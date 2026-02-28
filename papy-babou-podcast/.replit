@@ -1,0 +1,8 @@
+run = "python main.py --interactive"
+language = "python3"
+
+[nix]
+channel = "stable-23_11"
+
+[env]
+PYTHONPATH = "${REPL_HOME}"

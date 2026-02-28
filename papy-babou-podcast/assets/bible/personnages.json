@@ -1,0 +1,88 @@
+{
+  "personnages": {
+    "papy_babou": {
+      "nom_complet": "Papy Babou",
+      "age": 72,
+      "description": "Grand-père aimant, ancien instituteur à la retraite. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants.",
+      "ton": "chaleureux, grave, bienveillant",
+      "tics_de_langage": [
+        "Ah mes petits loups...",
+        "Figurez-vous que...",
+        "Et devinez quoi ?",
+        "Comme disait ma grand-mère...",
+        "C'est pas merveilleux, ça ?",
+        "Attendez, attendez, j'y viens !",
+        "Eh bien, mes trésors...",
+        "Vous voyez, mes enfants..."
+      ],
+      "vocabulaire_typique": [
+        "formidable",
+        "extraordinaire",
+        "mes petits loups",
+        "mes trésors",
+        "eh bien",
+        "figurez-vous"
+      ],
+      "interdictions": [
+        "Ne jamais utiliser d'argot moderne",
+        "Pas de références à la technologie moderne",
+        "Toujours expliquer les mots difficiles"
+      ]
+    },
+    "antoine": {
+      "nom_complet": "Antoine",
+      "age": 8,
+      "description": "Petit-fils curieux et aventurier. Pose beaucoup de questions, parfois impertinentes. Adore les passages avec de l'action.",
+      "ton": "curieux, enthousiaste, parfois impatient",
+      "tics_de_langage": [
+        "Mais Papy, pourquoi... ?",
+        "Trop cool !",
+        "Et après, qu'est-ce qui s'est passé ?",
+        "Comme un super-héros ?",
+        "C'est vrai, Papy ?",
+        "Wahou !"
+      ],
+      "reactions_typiques": [
+        "S'enthousiasme pour les scènes d'action",
+        "Compare les personnages bibliques à des héros",
+        "Pose des questions sur la logique de l'histoire",
+        "Coupe parfois la parole avec impatience"
+      ]
+    },
+    "noemie": {
+      "nom_complet": "Noémie",
+      "age": 6,
+      "description": "Petite-fille sensible et empathique. S'inquiète pour les personnages, aime les détails émotionnels.",
+      "ton": "sensible, doux, parfois inquiet",
+      "tics_de_langage": [
+        "Oh non, le pauvre...",
+        "Il avait pas peur, Papy ?",
+        "Et ils étaient contents après ?",
+        "C'est triste, Papy...",
+        "Moi je l'aurais aidé !",
+        "Raconte encore, Papy !"
+      ],
+      "reactions_typiques": [
+        "S'inquiète pour les personnages en difficulté",
+        "Demande si l'histoire finit bien",
+        "Veut savoir ce que ressentent les personnages",
+        "A parfois besoin d'être rassurée par Papy Babou"
+      ]
+    },
+    "narrateur": {
+      "nom_complet": "Narrateur",
+      "description": "Voix neutre qui assure les transitions entre les scènes et fournit le contexte historique.",
+      "ton": "neutre, clair, posé",
+      "usage": [
+        "Transitions entre scènes",
+        "Contexte historique ou géographique",
+        "Introduction et conclusion de l'épisode"
+      ]
+    }
+  },
+  "regles_interaction": {
+    "frequence_interruptions": "Les enfants doivent intervenir au moins toutes les 90 secondes de narration",
+    "alternance": "Alterner entre Antoine (questions d'action/logique) et Noémie (questions émotionnelles)",
+    "reponses_papy": "Papy Babou répond toujours avec patience et pédagogie, même aux questions naïves"
+  }
+}

@@ -1,0 +1,8 @@
+.env
+audio/segments/*.mp3
+output/episodes/*.mp3
+logs/*.log
+__pycache__/
+*.pyc
+.venv/
+venv/
