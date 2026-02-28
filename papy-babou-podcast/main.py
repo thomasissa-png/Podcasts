@@ -485,6 +485,146 @@ def _validation_script(
             console.print("[red]  Choix non reconnu. Tapez v, m, c ou a.[/red]")
 
 
+def _validation_plan_saison(
+    plan: dict,
+    chemin_json: Path,
+    planificateur: Planificateur,
+    saison: int,
+    theme: str,
+    description: str = "",
+    personnages_list: list[str] | None = None,
+    saisons_prec: list[dict] | None = None,
+) -> dict:
+    """Point de validation humaine du plan de saison (go/no-go).
+
+    Affiche le plan complet et permet au producteur de valider, modifier,
+    regenerer ou abandonner avant de lancer la production des episodes.
+
+    Args:
+        plan: Plan de saison genere.
+        chemin_json: Chemin du fichier JSON du plan.
+        planificateur: Instance du Planificateur (pour regeneration).
+        saison: Numero de saison.
+        theme: Theme de la saison.
+        description: Description du producteur.
+        personnages_list: Personnages secondaires.
+        saisons_prec: Saisons precedentes pour contexte.
+
+    Returns:
+        Le plan (potentiellement modifie ou regenere).
+
+    Raises:
+        ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
+    """
+    while True:
+        console.print(panel_validation([
+            ("v", "Valider le plan — lancer la production"),
+            ("m", "Modifier le fichier JSON manuellement"),
+            ("r", "Regenerer le plan (nouvel appel au Planificateur)"),
+            ("a", "Abandonner"),
+        ], titre="Validation du plan de saison"))
+
+        choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+
+        if choix in ("v", "valider"):
+            console.print("[green]  Plan de saison valide par le producteur[/green]")
+            return plan
+
+        elif choix in ("m", "modifier"):
+            console.print(
+                f"\n[yellow]  Modifiez le fichier puis revenez ici :[/yellow]"
+                f"\n  [bold]{chemin_json}[/bold]\n"
+            )
+            console.input("[cyan]  Appuyez sur Entree quand c'est fait...[/cyan]")
+
+            try:
+                with open(chemin_json, "r", encoding="utf-8") as f:
+                    plan = json.load(f)
+                planificateur._valider_plan(plan)
+                console.print("[green]  Plan recharge et valide depuis le fichier[/green]")
+                _afficher_plan_saison(plan)
+            except (json.JSONDecodeError, FileNotFoundError) as e:
+                console.print(f"[red]  Erreur au rechargement : {e}[/red]")
+                console.print("[yellow]  Le plan precedent est conserve.[/yellow]")
+            except ValueError as e:
+                console.print(f"[red]  Plan invalide : {e}[/red]")
+                console.print("[yellow]  Le plan precedent est conserve.[/yellow]")
+
+        elif choix in ("r", "regenerer"):
+            console.print(
+                "\n[cyan]  Regeneration du plan de saison...[/cyan]"
+            )
+            plan = planificateur.planifier_saison(
+                numero_saison=saison,
+                theme=theme,
+                description=description,
+                personnages_secondaires=personnages_list,
+                saisons_precedentes=saisons_prec or None,
+            )
+            planificateur.sauvegarder(plan, chemin_json)
+            console.print("[green]  Nouveau plan genere et sauvegarde[/green]")
+            _afficher_plan_saison(plan)
+
+        elif choix in ("a", "abandonner"):
+            raise ProductionAbandonnee(
+                "Planification abandonnee par l'utilisateur."
+            )
+
+        else:
+            console.print("[red]  Choix non reconnu. Tapez v, m, r ou a.[/red]")
+
+
+def _afficher_plan_saison(plan: dict) -> None:
+    """Affiche le resume complet d'un plan de saison."""
+    saison_data = plan["saison"]
+    saison_num = saison_data.get("numero", "?")
+
+    # Table des episodes
+    table = table_saison_plan(saison_num, saison_data["theme"])
+    for ep in saison_data["episodes"]:
+        table.add_row(
+            str(ep["numero"]),
+            ep["titre"],
+            ep.get("type", "standard"),
+            ep.get("ambiance", "?"),
+            ep["morale"][:40],
+        )
+    console.print(table)
+
+    # Fil rouge
+    fil_rouge = saison_data.get("fil_rouge", "")
+    if fil_rouge:
+        console.print(f"\n  [bold]Fil rouge :[/bold] {fil_rouge}")
+
+    # Arcs de personnages
+    arcs = saison_data.get("arcs_personnages", {})
+    if arcs:
+        console.print("\n[bold]  Arcs de personnages :[/bold]")
+        for perso, arc in arcs.items():
+            nom = perso.replace("_", " ").title()
+            console.print(
+                f"    {nom} : {arc.get('depart', '')} -> {arc.get('arrivee', '')}"
+            )
+
+    # Personnages secondaires
+    secondaires = saison_data.get("personnages_secondaires", [])
+    if secondaires:
+        console.print("\n[bold]  Personnages secondaires :[/bold]")
+        for p in secondaires:
+            console.print(
+                f"    {p.get('nom_complet', '?')} "
+                f"(episode {p.get('apparait_episode', '?')}) : "
+                f"{p.get('description', '')[:60]}"
+            )
+
+    # Rituels
+    rituels = saison_data.get("rituels", {})
+    if rituels:
+        console.print("\n[bold]  Rituels :[/bold]")
+        for cle, val in rituels.items():
+            console.print(f"    {cle.replace('_', ' ').title()} : {val}")
+
+
 def _validation_montage(
     chemin_hq: Path, chemin_preview: Path, duree_secondes: float
 ) -> None:
@@ -1434,10 +1574,28 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
             saisons_precedentes=saisons_prec or None,
         )
 
-        # Sauvegarder le plan
+        # Sauvegarder le plan (brouillon)
         chemin_json = config.SAISONS_DIR / f"saison_{saison:02d}.json"
         planificateur.sauvegarder(plan, chemin_json)
         console.print(f"  Plan sauvegarde : {chemin_json}")
+
+        # Afficher le plan complet
+        _afficher_plan_saison(plan)
+
+        # ── Validation humaine du plan de saison (go/no-go) ──────────
+        plan = _validation_plan_saison(
+            plan=plan,
+            chemin_json=chemin_json,
+            planificateur=planificateur,
+            saison=saison,
+            theme=theme,
+            description=description,
+            personnages_list=personnages_list,
+            saisons_prec=saisons_prec,
+        )
+
+        # Re-sauvegarder le plan valide (peut avoir ete modifie ou regenere)
+        planificateur.sauvegarder(plan, chemin_json)
 
         # Sauvegarder en DB (versionnée — anciennes versions conservées)
         if _use_db():
@@ -1455,44 +1613,16 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
         console.print(f"  Export CSV : {chemin_csv}")
         console.print(f"  Export Markdown : {chemin_md}")
 
-        # Afficher le résumé
-        saison_data = plan["saison"]
-        table = Table(title=f"Saison {saison} — {saison_data['theme']}")
-        table.add_column("Ep", style="cyan", justify="right")
-        table.add_column("Titre", style="white")
-        table.add_column("Type", style="dim")
-        table.add_column("Ambiance", style="dim")
-        table.add_column("Morale", style="dim")
+        console.print(panel_succes(
+            f"Plan de saison {saison} valide et exporte.\n"
+            f"  JSON : {chemin_json}\n"
+            f"  CSV  : {chemin_csv}\n"
+            f"  MD   : {chemin_md}",
+            titre="Plan de saison valide",
+        ))
 
-        for ep in saison_data["episodes"]:
-            table.add_row(
-                str(ep["numero"]),
-                ep["titre"],
-                ep.get("type", "standard"),
-                ep.get("ambiance", "?"),
-                ep["morale"][:40],
-            )
-        console.print(table)
-
-        # Afficher les arcs
-        arcs = saison_data.get("arcs_personnages", {})
-        if arcs:
-            console.print("\n[bold]  Arcs de personnages :[/bold]")
-            for perso, arc in arcs.items():
-                nom = perso.replace("_", " ").title()
-                console.print(f"    {nom} : {arc.get('depart', '')} -> {arc.get('arrivee', '')}")
-
-        # Afficher les personnages secondaires
-        secondaires = saison_data.get("personnages_secondaires", [])
-        if secondaires:
-            console.print("\n[bold]  Personnages secondaires :[/bold]")
-            for p in secondaires:
-                console.print(
-                    f"    {p.get('nom_complet', '?')} "
-                    f"(episode {p.get('apparait_episode', '?')}) : "
-                    f"{p.get('description', '')[:60]}"
-                )
-
+    except ProductionAbandonnee as e:
+        console.print(f"\n[bold yellow]Planification arretee : {e}[/bold yellow]")
     except Exception as e:
         console.print(f"[bold red]Erreur : {e}[/bold red]")
         logger.exception("Erreur lors de la planification")
@@ -1527,6 +1657,24 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
         title="Production de saison",
         border_style="blue",
     ))
+
+    # ── Validation humaine du plan avant production (go/no-go) ───────
+    if not auto:
+        _afficher_plan_saison(plan)
+        console.print(panel_validation([
+            ("g", "Go — lancer la production"),
+            ("a", "Abandonner"),
+        ], titre="Go / No-Go — Plan de saison"))
+
+        choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+        if choix in ("a", "abandonner"):
+            console.print(
+                "[bold yellow]Production annulee. "
+                "Modifiez le plan avec planifier-saison si necessaire.[/bold yellow]"
+            )
+            return
+        elif choix not in ("g", "go"):
+            console.print("[yellow]  Choix non reconnu — lancement par defaut.[/yellow]")
 
     resultats = []
     for i, ep in enumerate(episodes_plan, 1):
