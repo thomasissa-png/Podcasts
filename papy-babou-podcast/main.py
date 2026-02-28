@@ -89,7 +89,7 @@ def initialiser_db() -> bool:
         if not database.DATABASE_URL:
             return False
         database.initialiser_schema()
-        console.print("[green]  PostgreSQL connecté et schéma initialisé[/green]")
+        console.print(f"[{Palette.SUCCES}]  PostgreSQL connecte et schema initialise.[/]")
         return True
     except Exception as e:
         console.print(f"[yellow]  PostgreSQL indisponible : {e}[/yellow]")
@@ -485,7 +485,7 @@ def _afficher_recap_script(script: dict, score: float, type_episode: str, rappor
         f"{Typo.label_valeur('Duree estimee', f'{duree_estimee:.1f} min (cible: {duree_cible} min,')} [{couleur_duree}]ecart: {ecart_duree:+.1f} min[/]\n"
         f"{Typo.label_valeur('Segments', f'{nb_segments} (dont {nb_sfx} SFX)')}\n"
         f"{Typo.label_valeur('Type', type_episode)}",
-        titre="Recap du script",
+        titre=f"{Icons.SCRIPT} Recap du script",
     ))
 
 
@@ -524,7 +524,7 @@ def _validation_script(
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
         if choix in ("v", "valider"):
-            console.print("[green]  Script valide par le producteur[/green]")
+            console.print(f"[{Palette.SUCCES}]  Script valide par le producteur.[/]")
             if rapport is not None:
                 rapport.setdefault("decisions_humaines", []).append({
                     "etape": "script",
@@ -556,8 +556,8 @@ def _validation_script(
                         for corr in all_corrections:
                             ajouter_preference(corr, source_episode=ep_id, categorie="style")
                         console.print(
-                            f"[green]  {len(all_corrections)} preference(s) memorisee(s) "
-                            f"pour les prochains episodes.[/green]"
+                            f"[{Palette.SUCCES}]  {len(all_corrections)} preference(s) memorisee(s) "
+                            f"pour les prochains episodes.[/]"
                         )
 
             return script, score
@@ -574,7 +574,7 @@ def _validation_script(
                     script = json.load(f)
                 # Valider la structure du script recharge (S3)
                 Scripteur._valider_structure(script)
-                console.print("[green]  Script recharge et structure validee[/green]")
+                console.print(f"[{Palette.SUCCES}]  Script recharge et structure validee.[/]")
                 if rapport is not None:
                     rapport.setdefault("decisions_humaines", []).append({
                         "etape": "script",
@@ -597,10 +597,10 @@ def _validation_script(
                 _afficher_recap_script(script, score, type_episode, rapport)
             except (json.JSONDecodeError, FileNotFoundError) as e:
                 console.print(f"[red]  Erreur au rechargement : {e}[/red]")
-                console.print("[yellow]  Le script precedent est conserve.[/yellow]")
+                console.print("[yellow]  Les donnees precedentes sont conservees.[/yellow]")
             except ValueError as e:
                 console.print(f"[red]  Structure invalide : {e}[/red]")
-                console.print("[yellow]  Le script precedent est conserve.[/yellow]")
+                console.print("[yellow]  Les donnees precedentes sont conservees.[/yellow]")
 
         elif choix in ("c", "corrections"):
             nb_corrections_humaines += 1
@@ -644,7 +644,7 @@ def _validation_script(
                 scripteur.sauvegarder(script, chemin_script)
                 nb = scripteur.compter_mots(script)
                 console.print(
-                    f"[green]  Nouveau script genere ({nb} mots)[/green]"
+                    f"[{Palette.SUCCES}]  Nouveau script genere ({nb} mots).[/]"
                 )
 
                 # Re-evaluer avec le Reviewer (S1)
@@ -670,7 +670,7 @@ def _validation_script(
                 # Appliquer les corrections du reviewer au script
                 if reviewer.est_valide(resultat_review):
                     script = {"episode": resultat_review["episode"]}
-                    console.print(f"[green]  Script corrige valide ({score}/10)[/green]")
+                    console.print(f"[{Palette.SUCCES}]  Script corrige valide ({score}/10).[/]")
                 else:
                     script = {"episode": resultat_review["episode"]}
                     console.print(
@@ -745,6 +745,17 @@ def _validation_plan_saison(
         ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
     """
     while True:
+        # Afficher un resume compact du plan avant les choix
+        saison_data = plan.get("saison", {})
+        nb_eps = len(saison_data.get("episodes", []))
+        theme_plan = saison_data.get("theme", "?")
+        console.print(panel_info(
+            f"{Typo.label_valeur('Theme', theme_plan)}\n"
+            f"{Typo.label_valeur('Episodes', str(nb_eps))}\n"
+            f"{Typo.label_valeur('Fil rouge', saison_data.get('fil_rouge', 'N/A')[:80])}",
+            titre=f"{Icons.SAISON} Resume du plan de saison",
+        ))
+
         console.print(panel_validation([
             ("v", "Valider le plan — lancer la production"),
             ("m", "Modifier le fichier JSON manuellement"),
@@ -756,7 +767,7 @@ def _validation_plan_saison(
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
         if choix in ("v", "valider"):
-            console.print("[green]  Plan de saison valide par le producteur[/green]")
+            console.print(f"[{Palette.SUCCES}]  Plan de saison valide par le producteur.[/]")
             plan["saison"].setdefault("decisions_humaines", []).append({
                 "action": "valide",
                 "timestamp": datetime.now().isoformat(),
@@ -778,14 +789,14 @@ def _validation_plan_saison(
                     "action": "modification_json",
                     "timestamp": datetime.now().isoformat(),
                 })
-                console.print("[green]  Plan recharge et valide depuis le fichier[/green]")
+                console.print(f"[{Palette.SUCCES}]  Plan recharge et valide depuis le fichier.[/]")
                 _afficher_plan_saison(plan)
             except (json.JSONDecodeError, FileNotFoundError) as e:
                 console.print(f"[red]  Erreur au rechargement : {e}[/red]")
-                console.print("[yellow]  Le plan precedent est conserve.[/yellow]")
+                console.print("[yellow]  Les donnees precedentes sont conservees.[/yellow]")
             except ValueError as e:
-                console.print(f"[red]  Plan invalide : {e}[/red]")
-                console.print("[yellow]  Le plan precedent est conserve.[/yellow]")
+                console.print(f"[red]  Structure invalide : {e}[/red]")
+                console.print("[yellow]  Les donnees precedentes sont conservees.[/yellow]")
 
         elif choix in ("r", "regenerer"):
             console.print(
@@ -800,7 +811,7 @@ def _validation_plan_saison(
                 preferences_producteur=_construire_bloc_preferences(),
             )
             planificateur.sauvegarder(plan, chemin_json)
-            console.print("[green]  Nouveau plan genere et sauvegarde[/green]")
+            console.print(f"[{Palette.SUCCES}]  Nouveau plan genere et sauvegarde.[/]")
             _afficher_plan_saison(plan)
 
         elif choix in ("i", "instructions"):
@@ -841,7 +852,7 @@ def _validation_plan_saison(
                     "date": datetime.now().isoformat(),
                 })
                 planificateur.sauvegarder(plan, chemin_json)
-                console.print("[green]  Nouveau plan genere avec vos instructions[/green]")
+                console.print(f"[{Palette.SUCCES}]  Nouveau plan genere avec vos instructions.[/]")
                 _afficher_plan_saison(plan)
 
         elif choix in ("a", "abandonner"):
@@ -957,7 +968,7 @@ def _afficher_plan_saison(plan: dict) -> None:
         f"{Typo.label_valeur('Mots totaux estimes', f'~{mots_totaux:,}')}\n"
         f"{Typo.label_valeur('Cout estime', f'~${cout_total_estime:.2f}')} "
         f"[dim](Claude: ${cout_claude_estime:.2f} + TTS: ${cout_tts_estime:.2f})[/dim]",
-        titre="Previsionnel de la saison",
+        titre=f"{Icons.SAISON} Previsionnel de la saison",
     ))
 
 
@@ -1036,7 +1047,7 @@ def _validation_montage(
 
         if choix in ("v", "valider"):
             console.print(
-                "[green]  Montage valide — lancement de la publication[/green]"
+                f"[{Palette.SUCCES}]  Montage valide par le producteur.[/]"
             )
             if rapport is not None:
                 rapport.setdefault("decisions_humaines", []).append({
@@ -1061,13 +1072,13 @@ def _validation_montage(
                     # Mettre a jour le script en place pour le remontage
                     script.clear()
                     script.update(script_recharge)
-                    console.print("[green]  Script recharge et valide — relance du montage[/green]")
+                    console.print(f"[{Palette.SUCCES}]  Script recharge et valide — relance du montage.[/]")
                 except (json.JSONDecodeError, FileNotFoundError) as e:
-                    console.print(f"[red]  Erreur : {e}[/red]")
-                    console.print("[yellow]  Le script original est conserve pour le remontage.[/yellow]")
+                    console.print(f"[red]  Erreur au rechargement : {e}[/red]")
+                    console.print("[yellow]  Les donnees precedentes sont conservees.[/yellow]")
                 except ValueError as e:
                     console.print(f"[red]  Structure invalide : {e}[/red]")
-                    console.print("[yellow]  Le script original est conserve pour le remontage.[/yellow]")
+                    console.print("[yellow]  Les donnees precedentes sont conservees.[/yellow]")
             else:
                 console.print("[yellow]  Fichier script introuvable — relance sans modification.[/yellow]")
 
@@ -1107,18 +1118,8 @@ def _validation_montage(
             console.print("[red]  Choix non reconnu. Tapez v, e, r ou a.[/red]")
 
 
-def _validation_metadonnees(
-    meta: dict,
-    chemin_meta: Path,
-    script: dict | None = None,
-    duree_secondes: float = 0,
-    rapport: dict | None = None,
-) -> dict:
-    """Point de validation humaine pour les metadonnees avant publication.
-
-    Returns:
-        Le dict meta (potentiellement modifie par l'utilisateur).
-    """
+def _afficher_recap_metadonnees(meta: dict) -> None:
+    """Affiche le recap complet des metadonnees dans un panel info."""
     info_lines = [
         f"{Typo.label_valeur('Titre', meta.get('titre', 'N/A'))}",
         f"{Typo.label_valeur('Description', meta.get('description_courte', 'N/A'))}",
@@ -1148,6 +1149,21 @@ def _validation_metadonnees(
         titre=f"{Icons.METADONNEES} Metadonnees generees",
     ))
 
+
+def _validation_metadonnees(
+    meta: dict,
+    chemin_meta: Path,
+    script: dict | None = None,
+    duree_secondes: float = 0,
+    rapport: dict | None = None,
+) -> dict:
+    """Point de validation humaine pour les metadonnees avant publication.
+
+    Returns:
+        Le dict meta (potentiellement modifie par l'utilisateur).
+    """
+    _afficher_recap_metadonnees(meta)
+
     while True:
         options = [
             ("v", "Valider les metadonnees"),
@@ -1160,7 +1176,7 @@ def _validation_metadonnees(
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
         if choix in ("v", "valider"):
-            console.print("[green]  Metadonnees validees.[/green]")
+            console.print(f"[{Palette.SUCCES}]  Metadonnees validees par le producteur.[/]")
             if rapport is not None:
                 rapport.setdefault("decisions_humaines", []).append({
                     "etape": "metadonnees",
@@ -1192,8 +1208,8 @@ def _validation_metadonnees(
                 else:
                     meta = metadonnees_agent.generer_dry_run(script_enrichi)
                 metadonnees_agent.sauvegarder(meta, chemin_meta)
-                console.print(f"  Titre : {meta.get('titre', 'N/A')}")
-                console.print(f"  Description : {meta.get('description_courte', 'N/A')}")
+                console.print(f"[{Palette.SUCCES}]  Metadonnees regenerees.[/]")
+                _afficher_recap_metadonnees(meta)
                 if rapport is not None:
                     rapport.setdefault("decisions_humaines", []).append({
                         "etape": "metadonnees",
@@ -1206,26 +1222,30 @@ def _validation_metadonnees(
 
         elif choix in ("m", "modifier"):
             console.print(
-                f"[cyan]  Editez le fichier JSON : {chemin_meta}[/cyan]"
+                f"\n[yellow]  Modifiez le fichier puis revenez ici :[/yellow]"
+                f"\n  [bold]{chemin_meta}[/bold]\n"
             )
-            console.print("[dim]  Sauvegardez puis appuyez sur Entree...[/dim]")
-            console.input("  ")
+            console.input("[cyan]  Appuyez sur Entree quand c'est fait...[/cyan]")
             try:
                 with open(chemin_meta, "r", encoding="utf-8") as f:
                     meta = json.load(f)
-                console.print("[green]  Metadonnees rechargees depuis le fichier.[/green]")
+                # Valider la structure minimale
+                if "titre" not in meta or "description_courte" not in meta:
+                    raise ValueError("Champs requis manquants : titre, description_courte")
+                console.print(f"[{Palette.SUCCES}]  Metadonnees rechargees depuis le fichier.[/]")
                 if rapport is not None:
                     rapport.setdefault("decisions_humaines", []).append({
                         "etape": "metadonnees",
                         "action": "modifie_json",
                         "timestamp": datetime.now().isoformat(),
                     })
-                # Re-afficher les metadonnees modifiees
-                console.print(f"  Titre : {meta.get('titre', 'N/A')}")
-                console.print(f"  Description : {meta.get('description_courte', 'N/A')}")
+                _afficher_recap_metadonnees(meta)
             except (json.JSONDecodeError, FileNotFoundError) as e:
-                console.print(f"[red]  Erreur de lecture : {e}[/red]")
-                console.print("[yellow]  Les metadonnees originales sont conservees.[/yellow]")
+                console.print(f"[red]  Erreur au rechargement : {e}[/red]")
+                console.print("[yellow]  Les donnees precedentes sont conservees.[/yellow]")
+            except ValueError as e:
+                console.print(f"[red]  Structure invalide : {e}[/red]")
+                console.print("[yellow]  Les donnees precedentes sont conservees.[/yellow]")
 
         elif choix in ("a", "abandonner"):
             if rapport is not None:
@@ -1239,7 +1259,7 @@ def _validation_metadonnees(
             )
 
         else:
-            console.print("[red]  Choix non reconnu. Tapez v, m ou a.[/red]")
+            console.print("[red]  Choix non reconnu. Tapez v, c, m ou a.[/red]")
 
 
 def _validation_publication(
@@ -1274,7 +1294,7 @@ def _validation_publication(
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
         if choix in ("p", "publier"):
-            console.print("[green]  Publication confirmee.[/green]")
+            console.print(f"[{Palette.SUCCES}]  Publication confirmee par le producteur.[/]")
             if rapport is not None:
                 rapport.setdefault("decisions_humaines", []).append({
                     "etape": "publication",
@@ -1572,7 +1592,7 @@ def _pipeline_inner(
 
             if reviewer.est_valide(resultat_review):
                 script = {"episode": resultat_review["episode"]}
-                console.print(f"[green]  Script valide (score {score}/10)[/green]")
+                console.print(f"[{Palette.SUCCES}]  Script valide (score {score}/10).[/]")
                 break
 
             console.print(f"[yellow]  Score insuffisant ({score}/10 < 7) — relance du scripteur[/yellow]")
@@ -2470,6 +2490,7 @@ def dashboard(saison: int):
             score=score_val,
             ambiance=ep.get("ambiance", ""),
             date=ep.get("date_production", ""),
+            morale=ep.get("morale", ""),
         )
 
     console.print(table)
@@ -2501,16 +2522,51 @@ def dashboard(saison: int):
             episodes_produits = {ep.get("episode_id") for ep in historique}
             progression_saison(console, saison, episodes_plan, episodes_produits)
 
+    # ── Retours humains récents ───────────────────────────────────────────
+    episodes_avec_retours = [
+        ep for ep in historique if ep.get("retours_humains")
+    ]
+    if episodes_avec_retours:
+        retours_lines = []
+        for ep in episodes_avec_retours[-5:]:  # 5 derniers
+            ep_id = ep.get("episode_id", "?")
+            retours_lines.append(
+                f"{Typo.label_valeur(ep_id, ep['retours_humains'][:80])}"
+            )
+        console.print(panel_info(
+            "\n".join(retours_lines),
+            titre=f"{Icons.REVIEW} Retours humains recents",
+        ))
+
+    # ── Préférences producteur ─────────────────────────────────────────
+    preferences = charger_preferences()
+    if preferences:
+        pref_lines = []
+        for pref in preferences[-8:]:  # 8 dernières
+            source = pref.get("source_episode", "")
+            source_str = f" [{Palette.ARDOISE}]({source})[/]" if source else ""
+            pref_lines.append(
+                f"  [{Palette.MIEL}]{Icons.ETOILE}[/] [{Palette.IVOIRE}]{pref['regle'][:70]}[/]{source_str}"
+            )
+        if len(preferences) > 8:
+            pref_lines.append(
+                Typo.dim(f"  … et {len(preferences) - 8} autre(s)")
+            )
+        console.print(panel_info(
+            "\n".join(pref_lines),
+            titre=f"{Icons.PAPY} Preferences producteur ({len(preferences)} regles)",
+        ))
+
     # ── Saisons disponibles ──────────────────────────────────────────────
     saisons_dispo = config.liste_saisons()
     if saisons_dispo:
-        console.print(
-            f"\n  [{Palette.ARDOISE}]{'─' * 50}[/]"
-        )
         nums_str = "  ".join(
             f"[bold {Palette.OCRE}]{s}[/]" for s in saisons_dispo
         )
-        console.print(f"  {Icons.SAISON} [{Palette.TERRE_CUITE}]Saisons planifiées[/]  {nums_str}")
+        console.print(panel_info(
+            f"  {Icons.SAISON} {nums_str}",
+            titre=f"{Icons.SAISON} Saisons planifiees",
+        ))
 
     # ── Coûts détaillés ──────────────────────────────────────────────────
     cout_total_global = 0.0
@@ -2552,23 +2608,23 @@ def dashboard(saison: int):
     # ── Checkpoints en cours ─────────────────────────────────────────────
     checkpoints = list(config.CHECKPOINTS_DIR.glob("*_checkpoint.json"))
     if checkpoints:
-        console.print(
-            f"\n  [{Palette.ARDOISE}]{'─' * 50}[/]"
-        )
-        console.print(
-            f"  {Icons.CHECKPOINT} [{Palette.ATTENTION}]Checkpoints en attente : "
-            f"{len(checkpoints)}[/]"
-        )
+        cp_lines = []
         for cp_path in checkpoints:
             try:
                 with open(cp_path, "r", encoding="utf-8") as f:
                     cp = json.load(f)
-                console.print(
-                    f"    [{Palette.BLEU_CIEL}]{cp['episode_id']}[/] "
-                    f"[{Palette.ARDOISE}]étape: {cp['etape']} — {cp['timestamp']}[/]"
+                cp_lines.append(
+                    f"  [{Palette.BLEU_CIEL}]{cp['episode_id']}[/] "
+                    f"[{Palette.ARDOISE}]etape: {cp['etape']} — {cp['timestamp']}[/]"
                 )
             except (json.JSONDecodeError, FileNotFoundError):
-                console.print(f"    [{Palette.ARDOISE}]{cp_path.name} (illisible)[/]")
+                cp_lines.append(f"  [{Palette.ARDOISE}]{cp_path.name} (illisible)[/]")
+        console.print(Panel(
+            "\n".join(cp_lines),
+            title=f"[{Palette.ATTENTION}]{Icons.CHECKPOINT} Checkpoints en attente ({len(checkpoints)})[/]",
+            border_style=Style(color=Palette.ATTENTION),
+            padding=(1, 2),
+        ))
 
     console.print()
 

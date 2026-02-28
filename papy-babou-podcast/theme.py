@@ -468,8 +468,9 @@ def table_episodes_dashboard(titre_table: str) -> Table:
     table.add_column("", width=2)  # Status icon
     table.add_column("Épisode", style=Style(color=Palette.BLEU_CIEL, bold=True), width=8)
     table.add_column("Titre", style=Style(color=Palette.IVOIRE), min_width=20)
-    table.add_column("Type", style=Style(color=Palette.ARDOISE), width=12)
+    table.add_column("Type", style=Style(color=Palette.ARDOISE), width=10)
     table.add_column("Score", justify="center", width=14)
+    table.add_column("Morale", style=Style(color=Palette.VERT_OLIVE), max_width=30)
     table.add_column("Ambiance", style=Style(color=Palette.LAVANDE), width=12)
     table.add_column("Date", style=Style(color=Palette.ARDOISE), width=10)
 
@@ -484,6 +485,7 @@ def ajouter_episode_dashboard(
     score: float,
     ambiance: str,
     date: str,
+    morale: str = "",
 ) -> None:
     """Ajoute une ligne épisode au tableau dashboard."""
     # Icône de statut
@@ -504,12 +506,15 @@ def ajouter_episode_dashboard(
     else:
         score_str = Typo.dim("—")
 
+    titre_affiche = titre[:32] + "…" if len(titre) > 35 else titre
+    morale_affiche = morale[:27] + "…" if len(morale) > 30 else morale if morale else "—"
     table.add_row(
         status_icon,
         episode_id,
-        titre[:35],
+        titre_affiche,
         type_episode,
         score_str,
+        morale_affiche,
         ambiance or "—",
         date[:10] if date else "—",
     )
@@ -593,9 +598,10 @@ def progression_saison(
             icon = f"[{Palette.ARDOISE}]{Icons.A_FAIRE}[/]"
             status = f"[{Palette.ARDOISE}]à faire[/]"
         type_tag = f"[{Palette.LAVANDE}][{ep.get('type', 'standard')}][/]"
+        titre_ep = ep['titre'][:32] + "…" if len(ep['titre']) > 35 else ep['titre']
         console.print(
             f"    {icon}  [{Palette.BLEU_CIEL}]E{ep['numero']:02d}[/]  "
-            f"{ep['titre'][:35]:<35}  {type_tag:<25}  {status}"
+            f"{titre_ep:<35}  {type_tag:<25}  {status}"
         )
 
 

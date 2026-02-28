@@ -266,6 +266,36 @@ Complete audit of feedback→memory→future-use chain (overall: 4/10 → fixed)
 - A7: Metadata regeneration with free-text feedback (option 'c') — re-calls Metadonnees.generer() with instructions
 - Decision logging added to `_validation_plan_saison` (stored in `plan["saison"]["decisions_humaines"]`)
 
+## Dashboard & Validation UX Audit (Session 4)
+Comprehensive UX/flat design audit of all 5 validation workflows and the dashboard. Key fixes:
+
+### Dashboard Improvements
+- Added `morale` column to episode table (`ajouter_episode_dashboard` accepts `morale` kwarg)
+- Added "Retours humains recents" panel — shows last 5 episodes' `retours_humains`
+- Added "Preferences producteur" panel — shows rules from `preferences_producteur.json` with source episode
+- Wrapped "Saisons planifiees" and "Checkpoints en attente" sections in themed panels
+- Title truncation with ellipsis (32 chars + "…") instead of hard cut at 35
+
+### Validation UX Consistency Fixes
+- **C1 BUG**: `_validation_metadonnees` error hint listed "v, m, a" but should be "v, c, m, a"
+- **C2**: Added `panel_info` summary at top of `_validation_plan_saison` loop (was the only validation without one)
+- **M1**: Full `panel_info` re-display after modifications in `_validation_metadonnees` (was partial — only title/description)
+- **M2/M3**: Normalized manual edit prompt in `_validation_metadonnees` to match standard pattern
+- **M4/M5**: Standardized error messages: "Erreur au rechargement" + "Les donnees precedentes sont conservees." across all 5 functions
+- **M6**: Added structure validation (`titre`, `description_courte` required) on metadonnees JSON reload
+- **M7**: Standardized confirmation messages with `Palette.SUCCES` colors and trailing periods
+- **m5**: Added Icons to `panel_info` titles: `Icons.SCRIPT` for script recap, `Icons.SAISON` for plan previsionnel
+- Extracted `_afficher_recap_metadonnees()` helper for DRY re-display after modifications
+- Replaced all raw `[green]` tags with `Palette.SUCCES` in validation flows and `initialiser_db()`
+
+### UX Pattern Standards (for future validation functions)
+- Error on reload: `"[red]  Erreur au rechargement : {e}[/red]"`
+- Preservation: `"[yellow]  Les donnees precedentes sont conservees.[/yellow]"`
+- Confirmation: `f"[{Palette.SUCCES}]  [Thing] valide(es) par le producteur.[/]"`
+- Manual edit prompt: `[yellow]  Modifiez le fichier...` → `[bold]{path}[/bold]` → `[cyan]  Appuyez sur Entree...[/cyan]`
+- All `panel_info` titles include relevant Icon
+- All validation menus use `panel_validation()` with consistent key patterns
+
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`
 - Push: `git push -u origin claude/podcast-production-system-YkngW`
