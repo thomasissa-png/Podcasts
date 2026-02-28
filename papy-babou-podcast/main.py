@@ -1136,20 +1136,45 @@ def pipeline(
 # ── CLI Click ─────────────────────────────────────────────────────────────────
 
 
+def _healthcheck() -> None:
+    """Affiche l'état des dépendances au démarrage."""
+    problemes = []
+
+    # Vérifier les clés API
+    if not config.ANTHROPIC_API_KEY:
+        problemes.append("ANTHROPIC_API_KEY manquante")
+    if not config.ELEVENLABS_API_KEY:
+        problemes.append("ELEVENLABS_API_KEY manquante (production audio impossible)")
+
+    # Vérifier ffmpeg (nécessaire pour le montage)
+    if not config.verifier_ffmpeg():
+        problemes.append("ffmpeg non installé (montage audio impossible)")
+
+    # Vérifier la bible des personnages
+    if not config.PERSONNAGES_JSON_PATH.exists():
+        problemes.append("personnages.json introuvable")
+
+    if problemes:
+        console.print(f"[{Palette.ATTENTION}]  {Icons.ATTENTION_IC} Healthcheck :[/]")
+        for p in problemes:
+            console.print(f"[{Palette.ATTENTION}]    {Icons.FLECHE} {p}[/]")
+
+
 @click.group(invoke_without_command=True)
 @click.pass_context
 def cli(ctx):
     """Les Histoires de Papy Babou — Systeme de production automatisee."""
     configurer_logging()
     initialiser_db()
+    _healthcheck()
     if ctx.invoked_subcommand is None:
         ctx.invoke(interactif)
 
 
 @cli.command()
 @click.option("--episode", "-e", required=True, help="Titre de l'episode")
-@click.option("--saison", "-s", type=int, required=True, help="Numero de saison")
-@click.option("--numero", "-n", type=int, required=True, help="Numero d'episode")
+@click.option("--saison", "-s", type=click.IntRange(min=1), required=True, help="Numero de saison (>= 1)")
+@click.option("--numero", "-n", type=click.IntRange(min=1), required=True, help="Numero d'episode (>= 1)")
 @click.option("--resume", "-r", required=True, help="Resume de l'histoire biblique")
 @click.option("--morale", "-m", default="", help="Lecon de vie a transmettre")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
@@ -1323,7 +1348,7 @@ def reprendre(checkpoint: str, auto: bool):
 
 
 @cli.command("planifier-saison")
-@click.option("--saison", "-s", type=int, required=True, help="Numero de la saison")
+@click.option("--saison", "-s", type=click.IntRange(min=1), required=True, help="Numero de la saison (>= 1)")
 @click.option("--theme", "-t", required=True, help="Theme central de la saison")
 @click.option("--description", "-d", default="", help="Description / vision du producteur")
 @click.option("--personnages", "-p", default="", help="Personnages secondaires a introduire (separes par des virgules)")
@@ -1427,7 +1452,7 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
 
 
 @cli.command("produire-saison")
-@click.option("--saison", "-s", type=int, required=True, help="Numero de la saison")
+@click.option("--saison", "-s", type=click.IntRange(min=1), required=True, help="Numero de la saison (>= 1)")
 @click.option("--episodes", "-e", default="", help="Episodes specifiques (ex: '1,3,5' — vide = tous)")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, default=True, help="Mode automatique (defaut: oui)")

@@ -81,7 +81,8 @@ class Publisher:
             logger.warning(
                 "Buzzsprout non configuré — publication simulée."
             )
-            return f"https://www.buzzsprout.com/{config.BUZZSPROUT_PODCAST_ID}/episodes/simulated.mp3"
+            podcast_id = config.BUZZSPROUT_PODCAST_ID or "non-configure"
+            return f"https://www.buzzsprout.com/{podcast_id}/episodes/simulated.mp3"
 
         url = (
             f"https://www.buzzsprout.com/api/{config.BUZZSPROUT_PODCAST_ID}/episodes.json"
