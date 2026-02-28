@@ -75,9 +75,10 @@ class TestProducteurAudioProduction:
     @patch("agents.producteur_audio.config.VOICE_IDS", {
         "narrateur": "voice_test_123",
     })
+    @patch("agents.producteur_audio.config.rate_limiter_elevenlabs")
     @patch("agents.producteur_audio.time.sleep")
     @patch("agents.producteur_audio.random.uniform", return_value=0.5)
-    def test_generer_segment_retry_avec_jitter(self, mock_random, mock_sleep, mock_post, tmp_path):
+    def test_generer_segment_retry_avec_jitter(self, mock_random, mock_sleep, mock_rl, mock_post, tmp_path):
         """La génération doit réessayer avec jitter en cas d'échec."""
         import requests as req
 

@@ -142,6 +142,7 @@ class ProducteurAudio:
         max_tentatives = config.PRODUCTION["max_retry_tts"]
         for tentative in range(1, max_tentatives + 1):
             try:
+                config.rate_limiter_elevenlabs.attendre()
                 response = requests.post(
                     url, json=payload, headers=headers, timeout=60
                 )

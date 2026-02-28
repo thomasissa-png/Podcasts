@@ -1,0 +1,70 @@
+name: CI — Tests & Qualité
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    name: Tests Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurer Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Installer ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt pytest
+
+      - name: Lancer les tests
+        run: python -m pytest tests/ -v --tb=short
+        env:
+          ANTHROPIC_API_KEY: "test-key-for-ci"
+
+      - name: Vérifier les imports
+        run: |
+          python -c "from agents import Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur, Metadonnees, Publisher, CoverArt"
+          python -c "import config; print('Config OK')"
+          python -c "import main; print('Main OK')"
+
+      - name: Vérifier la CLI
+        run: python main.py --help
+        env:
+          ANTHROPIC_API_KEY: "test-key-for-ci"
+
+  lint:
+    name: Lint & Formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les outils
+        run: pip install ruff
+
+      - name: Vérifier le style (ruff)
+        run: ruff check . --select=E,F,W --ignore=E501

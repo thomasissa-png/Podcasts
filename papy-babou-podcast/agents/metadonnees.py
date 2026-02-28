@@ -73,6 +73,7 @@ class Metadonnees:
             episode["numero"],
         )
 
+        config.rate_limiter_anthropic.attendre()
         response = self.client.messages.create(
             model=config.CLAUDE_MODEL,
             max_tokens=2048,

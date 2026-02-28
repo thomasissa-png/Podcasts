@@ -2,7 +2,10 @@
 
 import json
 import os
+import shutil
 import sys
+import threading
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -44,6 +47,18 @@ BUZZSPROUT_PODCAST_ID = os.getenv("BUZZSPROUT_PODCAST_ID", "")
 FREESOUND_API_KEY = os.getenv("FREESOUND_API_KEY", "")
 
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
+
+def verifier_ffmpeg() -> bool:
+    """Vérifie que ffmpeg est disponible dans le PATH.
+
+    Returns:
+        True si ffmpeg est trouvé.
+    """
+    return shutil.which("ffmpeg") is not None
+
+
 def valider_cles_api(dry_run: bool = False) -> list[str]:
     """Valide que les clés API requises sont configurées.
 
@@ -62,6 +77,12 @@ def valider_cles_api(dry_run: bool = False) -> list[str]:
         )
 
     if not dry_run:
+        if not verifier_ffmpeg():
+            erreurs.append(
+                "ffmpeg non trouvé. Installez-le : "
+                "apt install ffmpeg (Linux) / brew install ffmpeg (macOS)."
+            )
+
         if not ELEVENLABS_API_KEY:
             erreurs.append(
                 "ELEVENLABS_API_KEY non configurée. "
@@ -225,3 +246,54 @@ def charger_personnages() -> dict:
 # ── Modèle Claude ─────────────────────────────────────────────────────────────
 
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
+
+# ── Coûts estimés (pour le suivi budgétaire) ─────────────────────────────────
+
+COUTS = {
+    "elevenlabs_par_caractere": 0.000018,   # ~$0.018 / 1000 chars
+    "claude_input_par_token": 0.000003,     # $3 / 1M tokens (Sonnet)
+    "claude_output_par_token": 0.000015,    # $15 / 1M tokens (Sonnet)
+    "openai_dalle3_par_image": 0.040,       # $0.04 / image (1024x1024)
+}
+
+# ── Configuration cover art ──────────────────────────────────────────────────
+
+COVER_ART_CONFIG = {
+    "enabled": bool(OPENAI_API_KEY),
+    "model": "dall-e-3",
+    "size": "1024x1024",
+    "quality": "standard",
+    "style_prefix": (
+        "Illustration pour enfants, style aquarelle douce et chaleureuse, "
+        "couleurs pastel, adapté aux 6-10 ans. "
+    ),
+}
+
+# ── Rate limiter global ──────────────────────────────────────────────────────
+
+
+class RateLimiter:
+    """Rate limiter à fenêtre glissante pour les appels API.
+
+    Limite le nombre d'appels par seconde pour éviter les erreurs 429.
+    Thread-safe pour l'utilisation avec ThreadPoolExecutor.
+    """
+
+    def __init__(self, max_par_seconde: float = 5.0):
+        self._min_interval = 1.0 / max_par_seconde
+        self._lock = threading.Lock()
+        self._dernier_appel = 0.0
+
+    def attendre(self) -> None:
+        """Attend le temps nécessaire avant le prochain appel."""
+        with self._lock:
+            maintenant = time.monotonic()
+            ecart = maintenant - self._dernier_appel
+            if ecart < self._min_interval:
+                time.sleep(self._min_interval - ecart)
+            self._dernier_appel = time.monotonic()
+
+
+# Limiteurs globaux (partagés entre agents)
+rate_limiter_elevenlabs = RateLimiter(max_par_seconde=3.0)
+rate_limiter_anthropic = RateLimiter(max_par_seconde=5.0)

@@ -7,6 +7,7 @@ from .monteur import Monteur
 from .metadonnees import Metadonnees
 from .publisher import Publisher
 from .sfx_provider import SfxProvider
+from .cover_art import CoverArt
 
 __all__ = [
     "Scripteur",
@@ -16,4 +17,5 @@ __all__ = [
     "Monteur",
     "Metadonnees",
     "Publisher",
+    "CoverArt",
 ]

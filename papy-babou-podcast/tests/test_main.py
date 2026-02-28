@@ -15,6 +15,7 @@ from main import (
     sauvegarder_checkpoint,
     charger_checkpoint,
     supprimer_checkpoint,
+    _calculer_couts,
 )
 
 
@@ -138,3 +139,67 @@ class TestCheckpoints:
 
         with pytest.raises(ValueError, match="champ manquant"):
             charger_checkpoint(chemin)
+
+
+class TestCalculerCouts:
+    """Tests du calcul des métriques de coût."""
+
+    def test_couts_vides(self):
+        """Un rapport vide doit retourner un coût total de 0."""
+        rapport = {"etapes": {}}
+        couts = _calculer_couts(rapport)
+        assert couts["total_estime"] == 0.0
+
+    def test_couts_avec_tts(self):
+        """Le coût TTS doit être calculé à partir des caractères."""
+        rapport = {
+            "etapes": {
+                "audio": {
+                    "caracteres": {"papy_babou": 1000, "antoine": 500},
+                },
+            },
+        }
+        couts = _calculer_couts(rapport)
+        assert "elevenlabs_tts" in couts
+        assert couts["elevenlabs_tts"]["caracteres"] == 1500
+        assert couts["elevenlabs_tts"]["cout"] > 0
+        assert couts["total_estime"] > 0
+
+    def test_couts_avec_sfx_elevenlabs(self):
+        """Le coût SFX ElevenLabs doit compter les SFX générés."""
+        rapport = {
+            "etapes": {
+                "sfx": {
+                    "sources": {"sfx_001": "elevenlabs", "sfx_002": "freesound (vent)"},
+                },
+            },
+        }
+        couts = _calculer_couts(rapport)
+        assert "elevenlabs_sfx" in couts
+        assert couts["elevenlabs_sfx"]["nb_sfx"] == 1
+
+    def test_couts_avec_cover_art(self):
+        """Le coût cover art doit être inclus si présent."""
+        rapport = {
+            "etapes": {
+                "metadonnees": {
+                    "cover_art_cout": 0.04,
+                },
+            },
+        }
+        couts = _calculer_couts(rapport)
+        assert "openai_dalle3" in couts
+        assert couts["total_estime"] >= 0.04
+
+    def test_couts_complet(self):
+        """Un rapport complet doit cumuler tous les coûts."""
+        rapport = {
+            "etapes": {
+                "audio": {"caracteres": {"papy_babou": 2000}},
+                "sfx": {"sources": {"sfx_001": "elevenlabs"}},
+                "script": {"score_review": 8},
+                "metadonnees": {"cover_art_cout": 0.04},
+            },
+        }
+        couts = _calculer_couts(rapport)
+        assert couts["total_estime"] > 0.04  # Au moins cover art + autres

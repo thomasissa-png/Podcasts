@@ -136,3 +136,74 @@ class TestConfigBitrate:
     def test_bitrate_final_192k(self):
         """Le bitrate final doit être 192k."""
         assert config.PRODUCTION["mp3_bitrate_final"] == "192k"
+
+
+class TestVerifierFfmpeg:
+    """Tests de la vérification ffmpeg."""
+
+    def test_verifier_ffmpeg_retourne_bool(self):
+        """verifier_ffmpeg doit retourner un booléen."""
+        result = config.verifier_ffmpeg()
+        assert isinstance(result, bool)
+
+    def test_valider_cles_api_ffmpeg_check(self, monkeypatch):
+        """En production, ffmpeg absent doit être signalé."""
+        monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "sk-test")
+        monkeypatch.setattr(config, "ELEVENLABS_API_KEY", "el-test")
+        monkeypatch.setattr(config, "VOICE_IDS", {"papy_babou": "v1", "antoine": "v2", "noemie": "v3", "narrateur": "v4"})
+        monkeypatch.setattr("config.verifier_ffmpeg", lambda: False)
+        erreurs = config.valider_cles_api(dry_run=False)
+        assert any("ffmpeg" in e for e in erreurs)
+
+    def test_valider_cles_api_dry_run_pas_ffmpeg(self, monkeypatch):
+        """En dry-run, l'absence de ffmpeg ne doit PAS être signalée."""
+        monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "sk-test")
+        erreurs = config.valider_cles_api(dry_run=True)
+        assert not any("ffmpeg" in e for e in erreurs)
+
+
+class TestRateLimiter:
+    """Tests du rate limiter."""
+
+    def test_rate_limiter_creation(self):
+        """Le rate limiter doit s'instancier correctement."""
+        rl = config.RateLimiter(max_par_seconde=10.0)
+        assert rl._min_interval == pytest.approx(0.1)
+
+    def test_rate_limiter_attendre(self):
+        """attendre() ne doit pas crasher."""
+        rl = config.RateLimiter(max_par_seconde=100.0)
+        rl.attendre()
+        rl.attendre()
+
+    def test_rate_limiter_globals_existent(self):
+        """Les limiteurs globaux doivent exister."""
+        assert hasattr(config, "rate_limiter_elevenlabs")
+        assert hasattr(config, "rate_limiter_anthropic")
+
+
+class TestConfigCouts:
+    """Tests de la configuration des coûts."""
+
+    def test_couts_definis(self):
+        """Les coûts estimés doivent être définis."""
+        assert "elevenlabs_par_caractere" in config.COUTS
+        assert "claude_input_par_token" in config.COUTS
+        assert "claude_output_par_token" in config.COUTS
+        assert "openai_dalle3_par_image" in config.COUTS
+
+    def test_couts_positifs(self):
+        """Tous les coûts doivent être positifs."""
+        for cle, val in config.COUTS.items():
+            assert val > 0, f"Coût {cle} doit être > 0"
+
+
+class TestCoverArtConfig:
+    """Tests de la configuration cover art."""
+
+    def test_cover_art_config_existe(self):
+        """La config cover art doit exister."""
+        assert hasattr(config, "COVER_ART_CONFIG")
+        assert "model" in config.COVER_ART_CONFIG
+        assert "size" in config.COVER_ART_CONFIG
+        assert "style_prefix" in config.COVER_ART_CONFIG

@@ -223,6 +223,7 @@ class Scripteur:
 
         system_prompt = _construire_system_prompt()
 
+        config.rate_limiter_anthropic.attendre()
         response = self.client.messages.create(
             model=config.CLAUDE_MODEL,
             max_tokens=4096,

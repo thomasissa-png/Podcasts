@@ -1,0 +1,62 @@
+ASSETS AUDIO REQUIS
+===================
+
+Placez vos fichiers audio MP3 dans ce dossier.
+Le monteur les utilisera automatiquement pour assembler les épisodes.
+Sans ces fichiers, le monteur utilisera des silences de remplacement.
+
+FICHIERS OBLIGATOIRES
+---------------------
+
+1. intro_jingle.mp3
+   - Durée : 8-12 secondes
+   - Contenu : Jingle d'ouverture du podcast
+   - Style : Musique douce et joyeuse, type boîte à musique ou guitare acoustique
+   - Suggestion : Inclure "Les Histoires de Papy Babou" chantonné ou parlé
+
+2. outro_jingle.mp3
+   - Durée : 6-10 secondes
+   - Contenu : Jingle de clôture
+   - Style : Même mélodie que l'intro, version plus douce / ralentie
+   - Suggestion : Terminer par "À bientôt, mes petits loups !"
+
+3. fond_doux.mp3
+   - Durée : 2-5 minutes (sera mis en boucle automatiquement)
+   - Contenu : Musique de fond par défaut
+   - Style : Piano ou guitare acoustique, très doux, sans mélodie trop présente
+   - Volume : Sera automatiquement réduit à -20 dB sous les voix
+
+FICHIERS D'AMBIANCE (optionnels)
+---------------------------------
+
+4. ambiance_joyeux.mp3
+   - Style : Ukulélé, xylophone, rythme léger et entraînant
+   - Usage : Épisodes joyeux (fêtes, miracles positifs)
+
+5. ambiance_dramatique.mp3
+   - Style : Cordes graves, tension douce mais pas effrayante
+   - Usage : Épisodes avec des épreuves (déluge, exode)
+
+6. ambiance_calme.mp3
+   - Style : Harpe ou piano très doux, sons de nature
+   - Usage : Épisodes contemplatifs (création, psaumes)
+
+7. ambiance_mystere.mp3
+   - Style : Notes suspendues, léger mystère sans être inquiétant
+   - Usage : Épisodes de découverte (buisson ardent, rêves de Joseph)
+
+RECOMMANDATIONS TECHNIQUES
+---------------------------
+
+- Format : MP3, 44100 Hz, stéréo
+- Bitrate : 192 kbps minimum
+- Volume : Normalisé à -14 LUFS (sera ajusté par le monteur)
+- Licence : Utiliser des musiques libres de droits (Creative Commons, achat licence)
+
+SOURCES SUGGÉRÉES (libres de droits)
+-------------------------------------
+
+- Pixabay Music (https://pixabay.com/music/)
+- Free Music Archive (https://freemusicarchive.org/)
+- Incompetech (https://incompetech.com/)
+- Bensound (https://www.bensound.com/)

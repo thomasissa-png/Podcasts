@@ -24,7 +24,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 import config
-from agents import Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur, Metadonnees, Publisher
+from agents import Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur, Metadonnees, Publisher, CoverArt
 
 console = Console()
 
@@ -136,6 +136,77 @@ def supprimer_checkpoint(episode_id: str) -> None:
     if chemin.exists():
         chemin.unlink()
         logger.info("Checkpoint supprimé : %s", chemin)
+
+
+# ── Métriques de coût ────────────────────────────────────────────────────────
+
+
+def _calculer_couts(rapport: dict) -> dict:
+    """Calcule les coûts estimés de production d'un épisode.
+
+    Args:
+        rapport: Rapport de production avec les étapes complétées.
+
+    Returns:
+        Dictionnaire avec le détail des coûts par service.
+    """
+    couts = config.COUTS
+    detail = {}
+    total = 0.0
+
+    # Coût ElevenLabs (TTS voix)
+    audio_data = rapport.get("etapes", {}).get("audio", {})
+    chars_tts = audio_data.get("caracteres", {})
+    if isinstance(chars_tts, dict):
+        total_chars = sum(chars_tts.values())
+        cout_tts = total_chars * couts["elevenlabs_par_caractere"]
+        detail["elevenlabs_tts"] = {
+            "caracteres": total_chars,
+            "cout": round(cout_tts, 4),
+        }
+        total += cout_tts
+
+    # Coût ElevenLabs (SFX)
+    sfx_data = rapport.get("etapes", {}).get("sfx", {})
+    nb_sfx_elevenlabs = sum(
+        1 for src in sfx_data.get("sources", {}).values()
+        if src == "elevenlabs"
+    )
+    if nb_sfx_elevenlabs > 0:
+        cout_sfx = nb_sfx_elevenlabs * 0.01  # ~$0.01 par SFX généré
+        detail["elevenlabs_sfx"] = {
+            "nb_sfx": nb_sfx_elevenlabs,
+            "cout": round(cout_sfx, 4),
+        }
+        total += cout_sfx
+
+    # Coût Claude (estimation basée sur les tokens)
+    # ~2000 tokens input + ~4000 tokens output par appel (script, review, meta)
+    nb_appels_claude = sum(1 for etape in ("script", "metadonnees") if etape in rapport.get("etapes", {}))
+    score_review = rapport.get("etapes", {}).get("script", {}).get("score_review", 0)
+    if score_review > 0:
+        nb_appels_claude += 1  # review
+    if nb_appels_claude > 0:
+        cout_input = nb_appels_claude * 2000 * couts["claude_input_par_token"]
+        cout_output = nb_appels_claude * 4000 * couts["claude_output_par_token"]
+        cout_claude = cout_input + cout_output
+        detail["anthropic_claude"] = {
+            "nb_appels": nb_appels_claude,
+            "cout": round(cout_claude, 4),
+        }
+        total += cout_claude
+
+    # Coût cover art
+    cover_art_cout = rapport.get("etapes", {}).get("metadonnees", {}).get("cover_art_cout", 0)
+    if cover_art_cout > 0:
+        detail["openai_dalle3"] = {
+            "nb_images": 1,
+            "cout": round(cover_art_cout, 4),
+        }
+        total += cover_art_cout
+
+    detail["total_estime"] = round(total, 4)
+    return detail
 
 
 # ── Pipeline de production ────────────────────────────────────────────────────
@@ -627,6 +698,18 @@ def pipeline(
             "cover_art_path": meta.get("cover_art_path", ""),
         }
 
+        # Générer le cover art si configuré
+        if meta.get("cover_art_prompt") and config.COVER_ART_CONFIG.get("enabled"):
+            console.print("  Génération du cover art...")
+            cover_agent = CoverArt()
+            cover_path = cover_agent.generer(meta["cover_art_prompt"], episode_id)
+            if cover_path:
+                meta["cover_art_path"] = str(cover_path)
+                metadonnees.sauvegarder(meta, chemin_meta)
+                rapport["etapes"]["metadonnees"]["cover_art_path"] = str(cover_path)
+                console.print(f"  Cover art : {cover_path}")
+                rapport["etapes"]["metadonnees"]["cover_art_cout"] = config.COUTS["openai_dalle3_par_image"]
+
     # ── Étape 7 : Publication ─────────────────────────────────────────────────
 
     if etape_idx <= 6:
@@ -647,6 +730,9 @@ def pipeline(
     console.print("\n[bold cyan]Etape 8/8 — Rapport final[/bold cyan]")
     rapport["fin"] = datetime.now().isoformat()
 
+    # Calculer les métriques de coût
+    rapport["couts"] = _calculer_couts(rapport)
+
     # Sauvegarder le rapport
     chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
     with open(chemin_rapport, "w", encoding="utf-8") as f:
@@ -658,13 +744,16 @@ def pipeline(
     # Supprimer le checkpoint (production réussie)
     supprimer_checkpoint(episode_id)
 
-    # Afficher le résumé
+    # Afficher le résumé et les coûts
+    couts = rapport["couts"]
+    cout_total_str = f"${couts['total_estime']:.3f}" if not dry_run else "N/A (dry-run)"
     console.print(
         Panel(
             f"[bold green]Production terminee ![/bold green]\n\n"
             f"Episode : {episode_id} — {titre}\n"
             f"Score review : {score}/10\n"
             f"Morale : {script['episode'].get('morale', 'N/A')}\n"
+            f"Cout estime : {cout_total_str}\n"
             f"Rapport : {chemin_rapport}",
             title="Resume",
             border_style="green",
@@ -903,9 +992,11 @@ def dashboard():
         console.print(f"  Meilleur score : {max(scores)}/10")
         console.print(f"  Plus bas score : {min(scores)}/10")
 
-    # Coûts ElevenLabs (depuis les rapports)
+    # Coûts détaillés (depuis les rapports)
+    cout_total_global = 0.0
     total_chars = 0
     rapports_dir = config.LOGS_DIR
+    cout_par_service: dict[str, float] = {}
     for rapport_path in rapports_dir.glob("S*_rapport.json"):
         try:
             with open(rapport_path, "r", encoding="utf-8") as f:
@@ -913,13 +1004,23 @@ def dashboard():
             chars = rapport.get("etapes", {}).get("audio", {}).get("caracteres", {})
             if isinstance(chars, dict):
                 total_chars += sum(chars.values())
+            couts_ep = rapport.get("couts", {})
+            for service, detail in couts_ep.items():
+                if service == "total_estime":
+                    cout_total_global += detail
+                elif isinstance(detail, dict):
+                    cout_par_service[service] = cout_par_service.get(service, 0) + detail.get("cout", 0)
         except (json.JSONDecodeError, FileNotFoundError):
             pass
 
-    if total_chars > 0:
-        console.print(f"\n  Total caracteres ElevenLabs : {total_chars:,}")
-        cout_estime = total_chars * 0.000018  # ~$0.018 par 1000 caractères
-        console.print(f"  Cout estime ElevenLabs : ~${cout_estime:.2f}")
+    if total_chars > 0 or cout_total_global > 0:
+        console.print("\n[bold]  Coûts cumulés :[/bold]")
+        if total_chars > 0:
+            console.print(f"  Total caracteres ElevenLabs : {total_chars:,}")
+        for service, cout in sorted(cout_par_service.items()):
+            console.print(f"  {service} : ${cout:.4f}")
+        if cout_total_global > 0:
+            console.print(f"  [bold]TOTAL estimé : ${cout_total_global:.4f}[/bold]")
 
     # Checkpoints en cours
     checkpoints = list(config.CHECKPOINTS_DIR.glob("*_checkpoint.json"))

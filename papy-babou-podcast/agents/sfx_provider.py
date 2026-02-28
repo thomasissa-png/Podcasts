@@ -137,6 +137,7 @@ class SfxProvider:
 
         for tentative in range(1, max_tentatives + 1):
             try:
+                config.rate_limiter_elevenlabs.attendre()
                 response = requests.post(
                     ELEVENLABS_SFX_URL,
                     json=payload,
