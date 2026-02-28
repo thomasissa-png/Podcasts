@@ -467,8 +467,15 @@ COVER_ART_CONFIG = {
     "size": "1024x1024",
     "quality": "standard",
     "style_prefix": (
-        "Illustration pour enfants, style aquarelle douce et chaleureuse, "
-        "couleurs pastel, adapté aux 6-10 ans. "
+        "Flat design illustration for children ages 6-10. "
+        "Clean geometric shapes with soft rounded corners. "
+        "Warm pastel color palette: golden ochre (#D4A054), sky blue (#7BAFD4), "
+        "powder pink (#D4869A), olive green (#8BAF6E), warm beige (#F5E6D0), "
+        "lavender (#9B8EC4), terracotta (#C47A5A). "
+        "Provence countryside atmosphere with golden light. "
+        "Minimalist style with bold outlines and flat color fills, no gradients. "
+        "Inspired by modern children's book illustrations (Oliver Jeffers, Jon Klassen). "
+        "Include a subtle golden frame border evoking an old storybook. "
     ),
 }
 

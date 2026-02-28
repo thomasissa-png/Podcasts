@@ -25,11 +25,22 @@ from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+from rich.style import Style
 
 import config
 from agents import (
     Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur,
     Metadonnees, Publisher, CoverArt, Planificateur,
+)
+from theme import (
+    Palette, Icons, Typo, NOMS_PERSONNAGES_STYLED,
+    creer_console, banner, get_rich_theme,
+    panel_episode, panel_validation, panel_erreur, panel_succes,
+    panel_info, panel_rapport_final,
+    table_review, table_episodes_dashboard, ajouter_episode_dashboard,
+    table_saison_plan, table_couts, table_db_status,
+    progression_saison, stats_block, personnages_block,
+    afficher_script,
 )
 
 # Import optionnel PostgreSQL (fallback gracieux vers JSON)
@@ -45,7 +56,7 @@ try:
 except ImportError:
     _DB_AVAILABLE = False
 
-console = Console()
+console = creer_console()
 
 # ── Configuration du logging ──────────────────────────────────────────────────
 
@@ -363,47 +374,17 @@ NOMS_PERSONNAGES = {
     "sfx": "SFX",
 }
 
+# Alias pour le thème (utilisé dans les anciens appels)
+NOMS_STYLED = NOMS_PERSONNAGES_STYLED
+
 
 class ProductionAbandonnee(Exception):
     """Levée quand l'utilisateur abandonne la production."""
 
 
 def _afficher_script(script: dict) -> None:
-    """Affiche le script complet de manière lisible dans le terminal."""
-    episode = script["episode"]
-
-    console.print(Panel(
-        f"[bold]{episode['titre']}[/bold] — "
-        f"S{episode['saison']:02d}E{episode['numero']:02d}\n"
-        f"Ambiance : {episode.get('ambiance', 'non définie')} | "
-        f"Morale : {episode.get('morale', 'non définie')}",
-        title="Script complet",
-        border_style="cyan",
-    ))
-
-    for seg in episode["segments"]:
-        nom = NOMS_PERSONNAGES.get(seg["personnage"], seg["personnage"])
-        if seg["personnage"] == "sfx":
-            mode = seg.get("mode", "insert")
-            console.print(
-                f"  [dim italic]  SFX ({mode}) : {seg['texte']} "
-                f"({seg.get('duree_sfx_secondes', '?')}s)[/dim italic]"
-            )
-        elif seg["personnage"] == "narrateur":
-            console.print(f"  [dim][Narrateur][/dim] {seg['texte']}")
-        else:
-            style = {
-                "papy_babou": "bold yellow",
-                "antoine": "bold blue",
-                "noemie": "bold magenta",
-            }.get(seg["personnage"], "")
-            console.print(f"  [{style}][{nom}][/{style}] {seg['texte']}")
-
-        pause = seg.get("pause_apres_ms", 0)
-        if pause >= 1500:
-            console.print(f"  [dim]  ... (pause {pause / 1000:.1f}s)[/dim]")
-
-    console.print()
+    """Affiche le script complet avec l'identité visuelle Papy Babou."""
+    afficher_script(console, script)
 
 
 def _validation_script(
@@ -425,16 +406,14 @@ def _validation_script(
     _afficher_script(script)
 
     while True:
-        console.print(Panel(
-            "[bold](v)[/bold] Valider et continuer\n"
-            "[bold](m)[/bold] Modifier le fichier JSON manuellement\n"
-            "[bold](c)[/bold] Donner des corrections (relance le scripteur)\n"
-            "[bold](a)[/bold] Abandonner la production",
-            title="Validation du script",
-            border_style="green",
-        ))
+        console.print(panel_validation([
+            ("v", "Valider et continuer"),
+            ("m", "Modifier le fichier JSON manuellement"),
+            ("c", "Donner des corrections (relance le scripteur)"),
+            ("a", "Abandonner la production"),
+        ], titre="Validation du script"))
 
-        choix = console.input("[cyan]Votre choix :[/cyan] ").strip().lower()
+        choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
         if choix in ("v", "valider"):
             console.print("[green]  Script valide par le producteur[/green]")
@@ -511,25 +490,21 @@ def _validation_montage(
     Raises:
         ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
     """
-    console.print(Panel(
-        f"Duree : [bold]{duree_secondes:.0f}s[/bold] "
-        f"({duree_secondes / 60:.1f} min)\n"
-        f"Fichier HQ  : [bold]{chemin_hq}[/bold]\n"
-        f"Preview     : [bold]{chemin_preview}[/bold]\n\n"
-        "[dim]Ecoutez le fichier preview avant de valider la publication.[/dim]",
-        title="Ecoute du montage",
-        border_style="cyan",
+    console.print(panel_info(
+        f"{Typo.label_valeur('Durée', f'{duree_secondes:.0f}s ({duree_secondes / 60:.1f} min)')}\n"
+        f"{Typo.label_valeur('Fichier HQ', str(chemin_hq))}\n"
+        f"{Typo.label_valeur('Preview', str(chemin_preview))}\n\n"
+        f"{Typo.dim('Écoutez le fichier preview avant de valider la publication.')}",
+        titre=f"{Icons.MONTAGE} Écoute du montage",
     ))
 
     while True:
-        console.print(Panel(
-            "[bold](v)[/bold] Valider et publier\n"
-            "[bold](a)[/bold] Abandonner (l'audio est conserve, pas de publication)",
-            title="Validation du montage",
-            border_style="green",
-        ))
+        console.print(panel_validation([
+            ("v", "Valider et publier"),
+            ("a", "Abandonner (l'audio est conservé, pas de publication)"),
+        ], titre="Validation du montage"))
 
-        choix = console.input("[cyan]Votre choix :[/cyan] ").strip().lower()
+        choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
         if choix in ("v", "valider"):
             console.print(
@@ -653,18 +628,14 @@ def pipeline(
         ))
         sys.exit(1)
 
-    mode_str = "DRY RUN (pas d'audio ni de publication)" if dry_run else "PRODUCTION"
-    morale_str = morale or "non définie"
-    type_str = f" [{type_episode}]" if type_episode != "standard" else ""
-    console.print(
-        Panel(
-            f"[bold]Épisode {episode_id} — {titre}{type_str}[/bold]\n"
-            f"Mode : {mode_str}\n"
-            f"Morale : {morale_str}",
-            title="Les Histoires de Papy Babou",
-            border_style="blue",
-        )
-    )
+    mode_str = "DRY RUN" if dry_run else "PRODUCTION"
+    console.print(panel_episode(
+        episode_id=episode_id,
+        titre=titre,
+        mode=mode_str,
+        type_episode=type_episode,
+        morale=morale or "non définie",
+    ))
 
     etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
     etape_idx = etapes.index(etape_depart) if etape_depart in etapes else 0
@@ -701,7 +672,7 @@ def pipeline(
     # ── Étape 1-2 : Scripteur + Reviewer ─────────────────────────────────────
 
     if etape_idx <= 1:
-        console.print("\n[bold cyan]Etape 1/8 — Generation du script[/bold cyan]")
+        console.print(f"\n{Typo.etape(1, 8, 'Génération du script')}")
         scripteur = Scripteur()
         corrections = None
 
@@ -735,17 +706,14 @@ def pipeline(
 
             # ── Reviewer ─────────────────────────────────────────────────────
 
-            console.print(f"\n[bold cyan]Etape 2/8 — Relecture (iteration {iteration})[/bold cyan]")
+            console.print(f"\n{Typo.etape(2, 8, f'Relecture (itération {iteration})')}")
             reviewer = Reviewer()
             resultat_review = reviewer.evaluer(script)
             score = resultat_review["review"]["score"]
 
-            table = Table(title=f"Score de review : {score}/10")
-            table.add_column("Critere", style="cyan")
-            table.add_column("Score", justify="right")
-            for critere, val in resultat_review["review"].get("details_score", {}).items():
-                table.add_row(critere.replace("_", " ").title(), f"{val}/2")
-            console.print(table)
+            console.print(table_review(
+                score, resultat_review["review"].get("details_score", {})
+            ))
 
             if resultat_review["review"]["corrections"]:
                 console.print("[yellow]  Corrections :[/yellow]")
@@ -837,10 +805,10 @@ def pipeline(
 
     if etape_idx <= 2:
         if dry_run:
-            console.print("\n[bold yellow]Etape 3/8 — Production audio (SAUTEE — dry-run)[/bold yellow]")
+            console.print(f"\n{Typo.etape(3, 8, 'Audio')}  {Typo.attention('SAUTÉ — dry-run')}")
             rapport["etapes"]["audio"] = {"status": "skipped (dry-run)"}
         else:
-            console.print("\n[bold cyan]Etape 3/8 — Production audio (voix)[/bold cyan]")
+            console.print(f"\n{Typo.etape(3, 8, 'Audio — Production voix')}")
             producteur = ProducteurAudio()
 
             segments_voix = [
@@ -908,13 +876,13 @@ def pipeline(
         nb_sfx = len([s for s in script["episode"]["segments"] if s["personnage"] == "sfx"])
 
         if dry_run:
-            console.print(f"\n[bold yellow]Etape 4/8 — Bruitages SFX (SAUTEE — dry-run) [{nb_sfx} SFX][/bold yellow]")
+            console.print(f"\n{Typo.etape(4, 8, 'SFX Bruitages')}  {Typo.attention(f'SAUTÉ — dry-run ({nb_sfx} SFX)')}")
             rapport["etapes"]["sfx"] = {"status": "skipped (dry-run)", "nb_sfx": nb_sfx}
         elif nb_sfx == 0:
-            console.print("\n[bold cyan]Etape 4/8 — Bruitages SFX (aucun dans le script)[/bold cyan]")
+            console.print(f"\n{Typo.etape(4, 8, 'SFX Bruitages')}  {Typo.dim('aucun dans le script')}")
             rapport["etapes"]["sfx"] = {"status": "no sfx segments", "nb_sfx": 0}
         else:
-            console.print(f"\n[bold cyan]Etape 4/8 — Bruitages SFX ({nb_sfx} bruitages)[/bold cyan]")
+            console.print(f"\n{Typo.etape(4, 8, f'SFX Bruitages ({nb_sfx})')}")
             sfx_provider = SfxProvider()
             fichiers_sfx = sfx_provider.produire_sfx(script)
 
@@ -958,7 +926,7 @@ def pipeline(
 
     if etape_idx <= 4:
         if dry_run:
-            console.print("\n[bold yellow]Etape 5/8 — Montage (SAUTE — dry-run)[/bold yellow]")
+            console.print(f"\n{Typo.etape(5, 8, 'Montage')}  {Typo.attention('SAUTÉ — dry-run')}")
             rapport["etapes"]["montage"] = {"status": "skipped (dry-run)"}
             reviewer = Reviewer()
             duree_estimee = reviewer.estimer_duree(script)
@@ -966,7 +934,7 @@ def pipeline(
             taille_bytes = 0
             chemin_hq = None
         else:
-            console.print("\n[bold cyan]Etape 5/8 — Montage[/bold cyan]")
+            console.print(f"\n{Typo.etape(5, 8, 'Montage')}")
             monteur = Monteur()
             resultat_montage = monteur.assembler(script)
 
@@ -1034,7 +1002,7 @@ def pipeline(
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
     if etape_idx <= 5:
-        console.print("\n[bold cyan]Etape 6/8 — Generation des metadonnees[/bold cyan]")
+        console.print(f"\n{Typo.etape(6, 8, 'Métadonnées')}")
         metadonnees = Metadonnees()
 
         if dry_run:
@@ -1095,10 +1063,10 @@ def pipeline(
 
     if etape_idx <= 6:
         if dry_run:
-            console.print("\n[bold yellow]Etape 7/8 — Publication (SAUTEE — dry-run)[/bold yellow]")
+            console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention('SAUTÉ — dry-run')}")
             rapport["etapes"]["publication"] = {"status": "skipped (dry-run)"}
         else:
-            console.print("\n[bold cyan]Etape 7/8 — Publication[/bold cyan]")
+            console.print(f"\n{Typo.etape(7, 8, 'Publication')}")
             publisher = Publisher()
             rapport_pub = publisher.publier(meta, chemin_hq, taille_bytes)
             console.print(f"  URL audio : {rapport_pub['url_audio']}")
@@ -1120,7 +1088,7 @@ def pipeline(
 
     # ── Étape 8 : Rapport final ───────────────────────────────────────────────
 
-    console.print("\n[bold cyan]Etape 8/8 — Rapport final[/bold cyan]")
+    console.print(f"\n{Typo.etape(8, 8, 'Rapport final')}")
     rapport["fin"] = datetime.now().isoformat()
 
     # Calculer les métriques de coût
@@ -1152,18 +1120,15 @@ def pipeline(
     # Afficher le résumé et les coûts
     couts = rapport["couts"]
     cout_total_str = f"${couts['total_estime']:.3f}" if not dry_run else "N/A (dry-run)"
-    console.print(
-        Panel(
-            f"[bold green]Production terminee ![/bold green]\n\n"
-            f"Episode : {episode_id} — {titre}\n"
-            f"Score review : {score}/10\n"
-            f"Morale : {script['episode'].get('morale', 'N/A')}\n"
-            f"Cout estime : {cout_total_str}\n"
-            f"Rapport : {chemin_rapport}",
-            title="Resume",
-            border_style="green",
-        )
-    )
+    console.print(panel_rapport_final(
+        episode_id=episode_id,
+        titre=titre,
+        score=score,
+        morale=script['episode'].get('morale', 'N/A'),
+        cout=cout_total_str,
+        chemin_rapport=str(chemin_rapport),
+        dry_run=dry_run,
+    ))
 
     return rapport
 
@@ -1213,15 +1178,7 @@ def produire(episode: str, saison: int, numero: int, resume: str, morale: str, d
 @cli.command()
 def interactif():
     """Mode interactif — saisie guidee des parametres avec validation humaine."""
-    console.print(
-        Panel(
-            "[bold]Bienvenue dans le studio de production[/bold]\n"
-            "Les Histoires de Papy Babou\n\n"
-            "[dim]Vous serez invite a valider le script et le montage "
-            "avant publication.[/dim]",
-            border_style="blue",
-        )
-    )
+    banner(console, "Vous serez invité à valider le script et le montage avant publication.")
 
     titre = console.input("[cyan]Titre de l'episode :[/cyan] ")
     try:
@@ -1549,10 +1506,12 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
 @click.option("--saison", "-s", type=int, default=0, help="Filtrer par saison (0 = toutes)")
 def dashboard(saison: int):
     """Affiche le dashboard de suivi des episodes produits."""
+    banner(console, "Dashboard de production")
+
     historique = charger_historique()
 
     if not historique:
-        console.print("[yellow]Aucun episode produit pour le moment.[/yellow]")
+        console.print(Typo.attention("Aucun épisode produit pour le moment."))
         return
 
     # Filtrer par saison si demandé
@@ -1560,70 +1519,68 @@ def dashboard(saison: int):
         prefix = f"S{saison:02d}"
         historique = [ep for ep in historique if ep.get("episode_id", "").startswith(prefix)]
         if not historique:
-            console.print(f"[yellow]Aucun episode produit pour la saison {saison}.[/yellow]")
+            console.print(Typo.attention(f"Aucun épisode produit pour la saison {saison}."))
             return
 
-    # Tableau des épisodes
-    titre_table = f"Dashboard — Saison {saison}" if saison > 0 else "Dashboard — Tous les episodes"
-    table = Table(title=titre_table)
-    table.add_column("Episode", style="cyan")
-    table.add_column("Titre", style="white")
-    table.add_column("Type", style="dim")
-    table.add_column("Score", justify="right", style="green")
-    table.add_column("Morale", style="dim")
-    table.add_column("Date", style="dim")
+    # ── Tableau des épisodes ─────────────────────────────────────────────
+    titre_table = f"Saison {saison}" if saison > 0 else "Tous les épisodes"
+    table = table_episodes_dashboard(titre_table)
 
     for ep in historique:
-        score = ep.get("score_review", "?")
-        score_style = "green" if isinstance(score, (int, float)) and score >= 7 else "yellow"
-        table.add_row(
-            ep.get("episode_id", "?"),
-            ep.get("titre", "?"),
-            ep.get("type_episode", "standard"),
-            f"[{score_style}]{score}/10[/{score_style}]",
-            ep.get("morale", "")[:40],
-            ep.get("date_production", "")[:10],
+        score_val = ep.get("score_review", 0)
+        if not isinstance(score_val, (int, float)):
+            score_val = 0
+        ajouter_episode_dashboard(
+            table,
+            episode_id=ep.get("episode_id", "?"),
+            titre=ep.get("titre", "?"),
+            type_episode=ep.get("type_episode", "standard"),
+            score=score_val,
+            ambiance=ep.get("ambiance", ""),
+            date=ep.get("date_production", ""),
         )
 
     console.print(table)
 
-    # Statistiques globales
+    # ── Statistiques globales ────────────────────────────────────────────
     scores = [ep.get("score_review", 0) for ep in historique if isinstance(ep.get("score_review"), (int, float))]
     if scores:
-        console.print(f"\n  Episodes produits : {len(historique)}")
-        console.print(f"  Score moyen : {sum(scores)/len(scores):.1f}/10")
-        console.print(f"  Meilleur score : {max(scores)}/10")
-        console.print(f"  Plus bas score : {min(scores)}/10")
+        stats_block(
+            console,
+            nb_episodes=len(historique),
+            score_moyen=sum(scores) / len(scores),
+            score_max=max(scores),
+            score_min=min(scores),
+        )
 
-    # Personnages utilisés
+    # ── Personnages utilisés ─────────────────────────────────────────────
     all_personnages: dict[str, int] = {}
     for ep in historique:
         for p in ep.get("personnages_presents", []):
             all_personnages[p] = all_personnages.get(p, 0) + 1
-    if all_personnages:
-        console.print("\n[bold]  Personnages :[/bold]")
-        for p, count in sorted(all_personnages.items(), key=lambda x: -x[1]):
-            console.print(f"    {p} : {count} episode(s)")
+    personnages_block(console, all_personnages)
 
-    # Vue saison si un plan existe
+    # ── Progression de saison ────────────────────────────────────────────
     if saison > 0:
         plan = config.charger_saison(saison)
         if plan:
             saison_data = plan.get("saison", {})
             episodes_plan = saison_data.get("episodes", [])
             episodes_produits = {ep.get("episode_id") for ep in historique}
-            console.print(f"\n[bold]  Progression de la saison {saison} :[/bold]")
-            for ep in episodes_plan:
-                ep_id = f"S{saison:02d}E{ep['numero']:02d}"
-                status = "[green]PRODUIT[/green]" if ep_id in episodes_produits else "[yellow]A FAIRE[/yellow]"
-                console.print(f"    E{ep['numero']:02d} {ep['titre'][:40]} — {status}")
+            progression_saison(console, saison, episodes_plan, episodes_produits)
 
-    # Saisons disponibles
+    # ── Saisons disponibles ──────────────────────────────────────────────
     saisons_dispo = config.liste_saisons()
     if saisons_dispo:
-        console.print(f"\n[bold]  Saisons planifiees :[/bold] {', '.join(str(s) for s in saisons_dispo)}")
+        console.print(
+            f"\n  [{Palette.ARDOISE}]{'─' * 50}[/]"
+        )
+        nums_str = "  ".join(
+            f"[bold {Palette.OCRE}]{s}[/]" for s in saisons_dispo
+        )
+        console.print(f"  {Icons.SAISON} [{Palette.TERRE_CUITE}]Saisons planifiées[/]  {nums_str}")
 
-    # Coûts détaillés (depuis les rapports)
+    # ── Coûts détaillés ──────────────────────────────────────────────────
     cout_total_global = 0.0
     total_chars = 0
     rapports_dir = config.LOGS_DIR
@@ -1646,25 +1603,42 @@ def dashboard(saison: int):
             pass
 
     if total_chars > 0 or cout_total_global > 0:
-        console.print("\n[bold]  Couts cumules :[/bold]")
+        t_couts = table_couts()
         if total_chars > 0:
-            console.print(f"  Total caracteres ElevenLabs : {total_chars:,}")
+            t_couts.add_row("ElevenLabs", f"{total_chars:,} caractères", "—")
         for service, cout in sorted(cout_par_service.items()):
-            console.print(f"  {service} : ${cout:.4f}")
+            t_couts.add_row(service, "", f"${cout:.4f}")
         if cout_total_global > 0:
-            console.print(f"  [bold]TOTAL estime : ${cout_total_global:.4f}[/bold]")
+            t_couts.add_row(
+                f"[bold {Palette.IVOIRE}]TOTAL[/]",
+                "",
+                f"[bold {Palette.MIEL}]${cout_total_global:.4f}[/]",
+            )
+        console.print()
+        console.print(t_couts)
 
-    # Checkpoints en cours
+    # ── Checkpoints en cours ─────────────────────────────────────────────
     checkpoints = list(config.CHECKPOINTS_DIR.glob("*_checkpoint.json"))
     if checkpoints:
-        console.print(f"\n[yellow]  Checkpoints en attente : {len(checkpoints)}[/yellow]")
+        console.print(
+            f"\n  [{Palette.ARDOISE}]{'─' * 50}[/]"
+        )
+        console.print(
+            f"  {Icons.CHECKPOINT} [{Palette.ATTENTION}]Checkpoints en attente : "
+            f"{len(checkpoints)}[/]"
+        )
         for cp_path in checkpoints:
             try:
                 with open(cp_path, "r", encoding="utf-8") as f:
                     cp = json.load(f)
-                console.print(f"    - {cp['episode_id']} (etape: {cp['etape']}, {cp['timestamp']})")
+                console.print(
+                    f"    [{Palette.BLEU_CIEL}]{cp['episode_id']}[/] "
+                    f"[{Palette.ARDOISE}]étape: {cp['etape']} — {cp['timestamp']}[/]"
+                )
             except (json.JSONDecodeError, FileNotFoundError):
-                console.print(f"    - {cp_path.name} (illisible)")
+                console.print(f"    [{Palette.ARDOISE}]{cp_path.name} (illisible)[/]")
+
+    console.print()
 
 
 @cli.command("db-status")
@@ -1683,20 +1657,26 @@ def db_status():
         console.print("[red]Connexion PostgreSQL échouée.[/red]")
         return
 
-    console.print("[green]PostgreSQL connecté[/green]\n")
+    console.print(Typo.succes("PostgreSQL connecté"))
+    console.print()
 
     try:
         stats = database.obtenir_stats_db()
-        table = Table(title="État de la base de données")
-        table.add_column("Table", style="cyan")
-        table.add_column("Enregistrements", justify="right", style="green")
+        table = table_db_status()
 
         total = 0
+        max_count = max(stats.values()) if stats else 1
         for table_name, count in stats.items():
-            table.add_row(table_name, str(count))
+            barre_len = round((count / max_count) * 20) if max_count > 0 else 0
+            barre = f"[{Palette.BLEU_CIEL}]{'█' * barre_len}{'░' * (20 - barre_len)}[/]"
+            table.add_row(table_name, str(count), barre)
             total += count
 
-        table.add_row("[bold]TOTAL[/bold]", f"[bold]{total}[/bold]")
+        table.add_row(
+            f"[bold {Palette.IVOIRE}]TOTAL[/]",
+            f"[bold {Palette.MIEL}]{total}[/]",
+            "",
+        )
         console.print(table)
 
         # Coûts totaux

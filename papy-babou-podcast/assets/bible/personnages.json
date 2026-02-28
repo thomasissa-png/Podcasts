@@ -139,18 +139,45 @@
     "regles_sfx": "Les bruitages accompagnent les moments clés : arrivée d'un personnage, événement surnaturel, transition de lieu"
   },
   "style_cover_art": {
-    "style": "Aquarelle douce et chaleureuse, couleurs pastel",
-    "palette": ["ocre", "bleu ciel", "vert olive", "rose poudré", "beige chaud"],
+    "style": "Flat design chaleureux et moderne, formes géométriques douces, aplats de couleur, pas d'ombres portées, inspiré par Oliver Jeffers et Jon Klassen",
+    "palette": {
+      "ocre_dore": "#D4A054",
+      "bleu_ciel": "#7BAFD4",
+      "rose_poudre": "#D4869A",
+      "vert_olive": "#8BAF6E",
+      "beige_chaud": "#F5E6D0",
+      "lavande": "#9B8EC4",
+      "terre_cuite": "#C47A5A",
+      "miel": "#E8B84B",
+      "ardoise": "#5A6978",
+      "ivoire": "#FDF8F0"
+    },
     "elements_recurrents": [
-      "Cadre doré rappelant un livre ancien",
-      "Petites étoiles dorées autour du titre",
-      "Le fauteuil de Papy en bas de l'image"
+      "Livre ouvert stylisé avec reliure terre cuite (#C47A5A)",
+      "Lunettes rondes de Papy Babou en ardoise (#5A6978)",
+      "Étoiles dorées en miel (#E8B84B) autour du titre",
+      "Fond parcheminé en beige chaud (#F5E6D0)",
+      "Bordures ocre dorées (#D4A054) en haut et en bas",
+      "Coins arrondis, formes simples et lisibles"
+    ],
+    "regles_visuelles": [
+      "Formes géométriques simples avec coins arrondis",
+      "Aplats de couleur sans dégradés ni textures lourdes",
+      "Traits nets et réguliers, épaisseur constante",
+      "Personnages stylisés avec expressions claires et lisibles",
+      "Fond toujours clair (ivoire ou beige chaud)",
+      "Palette limitée à 4-5 couleurs par illustration",
+      "Proportions enfantines : grandes têtes, yeux expressifs"
     ],
     "interdictions_visuelles": [
       "Pas de violence graphique",
-      "Pas d'images effrayantes",
+      "Pas d'images effrayantes ou sombres",
       "Pas de représentation directe de Dieu",
-      "Pas de nudité"
+      "Pas de nudité",
+      "Pas d'aquarelle ni de textures peintes",
+      "Pas d'ombres portées ni d'effets 3D",
+      "Pas de dégradés complexes",
+      "Pas de couleurs néon ni saturées à l'extrême"
     ]
   }
 }
