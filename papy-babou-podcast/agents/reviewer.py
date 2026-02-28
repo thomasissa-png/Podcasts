@@ -6,6 +6,7 @@ import logging
 import anthropic
 
 import config
+from utils import parser_json_llm
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +38,9 @@ CRITÈRES D'ÉVALUATION (note sur 10) :
    - Les pauses sont-elles bien placées ?
 
 5. DURÉE ET FORMAT (2 pts)
-   - Durée et mots cibles : vérifie selon le type d'épisode indiqué dans le script
-     (ouverture ~1600 mots/15 min, standard ~1400 mots/13 min,
-      mi-saison ~1600 mots/15 min, final ~1900 mots/18 min, bonus ~1000 mots/10 min).
-   - Comptage : 100 mots/min pour enfants, 120 mots/min pour adultes.
+   - Durée et mots cibles : vérifie selon le type d'épisode indiqué dans le script.
+     Référence des formats : {formats_episodes}
+   - Comptage : {mots_min_enfant} mots/min pour enfants, {mots_min_adulte} mots/min pour adultes.
    - Format JSON correct et complet ?
    - Les segments SFX (personnage "sfx") sont-ils bien placés et pertinents ?
    - Les bruitages enrichissent-ils l'histoire sans surcharger ? (3-8 SFX max)
@@ -49,8 +49,8 @@ CRITÈRES D'ÉVALUATION (note sur 10) :
    - Chaque segment SFX doit avoir un champ "duree_sfx_secondes" (durée en secondes).
 
 FORMAT DE RÉPONSE — JSON STRICT :
-{
-  "review": {
+{{
+  "review": {{
     "score": 8,
     "corrections": [
       "Description de chaque correction effectuée"
@@ -58,21 +58,34 @@ FORMAT DE RÉPONSE — JSON STRICT :
     "alertes": [
       "Points d'attention qui n'ont pas été corrigés automatiquement"
     ],
-    "details_score": {
+    "details_score": {{
       "coherence_personnage": 2,
       "adequation_age": 1.5,
       "fidelite_biblique": 2,
       "rythme_structure": 1.5,
       "duree_format": 1
-    }
-  },
-  "episode": {
+    }}
+  }},
+  "episode": {{
     "...le script corrigé complet..."
-  }
-}
+  }}
+}}
 
 Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 """
+
+
+def _construire_system_prompt_reviewer() -> str:
+    """Construit le system prompt du reviewer avec les formats synchronisés depuis config."""
+    formats_str = ", ".join(
+        f"{t} ~{f['mots_cible']} mots/{f['duree_cible_minutes']} min"
+        for t, f in config.FORMATS_EPISODES.items()
+    )
+    return SYSTEM_PROMPT.format(
+        formats_episodes=formats_str,
+        mots_min_enfant=config.PRODUCTION["mots_par_minute_enfant"],
+        mots_min_adulte=config.PRODUCTION["mots_par_minute_adulte"],
+    )
 
 
 class Reviewer:
@@ -104,23 +117,22 @@ class Reviewer:
             script["episode"]["numero"],
         )
 
+        system_prompt = _construire_system_prompt_reviewer()
+
         response = config.appel_claude_avec_retry(
             self.client,
             model=config.CLAUDE_MODEL,
             max_tokens=8192,
-            system=SYSTEM_PROMPT,
+            system=system_prompt,
             messages=[{"role": "user", "content": prompt}],
         )
 
         texte_brut = response.content[0].text.strip()
-
-        if texte_brut.startswith("```"):
-            lignes = texte_brut.split("\n")
-            lignes = [l for l in lignes if not l.startswith("```")]
-            texte_brut = "\n".join(lignes)
-
-        resultat = json.loads(texte_brut)
+        resultat = parser_json_llm(texte_brut)
         self._valider_review(resultat)
+
+        # Vérifier la cohérence structurelle du script corrigé vs original (BUG 6)
+        self._verifier_coherence(script, resultat)
 
         score = resultat["review"]["score"]
         nb_corrections = len(resultat["review"]["corrections"])
@@ -150,16 +162,19 @@ class Reviewer:
     def extraire_corrections(self, resultat_review: dict) -> list[str]:
         """Extrait la liste des corrections à transmettre au Scripteur.
 
+        Retourne uniquement les corrections actionnables, pas les alertes
+        informatives (qui risquent de créer des boucles infinies).
+
         Args:
             resultat_review: Résultat de la review.
 
         Returns:
             Liste de corrections textuelles.
         """
-        return (
-            resultat_review["review"]["corrections"]
-            + resultat_review["review"]["alertes"]
-        )
+        corrections = list(resultat_review["review"]["corrections"])
+        if not corrections:
+            corrections = list(resultat_review["review"]["alertes"])
+        return corrections
 
     @staticmethod
     def estimer_duree(script: dict) -> float:
@@ -188,6 +203,45 @@ class Reviewer:
             duree_sec += (nb_mots / mots_par_min) * 60
             duree_sec += seg.get("pause_apres_ms", 0) / 1000.0
         return duree_sec / 60.0
+
+    @staticmethod
+    def _verifier_coherence(script_original: dict, resultat: dict) -> None:
+        """Vérifie que le reviewer n'a pas altéré la structure du script de manière excessive.
+
+        Alerte si le nombre de segments change de plus de 30% ou si des personnages
+        principaux ont été supprimés.
+        """
+        orig_segs = script_original["episode"]["segments"]
+        corr_segs = resultat["episode"]["segments"]
+        nb_orig = len(orig_segs)
+        nb_corr = len(corr_segs)
+
+        if nb_orig > 0:
+            ratio = nb_corr / nb_orig
+            if ratio < 0.7:
+                logger.warning(
+                    "Le reviewer a supprimé %.0f%% des segments (%d → %d). "
+                    "Vérifiez la cohérence du script corrigé.",
+                    (1 - ratio) * 100, nb_orig, nb_corr,
+                )
+            elif ratio > 1.5:
+                logger.warning(
+                    "Le reviewer a ajouté %.0f%% de segments (%d → %d). "
+                    "La durée de l'épisode pourrait dépasser la cible.",
+                    (ratio - 1) * 100, nb_orig, nb_corr,
+                )
+
+        # Vérifier que les personnages principaux sont toujours présents
+        persos_orig = {s["personnage"] for s in orig_segs if s["personnage"] != "sfx"}
+        persos_corr = {s["personnage"] for s in corr_segs if s["personnage"] != "sfx"}
+        principaux = {"papy_babou", "antoine", "noemie"}
+        disparus = (persos_orig & principaux) - persos_corr
+        if disparus:
+            logger.warning(
+                "Le reviewer a supprimé les personnages principaux : %s. "
+                "Ceci est probablement une erreur.",
+                ", ".join(disparus),
+            )
 
     @staticmethod
     def _valider_review(resultat: dict) -> None:

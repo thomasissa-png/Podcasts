@@ -11,6 +11,7 @@ from pathlib import Path
 import anthropic
 
 import config
+from utils import parser_json_llm
 
 logger = logging.getLogger(__name__)
 
@@ -488,8 +489,18 @@ class Scripteur:
                     prompt += f"- Questions ouvertes à laisser en suspens : {'; '.join(questions)}\n"
 
         if historique:
+            # Pour les épisodes finaux/mi-saison, inclure tout l'historique de la saison
+            if type_episode in ("final", "mi-saison"):
+                eps_a_inclure = [
+                    ep for ep in historique
+                    if ep.get("episode_id", "").startswith(f"S{saison:02d}")
+                ]
+                if not eps_a_inclure:
+                    eps_a_inclure = historique[-5:]
+            else:
+                eps_a_inclure = historique[-5:]
             prompt += "\nÉPISODES PRÉCÉDENTS (pour la continuité, fais-y référence) :\n"
-            for ep in historique[-5:]:
+            for ep in eps_a_inclure:
                 ep_info = (
                     f"  - {ep.get('episode_id', '?')} \"{ep.get('titre', '?')}\" : "
                     f"{ep.get('resume_court', ep.get('morale', ''))}"
@@ -522,30 +533,50 @@ class Scripteur:
             historique=historique,
         )
 
+        # max_tokens adaptatif selon le type d'épisode
+        max_tokens_map = {
+            "ouverture": 7168,
+            "standard": 6144,
+            "mi-saison": 7168,
+            "final": 8192,
+            "bonus": 4096,
+        }
+        max_tokens = max_tokens_map.get(type_episode, 6144)
+
         response = config.appel_claude_avec_retry(
             self.client,
             model=config.CLAUDE_MODEL,
-            max_tokens=6144,
+            max_tokens=max_tokens,
             system=system_prompt,
             messages=[{"role": "user", "content": prompt}],
         )
 
         texte_brut = response.content[0].text.strip()
-
-        # Extraire le JSON même si Claude ajoute des backticks
-        if texte_brut.startswith("```"):
-            lignes = texte_brut.split("\n")
-            lignes = [l for l in lignes if not l.startswith("```")]
-            texte_brut = "\n".join(lignes)
-
-        script = json.loads(texte_brut)
+        script = parser_json_llm(texte_brut)
         self._valider_structure(script)
 
+        nb_mots = self.compter_mots(script)
+        mots_cible = format_ep["mots_cible"]
         logger.info(
-            "Script généré : %d segments, ~%d mots",
+            "Script généré : %d segments, ~%d mots (cible : %d)",
             len(script["episode"]["segments"]),
-            self.compter_mots(script),
+            nb_mots, mots_cible,
         )
+
+        # Validation post-génération du nombre de mots
+        ratio = nb_mots / mots_cible if mots_cible > 0 else 1.0
+        if ratio < 0.5:
+            logger.warning(
+                "Script trop court : %d mots (cible %d, ratio %.0f%%). "
+                "Le reviewer devrait demander une réécriture.",
+                nb_mots, mots_cible, ratio * 100,
+            )
+        elif ratio > 1.5:
+            logger.warning(
+                "Script trop long : %d mots (cible %d, ratio %.0f%%). "
+                "La durée réelle dépassera la cible.",
+                nb_mots, mots_cible, ratio * 100,
+            )
 
         return script
 
@@ -587,10 +618,16 @@ class Scripteur:
             raise ValueError("Le script ne contient aucun segment.")
 
         # Valider les champs optionnels avec avertissement
+        ambiances_valides = ("joyeux", "dramatique", "calme", "mystere")
         if "ambiance" not in ep:
-            logger.warning("Champ 'ambiance' manquant — fallback vers 'fond_doux'.")
-        elif ep["ambiance"] not in ("joyeux", "dramatique", "calme", "mystere"):
-            logger.warning("Ambiance '%s' non reconnue — fallback vers 'fond_doux'.", ep["ambiance"])
+            ep["ambiance"] = "calme"
+            logger.warning("Champ 'ambiance' manquant — défaut 'calme'.")
+        elif ep["ambiance"] not in ambiances_valides:
+            logger.warning(
+                "Ambiance '%s' non reconnue (valides : %s) — défaut 'calme'.",
+                ep["ambiance"], ", ".join(ambiances_valides),
+            )
+            ep["ambiance"] = "calme"
 
         if "morale" not in ep:
             logger.warning("Champ 'morale' manquant dans le script.")

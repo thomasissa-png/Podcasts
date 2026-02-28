@@ -91,7 +91,8 @@ class CoverArt:
         Returns:
             Chemin du fichier image sauvegardé.
         """
-        chemin = config.COVERS_DIR / f"{episode_id}_cover.jpg"
+        # DALL-E 3 retourne du PNG, utiliser la bonne extension
+        chemin = config.COVERS_DIR / f"{episode_id}_cover.png"
 
         response = requests.get(url, timeout=60)
         response.raise_for_status()

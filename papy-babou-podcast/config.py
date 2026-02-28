@@ -111,8 +111,8 @@ def valider_cles_api(dry_run: bool = False) -> list[str]:
 
 PODCAST_CONFIG = {
     "titre": "Les Histoires de Papy Babou",
-    "auteur": "À compléter",
-    "email_contact": "À compléter",
+    "auteur": os.getenv("PODCAST_AUTEUR", "À compléter"),
+    "email_contact": os.getenv("PODCAST_EMAIL", "À compléter"),
     "description": (
         "Des histoires bibliques racontées avec amour par Papy Babou "
         "à ses petits-enfants Antoine et Noémie."
@@ -121,9 +121,22 @@ PODCAST_CONFIG = {
     "categorie_itunes": "Kids & Family",
     "sous_categorie": "Stories for Kids",
     "explicit": False,
-    "site_web": "À compléter",
-    "cover_url": "À compléter",
+    "site_web": os.getenv("PODCAST_SITE_WEB", "À compléter"),
+    "cover_url": os.getenv("PODCAST_COVER_URL", "À compléter"),
 }
+
+# Avertir si des valeurs placeholder restent
+_PLACEHOLDERS_CONFIG = [
+    (k, v) for k, v in PODCAST_CONFIG.items()
+    if isinstance(v, str) and v == "À compléter"
+]
+if _PLACEHOLDERS_CONFIG:
+    _config_logger.warning(
+        "PODCAST_CONFIG : champs non configurés : %s. "
+        "Configurez-les via .env (PODCAST_AUTEUR, PODCAST_EMAIL, etc.) "
+        "ou modifiez config.py.",
+        ", ".join(k for k, _ in _PLACEHOLDERS_CONFIG),
+    )
 
 # ── Voix ElevenLabs ───────────────────────────────────────────────────────────
 
@@ -448,7 +461,7 @@ FORMATS_EPISODES = {
 
 # ── Modèle Claude ─────────────────────────────────────────────────────────────
 
-CLAUDE_MODEL = "claude-sonnet-4-20250514"
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 
 # ── Coûts estimés (pour le suivi budgétaire) ─────────────────────────────────
 
@@ -539,6 +552,11 @@ def appel_claude_avec_retry(
             return client.messages.create(**kwargs)
         except Exception as e:
             err_str = str(e)
+            # Masquer les clés API potentiellement présentes dans l'erreur
+            safe_err = err_str
+            for secret in (ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, OPENAI_API_KEY):
+                if secret and secret in safe_err:
+                    safe_err = safe_err.replace(secret, "****")
             is_retryable = any(
                 code in err_str for code in ("429", "500", "502", "503", "529", "overloaded")
             )
@@ -547,6 +565,6 @@ def appel_claude_avec_retry(
             delai = (2 ** tentative) + random.uniform(0, 1)
             logger.warning(
                 "API Claude tentative %d/%d échouée (%s) — retry dans %.1fs",
-                tentative, max_tentatives, err_str[:80], delai,
+                tentative, max_tentatives, safe_err[:80], delai,
             )
             time.sleep(delai)

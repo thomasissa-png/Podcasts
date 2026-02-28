@@ -422,17 +422,25 @@ def verifier_connexion() -> bool:
         return False
 
 
+_TABLES_CONNUES = (
+    "saisons", "episodes", "scripts", "reviews", "productions",
+    "metadonnees", "fichiers_audio", "historique_episodes",
+    "personnages", "couts_api", "publications", "audit_log",
+)
+
+
 def obtenir_stats_db() -> dict:
     """Retourne des statistiques sur la base de données."""
     stats = {}
-    tables = [
-        "saisons", "episodes", "scripts", "reviews", "productions",
-        "metadonnees", "fichiers_audio", "historique_episodes",
-        "personnages", "couts_api", "publications", "audit_log",
-    ]
     with get_cursor() as cur:
-        for table in tables:
-            cur.execute(f"SELECT COUNT(*) as count FROM {table}")
+        for table in _TABLES_CONNUES:
+            # Utilisation de psycopg2.sql pour éviter l'injection SQL
+            from psycopg2 import sql
+            cur.execute(
+                sql.SQL("SELECT COUNT(*) as count FROM {}").format(
+                    sql.Identifier(table)
+                )
+            )
             row = cur.fetchone()
             stats[table] = row["count"] if row else 0
     return stats

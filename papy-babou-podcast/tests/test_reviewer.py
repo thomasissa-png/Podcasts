@@ -69,11 +69,21 @@ class TestReviewerLogique:
         assert reviewer.est_valide(review_exemple, seuil=9) is False
 
     def test_extraire_corrections(self, review_exemple):
-        """Les corrections doivent inclure corrections + alertes."""
+        """Les corrections actionnables doivent être retournées prioritairement."""
         reviewer = Reviewer()
         review_exemple["review"]["alertes"] = ["Une alerte"]
         corrections = reviewer.extraire_corrections(review_exemple)
-        assert len(corrections) == 2
+        # Seules les corrections actionnables, pas les alertes
+        assert len(corrections) == 1
+        assert "Une alerte" not in corrections
+
+    def test_extraire_corrections_vides_fallback_alertes(self, review_exemple):
+        """Sans corrections, les alertes sont utilisées en fallback."""
+        reviewer = Reviewer()
+        review_exemple["review"]["corrections"] = []
+        review_exemple["review"]["alertes"] = ["Une alerte"]
+        corrections = reviewer.extraire_corrections(review_exemple)
+        assert len(corrections) == 1
         assert "Une alerte" in corrections
 
     def test_estimer_duree(self, script_exemple):

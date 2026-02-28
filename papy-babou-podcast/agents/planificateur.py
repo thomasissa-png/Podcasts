@@ -7,6 +7,7 @@ from pathlib import Path
 import anthropic
 
 import config
+from utils import parser_json_llm
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +101,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 
 
 class Planificateur:
-    """Planifie une saison complète de 10 épisodes avec arcs narratifs."""
+    """Planifie une saison complète avec arcs narratifs."""
 
     def __init__(self):
         self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
@@ -112,8 +113,9 @@ class Planificateur:
         description: str = "",
         personnages_secondaires: list[str] | None = None,
         saisons_precedentes: list[dict] | None = None,
+        nb_episodes: int = 10,
     ) -> dict:
-        """Génère le plan complet d'une saison de 10 épisodes.
+        """Génère le plan complet d'une saison.
 
         Args:
             numero_saison: Numéro de la saison.
@@ -121,12 +123,13 @@ class Planificateur:
             description: Description libre du producteur.
             personnages_secondaires: Personnages à introduire cette saison.
             saisons_precedentes: Résumés des saisons précédentes.
+            nb_episodes: Nombre d'épisodes dans la saison (défaut : 10).
 
         Returns:
             Plan de saison structuré.
         """
         prompt = (
-            f"Planifie la saison {numero_saison} complète (10 épisodes) :\n"
+            f"Planifie la saison {numero_saison} complète ({nb_episodes} épisodes) :\n"
             f"- Thème : {theme}\n"
         )
 
@@ -165,12 +168,7 @@ class Planificateur:
         )
 
         texte_brut = response.content[0].text.strip()
-        if texte_brut.startswith("```"):
-            lignes = texte_brut.split("\n")
-            lignes = [l for l in lignes if not l.startswith("```")]
-            texte_brut = "\n".join(lignes)
-
-        plan = json.loads(texte_brut)
+        plan = parser_json_llm(texte_brut)
         self._valider_plan(plan)
 
         logger.info(
@@ -203,7 +201,7 @@ class Planificateur:
 
     @staticmethod
     def _valider_plan(plan: dict) -> None:
-        """Valide la structure du plan de saison."""
+        """Valide la structure et la cohérence du plan de saison."""
         if "saison" not in plan:
             raise ValueError("Le plan doit contenir une clé 'saison'.")
         saison = plan["saison"]
@@ -212,12 +210,38 @@ class Planificateur:
                 raise ValueError(f"Champ manquant dans saison : '{champ}'")
         if not saison["episodes"]:
             raise ValueError("La saison doit contenir au moins un épisode.")
-        for i, ep in enumerate(saison["episodes"]):
+
+        episodes = saison["episodes"]
+        for i, ep in enumerate(episodes):
             for champ in ("numero", "titre", "resume", "morale"):
                 if champ not in ep:
                     raise ValueError(
                         f"Champ '{champ}' manquant dans l'épisode {i + 1}."
                     )
+
+        # Validation de cohérence (warnings, pas d'erreurs)
+        # Vérifier les types d'épisodes
+        types = [ep.get("type", "standard") for ep in episodes]
+        if len(episodes) >= 3:
+            if types[0] != "ouverture":
+                logger.warning(
+                    "L'épisode 1 devrait être de type 'ouverture' (trouvé : '%s').",
+                    types[0],
+                )
+            if types[-1] != "final":
+                logger.warning(
+                    "Le dernier épisode devrait être de type 'final' (trouvé : '%s').",
+                    types[-1],
+                )
+
+        # Vérifier la variété des ambiances
+        ambiances = [ep.get("ambiance", "") for ep in episodes if ep.get("ambiance")]
+        if ambiances and len(set(ambiances)) < min(3, len(ambiances)):
+            logger.warning(
+                "Faible variété d'ambiances dans la saison : %s. "
+                "Pensez à varier pour maintenir l'intérêt.",
+                set(ambiances),
+            )
 
     def exporter_csv(self, plan: dict, chemin: Path) -> Path:
         """Exporte le planning en CSV pour partage éditorial."""

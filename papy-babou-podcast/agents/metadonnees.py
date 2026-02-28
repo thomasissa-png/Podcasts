@@ -7,6 +7,7 @@ from pathlib import Path
 import anthropic
 
 import config
+from utils import parser_json_llm
 
 logger = logging.getLogger(__name__)
 
@@ -82,12 +83,7 @@ class Metadonnees:
         )
 
         texte_brut = response.content[0].text.strip()
-        if texte_brut.startswith("```"):
-            lignes = texte_brut.split("\n")
-            lignes = [l for l in lignes if not l.startswith("```")]
-            texte_brut = "\n".join(lignes)
-
-        meta = json.loads(texte_brut)
+        meta = parser_json_llm(texte_brut)
 
         # Enrichir avec les données techniques
         meta["saison"] = episode["saison"]
@@ -99,11 +95,14 @@ class Metadonnees:
         # Générer le transcript
         meta["transcript"] = self._generer_transcript(episode)
 
-        # Chemin du cover art (si existe)
+        # Chemin du cover art (si existe — PNG ou JPG)
         episode_id = f"S{episode['saison']:02d}E{episode['numero']:02d}"
-        cover_path = config.COVERS_DIR / f"{episode_id}_cover.jpg"
-        if cover_path.exists():
-            meta["cover_art_path"] = str(cover_path)
+        cover_path_png = config.COVERS_DIR / f"{episode_id}_cover.png"
+        cover_path_jpg = config.COVERS_DIR / f"{episode_id}_cover.jpg"
+        if cover_path_png.exists():
+            meta["cover_art_path"] = str(cover_path_png)
+        elif cover_path_jpg.exists():
+            meta["cover_art_path"] = str(cover_path_jpg)
         else:
             meta["cover_art_path"] = ""
 
@@ -122,9 +121,16 @@ class Metadonnees:
         episode = script["episode"]
         episode_id = f"S{episode['saison']:02d}E{episode['numero']:02d}"
 
-        # Estimer la durée
-        nb_mots = sum(len(s["texte"].split()) for s in episode["segments"])
-        duree_estimee = (nb_mots / 110) * 60  # Moyenne entre adulte et enfant
+        # Estimer la durée (exclure les SFX du comptage de mots)
+        nb_mots = sum(
+            len(s["texte"].split()) for s in episode["segments"]
+            if s["personnage"] != "sfx"
+        )
+        sfx_duree = sum(
+            s.get("duree_sfx_secondes", 5.0) for s in episode["segments"]
+            if s["personnage"] == "sfx"
+        )
+        duree_estimee = (nb_mots / 110) * 60 + sfx_duree  # Moyenne + durée SFX
 
         morale = episode.get("morale", "")
 
@@ -151,10 +157,13 @@ class Metadonnees:
             "transcript": self._generer_transcript(episode),
         }
 
-        # Vérifier si un cover art existe
-        cover_path = config.COVERS_DIR / f"{episode_id}_cover.jpg"
-        if cover_path.exists():
-            meta["cover_art_path"] = str(cover_path)
+        # Vérifier si un cover art existe (PNG ou JPG)
+        cover_path_png = config.COVERS_DIR / f"{episode_id}_cover.png"
+        cover_path_jpg = config.COVERS_DIR / f"{episode_id}_cover.jpg"
+        if cover_path_png.exists():
+            meta["cover_art_path"] = str(cover_path_png)
+        elif cover_path_jpg.exists():
+            meta["cover_art_path"] = str(cover_path_jpg)
 
         logger.info("Métadonnées dry-run générées : %s", meta["titre"])
         return meta

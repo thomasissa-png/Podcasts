@@ -2,6 +2,7 @@
 
 import logging
 import random
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -21,6 +22,7 @@ class ProducteurAudio:
     def __init__(self):
         self.api_key = config.ELEVENLABS_API_KEY
         self.caracteres_utilises: dict[str, int] = {}
+        self._compteur_lock = threading.Lock()
 
     def produire_episode(self, script: dict, dossier_sortie: Path | None = None) -> list[Path]:
         """Produit tous les segments audio d'un épisode.
@@ -144,9 +146,10 @@ class ProducteurAudio:
         }
 
         nb_chars = len(segment["texte"])
-        self.caracteres_utilises[personnage] = (
-            self.caracteres_utilises.get(personnage, 0) + nb_chars
-        )
+        with self._compteur_lock:
+            self.caracteres_utilises[personnage] = (
+                self.caracteres_utilises.get(personnage, 0) + nb_chars
+            )
 
         max_tentatives = config.PRODUCTION["max_retry_tts"]
         for tentative in range(1, max_tentatives + 1):

@@ -187,11 +187,19 @@ class Monteur:
         for seg in segments:
             chemin = dossier / f"{seg['id']}.mp3"
             if not chemin.exists():
-                raise FileNotFoundError(
-                    f"Segment audio introuvable : {chemin}"
+                # Remplacement par du silence au lieu de crash (BUG 11)
+                if seg["personnage"] == "sfx":
+                    duree_ms = int(seg.get("duree_sfx_secondes", 5.0) * 1000)
+                else:
+                    nb_mots = len(seg.get("texte", "").split())
+                    duree_ms = max(int((nb_mots / 110) * 60 * 1000), 1000)
+                logger.warning(
+                    "Segment audio introuvable : %s — remplacement par %dms de silence.",
+                    chemin, duree_ms,
                 )
-
-            audio = AudioSegment.from_mp3(str(chemin))
+                audio = AudioSegment.silent(duration=duree_ms)
+            else:
+                audio = AudioSegment.from_mp3(str(chemin))
 
             if seg["personnage"] == "sfx":
                 sfx_vol = config.SFX_CONFIG["sfx_volume_db"]
@@ -220,6 +228,11 @@ class Monteur:
                                 duration=len(audio) - len(sfx_overlay)
                             )
                         elif len(sfx_overlay) > len(audio):
+                            logger.warning(
+                                "SFX overlay tronqué de %.1fs à %.1fs "
+                                "(segment voix trop court).",
+                                len(sfx_overlay) / 1000.0, len(audio) / 1000.0,
+                            )
                             sfx_overlay = sfx_overlay[:len(audio)]
                         sfx_overlay = _appliquer_pan(sfx_overlay, config.STEREO_PAN.get("sfx", 0.0))
                         audio = audio.overlay(sfx_overlay)
@@ -342,26 +355,59 @@ class Monteur:
     def _generer_chapitres(
         self, segments: list[dict], dossier: Path
     ) -> list[dict]:
-        """Génère la liste de chapitres à partir des segments du script."""
+        """Génère la liste de chapitres à partir des segments du script.
+
+        Crée des chapitres pour les sections narratives principales
+        plutôt que pour chaque intervention du narrateur.
+        """
         chapitres = []
         # Offset initial : intro jingle + silence transition
         intro_ms = config.PRODUCTION["intro_jingle_duree_ms"]
         transition_ms = 500
         temps_courant_ms = intro_ms + transition_ms
 
-        for seg in segments:
+        # Identifier les chapitres logiques (max 5-7 chapitres)
+        # Un chapitre commence au 1er segment, puis à chaque segment
+        # narrateur précédé d'un SFX ou après un gap de 3+ segments voix
+        dernier_chapitre_idx = -10
+        nb_segments_depuis_chapitre = 0
+
+        for i, seg in enumerate(segments):
             chemin = dossier / f"{seg['id']}.mp3"
             if chemin.exists():
                 audio = AudioSegment.from_mp3(str(chemin))
                 duree_ms = len(audio)
             else:
-                duree_ms = seg.get("pause_apres_ms", 0)
+                if seg["personnage"] == "sfx":
+                    duree_ms = int(seg.get("duree_sfx_secondes", 5.0) * 1000)
+                else:
+                    duree_ms = seg.get("pause_apres_ms", 1000)
 
-            if seg["personnage"] == "narrateur" or not chapitres:
+            # Créer un chapitre si :
+            # - C'est le premier segment
+            # - C'est un narrateur ET il y a eu 8+ segments depuis le dernier chapitre
+            # - Il y a eu un SFX juste avant ce narrateur
+            creer_chapitre = False
+            if not chapitres:
+                creer_chapitre = True
+            elif seg["personnage"] == "narrateur" and nb_segments_depuis_chapitre >= 8:
+                creer_chapitre = True
+            elif (seg["personnage"] == "narrateur"
+                  and i > 0
+                  and segments[i - 1]["personnage"] == "sfx"
+                  and nb_segments_depuis_chapitre >= 4):
+                creer_chapitre = True
+
+            if creer_chapitre and seg["personnage"] != "sfx":
+                titre_chapitre = seg["texte"][:80].rstrip(".")
                 chapitres.append({
                     "startTime": temps_courant_ms / 1000.0,
-                    "title": seg["texte"][:80].rstrip(".") if seg["personnage"] != "sfx" else "Transition",
+                    "title": titre_chapitre,
                 })
+                dernier_chapitre_idx = i
+                nb_segments_depuis_chapitre = 0
+            else:
+                nb_segments_depuis_chapitre += 1
 
             temps_courant_ms += duree_ms + seg.get("pause_apres_ms", 0)
 

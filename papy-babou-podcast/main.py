@@ -28,6 +28,7 @@ from rich.table import Table
 from rich.style import Style
 
 import config
+from utils import fichier_lock
 from agents import (
     Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur,
     Metadonnees, Publisher, CoverArt, Planificateur,
@@ -188,13 +189,14 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         except Exception as e:
             logger.warning("DB indisponible pour ajout historique : %s", e)
 
-    # Toujours sauvegarder en JSON (rétrocompatibilité)
-    historique = []
-    if HISTORIQUE_PATH.exists():
-        with open(HISTORIQUE_PATH, "r", encoding="utf-8") as f:
-            historique = json.load(f)
-    historique.append(entree)
-    sauvegarder_historique(historique)
+    # Toujours sauvegarder en JSON (rétrocompatibilité) avec verrou
+    with fichier_lock(HISTORIQUE_PATH):
+        historique = []
+        if HISTORIQUE_PATH.exists():
+            with open(HISTORIQUE_PATH, "r", encoding="utf-8") as f:
+                historique = json.load(f)
+        historique.append(entree)
+        sauvegarder_historique(historique)
 
 
 # ── Système de checkpoints ───────────────────────────────────────────────────
@@ -391,6 +393,7 @@ def _validation_script(
     script: dict,
     chemin_script: Path,
     morale: str = "",
+    resume: str = "",
     contexte_saison: dict | None = None,
     episode_plan: dict | None = None,
     type_episode: str = "standard",
@@ -456,7 +459,7 @@ def _validation_script(
                 historique = charger_historique()
                 script = scripteur.generer(
                     titre=script["episode"]["titre"],
-                    resume="",
+                    resume=resume,
                     saison=script["episode"]["saison"],
                     numero=script["episode"]["numero"],
                     morale=morale,
@@ -559,6 +562,7 @@ def pipeline(
         Rapport de production complet.
     """
     global _production_id_courante
+    _production_id_courante = None  # Reset au début de chaque pipeline
 
     episode_id = f"S{saison:02d}E{numero:02d}"
     rapport = checkpoint_data or {
@@ -592,6 +596,47 @@ def pipeline(
             logger.warning("DB indisponible pour création production : %s", e)
             _production_id_courante = None
 
+    try:
+        return _pipeline_inner(
+            titre=titre, resume=resume, saison=saison, numero=numero,
+            morale=morale, dry_run=dry_run, auto=auto,
+            max_iterations_review=max_iterations_review,
+            etape_depart=etape_depart, checkpoint_data=checkpoint_data,
+            contexte_saison=contexte_saison, type_episode=type_episode,
+            episode_id=episode_id, rapport=rapport,
+        )
+    except ProductionAbandonnee:
+        raise
+    except Exception as e:
+        # Marquer la production comme échouée en DB (BUG 29)
+        logger.error("Pipeline échoué pour %s : %s", episode_id, e)
+        if _use_db() and _production_id_courante:
+            try:
+                ProductionRepo.echouer(_production_id_courante, str(e))
+                EpisodeRepo.maj_status(episode_id, "failed")
+            except Exception as db_err:
+                logger.warning("DB indisponible pour marquage échec : %s", db_err)
+        # Sauvegarder le rapport partiel
+        rapport["erreur"] = str(e)
+        rapport["fin"] = datetime.now().isoformat()
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport_echec.json"
+        with open(chemin_rapport, "w", encoding="utf-8") as f:
+            json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+        console.print(panel_erreur(
+            f"Pipeline échoué pour {episode_id} : {e}\n"
+            f"Rapport partiel sauvé : {chemin_rapport}"
+        ))
+        raise
+
+
+def _pipeline_inner(
+    titre, resume, saison, numero, morale, dry_run, auto,
+    max_iterations_review, etape_depart, checkpoint_data,
+    contexte_saison, type_episode, episode_id, rapport,
+):
+    """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
+    global _production_id_courante
+
     # Charger le contexte de saison automatiquement si pas fourni
     if not contexte_saison:
         contexte_saison = config.charger_saison(saison) or None
@@ -604,8 +649,9 @@ def pipeline(
             type_episode = episode_plan.get("type", type_episode)
             if not morale and episode_plan.get("morale"):
                 morale = episode_plan["morale"]
-            # Enregistrer les personnages secondaires de la saison
-            for perso_sec in contexte_saison.get("saison", {}).get("personnages_secondaires", []):
+            # Enregistrer les personnages secondaires de CETTE saison uniquement
+            persos_saison = contexte_saison.get("saison", {}).get("personnages_secondaires", [])
+            for perso_sec in persos_saison:
                 perso_id = perso_sec.get("id", "")
                 if perso_id and perso_id not in config.personnages_valides():
                     config.ajouter_personnage(
@@ -776,12 +822,13 @@ def pipeline(
             "chemin": str(chemin_valide),
         }
 
-        # Checkpoint après script
+        # Checkpoint après script (inclut le chemin du script validé)
         sauvegarder_checkpoint(episode_id, "audio", {
             "episode_id": episode_id, "titre": titre, "resume": resume,
             "saison": saison, "numero": numero, "morale": morale,
             "type_episode": type_episode,
             "dry_run": dry_run, "rapport": rapport,
+            "chemin_script_valide": str(chemin_valide),
         })
 
         # ── Validation humaine : script ──────────────────────────────────────
@@ -793,6 +840,7 @@ def pipeline(
             )
             script = _validation_script(
                 script, chemin_valide, morale,
+                resume=resume,
                 contexte_saison=contexte_saison,
                 episode_plan=episode_plan,
                 type_episode=type_episode,

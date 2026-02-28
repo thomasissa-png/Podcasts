@@ -68,13 +68,14 @@ class TestMonteurAssemblage:
     """Tests de l'assemblage des segments."""
 
     def test_assembler_segments_manquants(self, script_exemple, tmp_path):
-        """Des segments manquants doivent lever une erreur."""
+        """Des segments manquants doivent être remplacés par du silence."""
         monteur = Monteur()
-        with pytest.raises(FileNotFoundError, match="introuvable"):
-            monteur._assembler_segments(
-                script_exemple["episode"]["segments"],
-                tmp_path,
-            )
+        # Ne doit plus lever d'erreur, mais produire du silence
+        result = monteur._assembler_segments(
+            script_exemple["episode"]["segments"],
+            tmp_path,
+        )
+        assert len(result) > 0  # Silence de remplacement
 
 
 class TestMonteurOverlaysPending:

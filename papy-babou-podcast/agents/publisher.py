@@ -171,6 +171,22 @@ class Publisher:
         if not root.get("xmlns:podcast"):
             root.set("xmlns:podcast", PODCAST_NS)
 
+        # GUID basé sur episode_id + titre (unique même si titres identiques entre saisons)
+        episode_id = f"S{meta['saison']:02d}E{meta['numero']:02d}"
+        guid_seed = f"{episode_id}_{meta['titre']}"
+        guid_value = str(uuid.uuid5(uuid.NAMESPACE_URL, guid_seed))
+
+        # Vérifier les doublons — remplacer si le GUID existe déjà
+        for existing_item in list(channel.findall("item")):
+            existing_guid = existing_item.find("guid")
+            if existing_guid is not None and existing_guid.text == guid_value:
+                logger.warning(
+                    "Épisode %s déjà dans le flux RSS — remplacement.",
+                    episode_id,
+                )
+                channel.remove(existing_item)
+                break
+
         # Ajouter le nouvel épisode
         item = ET.SubElement(channel, "item")
 
@@ -178,7 +194,7 @@ class Publisher:
         ET.SubElement(item, "description").text = meta["description_longue"]
 
         guid = ET.SubElement(item, "guid", isPermaLink="false")
-        guid.text = str(uuid.uuid5(uuid.NAMESPACE_URL, meta["titre"]))
+        guid.text = guid_value
 
         now = datetime.now(timezone.utc)
         ET.SubElement(item, "pubDate").text = formatdate(

@@ -73,7 +73,7 @@ class TestCoverArtAvecApiKey:
 
         assert result is not None
         assert result.exists()
-        assert result.name == "S01E01_cover.jpg"
+        assert result.name == "S01E01_cover.png"
         mock_post.assert_called_once()
 
     @patch("agents.cover_art.requests.post")
