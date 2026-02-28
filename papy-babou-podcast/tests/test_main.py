@@ -14,7 +14,7 @@ from main import (
     ajouter_historique,
     sauvegarder_checkpoint,
     charger_checkpoint,
-    supprimer_checkpoint,
+    archiver_checkpoint,
     _calculer_couts,
 )
 
@@ -144,8 +144,8 @@ class TestCheckpoints:
         assert cp["etape"] == "sfx"
         assert cp["data"]["titre"] == "Test"
 
-    def test_supprimer_checkpoint(self, tmp_path, monkeypatch):
-        """Un checkpoint supprimé ne doit plus exister."""
+    def test_archiver_checkpoint(self, tmp_path, monkeypatch):
+        """Un checkpoint archivé doit être renommé (jamais supprimé)."""
         import config
         monkeypatch.setattr(config, "CHECKPOINTS_DIR", tmp_path)
 
@@ -153,14 +153,18 @@ class TestCheckpoints:
         chemin = sauvegarder_checkpoint("S01E01", "audio", data)
         assert chemin.exists()
 
-        supprimer_checkpoint("S01E01")
+        archiver_checkpoint("S01E01")
+        # Le fichier original ne doit plus exister...
         assert not chemin.exists()
+        # ...mais un fichier _done_ doit exister à la place
+        archives = list(tmp_path.glob("S01E01_checkpoint_done_*.json"))
+        assert len(archives) == 1
 
-    def test_supprimer_checkpoint_inexistant(self, tmp_path, monkeypatch):
-        """Supprimer un checkpoint inexistant ne doit pas lever d'erreur."""
+    def test_archiver_checkpoint_inexistant(self, tmp_path, monkeypatch):
+        """Archiver un checkpoint inexistant ne doit pas lever d'erreur."""
         import config
         monkeypatch.setattr(config, "CHECKPOINTS_DIR", tmp_path)
-        supprimer_checkpoint("S99E99")  # Ne devrait pas lever d'erreur
+        archiver_checkpoint("S99E99")  # Ne devrait pas lever d'erreur
 
     def test_charger_checkpoint_corrompu(self, tmp_path, monkeypatch):
         """Un checkpoint JSON corrompu doit lever une ValueError."""

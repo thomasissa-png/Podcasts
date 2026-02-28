@@ -1680,7 +1680,6 @@ def db_status():
         console.print(table)
 
         # Coûts totaux
-        cout_total = CoutRepo.total_par_episode("%")  # Hack - won't work, use direct query
         with database.get_cursor(commit=False) as cur:
             cur.execute("SELECT COALESCE(SUM(cout_estime), 0) AS total FROM couts_api")
             row = cur.fetchone()
