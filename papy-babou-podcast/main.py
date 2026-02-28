@@ -1,9 +1,10 @@
 """Orchestrateur principal — Pipeline de production du podcast Papy Babou.
 
 Usage:
-    python main.py --episode "Le buisson ardent" --saison 1 --numero 2 --resume "..."
-    python main.py --episode "..." --saison 1 --numero 1 --resume "..." --dry-run
-    python main.py --interactive
+    python main.py produire -e "Le buisson ardent" -s 1 -n 2 -r "..."
+    python main.py produire -e "..." -s 1 -n 1 -r "..." --dry-run
+    python main.py produire -e "..." -s 1 -n 1 -r "..." --auto  (sans validation humaine)
+    python main.py interactif
 """
 
 import json
@@ -48,22 +49,209 @@ logger = logging.getLogger("papy-babou")
 # ── Pipeline de production ────────────────────────────────────────────────────
 
 
+NOMS_PERSONNAGES = {
+    "papy_babou": "Papy Babou",
+    "antoine": "Antoine",
+    "noemie": "Noémie",
+    "narrateur": "Narrateur",
+    "sfx": "SFX",
+}
+
+
+class ProductionAbandonnee(Exception):
+    """Levée quand l'utilisateur abandonne la production."""
+
+
+def _afficher_script(script: dict) -> None:
+    """Affiche le script complet de manière lisible dans le terminal."""
+    episode = script["episode"]
+
+    console.print(Panel(
+        f"[bold]{episode['titre']}[/bold] — "
+        f"S{episode['saison']:02d}E{episode['numero']:02d}",
+        title="Script complet",
+        border_style="cyan",
+    ))
+
+    for seg in episode["segments"]:
+        nom = NOMS_PERSONNAGES.get(seg["personnage"], seg["personnage"])
+        if seg["personnage"] == "sfx":
+            console.print(
+                f"  [dim italic]  SFX : {seg['texte']} "
+                f"({seg.get('duree_sfx_secondes', '?')}s)[/dim italic]"
+            )
+        elif seg["personnage"] == "narrateur":
+            console.print(f"  [dim][Narrateur][/dim] {seg['texte']}")
+        else:
+            style = {
+                "papy_babou": "bold yellow",
+                "antoine": "bold blue",
+                "noemie": "bold magenta",
+            }.get(seg["personnage"], "")
+            console.print(f"  [{style}][{nom}][/{style}] {seg['texte']}")
+
+        pause = seg.get("pause_apres_ms", 0)
+        if pause >= 1500:
+            console.print(f"  [dim]  ... (pause {pause / 1000:.1f}s)[/dim]")
+
+    console.print()
+
+
+def _validation_script(script: dict, chemin_script: Path) -> dict:
+    """Point de validation humaine apres la review du script.
+
+    Affiche le script, puis propose :
+      (v) Valider - continuer le pipeline
+      (m) Modifier - ouvrir le fichier JSON, recharger apres modification
+      (c) Corrections - saisir des instructions, relancer le scripteur
+      (a) Abandonner - arreter la production
+
+    Returns:
+        Le script (potentiellement modifie).
+
+    Raises:
+        ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
+    """
+    _afficher_script(script)
+
+    while True:
+        console.print(Panel(
+            "[bold](v)[/bold] Valider et continuer\n"
+            "[bold](m)[/bold] Modifier le fichier JSON manuellement\n"
+            "[bold](c)[/bold] Donner des corrections (relance le scripteur)\n"
+            "[bold](a)[/bold] Abandonner la production",
+            title="Validation du script",
+            border_style="green",
+        ))
+
+        choix = console.input("[cyan]Votre choix :[/cyan] ").strip().lower()
+
+        if choix in ("v", "valider"):
+            console.print("[green]  Script valide par le producteur[/green]")
+            return script
+
+        elif choix in ("m", "modifier"):
+            console.print(
+                f"\n[yellow]  Modifiez le fichier puis revenez ici :[/yellow]"
+                f"\n  [bold]{chemin_script}[/bold]\n"
+            )
+            console.input("[cyan]  Appuyez sur Entree quand c'est fait...[/cyan]")
+
+            try:
+                with open(chemin_script, "r", encoding="utf-8") as f:
+                    script = json.load(f)
+                console.print("[green]  Script recharge depuis le fichier[/green]")
+                _afficher_script(script)
+            except (json.JSONDecodeError, FileNotFoundError) as e:
+                console.print(f"[red]  Erreur au rechargement : {e}[/red]")
+                console.print("[yellow]  Le script precedent est conserve.[/yellow]")
+
+        elif choix in ("c", "corrections"):
+            console.print(
+                "\n[yellow]  Decrivez vos corrections "
+                "(terminez par une ligne vide) :[/yellow]"
+            )
+            lignes = []
+            while True:
+                ligne = console.input("  > ")
+                if not ligne.strip():
+                    break
+                lignes.append(ligne)
+
+            if lignes:
+                console.print(
+                    "\n[cyan]  Corrections enregistrees "
+                    "— relance du scripteur...[/cyan]"
+                )
+                scripteur = Scripteur()
+                script = scripteur.generer(
+                    titre=script["episode"]["titre"],
+                    resume="",
+                    saison=script["episode"]["saison"],
+                    numero=script["episode"]["numero"],
+                    corrections=lignes,
+                )
+                scripteur.sauvegarder(script, chemin_script)
+                nb = scripteur.compter_mots(script)
+                console.print(
+                    f"[green]  Nouveau script genere ({nb} mots)[/green]"
+                )
+                _afficher_script(script)
+
+        elif choix in ("a", "abandonner"):
+            raise ProductionAbandonnee(
+                "Production abandonnee par l'utilisateur."
+            )
+
+        else:
+            console.print("[red]  Choix non reconnu. Tapez v, m, c ou a.[/red]")
+
+
+def _validation_montage(
+    chemin_hq: Path, chemin_preview: Path, duree_secondes: float
+) -> None:
+    """Point de validation humaine apres le montage audio.
+
+    Raises:
+        ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
+    """
+    console.print(Panel(
+        f"Duree : [bold]{duree_secondes:.0f}s[/bold] "
+        f"({duree_secondes / 60:.1f} min)\n"
+        f"Fichier HQ  : [bold]{chemin_hq}[/bold]\n"
+        f"Preview     : [bold]{chemin_preview}[/bold]\n\n"
+        "[dim]Ecoutez le fichier preview avant de valider la publication.[/dim]",
+        title="Ecoute du montage",
+        border_style="cyan",
+    ))
+
+    while True:
+        console.print(Panel(
+            "[bold](v)[/bold] Valider et publier\n"
+            "[bold](a)[/bold] Abandonner (l'audio est conserve, pas de publication)",
+            title="Validation du montage",
+            border_style="green",
+        ))
+
+        choix = console.input("[cyan]Votre choix :[/cyan] ").strip().lower()
+
+        if choix in ("v", "valider"):
+            console.print(
+                "[green]  Montage valide — lancement de la publication[/green]"
+            )
+            return
+
+        elif choix in ("a", "abandonner"):
+            raise ProductionAbandonnee(
+                "Production arretee apres montage. "
+                f"L'audio est conserve dans : {chemin_hq}"
+            )
+
+        else:
+            console.print("[red]  Choix non reconnu. Tapez v ou a.[/red]")
+
+
+# ── Pipeline de production ────────────────────────────────────────────────────
+
+
 def pipeline(
     titre: str,
     resume: str,
     saison: int,
     numero: int,
     dry_run: bool = False,
+    auto: bool = False,
     max_iterations_review: int = 3,
 ) -> dict:
-    """Exécute le pipeline complet de production d'un épisode.
+    """Execute le pipeline complet de production d'un episode.
 
     Args:
-        titre: Titre de l'épisode.
-        resume: Résumé de l'histoire biblique.
-        saison: Numéro de saison.
-        numero: Numéro d'épisode.
-        dry_run: Si True, pas de génération audio ni de publication.
+        titre: Titre de l'episode.
+        resume: Resume de l'histoire biblique.
+        saison: Numero de saison.
+        numero: Numero d'episode.
+        dry_run: Si True, pas de generation audio ni de publication.
+        auto: Si True, pas de validation humaine (pipeline 100% automatique).
         max_iterations_review: Nombre max de boucles scripteur-reviewer.
 
     Returns:
@@ -171,6 +359,19 @@ def pipeline(
         "chemin": str(chemin_valide),
     }
 
+    # ── Validation humaine : script ──────────────────────────────────────────
+
+    if not auto:
+        console.print(
+            "\n[bold magenta]■ VALIDATION — Relisez le script avant "
+            "la production audio[/bold magenta]"
+        )
+        script = _validation_script(script, chemin_valide)
+        # Re-sauvegarder au cas ou le script a ete modifie
+        scripteur.sauvegarder(script, chemin_valide)
+        duree_estimee = reviewer.estimer_duree(script)
+        rapport["etapes"]["script"]["validation_humaine"] = True
+
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 
     if dry_run:
@@ -250,6 +451,20 @@ def pipeline(
             "chemin_preview": str(resultat_montage["chemin_preview"]),
         }
 
+    # ── Validation humaine : montage ─────────────────────────────────────────
+
+    if not auto and not dry_run and chemin_hq:
+        console.print(
+            "\n[bold magenta]■ VALIDATION — Ecoutez l'episode avant "
+            "publication[/bold magenta]"
+        )
+        _validation_montage(
+            chemin_hq,
+            resultat_montage["chemin_preview"],
+            duree_secondes,
+        )
+        rapport["etapes"]["montage"]["validation_humaine"] = True
+
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
     console.print("\n[bold cyan]▶ Étape 6/8 — Génération des métadonnées[/bold cyan]")
@@ -326,8 +541,9 @@ def cli(ctx):
 @click.option("--numero", "-n", type=int, required=True, help="Numéro d'épisode")
 @click.option("--resume", "-r", required=True, help="Résumé de l'histoire biblique")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
-def produire(episode: str, saison: int, numero: int, resume: str, dry_run: bool):
-    """Produit un épisode complet du podcast."""
+@click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
+def produire(episode: str, saison: int, numero: int, resume: str, dry_run: bool, auto: bool):
+    """Produit un episode complet du podcast."""
     try:
         pipeline(
             titre=episode,
@@ -335,7 +551,11 @@ def produire(episode: str, saison: int, numero: int, resume: str, dry_run: bool)
             saison=saison,
             numero=numero,
             dry_run=dry_run,
+            auto=auto,
         )
+    except ProductionAbandonnee as e:
+        console.print(f"\n[bold yellow]Production arretee : {e}[/bold yellow]")
+        sys.exit(0)
     except Exception as e:
         console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
         logger.exception("Erreur dans le pipeline de production")
@@ -344,19 +564,21 @@ def produire(episode: str, saison: int, numero: int, resume: str, dry_run: bool)
 
 @cli.command()
 def interactif():
-    """Mode interactif — saisie guidée des paramètres."""
+    """Mode interactif — saisie guidee des parametres avec validation humaine."""
     console.print(
         Panel(
             "[bold]Bienvenue dans le studio de production[/bold]\n"
-            "Les Histoires de Papy Babou",
+            "Les Histoires de Papy Babou\n\n"
+            "[dim]Vous serez invite a valider le script et le montage "
+            "avant publication.[/dim]",
             border_style="blue",
         )
     )
 
-    titre = console.input("[cyan]Titre de l'épisode :[/cyan] ")
-    saison = int(console.input("[cyan]Numéro de saison :[/cyan] "))
-    numero = int(console.input("[cyan]Numéro d'épisode :[/cyan] "))
-    resume = console.input("[cyan]Résumé de l'histoire biblique :[/cyan] ")
+    titre = console.input("[cyan]Titre de l'episode :[/cyan] ")
+    saison = int(console.input("[cyan]Numero de saison :[/cyan] "))
+    numero = int(console.input("[cyan]Numero d'episode :[/cyan] "))
+    resume = console.input("[cyan]Resume de l'histoire biblique :[/cyan] ")
 
     dry_run_str = console.input("[cyan]Mode dry-run ? (o/n) :[/cyan] ").strip().lower()
     dry_run = dry_run_str in ("o", "oui", "y", "yes")
@@ -369,7 +591,10 @@ def interactif():
             saison=saison,
             numero=numero,
             dry_run=dry_run,
+            auto=False,
         )
+    except ProductionAbandonnee as e:
+        console.print(f"\n[bold yellow]Production arretee : {e}[/bold yellow]")
     except Exception as e:
         console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
         logger.exception("Erreur dans le pipeline de production")
