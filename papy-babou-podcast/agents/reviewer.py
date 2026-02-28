@@ -40,6 +40,8 @@ CRITÈRES D'ÉVALUATION (note sur 10) :
    - Environ 1400 mots (~13 min) ?
    - Comptage : 100 mots/min pour enfants, 120 mots/min pour adultes.
    - Format JSON correct et complet ?
+   - Les segments SFX (personnage "sfx") sont-ils bien placés et pertinents ?
+   - Les bruitages enrichissent-ils l'histoire sans surcharger ? (3-8 SFX max)
 
 FORMAT DE RÉPONSE — JSON STRICT :
 {
@@ -167,8 +169,12 @@ class Reviewer:
         """
         duree_sec = 0.0
         for seg in script["episode"]["segments"]:
-            nb_mots = len(seg["texte"].split())
             personnage = seg["personnage"]
+            if personnage == "sfx":
+                duree_sec += seg.get("duree_sfx_secondes", 5.0)
+                duree_sec += seg.get("pause_apres_ms", 0) / 1000.0
+                continue
+            nb_mots = len(seg["texte"].split())
             if personnage in ("antoine", "noemie"):
                 mots_par_min = config.PRODUCTION["mots_par_minute_enfant"]
             else:

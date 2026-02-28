@@ -20,7 +20,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 import config
-from agents import Scripteur, Reviewer, ProducteurAudio, Monteur, Metadonnees, Publisher
+from agents import Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur, Metadonnees, Publisher
 
 console = Console()
 
@@ -89,7 +89,7 @@ def pipeline(
 
     # ── Étape 1 : Scripteur ───────────────────────────────────────────────────
 
-    console.print("\n[bold cyan]▶ Étape 1/7 — Génération du script[/bold cyan]")
+    console.print("\n[bold cyan]▶ Étape 1/8 — Génération du script[/bold cyan]")
     scripteur = Scripteur()
     corrections = None
     script = None
@@ -118,7 +118,7 @@ def pipeline(
 
         # ── Étape 2 : Reviewer ────────────────────────────────────────────────
 
-        console.print(f"\n[bold cyan]▶ Étape 2/7 — Relecture (itération {iteration})[/bold cyan]")
+        console.print(f"\n[bold cyan]▶ Étape 2/8 — Relecture (itération {iteration})[/bold cyan]")
         reviewer = Reviewer()
         resultat_review = reviewer.evaluer(script)
         score = resultat_review["review"]["score"]
@@ -171,15 +171,18 @@ def pipeline(
         "chemin": str(chemin_valide),
     }
 
-    # ── Étape 3 : Production audio ────────────────────────────────────────────
+    # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 
     if dry_run:
-        console.print("\n[bold yellow]▶ Étape 3/7 — Production audio (SAUTÉE — dry-run)[/bold yellow]")
+        console.print("\n[bold yellow]▶ Étape 3/8 — Production audio (SAUTÉE — dry-run)[/bold yellow]")
         rapport["etapes"]["audio"] = {"status": "skipped (dry-run)"}
     else:
-        console.print("\n[bold cyan]▶ Étape 3/7 — Production audio[/bold cyan]")
+        console.print("\n[bold cyan]▶ Étape 3/8 — Production audio (voix)[/bold cyan]")
         producteur = ProducteurAudio()
 
+        segments_voix = [
+            s for s in script["episode"]["segments"] if s["personnage"] != "sfx"
+        ]
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -187,27 +190,51 @@ def pipeline(
         ) as progress:
             task = progress.add_task(
                 "Génération des segments audio...",
-                total=len(script["episode"]["segments"]),
+                total=len(segments_voix),
             )
             fichiers_audio = producteur.produire_episode(script)
-            progress.update(task, completed=len(script["episode"]["segments"]))
+            progress.update(task, completed=len(segments_voix))
 
-        console.print(f"  {len(fichiers_audio)} segments audio générés")
+        console.print(f"  {len(fichiers_audio)} segments voix générés")
         rapport["etapes"]["audio"] = {
             "nb_segments": len(fichiers_audio),
             "caracteres": dict(producteur.caracteres_utilises),
         }
 
-    # ── Étape 4 : Montage ─────────────────────────────────────────────────────
+    # ── Étape 4 : Bruitages (SFX) ─────────────────────────────────────────────
+
+    nb_sfx = len([s for s in script["episode"]["segments"] if s["personnage"] == "sfx"])
 
     if dry_run:
-        console.print("\n[bold yellow]▶ Étape 4/7 — Montage (SAUTÉ — dry-run)[/bold yellow]")
+        console.print(f"\n[bold yellow]▶ Étape 4/8 — Bruitages SFX (SAUTÉE — dry-run) [{nb_sfx} SFX dans le script][/bold yellow]")
+        rapport["etapes"]["sfx"] = {"status": "skipped (dry-run)", "nb_sfx": nb_sfx}
+    elif nb_sfx == 0:
+        console.print("\n[bold cyan]▶ Étape 4/8 — Bruitages SFX (aucun dans le script)[/bold cyan]")
+        rapport["etapes"]["sfx"] = {"status": "no sfx segments", "nb_sfx": 0}
+    else:
+        console.print(f"\n[bold cyan]▶ Étape 4/8 — Bruitages SFX ({nb_sfx} bruitages)[/bold cyan]")
+        sfx_provider = SfxProvider()
+        fichiers_sfx = sfx_provider.produire_sfx(script)
+
+        console.print(f"  {len(fichiers_sfx)} bruitages générés/téléchargés")
+        for seg_id, source in sfx_provider.stats.items():
+            console.print(f"    {seg_id} : {source}")
+
+        rapport["etapes"]["sfx"] = {
+            "nb_sfx": len(fichiers_sfx),
+            "sources": dict(sfx_provider.stats),
+        }
+
+    # ── Étape 5 : Montage ─────────────────────────────────────────────────────
+
+    if dry_run:
+        console.print("\n[bold yellow]▶ Étape 5/8 — Montage (SAUTÉ — dry-run)[/bold yellow]")
         rapport["etapes"]["montage"] = {"status": "skipped (dry-run)"}
         duree_secondes = duree_estimee * 60
         taille_bytes = 0
         chemin_hq = None
     else:
-        console.print("\n[bold cyan]▶ Étape 4/7 — Montage[/bold cyan]")
+        console.print("\n[bold cyan]▶ Étape 5/8 — Montage[/bold cyan]")
         monteur = Monteur()
         resultat_montage = monteur.assembler(script)
 
@@ -223,9 +250,9 @@ def pipeline(
             "chemin_preview": str(resultat_montage["chemin_preview"]),
         }
 
-    # ── Étape 5 : Métadonnées ─────────────────────────────────────────────────
+    # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
-    console.print("\n[bold cyan]▶ Étape 5/7 — Génération des métadonnées[/bold cyan]")
+    console.print("\n[bold cyan]▶ Étape 6/8 — Génération des métadonnées[/bold cyan]")
     metadonnees = Metadonnees()
 
     if dry_run:
@@ -243,21 +270,21 @@ def pipeline(
         "chemin": str(chemin_meta),
     }
 
-    # ── Étape 6 : Publication ─────────────────────────────────────────────────
+    # ── Étape 7 : Publication ─────────────────────────────────────────────────
 
     if dry_run:
-        console.print("\n[bold yellow]▶ Étape 6/7 — Publication (SAUTÉE — dry-run)[/bold yellow]")
+        console.print("\n[bold yellow]▶ Étape 7/8 — Publication (SAUTÉE — dry-run)[/bold yellow]")
         rapport["etapes"]["publication"] = {"status": "skipped (dry-run)"}
     else:
-        console.print("\n[bold cyan]▶ Étape 6/7 — Publication[/bold cyan]")
+        console.print("\n[bold cyan]▶ Étape 7/8 — Publication[/bold cyan]")
         publisher = Publisher()
         rapport_pub = publisher.publier(meta, chemin_hq, taille_bytes)
         console.print(f"  URL audio : {rapport_pub['url_audio']}")
         rapport["etapes"]["publication"] = rapport_pub
 
-    # ── Étape 7 : Rapport final ───────────────────────────────────────────────
+    # ── Étape 8 : Rapport final ───────────────────────────────────────────────
 
-    console.print("\n[bold cyan]▶ Étape 7/7 — Rapport final[/bold cyan]")
+    console.print("\n[bold cyan]▶ Étape 8/8 — Rapport final[/bold cyan]")
     rapport["fin"] = datetime.now().isoformat()
 
     # Sauvegarder le rapport

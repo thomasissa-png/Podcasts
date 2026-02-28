@@ -6,11 +6,13 @@ from .producteur_audio import ProducteurAudio
 from .monteur import Monteur
 from .metadonnees import Metadonnees
 from .publisher import Publisher
+from .sfx_provider import SfxProvider
 
 __all__ = [
     "Scripteur",
     "Reviewer",
     "ProducteurAudio",
+    "SfxProvider",
     "Monteur",
     "Metadonnees",
     "Publisher",

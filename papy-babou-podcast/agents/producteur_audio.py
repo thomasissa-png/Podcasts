@@ -37,9 +37,12 @@ class ProducteurAudio:
         dossier_episode.mkdir(parents=True, exist_ok=True)
 
         fichiers = []
-        total_segments = len(episode["segments"])
+        segments_voix = [
+            s for s in episode["segments"] if s["personnage"] != "sfx"
+        ]
+        total_segments = len(segments_voix)
 
-        for i, segment in enumerate(episode["segments"], 1):
+        for i, segment in enumerate(segments_voix, 1):
             logger.info(
                 "[%s] Segment %d/%d — %s : %s...",
                 episode_id,

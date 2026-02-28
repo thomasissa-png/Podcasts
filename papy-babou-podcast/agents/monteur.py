@@ -139,7 +139,7 @@ class Monteur:
     def _assembler_segments(
         self, segments: list[dict], dossier: Path
     ) -> AudioSegment:
-        """Charge et concatène les segments audio avec les pauses."""
+        """Charge et concatène les segments audio (voix + SFX) avec les pauses."""
         resultat = AudioSegment.empty()
 
         for seg in segments:
@@ -150,6 +150,15 @@ class Monteur:
                 )
 
             audio = AudioSegment.from_mp3(str(chemin))
+
+            # Ajuster le volume des SFX pour ne pas couvrir les voix
+            if seg["personnage"] == "sfx":
+                sfx_vol = config.SFX_CONFIG["sfx_volume_db"]
+                fade_ms = config.SFX_CONFIG["sfx_fade_ms"]
+                audio = audio.apply_gain(sfx_vol)
+                if len(audio) > fade_ms * 2:
+                    audio = audio.fade_in(fade_ms).fade_out(fade_ms)
+
             resultat += audio
 
             pause_ms = seg.get("pause_apres_ms", 0)

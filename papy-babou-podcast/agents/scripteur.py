@@ -34,6 +34,13 @@ RÈGLES STRICTES :
 7. Marquer les silences dramatiques avec pause_apres_ms élevé (1500-3000ms).
 8. Commencer par une scène où Papy Babou accueille les enfants.
 9. Terminer par une leçon de vie simple et un au revoir chaleureux.
+10. BRUITAGES : insère des segments avec personnage "sfx" pour enrichir l'ambiance.
+    - Le champ "texte" contient une description courte du son en français (ex: "tonnerre au loin",
+      "bêlement de mouton", "vent dans le désert", "crépitement de feu", "vagues de la mer").
+    - Le champ "duree_sfx_secondes" indique la durée souhaitée (2 à 10 secondes).
+    - Place les bruitages aux moments clés : entrée des enfants, moments dramatiques,
+      transitions de scène, et pour illustrer les éléments de l'histoire.
+    - Utilise 3 à 8 bruitages par épisode, pas plus (ne pas surcharger).
 
 FORMAT DE SORTIE — JSON STRICT :
 {
@@ -49,6 +56,14 @@ FORMAT DE SORTIE — JSON STRICT :
         "texte": "...",
         "ton": "chaleureux|curieux|inquiet|neutre|enthousiaste|dramatique|joyeux|rassurant",
         "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_001",
+        "personnage": "sfx",
+        "texte": "description courte du bruitage",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0
       }
     ]
   }
@@ -145,10 +160,11 @@ class Scripteur:
 
     @staticmethod
     def compter_mots(script: dict) -> int:
-        """Compte le nombre total de mots dans le script."""
+        """Compte le nombre total de mots dans le script (hors SFX)."""
         total = 0
         for seg in script["episode"]["segments"]:
-            total += len(seg["texte"].split())
+            if seg["personnage"] != "sfx":
+                total += len(seg["texte"].split())
         return total
 
     @staticmethod
@@ -162,7 +178,7 @@ class Scripteur:
                 raise ValueError(f"Champ manquant dans episode: '{champ}'")
         if not ep["segments"]:
             raise ValueError("Le script ne contient aucun segment.")
-        personnages_valides = {"papy_babou", "antoine", "noemie", "narrateur"}
+        personnages_valides = {"papy_babou", "antoine", "noemie", "narrateur", "sfx"}
         for seg in ep["segments"]:
             for champ in ("id", "personnage", "texte", "ton", "pause_apres_ms"):
                 if champ not in seg:

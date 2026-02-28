@@ -17,9 +17,11 @@ OUTPUT_DIR = BASE_DIR / "output" / "episodes"
 SCRIPTS_DIR = BASE_DIR / "scripts" / "episodes"
 LOGS_DIR = BASE_DIR / "logs"
 RSS_DIR = BASE_DIR / "rss"
+SFX_DIR = ASSETS_DIR / "sfx"
+SFX_CACHE_DIR = AUDIO_DIR / "sfx_cache"
 
 # Créer les répertoires s'ils n'existent pas
-for d in [SEGMENTS_DIR, OUTPUT_DIR, SCRIPTS_DIR, LOGS_DIR, RSS_DIR]:
+for d in [SEGMENTS_DIR, OUTPUT_DIR, SCRIPTS_DIR, LOGS_DIR, RSS_DIR, SFX_DIR, SFX_CACHE_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
 # ── Clés API ───────────────────────────────────────────────────────────────────
@@ -28,6 +30,7 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 BUZZSPROUT_API_KEY = os.getenv("BUZZSPROUT_API_KEY", "")
 BUZZSPROUT_PODCAST_ID = os.getenv("BUZZSPROUT_PODCAST_ID", "")
+FREESOUND_API_KEY = os.getenv("FREESOUND_API_KEY", "")
 
 # ── Configuration du podcast ──────────────────────────────────────────────────
 
@@ -103,6 +106,15 @@ AUDIO_ASSETS = {
     "fond_doux": ASSETS_DIR / "music" / "fond_doux.mp3",
     "intro_jingle": ASSETS_DIR / "music" / "intro_jingle.mp3",
     "outro_jingle": ASSETS_DIR / "music" / "outro_jingle.mp3",
+}
+
+# ── Configuration SFX (bruitages) ────────────────────────────────────────────
+
+SFX_CONFIG = {
+    "sfx_volume_db": -6,
+    "sfx_duree_defaut_secondes": 5.0,
+    "sfx_duree_max_secondes": 22.0,
+    "sfx_fade_ms": 300,
 }
 
 # ── Modèle Claude ─────────────────────────────────────────────────────────────

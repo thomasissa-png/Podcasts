@@ -93,7 +93,7 @@ class TestScripteurComptage:
         script = {
             "episode": {
                 "segments": [
-                    {"texte": "Bonjour"},
+                    {"personnage": "narrateur", "texte": "Bonjour"},
                 ]
             }
         }
