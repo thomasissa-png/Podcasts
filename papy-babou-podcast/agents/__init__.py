@@ -8,6 +8,7 @@ from .metadonnees import Metadonnees
 from .publisher import Publisher
 from .sfx_provider import SfxProvider
 from .cover_art import CoverArt
+from .planificateur import Planificateur
 
 __all__ = [
     "Scripteur",
@@ -18,4 +19,5 @@ __all__ = [
     "Metadonnees",
     "Publisher",
     "CoverArt",
+    "Planificateur",
 ]

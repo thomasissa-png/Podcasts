@@ -207,3 +207,119 @@ class TestCoverArtConfig:
         assert "model" in config.COVER_ART_CONFIG
         assert "size" in config.COVER_ART_CONFIG
         assert "style_prefix" in config.COVER_ART_CONFIG
+
+
+class TestFormatsEpisodes:
+    """Tests des formats d'épisodes."""
+
+    def test_formats_definis(self):
+        """Les 5 formats d'épisodes doivent être définis."""
+        assert "ouverture" in config.FORMATS_EPISODES
+        assert "standard" in config.FORMATS_EPISODES
+        assert "mi-saison" in config.FORMATS_EPISODES
+        assert "final" in config.FORMATS_EPISODES
+        assert "bonus" in config.FORMATS_EPISODES
+
+    def test_format_ouverture_plus_long(self):
+        """L'ouverture doit être plus longue que le standard."""
+        assert config.FORMATS_EPISODES["ouverture"]["duree_cible_minutes"] > config.FORMATS_EPISODES["standard"]["duree_cible_minutes"]
+
+    def test_format_final_le_plus_long(self):
+        """Le final doit être le plus long."""
+        final = config.FORMATS_EPISODES["final"]["duree_cible_minutes"]
+        for type_ep, fmt in config.FORMATS_EPISODES.items():
+            assert final >= fmt["duree_cible_minutes"], f"Le final ({final}) doit être >= {type_ep} ({fmt['duree_cible_minutes']})"
+
+    def test_format_bonus_le_plus_court(self):
+        """Le bonus doit être le plus court."""
+        bonus = config.FORMATS_EPISODES["bonus"]["duree_cible_minutes"]
+        for type_ep, fmt in config.FORMATS_EPISODES.items():
+            assert bonus <= fmt["duree_cible_minutes"], f"Le bonus ({bonus}) doit être <= {type_ep} ({fmt['duree_cible_minutes']})"
+
+
+class TestGestionSaisons:
+    """Tests de la gestion des saisons."""
+
+    def test_charger_saison_inexistante(self):
+        """Une saison inexistante doit retourner un dict vide."""
+        result = config.charger_saison(99)
+        assert result == {}
+
+    def test_charger_saison_existante(self, tmp_path, monkeypatch):
+        """Une saison existante doit être chargée."""
+        monkeypatch.setattr(config, "SAISONS_DIR", tmp_path)
+        plan = {"saison": {"numero": 1, "theme": "Test", "episodes": []}}
+        chemin = tmp_path / "saison_01.json"
+        with open(chemin, "w", encoding="utf-8") as f:
+            json.dump(plan, f)
+
+        result = config.charger_saison(1)
+        assert result["saison"]["theme"] == "Test"
+
+    def test_charger_episode_saison(self, tmp_path, monkeypatch):
+        """Un épisode spécifique doit être trouvé dans le plan."""
+        monkeypatch.setattr(config, "SAISONS_DIR", tmp_path)
+        plan = {
+            "saison": {
+                "numero": 1,
+                "theme": "Test",
+                "episodes": [
+                    {"numero": 1, "titre": "Premier"},
+                    {"numero": 2, "titre": "Deuxième"},
+                ],
+            }
+        }
+        chemin = tmp_path / "saison_01.json"
+        with open(chemin, "w", encoding="utf-8") as f:
+            json.dump(plan, f)
+
+        ep = config.charger_episode_saison(1, 2)
+        assert ep["titre"] == "Deuxième"
+
+    def test_charger_episode_inexistant(self, tmp_path, monkeypatch):
+        """Un épisode inexistant doit retourner un dict vide."""
+        monkeypatch.setattr(config, "SAISONS_DIR", tmp_path)
+        plan = {"saison": {"numero": 1, "theme": "Test", "episodes": []}}
+        chemin = tmp_path / "saison_01.json"
+        with open(chemin, "w", encoding="utf-8") as f:
+            json.dump(plan, f)
+
+        ep = config.charger_episode_saison(1, 99)
+        assert ep == {}
+
+    def test_liste_saisons(self, tmp_path, monkeypatch):
+        """La liste des saisons doit être triée."""
+        monkeypatch.setattr(config, "SAISONS_DIR", tmp_path)
+        for num in [3, 1, 2]:
+            chemin = tmp_path / f"saison_{num:02d}.json"
+            chemin.write_text("{}", encoding="utf-8")
+
+        result = config.liste_saisons()
+        assert result == [1, 2, 3]
+
+
+class TestPersonnagesValides:
+    """Tests des personnages valides dynamiques."""
+
+    def test_personnages_base(self):
+        """Les 5 personnages de base doivent être présents."""
+        persos = config.personnages_valides()
+        assert "papy_babou" in persos
+        assert "antoine" in persos
+        assert "noemie" in persos
+        assert "narrateur" in persos
+        assert "sfx" in persos
+
+    def test_ajouter_personnage(self, tmp_path, monkeypatch):
+        """Un personnage ajouté doit être reconnu comme valide."""
+        chemin = tmp_path / "personnages.json"
+        chemin.write_text('{"personnages": {}}', encoding="utf-8")
+        monkeypatch.setattr(config, "PERSONNAGES_JSON_PATH", chemin)
+
+        config.ajouter_personnage(
+            "mamie_rose",
+            {"nom_complet": "Mamie Rose", "description": "Épouse de Papy"},
+        )
+
+        persos = config.personnages_valides()
+        assert "mamie_rose" in persos

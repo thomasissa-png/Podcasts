@@ -107,6 +107,41 @@ class TestMonteurOverlaysPending:
         assert len(result) >= len(voix) + len(sfx)
 
 
+class TestMonteurJingles:
+    """Tests de la sélection dynamique de jingles."""
+
+    def test_charger_jingle_standard_fallback(self):
+        """Un type standard doit fallback vers le jingle par défaut."""
+        monteur = Monteur()
+        audio = monteur._charger_jingle("intro", "standard")
+        assert len(audio) > 0
+
+    def test_charger_jingle_type_inconnu_fallback(self):
+        """Un type inconnu doit fallback vers le jingle par défaut."""
+        monteur = Monteur()
+        audio = monteur._charger_jingle("intro", "type_inconnu")
+        assert len(audio) > 0
+
+    def test_charger_jingle_ouverture(self, tmp_path, monkeypatch):
+        """Un type ouverture avec jingle existant doit le charger."""
+        import config
+        from pydub import AudioSegment
+        from unittest.mock import patch
+
+        chemin = tmp_path / "intro_saison.mp3"
+        chemin.write_bytes(b"fake")
+
+        monkeypatch.setattr(config, "JINGLES_PAR_TYPE", {
+            "ouverture": {"intro": chemin},
+        })
+
+        fake_audio = AudioSegment.silent(duration=1000)
+        with patch.object(AudioSegment, "from_mp3", return_value=fake_audio):
+            monteur = Monteur()
+            audio = monteur._charger_jingle("intro", "ouverture")
+        assert len(audio) > 0
+
+
 class TestAppliquerPan:
     """Tests du panoramique stéréo."""
 

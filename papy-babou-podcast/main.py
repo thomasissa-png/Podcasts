@@ -1,12 +1,15 @@
-"""Orchestrateur principal — Pipeline de production du podcast Papy Babou.
+"""Orchestrateur principal — Pipeline de production sérielle du podcast Papy Babou.
 
 Usage:
-    python main.py produire -e "Le buisson ardent" -s 1 -n 2 -r "..." -m "La confiance en Dieu"
+    python main.py produire -e "Le buisson ardent" -s 1 -n 2 -r "..." -m "..."
     python main.py produire -e "..." -s 1 -n 1 -r "..." --dry-run
-    python main.py produire -e "..." -s 1 -n 1 -r "..." --auto  (sans validation humaine)
     python main.py interactif
     python main.py batch -f planning.json
+    python main.py planifier-saison -s 1 -t "Les grands voyages de la Bible"
+    python main.py produire-saison -s 1 --auto
+    python main.py produire-saison -s 1 -e "1,2,3" --dry-run
     python main.py dashboard
+    python main.py dashboard -s 1
     python main.py reprendre -c checkpoints/S01E01_checkpoint.json
 """
 
@@ -24,7 +27,10 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 import config
-from agents import Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur, Metadonnees, Publisher, CoverArt
+from agents import (
+    Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur,
+    Metadonnees, Publisher, CoverArt, Planificateur,
+)
 
 console = Console()
 
@@ -69,17 +75,31 @@ def sauvegarder_historique(historique: list[dict]) -> None:
 
 
 def ajouter_historique(rapport: dict, script: dict) -> None:
-    """Ajoute un épisode à l'historique pour la continuité inter-épisodes."""
+    """Ajoute un épisode à l'historique avec contexte sériel complet."""
     historique = charger_historique()
     episode = script.get("episode", {})
-    historique.append({
+
+    # Extraire les personnages présents dans le script
+    personnages_presents = sorted({
+        seg["personnage"] for seg in episode.get("segments", [])
+        if seg["personnage"] != "sfx"
+    })
+
+    entree = {
         "episode_id": rapport.get("episode_id", ""),
         "titre": rapport.get("titre", ""),
         "morale": episode.get("morale", ""),
         "resume_court": episode.get("titre", ""),
         "date_production": rapport.get("debut", ""),
         "score_review": rapport.get("etapes", {}).get("script", {}).get("score_review", 0),
-    })
+        # Contexte sériel
+        "personnages_presents": personnages_presents,
+        "moments_cles": episode.get("moments_cles", []),
+        "ambiance": episode.get("ambiance", ""),
+        "type_episode": episode.get("type", "standard"),
+    }
+
+    historique.append(entree)
     sauvegarder_historique(historique)
 
 
@@ -408,6 +428,8 @@ def pipeline(
     max_iterations_review: int = 3,
     etape_depart: str = "script",
     checkpoint_data: dict | None = None,
+    contexte_saison: dict | None = None,
+    type_episode: str = "standard",
 ) -> dict:
     """Execute le pipeline complet de production d'un episode.
 
@@ -422,6 +444,8 @@ def pipeline(
         max_iterations_review: Nombre max de boucles scripteur-reviewer.
         etape_depart: Étape à laquelle reprendre (pour les checkpoints).
         checkpoint_data: Données du checkpoint (pour la reprise).
+        contexte_saison: Plan de saison complet pour le contexte sériel.
+        type_episode: Type d'épisode (ouverture, standard, mi-saison, final, bonus).
 
     Returns:
         Rapport de production complet.
@@ -435,6 +459,32 @@ def pipeline(
         "etapes": {},
     }
 
+    # Charger le contexte de saison automatiquement si pas fourni
+    if not contexte_saison:
+        contexte_saison = config.charger_saison(saison) or None
+
+    # Charger les données de l'épisode depuis le plan de saison
+    episode_plan = None
+    if contexte_saison:
+        episode_plan = config.charger_episode_saison(saison, numero)
+        if episode_plan:
+            type_episode = episode_plan.get("type", type_episode)
+            if not morale and episode_plan.get("morale"):
+                morale = episode_plan["morale"]
+            # Enregistrer les personnages secondaires de la saison
+            for perso_sec in contexte_saison.get("saison", {}).get("personnages_secondaires", []):
+                perso_id = perso_sec.get("id", "")
+                if perso_id and perso_id not in config.personnages_valides():
+                    config.ajouter_personnage(
+                        perso_id,
+                        {
+                            "nom_complet": perso_sec.get("nom_complet", perso_id),
+                            "description": perso_sec.get("description", ""),
+                            "ton": perso_sec.get("ton", "neutre"),
+                            "tics_de_langage": perso_sec.get("tics_de_langage", []),
+                        },
+                    )
+
     # Validation des clés API au démarrage
     erreurs_api = config.valider_cles_api(dry_run=dry_run)
     if erreurs_api:
@@ -447,9 +497,10 @@ def pipeline(
 
     mode_str = "DRY RUN (pas d'audio ni de publication)" if dry_run else "PRODUCTION"
     morale_str = morale or "non définie"
+    type_str = f" [{type_episode}]" if type_episode != "standard" else ""
     console.print(
         Panel(
-            f"[bold]Épisode {episode_id} — {titre}[/bold]\n"
+            f"[bold]Épisode {episode_id} — {titre}{type_str}[/bold]\n"
             f"Mode : {mode_str}\n"
             f"Morale : {morale_str}",
             title="Les Histoires de Papy Babou",
@@ -486,6 +537,8 @@ def pipeline(
             script = scripteur.generer(
                 titre=titre, resume=resume, saison=saison, numero=numero,
                 morale=morale, corrections=corrections, historique=historique,
+                contexte_saison=contexte_saison, episode_plan=episode_plan,
+                type_episode=type_episode,
             )
 
             chemin_script = config.SCRIPTS_DIR / f"{episode_id}_v{iteration}.json"
@@ -954,8 +1007,181 @@ def reprendre(checkpoint: str, auto: bool):
         sys.exit(1)
 
 
+@cli.command("planifier-saison")
+@click.option("--saison", "-s", type=int, required=True, help="Numero de la saison")
+@click.option("--theme", "-t", required=True, help="Theme central de la saison")
+@click.option("--description", "-d", default="", help="Description / vision du producteur")
+@click.option("--personnages", "-p", default="", help="Personnages secondaires a introduire (separes par des virgules)")
+def planifier_saison(saison: int, theme: str, description: str, personnages: str):
+    """Planifie une saison complete de 10 episodes avec arcs narratifs."""
+    console.print(Panel(
+        f"[bold]Planification — Saison {saison}[/bold]\n"
+        f"Theme : {theme}\n"
+        f"Description : {description or 'non fournie'}",
+        title="Planificateur de saison",
+        border_style="blue",
+    ))
+
+    # Charger les saisons précédentes pour continuité
+    saisons_prec = []
+    for num in config.liste_saisons():
+        plan = config.charger_saison(num)
+        if plan:
+            saison_data = plan.get("saison", {})
+            saisons_prec.append({
+                "numero": saison_data.get("numero", num),
+                "theme": saison_data.get("theme", "?"),
+                "description": saison_data.get("description", ""),
+            })
+
+    personnages_list = [p.strip() for p in personnages.split(",") if p.strip()] if personnages else None
+
+    try:
+        planificateur = Planificateur()
+        plan = planificateur.planifier_saison(
+            numero_saison=saison,
+            theme=theme,
+            description=description,
+            personnages_secondaires=personnages_list,
+            saisons_precedentes=saisons_prec or None,
+        )
+
+        # Sauvegarder le plan
+        chemin_json = config.SAISONS_DIR / f"saison_{saison:02d}.json"
+        planificateur.sauvegarder(plan, chemin_json)
+        console.print(f"  Plan sauvegarde : {chemin_json}")
+
+        # Exporter en CSV et Markdown
+        chemin_csv = config.SAISONS_DIR / f"saison_{saison:02d}.csv"
+        chemin_md = config.SAISONS_DIR / f"saison_{saison:02d}.md"
+        planificateur.exporter_csv(plan, chemin_csv)
+        planificateur.exporter_markdown(plan, chemin_md)
+        console.print(f"  Export CSV : {chemin_csv}")
+        console.print(f"  Export Markdown : {chemin_md}")
+
+        # Afficher le résumé
+        saison_data = plan["saison"]
+        table = Table(title=f"Saison {saison} — {saison_data['theme']}")
+        table.add_column("Ep", style="cyan", justify="right")
+        table.add_column("Titre", style="white")
+        table.add_column("Type", style="dim")
+        table.add_column("Ambiance", style="dim")
+        table.add_column("Morale", style="dim")
+
+        for ep in saison_data["episodes"]:
+            table.add_row(
+                str(ep["numero"]),
+                ep["titre"],
+                ep.get("type", "standard"),
+                ep.get("ambiance", "?"),
+                ep["morale"][:40],
+            )
+        console.print(table)
+
+        # Afficher les arcs
+        arcs = saison_data.get("arcs_personnages", {})
+        if arcs:
+            console.print("\n[bold]  Arcs de personnages :[/bold]")
+            for perso, arc in arcs.items():
+                nom = perso.replace("_", " ").title()
+                console.print(f"    {nom} : {arc.get('depart', '')} -> {arc.get('arrivee', '')}")
+
+        # Afficher les personnages secondaires
+        secondaires = saison_data.get("personnages_secondaires", [])
+        if secondaires:
+            console.print("\n[bold]  Personnages secondaires :[/bold]")
+            for p in secondaires:
+                console.print(
+                    f"    {p.get('nom_complet', '?')} "
+                    f"(episode {p.get('apparait_episode', '?')}) : "
+                    f"{p.get('description', '')[:60]}"
+                )
+
+    except Exception as e:
+        console.print(f"[bold red]Erreur : {e}[/bold red]")
+        logger.exception("Erreur lors de la planification")
+        sys.exit(1)
+
+
+@cli.command("produire-saison")
+@click.option("--saison", "-s", type=int, required=True, help="Numero de la saison")
+@click.option("--episodes", "-e", default="", help="Episodes specifiques (ex: '1,3,5' — vide = tous)")
+@click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
+@click.option("--auto", is_flag=True, default=True, help="Mode automatique (defaut: oui)")
+def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
+    """Produit les episodes d'une saison a partir du plan de saison."""
+    plan = config.charger_saison(saison)
+    if not plan:
+        console.print(f"[red]Plan de saison {saison} introuvable. Lancez planifier-saison d'abord.[/red]")
+        sys.exit(1)
+
+    saison_data = plan["saison"]
+    episodes_plan = saison_data["episodes"]
+
+    # Filtrer les épisodes si spécifié
+    if episodes:
+        nums = [int(n.strip()) for n in episodes.split(",")]
+        episodes_plan = [ep for ep in episodes_plan if ep["numero"] in nums]
+
+    console.print(Panel(
+        f"[bold]Production sérielle — Saison {saison}[/bold]\n"
+        f"Theme : {saison_data['theme']}\n"
+        f"Episodes : {len(episodes_plan)}\n"
+        f"Mode : {'DRY RUN' if dry_run else 'PRODUCTION'}",
+        title="Production de saison",
+        border_style="blue",
+    ))
+
+    resultats = []
+    for i, ep in enumerate(episodes_plan, 1):
+        console.print(f"\n[bold]{'='*60}[/bold]")
+        console.print(
+            f"[bold cyan]Episode {i}/{len(episodes_plan)} — "
+            f"S{saison:02d}E{ep['numero']:02d} {ep['titre']} "
+            f"[{ep.get('type', 'standard')}][/bold cyan]"
+        )
+        console.print(f"[bold]{'='*60}[/bold]")
+
+        try:
+            rapport = pipeline(
+                titre=ep["titre"],
+                resume=ep.get("resume", ep.get("histoire_biblique", "")),
+                saison=saison,
+                numero=ep["numero"],
+                morale=ep.get("morale", ""),
+                dry_run=dry_run,
+                auto=auto,
+                contexte_saison=plan,
+                type_episode=ep.get("type", "standard"),
+            )
+            resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
+        except Exception as e:
+            logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
+            resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+
+    # Rapport de saison
+    console.print(f"\n[bold]{'='*60}[/bold]")
+    console.print("[bold green]Rapport de saison[/bold green]")
+    ok = sum(1 for r in resultats if r["status"] == "ok")
+    erreurs = sum(1 for r in resultats if r["status"] == "error")
+    console.print(f"  Reussis : {ok}/{len(episodes_plan)}")
+    console.print(f"  Echecs  : {erreurs}/{len(episodes_plan)}")
+
+    for r in resultats:
+        status = "[green]OK[/green]" if r["status"] == "ok" else "[red]ERREUR[/red]"
+        console.print(f"  {status} — {r['episode']}")
+        if r["status"] == "error":
+            console.print(f"    [red]{r['erreur']}[/red]")
+
+    chemin_batch = config.LOGS_DIR / f"saison_{saison:02d}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(chemin_batch, "w", encoding="utf-8") as f:
+        json.dump(resultats, f, ensure_ascii=False, indent=2, default=str)
+    console.print(f"\n  Rapport saison : {chemin_batch}")
+
+
 @cli.command()
-def dashboard():
+@click.option("--saison", "-s", type=int, default=0, help="Filtrer par saison (0 = toutes)")
+def dashboard(saison: int):
     """Affiche le dashboard de suivi des episodes produits."""
     historique = charger_historique()
 
@@ -963,10 +1189,20 @@ def dashboard():
         console.print("[yellow]Aucun episode produit pour le moment.[/yellow]")
         return
 
+    # Filtrer par saison si demandé
+    if saison > 0:
+        prefix = f"S{saison:02d}"
+        historique = [ep for ep in historique if ep.get("episode_id", "").startswith(prefix)]
+        if not historique:
+            console.print(f"[yellow]Aucun episode produit pour la saison {saison}.[/yellow]")
+            return
+
     # Tableau des épisodes
-    table = Table(title="Dashboard — Episodes produits")
+    titre_table = f"Dashboard — Saison {saison}" if saison > 0 else "Dashboard — Tous les episodes"
+    table = Table(title=titre_table)
     table.add_column("Episode", style="cyan")
     table.add_column("Titre", style="white")
+    table.add_column("Type", style="dim")
     table.add_column("Score", justify="right", style="green")
     table.add_column("Morale", style="dim")
     table.add_column("Date", style="dim")
@@ -977,8 +1213,9 @@ def dashboard():
         table.add_row(
             ep.get("episode_id", "?"),
             ep.get("titre", "?"),
+            ep.get("type_episode", "standard"),
             f"[{score_style}]{score}/10[/{score_style}]",
-            ep.get("morale", "")[:50],
+            ep.get("morale", "")[:40],
             ep.get("date_production", "")[:10],
         )
 
@@ -992,12 +1229,41 @@ def dashboard():
         console.print(f"  Meilleur score : {max(scores)}/10")
         console.print(f"  Plus bas score : {min(scores)}/10")
 
+    # Personnages utilisés
+    all_personnages: dict[str, int] = {}
+    for ep in historique:
+        for p in ep.get("personnages_presents", []):
+            all_personnages[p] = all_personnages.get(p, 0) + 1
+    if all_personnages:
+        console.print("\n[bold]  Personnages :[/bold]")
+        for p, count in sorted(all_personnages.items(), key=lambda x: -x[1]):
+            console.print(f"    {p} : {count} episode(s)")
+
+    # Vue saison si un plan existe
+    if saison > 0:
+        plan = config.charger_saison(saison)
+        if plan:
+            saison_data = plan.get("saison", {})
+            episodes_plan = saison_data.get("episodes", [])
+            episodes_produits = {ep.get("episode_id") for ep in historique}
+            console.print(f"\n[bold]  Progression de la saison {saison} :[/bold]")
+            for ep in episodes_plan:
+                ep_id = f"S{saison:02d}E{ep['numero']:02d}"
+                status = "[green]PRODUIT[/green]" if ep_id in episodes_produits else "[yellow]A FAIRE[/yellow]"
+                console.print(f"    E{ep['numero']:02d} {ep['titre'][:40]} — {status}")
+
+    # Saisons disponibles
+    saisons_dispo = config.liste_saisons()
+    if saisons_dispo:
+        console.print(f"\n[bold]  Saisons planifiees :[/bold] {', '.join(str(s) for s in saisons_dispo)}")
+
     # Coûts détaillés (depuis les rapports)
     cout_total_global = 0.0
     total_chars = 0
     rapports_dir = config.LOGS_DIR
     cout_par_service: dict[str, float] = {}
-    for rapport_path in rapports_dir.glob("S*_rapport.json"):
+    pattern = f"S{saison:02d}*_rapport.json" if saison > 0 else "S*_rapport.json"
+    for rapport_path in rapports_dir.glob(pattern):
         try:
             with open(rapport_path, "r", encoding="utf-8") as f:
                 rapport = json.load(f)
@@ -1014,13 +1280,13 @@ def dashboard():
             pass
 
     if total_chars > 0 or cout_total_global > 0:
-        console.print("\n[bold]  Coûts cumulés :[/bold]")
+        console.print("\n[bold]  Couts cumules :[/bold]")
         if total_chars > 0:
             console.print(f"  Total caracteres ElevenLabs : {total_chars:,}")
         for service, cout in sorted(cout_par_service.items()):
             console.print(f"  {service} : ${cout:.4f}")
         if cout_total_global > 0:
-            console.print(f"  [bold]TOTAL estimé : ${cout_total_global:.4f}[/bold]")
+            console.print(f"  [bold]TOTAL estime : ${cout_total_global:.4f}[/bold]")
 
     # Checkpoints en cours
     checkpoints = list(config.CHECKPOINTS_DIR.glob("*_checkpoint.json"))

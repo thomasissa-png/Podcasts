@@ -26,6 +26,7 @@ SFX_DIR = ASSETS_DIR / "sfx"
 SFX_CACHE_DIR = AUDIO_DIR / "sfx_cache"
 CHECKPOINTS_DIR = BASE_DIR / "checkpoints"
 HISTORIQUE_DIR = BASE_DIR / "data"
+SAISONS_DIR = HISTORIQUE_DIR / "saisons"
 COVERS_DIR = ASSETS_DIR / "covers"
 CHAPTERS_DIR = BASE_DIR / "output" / "chapters"
 TRANSCRIPTS_DIR = BASE_DIR / "output" / "transcripts"
@@ -33,7 +34,7 @@ TRANSCRIPTS_DIR = BASE_DIR / "output" / "transcripts"
 # Créer les répertoires s'ils n'existent pas
 for d in [
     SEGMENTS_DIR, OUTPUT_DIR, SCRIPTS_DIR, LOGS_DIR, RSS_DIR,
-    SFX_DIR, SFX_CACHE_DIR, CHECKPOINTS_DIR, HISTORIQUE_DIR,
+    SFX_DIR, SFX_CACHE_DIR, CHECKPOINTS_DIR, HISTORIQUE_DIR, SAISONS_DIR,
     COVERS_DIR, CHAPTERS_DIR, TRANSCRIPTS_DIR,
 ]:
     d.mkdir(parents=True, exist_ok=True)
@@ -191,6 +192,18 @@ AUDIO_ASSETS = {
     "outro_jingle": ASSETS_DIR / "music" / "outro_jingle.mp3",
 }
 
+# Jingles variés selon le type d'épisode (fallback vers les jingles standards)
+JINGLES_PAR_TYPE = {
+    "ouverture": {
+        "intro": ASSETS_DIR / "music" / "intro_saison.mp3",
+        "outro": ASSETS_DIR / "music" / "outro_jingle.mp3",
+    },
+    "final": {
+        "intro": ASSETS_DIR / "music" / "intro_jingle.mp3",
+        "outro": ASSETS_DIR / "music" / "outro_saison.mp3",
+    },
+}
+
 # ── Multi-ambiances musicales ────────────────────────────────────────────────
 # Le scripteur choisit l'ambiance dans le champ "ambiance" du script.
 # Si l'asset n'existe pas, on fallback sur "fond_doux".
@@ -241,6 +254,133 @@ def charger_personnages() -> dict:
         with open(PERSONNAGES_JSON_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
+
+
+def ajouter_personnage(
+    personnage_id: str,
+    data: dict,
+    voice_id: str = "",
+    pan: float = 0.0,
+) -> None:
+    """Ajoute un personnage secondaire à la bible et au système audio.
+
+    Args:
+        personnage_id: Identifiant unique (ex: 'mamie_rose').
+        data: Données du personnage (nom_complet, description, ton, etc.).
+        voice_id: ElevenLabs voice ID (optionnel).
+        pan: Panoramique stéréo (-1.0 à 1.0).
+    """
+    bible = charger_personnages()
+    if "personnages" not in bible:
+        bible["personnages"] = {}
+    bible["personnages"][personnage_id] = data
+
+    with open(PERSONNAGES_JSON_PATH, "w", encoding="utf-8") as f:
+        json.dump(bible, f, ensure_ascii=False, indent=2)
+
+    # Enregistrer la voix et le pan dynamiquement
+    if voice_id:
+        VOICE_IDS[personnage_id] = voice_id
+    if personnage_id not in VOICE_SETTINGS:
+        VOICE_SETTINGS[personnage_id] = {
+            "stability": 0.70,
+            "similarity_boost": 0.80,
+            "style": 0.2,
+        }
+    STEREO_PAN[personnage_id] = pan
+
+
+def personnages_valides() -> set[str]:
+    """Retourne l'ensemble des personnages connus (principaux + secondaires).
+
+    Inclut dynamiquement tous les personnages de la bible.
+    """
+    base = {"papy_babou", "antoine", "noemie", "narrateur", "sfx"}
+    bible = charger_personnages()
+    if bible and "personnages" in bible:
+        base.update(bible["personnages"].keys())
+    return base
+
+
+# ── Gestion des saisons ──────────────────────────────────────────────────────
+
+
+def charger_saison(numero: int) -> dict:
+    """Charge le plan d'une saison depuis son fichier JSON.
+
+    Args:
+        numero: Numéro de la saison.
+
+    Returns:
+        Plan de saison ou dictionnaire vide si inexistant.
+    """
+    chemin = SAISONS_DIR / f"saison_{numero:02d}.json"
+    if chemin.exists():
+        with open(chemin, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def charger_episode_saison(saison: int, numero: int) -> dict:
+    """Charge les données d'un épisode spécifique depuis le plan de saison.
+
+    Args:
+        saison: Numéro de la saison.
+        numero: Numéro de l'épisode.
+
+    Returns:
+        Données de l'épisode ou dictionnaire vide.
+    """
+    plan = charger_saison(saison)
+    if not plan:
+        return {}
+    for ep in plan.get("saison", {}).get("episodes", []):
+        if ep.get("numero") == numero:
+            return ep
+    return {}
+
+
+def liste_saisons() -> list[int]:
+    """Retourne la liste des numéros de saisons existantes."""
+    numeros = []
+    for f in SAISONS_DIR.glob("saison_*.json"):
+        try:
+            num = int(f.stem.split("_")[1])
+            numeros.append(num)
+        except (IndexError, ValueError):
+            pass
+    return sorted(numeros)
+
+
+# ── Formats d'épisodes ───────────────────────────────────────────────────────
+
+FORMATS_EPISODES = {
+    "ouverture": {
+        "duree_cible_minutes": 15,
+        "mots_cible": 1600,
+        "description": "Premier épisode de saison — présentation du thème et des enjeux",
+    },
+    "standard": {
+        "duree_cible_minutes": 13,
+        "mots_cible": 1400,
+        "description": "Épisode classique de la saison",
+    },
+    "mi-saison": {
+        "duree_cible_minutes": 15,
+        "mots_cible": 1600,
+        "description": "Épisode pivot — tournant dramatique ou récapitulatif",
+    },
+    "final": {
+        "duree_cible_minutes": 18,
+        "mots_cible": 1900,
+        "description": "Dernier épisode — conclusion de l'arc de saison",
+    },
+    "bonus": {
+        "duree_cible_minutes": 10,
+        "mots_cible": 1000,
+        "description": "Épisode bonus — Q&R, coulisses, ou récap",
+    },
+}
 
 
 # ── Modèle Claude ─────────────────────────────────────────────────────────────

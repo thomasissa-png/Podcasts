@@ -59,6 +59,11 @@ class TestHistorique:
             "episode": {
                 "titre": "Le buisson ardent",
                 "morale": "La confiance en Dieu",
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Bonjour"},
+                    {"personnage": "antoine", "texte": "Salut"},
+                    {"personnage": "sfx", "texte": "vent"},
+                ],
             }
         }
 
@@ -68,6 +73,45 @@ class TestHistorique:
         assert len(historique) == 1
         assert historique[0]["morale"] == "La confiance en Dieu"
         assert historique[0]["score_review"] == 8
+
+    def test_ajouter_historique_contexte_seriel(self, tmp_path, monkeypatch):
+        """L'historique enrichi doit contenir les personnages et moments clés."""
+        import main
+        chemin = tmp_path / "historique.json"
+        monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+
+        rapport = {
+            "episode_id": "S01E01",
+            "titre": "Le buisson ardent",
+            "debut": "2025-01-01T00:00:00",
+            "etapes": {"script": {"score_review": 8}},
+        }
+        script = {
+            "episode": {
+                "titre": "Le buisson ardent",
+                "morale": "La confiance en Dieu",
+                "moments_cles": ["Moïse voit le buisson", "Dieu parle"],
+                "ambiance": "mystere",
+                "type": "ouverture",
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Bonjour"},
+                    {"personnage": "antoine", "texte": "Salut"},
+                    {"personnage": "noemie", "texte": "Coucou"},
+                ],
+            }
+        }
+
+        ajouter_historique(rapport, script)
+
+        historique = charger_historique()
+        assert len(historique) == 1
+        ep = historique[0]
+        assert "papy_babou" in ep["personnages_presents"]
+        assert "antoine" in ep["personnages_presents"]
+        assert "noemie" in ep["personnages_presents"]
+        assert "Moïse voit le buisson" in ep["moments_cles"]
+        assert ep["ambiance"] == "mystere"
+        assert ep["type_episode"] == "ouverture"
 
 
 class TestCheckpoints:

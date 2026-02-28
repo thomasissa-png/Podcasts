@@ -113,9 +113,10 @@ class Monteur:
         voix = self._assembler_segments(episode["segments"], segments_dir)
         logger.info("Segments voix assemblés : %.1f secondes", len(voix) / 1000.0)
 
-        # 2. Charger les assets audio
-        intro = self._charger_asset("intro_jingle")
-        outro = self._charger_asset("outro_jingle")
+        # 2. Charger les assets audio (jingles dynamiques par type d'épisode)
+        type_episode = episode.get("type", "standard")
+        intro = self._charger_jingle("intro", type_episode)
+        outro = self._charger_jingle("outro", type_episode)
 
         # 3. Charger la musique de fond selon l'ambiance
         ambiance = episode.get("ambiance", "fond_doux")
@@ -242,6 +243,25 @@ class Monteur:
             overlays_pending.clear()
 
         return resultat
+
+    def _charger_jingle(self, position: str, type_episode: str) -> AudioSegment:
+        """Charge un jingle adapté au type d'épisode.
+
+        Cherche d'abord dans JINGLES_PAR_TYPE, puis fallback vers AUDIO_ASSETS.
+
+        Args:
+            position: "intro" ou "outro".
+            type_episode: Type d'épisode (ouverture, standard, final, etc.).
+        """
+        jingles_type = config.JINGLES_PAR_TYPE.get(type_episode, {})
+        chemin = jingles_type.get(position)
+        if chemin and chemin.exists():
+            logger.info("Jingle %s chargé pour type '%s' : %s", position, type_episode, chemin)
+            return AudioSegment.from_mp3(str(chemin))
+
+        # Fallback vers les jingles standards
+        asset_nom = f"{position}_jingle"
+        return self._charger_asset(asset_nom)
 
     def _charger_asset(self, nom: str) -> AudioSegment:
         """Charge un asset audio depuis le dossier assets."""

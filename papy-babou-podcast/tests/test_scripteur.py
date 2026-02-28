@@ -9,7 +9,10 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agents.scripteur import Scripteur, _construire_bible_personnages, _construire_system_prompt
+from agents.scripteur import (
+    Scripteur, _construire_bible_personnages, _construire_system_prompt,
+    _construire_contexte_serie, _construire_structure_narrative,
+)
 
 
 class TestScripteurValidation:
@@ -53,7 +56,7 @@ class TestScripteurValidation:
                 "segments": [
                     {
                         "id": "seg_001",
-                        "personnage": "inconnu",
+                        "personnage": "personnage_xyz_inconnu",
                         "texte": "Texte",
                         "ton": "neutre",
                         "pause_apres_ms": 0,
@@ -61,7 +64,7 @@ class TestScripteurValidation:
                 ],
             }
         }
-        with pytest.raises(ValueError, match="inconnu"):
+        with pytest.raises(ValueError, match="personnage_xyz_inconnu"):
             Scripteur._valider_structure(script)
 
     def test_valider_structure_champ_segment_manquant(self):
@@ -255,3 +258,170 @@ class TestScripteurGeneration:
         call_args = mock_client.messages.create.call_args
         user_msg = call_args[1]["messages"][0]["content"]
         assert "Noé" in user_msg
+
+    @patch("agents.scripteur.anthropic.Anthropic")
+    def test_generer_avec_contexte_saison(self, mock_anthropic, script_exemple):
+        """La génération avec contexte de saison doit inclure le type d'épisode."""
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            MagicMock(text=json.dumps(script_exemple))
+        ]
+        mock_client.messages.create.return_value = mock_response
+
+        contexte = {
+            "saison": {
+                "numero": 1,
+                "theme": "Les voyages",
+                "description": "Grands voyages bibliques",
+                "fil_rouge": "Le courage",
+                "arcs_personnages": {},
+                "rituels": {
+                    "accroche": "Prêts pour le voyage ?",
+                    "au_revoir": "Bon voyage !",
+                },
+                "episodes": [],
+            }
+        }
+        episode_plan = {
+            "numero": 1,
+            "type": "ouverture",
+            "arc_personnage_focus": "antoine",
+            "progression_arc": "Découvre le courage",
+            "teasing_episode_suivant": "La prochaine fois, Moïse...",
+            "elements_fil_rouge": "Premier voyage",
+        }
+
+        scripteur = Scripteur()
+        scripteur.client = mock_client
+        result = scripteur.generer(
+            titre="Abraham",
+            resume="Le départ d'Abraham",
+            saison=1,
+            numero=1,
+            type_episode="ouverture",
+            contexte_saison=contexte,
+            episode_plan=episode_plan,
+        )
+
+        call_args = mock_client.messages.create.call_args
+        user_msg = call_args[1]["messages"][0]["content"]
+        system_msg = call_args[1]["system"]
+        assert "ouverture" in user_msg
+        assert "Les voyages" in system_msg
+        assert "Le courage" in system_msg
+
+
+class TestContexteSerie:
+    """Tests de la construction du contexte sériel."""
+
+    def test_contexte_sans_saison(self):
+        """Sans contexte de saison, le texte doit indiquer un épisode indépendant."""
+        result = _construire_contexte_serie(None)
+        assert "indépendant" in result.lower() or "independant" in result.lower()
+
+    def test_contexte_avec_saison(self):
+        """Avec un contexte de saison, le thème doit apparaître."""
+        contexte = {
+            "saison": {
+                "theme": "Les grands voyages",
+                "description": "Découvrir les voyages",
+                "fil_rouge": "Le courage de partir",
+                "arcs_personnages": {
+                    "antoine": {
+                        "depart": "Timide",
+                        "evolution": "Grandit",
+                        "arrivee": "Courageux",
+                    },
+                },
+            }
+        }
+        result = _construire_contexte_serie(contexte)
+        assert "Les grands voyages" in result
+        assert "Le courage de partir" in result
+        assert "Antoine" in result
+        assert "Timide" in result
+
+
+class TestStructureNarrative:
+    """Tests de la construction de la structure narrative par type d'épisode."""
+
+    def test_structure_ouverture(self):
+        """L'ouverture doit contenir les éléments spécifiques."""
+        result = _construire_structure_narrative("ouverture")
+        assert "SAISON" in result
+        assert "TEASING" in result
+
+    def test_structure_standard(self):
+        """La structure standard doit contenir previously-on et teasing."""
+        historique = [{"titre": "Épisode précédent", "morale": "La foi"}]
+        result = _construire_structure_narrative("standard", historique=historique)
+        assert "PREVIOUSLY ON" in result
+        assert "Épisode précédent" in result
+
+    def test_structure_final(self):
+        """Le final doit contenir un grand récapitulatif."""
+        result = _construire_structure_narrative("final")
+        assert "RÉCAPITULATIF" in result or "CLIMAX" in result
+
+    def test_structure_avec_rituels(self):
+        """Les rituels doivent apparaître dans la structure."""
+        contexte = {
+            "saison": {
+                "rituels": {
+                    "accroche": "Prêts pour l'aventure ?",
+                    "au_revoir": "À la prochaine !",
+                    "segment_recurrent": "Le mot du jour",
+                },
+            }
+        }
+        result = _construire_structure_narrative("standard", contexte_saison=contexte)
+        assert "Prêts pour l'aventure" in result
+        assert "À la prochaine" in result
+        assert "Le mot du jour" in result
+
+    def test_structure_avec_teasing(self):
+        """Le teasing de l'épisode suivant doit apparaître."""
+        episode_plan = {
+            "teasing_episode_suivant": "Moïse va traverser la mer...",
+        }
+        result = _construire_structure_narrative("standard", episode_plan=episode_plan)
+        assert "Moïse va traverser la mer" in result
+
+
+class TestSystemPromptSeriel:
+    """Tests du system prompt sériel."""
+
+    def test_system_prompt_contient_type_episode(self):
+        """Le system prompt doit adapter la durée au type d'épisode."""
+        prompt = _construire_system_prompt(type_episode="ouverture")
+        assert "15" in prompt  # durée ouverture = 15 min
+        assert "1600" in prompt  # mots cible ouverture = 1600
+
+    def test_system_prompt_contient_contexte_saison(self):
+        """Le system prompt doit inclure le contexte sériel."""
+        contexte = {
+            "saison": {
+                "theme": "La création",
+                "description": "Les 7 jours",
+                "fil_rouge": "L'émerveillement",
+                "arcs_personnages": {},
+            }
+        }
+        prompt = _construire_system_prompt(contexte_saison=contexte)
+        assert "La création" in prompt
+        assert "L'émerveillement" in prompt
+
+    def test_system_prompt_personnages_dynamiques(self, monkeypatch):
+        """Le system prompt doit inclure les personnages dynamiques."""
+        import config
+        # Simuler un personnage secondaire
+        original = config.personnages_valides
+        monkeypatch.setattr(
+            config, "personnages_valides",
+            lambda: {"papy_babou", "antoine", "noemie", "narrateur", "sfx", "mamie_rose"},
+        )
+        prompt = _construire_system_prompt()
+        assert "mamie_rose" in prompt
+        assert "PERSONNAGES SECONDAIRES" in prompt

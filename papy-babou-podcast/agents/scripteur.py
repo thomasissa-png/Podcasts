@@ -1,4 +1,8 @@
-"""Agent Scripteur — Génère le script complet d'un épisode de podcast."""
+"""Agent Scripteur — Génère le script complet d'un épisode de podcast.
+
+Supporte la production sérielle : contexte de saison, previously-on,
+teasing, rituels, personnages dynamiques, et types d'épisodes variables.
+"""
 
 import json
 import logging
@@ -11,30 +15,19 @@ import config
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT_BASE = """\
-Tu es un scénariste spécialisé dans les podcasts pour enfants de 6 à 10 ans.
+Tu es un scénariste spécialisé dans les podcasts SÉRIELS pour enfants de 6 à 10 ans.
 Tu écris les scripts du podcast "Les Histoires de Papy Babou".
+Ce podcast fonctionne par SAISONS de 10 épisodes avec un arc narratif continu.
 
 {bible_personnages}
 
-STRUCTURE NARRATIVE EN 3 ACTES :
-1. ACCROCHE (2-3 min) :
-   - Scène d'ouverture : Papy Babou accueille les enfants chaleureusement.
-   - Il plante le décor de l'histoire avec un élément d'intrigue.
-   - Les enfants posent des questions pour lancer le récit.
+{contexte_serie}
 
-2. DÉVELOPPEMENT (7-8 min) :
-   - Récit principal de l'histoire biblique avec les péripéties.
-   - Moments de tension dramatique (bruitages d'ambiance, silences).
-   - Les enfants réagissent régulièrement : Antoine sur l'action, Noémie sur l'émotion.
-   - Papy explique les mots difficiles avec des analogies adaptées.
-
-3. CONCLUSION (2-3 min) :
-   - Résolution de l'histoire.
-   - Leçon de vie claire et mémorable pour les enfants.
-   - Au revoir chaleureux de Papy Babou.
+STRUCTURE NARRATIVE :
+{structure_narrative}
 
 RÈGLES STRICTES :
-1. Le script doit faire environ 1400 mots pour 13 minutes (rythme adapté aux enfants).
+1. Le script doit faire environ {mots_cible} mots pour {duree_cible} minutes (rythme adapté aux enfants).
 2. Les enfants doivent intervenir au moins toutes les 90 secondes de narration (~150-180 mots).
 3. Alterner entre Antoine (questions logiques/action) et Noémie (questions émotionnelles).
 4. Utiliser les tics de langage de chaque personnage régulièrement.
@@ -54,6 +47,7 @@ RÈGLES STRICTES :
     - Utilise 3 à 8 bruitages par épisode, pas plus (ne pas surcharger).
 11. AMBIANCE MUSICALE : choisis l'ambiance générale de l'épisode parmi :
     "joyeux", "dramatique", "calme", "mystere". Indique-la dans le champ "ambiance" de l'épisode.
+{regles_personnages_dynamiques}
 
 MOTS INTERDITS (ne jamais utiliser ces mots, préférer des alternatives douces) :
 {mots_interdits}
@@ -64,13 +58,15 @@ FORMAT DE SORTIE — JSON STRICT :
     "titre": "...",
     "numero": N,
     "saison": N,
-    "duree_cible_minutes": 13,
+    "duree_cible_minutes": {duree_cible},
     "ambiance": "joyeux|dramatique|calme|mystere",
     "morale": "La leçon de vie de cet épisode",
+    "personnages_presents": ["papy_babou", "antoine", "noemie"],
+    "moments_cles": ["Moment important 1", "Moment important 2"],
     "segments": [
       {{
         "id": "seg_001",
-        "personnage": "papy_babou|antoine|noemie|narrateur",
+        "personnage": "{personnages_format}",
         "texte": "...",
         "ton": "chaleureux|curieux|inquiet|neutre|enthousiaste|dramatique|joyeux|rassurant",
         "pause_apres_ms": 800
@@ -90,6 +86,99 @@ FORMAT DE SORTIE — JSON STRICT :
 
 Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 """
+
+# ── Structure narrative par type d'épisode ───────────────────────────────────
+
+STRUCTURES_NARRATIVES = {
+    "ouverture": """\
+1. ACCROCHE DE SAISON (3-4 min) :
+   - Scène d'ouverture : Papy Babou présente le THÈME de la nouvelle saison.
+   - Il crée l'excitation : "Cette saison, on va découvrir ensemble..."
+   - Les enfants réagissent au thème avec enthousiasme et curiosité.
+   - {ritual_accroche}
+
+2. DÉVELOPPEMENT (8-9 min) :
+   - Première histoire biblique de la saison, qui pose les bases du thème.
+   - Présentation des enjeux de la saison.
+   - Les enfants posent des questions qui ouvrent sur les épisodes suivants.
+
+3. CONCLUSION + TEASING (3-4 min) :
+   - Résolution de la première histoire.
+   - Leçon de vie inaugurale.
+   - Papy tease la prochaine histoire avec mystère.
+   - {ritual_au_revoir}""",
+
+    "standard": """\
+1. ACCROCHE (2-3 min) :
+   - {previously_on}
+   - Scène d'ouverture : Papy Babou accueille les enfants chaleureusement.
+   - {ritual_accroche}
+   - Il plante le décor de l'histoire avec un élément d'intrigue.
+
+2. DÉVELOPPEMENT (7-8 min) :
+   - Récit principal de l'histoire biblique avec les péripéties.
+   - Moments de tension dramatique (bruitages d'ambiance, silences).
+   - Les enfants réagissent régulièrement : Antoine sur l'action, Noémie sur l'émotion.
+   - Papy explique les mots difficiles avec des analogies adaptées.
+   - {segment_recurrent}
+
+3. CONCLUSION + TEASING (2-3 min) :
+   - Résolution de l'histoire.
+   - Leçon de vie claire et mémorable pour les enfants.
+   - {teasing}
+   - {ritual_au_revoir}""",
+
+    "mi-saison": """\
+1. RÉCAPITULATIF + ACCROCHE (3-4 min) :
+   - {previously_on}
+   - Papy rappelle le fil rouge de la saison : ce qu'on a appris jusqu'ici.
+   - {ritual_accroche}
+   - Les enfants font le point sur ce qu'ils ont retenu.
+
+2. DÉVELOPPEMENT — TOURNANT (8-9 min) :
+   - Histoire biblique qui représente un TOURNANT dans le thème de la saison.
+   - Moment de surprise ou de révélation pour les enfants.
+   - Approfondissement du thème central.
+   - {segment_recurrent}
+
+3. CONCLUSION + OUVERTURE (3-4 min) :
+   - La résolution ouvre de nouvelles questions.
+   - Leçon de vie qui fait évoluer la compréhension du thème.
+   - {teasing}
+   - {ritual_au_revoir}""",
+
+    "final": """\
+1. GRAND RÉCAPITULATIF (3-4 min) :
+   - {previously_on}
+   - Papy rappelle toutes les histoires de la saison et leurs leçons.
+   - {ritual_accroche}
+   - Les enfants montrent combien ils ont grandi au fil de la saison.
+
+2. DÉVELOPPEMENT — CLIMAX (10-11 min) :
+   - Dernière histoire biblique qui conclut le thème de la saison.
+   - Moment émotionnel fort : les personnages montrent leur évolution.
+   - Résolution de toutes les questions ouvertes de la saison.
+   - {segment_recurrent}
+
+3. CONCLUSION DE SAISON (3-4 min) :
+   - Grande leçon de vie qui résume toute la saison.
+   - Moment d'émotion entre Papy et les enfants.
+   - Au revoir spécial de fin de saison.
+   - Éventuel teasing de la prochaine saison (si applicable).""",
+
+    "bonus": """\
+1. ACCROCHE SPÉCIALE (2 min) :
+   - Papy annonce un épisode spécial / bonus.
+   - {ritual_accroche}
+
+2. CONTENU SPÉCIAL (6-7 min) :
+   - Questions-réponses des enfants, coulisses, ou récapitulatif.
+   - Ton plus léger et interactif.
+
+3. CONCLUSION (2 min) :
+   - Au revoir décontracté.
+   - {ritual_au_revoir}""",
+}
 
 
 def _construire_bible_personnages() -> str:
@@ -153,18 +242,173 @@ PERSONNAGES :
 - Narrateur : voix neutre pour les transitions."""
 
 
-def _construire_system_prompt() -> str:
-    """Construit le system prompt complet avec bible et mots interdits."""
+def _construire_contexte_serie(contexte_saison: dict | None = None) -> str:
+    """Construit la section contexte sériel du prompt.
+
+    Args:
+        contexte_saison: Données du plan de saison (optionnel).
+
+    Returns:
+        Texte de contexte sériel pour le system prompt.
+    """
+    if not contexte_saison:
+        return "CONTEXTE : Épisode indépendant (pas de contexte de saison)."
+
+    sections = ["CONTEXTE DE LA SAISON :"]
+
+    saison = contexte_saison.get("saison", {})
+    if saison:
+        sections.append(f"- Thème de la saison : {saison.get('theme', '?')}")
+        sections.append(f"- Description : {saison.get('description', '')}")
+        sections.append(f"- Fil rouge : {saison.get('fil_rouge', '')}")
+
+    # Arcs de personnages
+    arcs = saison.get("arcs_personnages", {})
+    if arcs:
+        sections.append("\nARCS DE PERSONNAGES CETTE SAISON :")
+        for perso, arc in arcs.items():
+            nom = perso.replace("_", " ").title()
+            sections.append(
+                f"  - {nom} : de \"{arc.get('depart', '')}\" "
+                f"vers \"{arc.get('arrivee', '')}\" "
+                f"(évolution : {arc.get('evolution', '')})"
+            )
+
+    return "\n".join(sections)
+
+
+def _construire_structure_narrative(
+    type_episode: str,
+    contexte_saison: dict | None = None,
+    episode_plan: dict | None = None,
+    historique: list[dict] | None = None,
+) -> str:
+    """Construit la structure narrative adaptée au type d'épisode.
+
+    Args:
+        type_episode: Type d'épisode (ouverture, standard, mi-saison, final, bonus).
+        contexte_saison: Données du plan de saison.
+        episode_plan: Données de l'épisode dans le plan de saison.
+        historique: Historique des épisodes précédents.
+    """
+    template = STRUCTURES_NARRATIVES.get(type_episode, STRUCTURES_NARRATIVES["standard"])
+
+    # Rituels
+    rituels = {}
+    if contexte_saison:
+        rituels = contexte_saison.get("saison", {}).get("rituels", {})
+
+    ritual_accroche = (
+        f"Utilise la phrase d'accroche récurrente : \"{rituels['accroche']}\""
+        if rituels.get("accroche")
+        else "Papy Babou accueille les enfants chaleureusement."
+    )
+    ritual_au_revoir = (
+        f"Utilise la formule de clôture récurrente : \"{rituels['au_revoir']}\""
+        if rituels.get("au_revoir")
+        else "Au revoir chaleureux de Papy Babou."
+    )
+    segment_recurrent = (
+        f"Intègre le segment récurrent de la saison : \"{rituels['segment_recurrent']}\""
+        if rituels.get("segment_recurrent")
+        else ""
+    )
+
+    # Previously On
+    previously_on = ""
+    if historique and len(historique) > 0:
+        dernier = historique[-1]
+        previously_on = (
+            f"PREVIOUSLY ON : Papy rappelle brièvement l'épisode précédent "
+            f"\"{dernier.get('titre', '?')}\" et sa leçon "
+            f"({dernier.get('morale', '?')})."
+        )
+        if dernier.get("questions_ouvertes"):
+            questions = dernier["questions_ouvertes"]
+            if isinstance(questions, list):
+                previously_on += f" Reprends la question ouverte : \"{questions[0]}\""
+            elif isinstance(questions, str):
+                previously_on += f" Reprends la question ouverte : \"{questions}\""
+    if not previously_on:
+        previously_on = "Scène d'ouverture directe (premier épisode ou pas de contexte précédent)."
+
+    # Teasing
+    teasing = ""
+    if episode_plan and episode_plan.get("teasing_episode_suivant"):
+        teasing = (
+            f"TEASING : Papy tease la prochaine histoire : "
+            f"\"{episode_plan['teasing_episode_suivant']}\""
+        )
+    elif type_episode != "final":
+        teasing = "Papy donne un avant-goût mystérieux de la prochaine histoire."
+
+    return template.format(
+        ritual_accroche=ritual_accroche,
+        ritual_au_revoir=ritual_au_revoir,
+        segment_recurrent=segment_recurrent,
+        previously_on=previously_on,
+        teasing=teasing,
+    )
+
+
+def _construire_system_prompt(
+    contexte_saison: dict | None = None,
+    episode_plan: dict | None = None,
+    type_episode: str = "standard",
+    historique: list[dict] | None = None,
+) -> str:
+    """Construit le system prompt complet avec bible, contexte sériel et mots interdits.
+
+    Args:
+        contexte_saison: Plan de saison complet (optionnel).
+        episode_plan: Données de l'épisode dans le plan de saison.
+        type_episode: Type d'épisode.
+        historique: Historique des épisodes précédents.
+    """
     bible = _construire_bible_personnages()
     mots = ", ".join(config.MOTS_INTERDITS)
+    contexte_serie = _construire_contexte_serie(contexte_saison)
+    structure = _construire_structure_narrative(
+        type_episode, contexte_saison, episode_plan, historique,
+    )
+
+    # Format d'épisode
+    format_ep = config.FORMATS_EPISODES.get(type_episode, config.FORMATS_EPISODES["standard"])
+    duree_cible = format_ep["duree_cible_minutes"]
+    mots_cible = format_ep["mots_cible"]
+
+    # Personnages dynamiques
+    personnages_connus = config.personnages_valides()
+    personnages_voix = sorted(p for p in personnages_connus if p != "sfx")
+    personnages_format = "|".join(personnages_voix)
+    regles_dyn = ""
+    extra_persos = personnages_connus - {"papy_babou", "antoine", "noemie", "narrateur", "sfx"}
+    if extra_persos:
+        regles_dyn = (
+            "\n12. PERSONNAGES SECONDAIRES disponibles cette saison : "
+            + ", ".join(sorted(extra_persos))
+            + ".\n    N'utilise un personnage secondaire QUE s'il est mentionné dans les "
+            "personnages présents de cet épisode."
+        )
+
     return SYSTEM_PROMPT_BASE.format(
         bible_personnages=bible,
         mots_interdits=mots,
+        contexte_serie=contexte_serie,
+        structure_narrative=structure,
+        duree_cible=duree_cible,
+        mots_cible=mots_cible,
+        personnages_format=personnages_format,
+        regles_personnages_dynamiques=regles_dyn,
     )
 
 
 class Scripteur:
-    """Génère le script complet d'un épisode à partir d'un pitch."""
+    """Génère le script complet d'un épisode à partir d'un pitch.
+
+    Supporte la production sérielle avec contexte de saison, previously-on,
+    teasing, et personnages dynamiques.
+    """
 
     def __init__(self):
         self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
@@ -178,6 +422,9 @@ class Scripteur:
         morale: str = "",
         corrections: list[str] | None = None,
         historique: list[dict] | None = None,
+        contexte_saison: dict | None = None,
+        episode_plan: dict | None = None,
+        type_episode: str = "standard",
     ) -> dict:
         """Génère un script JSON structuré pour un épisode.
 
@@ -189,27 +436,71 @@ class Scripteur:
             morale: Leçon de vie à transmettre (optionnel).
             corrections: Liste de corrections du reviewer à intégrer (optionnel).
             historique: Résumés des épisodes précédents pour la continuité (optionnel).
+            contexte_saison: Plan de saison complet pour le contexte sériel (optionnel).
+            episode_plan: Données de l'épisode depuis le plan de saison (optionnel).
+            type_episode: Type d'épisode (ouverture, standard, mi-saison, final, bonus).
 
         Returns:
             Dictionnaire JSON du script structuré.
         """
+        # Déterminer le type d'épisode depuis le plan si disponible
+        if episode_plan and not type_episode:
+            type_episode = episode_plan.get("type", "standard")
+
+        format_ep = config.FORMATS_EPISODES.get(type_episode, config.FORMATS_EPISODES["standard"])
+        nb_episodes_saison = 10
+        if contexte_saison:
+            nb_episodes_saison = len(
+                contexte_saison.get("saison", {}).get("episodes", [])
+            ) or 10
+
         prompt = (
             f"Écris le script complet de l'épisode suivant :\n"
             f"- Titre : {titre}\n"
-            f"- Saison : {saison}, Épisode : {numero}\n"
+            f"- Saison : {saison}, Épisode : {numero}/{nb_episodes_saison}\n"
+            f"- Type d'épisode : {type_episode} ({format_ep['description']})\n"
+            f"- Durée cible : {format_ep['duree_cible_minutes']} minutes (~{format_ep['mots_cible']} mots)\n"
             f"- Résumé de l'histoire biblique : {resume}\n"
         )
 
         if morale:
             prompt += f"- Leçon de vie / morale à transmettre : {morale}\n"
 
-        if historique:
-            prompt += "\nÉPISODES PRÉCÉDENTS (pour la continuité, tu peux y faire référence) :\n"
-            for ep in historique[-5:]:
+        # Contexte sériel depuis le plan d'épisode
+        if episode_plan:
+            if episode_plan.get("arc_personnage_focus"):
                 prompt += (
-                    f"  - {ep.get('episode_id', '?')} \"{ep.get('titre', '?')}\" : "
-                    f"{ep.get('resume_court', ep.get('morale', ''))}\n"
+                    f"- Arc de personnage en focus : {episode_plan['arc_personnage_focus']}\n"
+                    f"  Progression : {episode_plan.get('progression_arc', '')}\n"
                 )
+            if episode_plan.get("elements_fil_rouge"):
+                prompt += f"- Éléments du fil rouge à intégrer : {episode_plan['elements_fil_rouge']}\n"
+            if episode_plan.get("personnages_secondaires_presents"):
+                prompt += (
+                    f"- Personnages secondaires présents : "
+                    f"{', '.join(episode_plan['personnages_secondaires_presents'])}\n"
+                )
+            if episode_plan.get("lien_episode_precedent"):
+                prompt += f"- Lien avec l'épisode précédent : {episode_plan['lien_episode_precedent']}\n"
+            if episode_plan.get("questions_ouvertes"):
+                questions = episode_plan["questions_ouvertes"]
+                if isinstance(questions, list):
+                    prompt += f"- Questions ouvertes à laisser en suspens : {'; '.join(questions)}\n"
+
+        if historique:
+            prompt += "\nÉPISODES PRÉCÉDENTS (pour la continuité, fais-y référence) :\n"
+            for ep in historique[-5:]:
+                ep_info = (
+                    f"  - {ep.get('episode_id', '?')} \"{ep.get('titre', '?')}\" : "
+                    f"{ep.get('resume_court', ep.get('morale', ''))}"
+                )
+                if ep.get("moments_cles"):
+                    cles = ep["moments_cles"]
+                    if isinstance(cles, list):
+                        ep_info += f" | Moments clés : {', '.join(cles[:2])}"
+                if ep.get("evolutions_personnages"):
+                    ep_info += f" | Évolutions : {ep['evolutions_personnages']}"
+                prompt += ep_info + "\n"
 
         if corrections:
             prompt += (
@@ -219,14 +510,22 @@ class Scripteur:
                 prompt += f"  {i}. {c}\n"
             prompt += "\nCorrige tous ces points dans cette nouvelle version.\n"
 
-        logger.info("Génération du script : %s (S%02dE%02d)", titre, saison, numero)
+        logger.info(
+            "Génération du script : %s (S%02dE%02d, type=%s)",
+            titre, saison, numero, type_episode,
+        )
 
-        system_prompt = _construire_system_prompt()
+        system_prompt = _construire_system_prompt(
+            contexte_saison=contexte_saison,
+            episode_plan=episode_plan,
+            type_episode=type_episode,
+            historique=historique,
+        )
 
         config.rate_limiter_anthropic.attendre()
         response = self.client.messages.create(
             model=config.CLAUDE_MODEL,
-            max_tokens=4096,
+            max_tokens=6144,
             system=system_prompt,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -296,7 +595,7 @@ class Scripteur:
         if "morale" not in ep:
             logger.warning("Champ 'morale' manquant dans le script.")
 
-        personnages_valides = {"papy_babou", "antoine", "noemie", "narrateur", "sfx"}
+        personnages_ok = config.personnages_valides()
         sfx_count = 0
         for seg in ep["segments"]:
             for champ in ("id", "personnage", "texte", "ton", "pause_apres_ms"):
@@ -304,10 +603,10 @@ class Scripteur:
                     raise ValueError(
                         f"Champ manquant dans segment {seg.get('id', '?')}: '{champ}'"
                     )
-            if seg["personnage"] not in personnages_valides:
+            if seg["personnage"] not in personnages_ok:
                 raise ValueError(
                     f"Personnage inconnu '{seg['personnage']}' dans segment {seg['id']}. "
-                    f"Valides : {personnages_valides}"
+                    f"Valides : {personnages_ok}"
                 )
             # Validation spécifique aux segments SFX
             if seg["personnage"] == "sfx":
