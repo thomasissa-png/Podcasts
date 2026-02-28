@@ -85,16 +85,25 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         if seg["personnage"] != "sfx"
     })
 
+    # Construire un résumé court à partir des premiers segments (pas juste le titre)
+    premiers_textes = [
+        seg["texte"] for seg in episode.get("segments", [])[:3]
+        if seg.get("personnage") != "sfx"
+    ]
+    resume_court = " ".join(premiers_textes)[:200] if premiers_textes else episode.get("titre", "")
+
     entree = {
         "episode_id": rapport.get("episode_id", ""),
         "titre": rapport.get("titre", ""),
         "morale": episode.get("morale", ""),
-        "resume_court": episode.get("titre", ""),
+        "resume_court": resume_court,
         "date_production": rapport.get("debut", ""),
         "score_review": rapport.get("etapes", {}).get("script", {}).get("score_review", 0),
         # Contexte sériel
         "personnages_presents": personnages_presents,
         "moments_cles": episode.get("moments_cles", []),
+        "questions_ouvertes": episode.get("questions_ouvertes", []),
+        "evolutions_personnages": episode.get("evolutions_personnages", ""),
         "ambiance": episode.get("ambiance", ""),
         "type_episode": episode.get("type", "standard"),
     }
@@ -283,7 +292,14 @@ def _afficher_script(script: dict) -> None:
     console.print()
 
 
-def _validation_script(script: dict, chemin_script: Path, morale: str = "") -> dict:
+def _validation_script(
+    script: dict,
+    chemin_script: Path,
+    morale: str = "",
+    contexte_saison: dict | None = None,
+    episode_plan: dict | None = None,
+    type_episode: str = "standard",
+) -> dict:
     """Point de validation humaine apres la review du script.
 
     Returns:
@@ -353,6 +369,9 @@ def _validation_script(script: dict, chemin_script: Path, morale: str = "") -> d
                     morale=morale,
                     corrections=lignes,
                     historique=historique,
+                    contexte_saison=contexte_saison,
+                    episode_plan=episode_plan,
+                    type_episode=type_episode,
                 )
                 scripteur.sauvegarder(script, chemin_script)
                 nb = scripteur.compter_mots(script)
@@ -511,6 +530,22 @@ def pipeline(
     etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
     etape_idx = etapes.index(etape_depart) if etape_depart in etapes else 0
 
+    # Initialiser les variables qui pourraient ne pas être définies lors d'une reprise
+    chemin_hq = None
+    resultat_montage = None
+    duree_secondes = 0.0
+    taille_bytes = 0
+    score = 0
+
+    # Restaurer les variables depuis le checkpoint si on reprend après le montage
+    if checkpoint_data and etape_idx > 4:
+        montage_data = checkpoint_data.get("etapes", {}).get("montage", {})
+        if montage_data.get("chemin_hq"):
+            chemin_hq = Path(montage_data["chemin_hq"])
+        duree_secondes = montage_data.get("duree_secondes", 0.0)
+        taille_bytes = int(montage_data.get("taille_mb", 0) * 1024 * 1024) if montage_data.get("taille_mb") else 0
+        resultat_montage = montage_data
+
     # Charger l'historique pour la continuité
     historique = charger_historique()
 
@@ -601,6 +636,7 @@ def pipeline(
         sauvegarder_checkpoint(episode_id, "audio", {
             "episode_id": episode_id, "titre": titre, "resume": resume,
             "saison": saison, "numero": numero, "morale": morale,
+            "type_episode": type_episode,
             "dry_run": dry_run, "rapport": rapport,
         })
 
@@ -611,7 +647,12 @@ def pipeline(
                 "\n[bold magenta]VALIDATION — Relisez le script avant "
                 "la production audio[/bold magenta]"
             )
-            script = _validation_script(script, chemin_valide, morale)
+            script = _validation_script(
+                script, chemin_valide, morale,
+                contexte_saison=contexte_saison,
+                episode_plan=episode_plan,
+                type_episode=type_episode,
+            )
             scripteur.sauvegarder(script, chemin_valide)
             duree_estimee = reviewer.estimer_duree(script)
             rapport["etapes"]["script"]["validation_humaine"] = True
@@ -650,6 +691,7 @@ def pipeline(
             sauvegarder_checkpoint(episode_id, "sfx", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
                 "saison": saison, "numero": numero, "morale": morale,
+                "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
             })
 
@@ -710,22 +752,29 @@ def pipeline(
             sauvegarder_checkpoint(episode_id, "metadonnees", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
                 "saison": saison, "numero": numero, "morale": morale,
+                "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
             })
 
     # ── Validation humaine : montage ─────────────────────────────────────────
 
-    if not auto and not dry_run and chemin_hq:
-        console.print(
-            "\n[bold magenta]VALIDATION — Ecoutez l'episode avant "
-            "publication[/bold magenta]"
+    if not auto and not dry_run and chemin_hq and resultat_montage:
+        preview_chemin = (
+            resultat_montage.get("chemin_preview")
+            if isinstance(resultat_montage, dict)
+            else None
         )
-        _validation_montage(
-            chemin_hq,
-            resultat_montage["chemin_preview"],
-            duree_secondes,
-        )
-        rapport["etapes"]["montage"]["validation_humaine"] = True
+        if preview_chemin:
+            console.print(
+                "\n[bold magenta]VALIDATION — Ecoutez l'episode avant "
+                "publication[/bold magenta]"
+            )
+            _validation_montage(
+                chemin_hq,
+                preview_chemin,
+                duree_secondes,
+            )
+            rapport["etapes"]["montage"]["validation_humaine"] = True
 
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
@@ -871,8 +920,12 @@ def interactif():
     )
 
     titre = console.input("[cyan]Titre de l'episode :[/cyan] ")
-    saison = int(console.input("[cyan]Numero de saison :[/cyan] "))
-    numero = int(console.input("[cyan]Numero d'episode :[/cyan] "))
+    try:
+        saison = int(console.input("[cyan]Numero de saison :[/cyan] "))
+        numero = int(console.input("[cyan]Numero d'episode :[/cyan] "))
+    except ValueError:
+        console.print("[red]Les numeros de saison et d'episode doivent etre des entiers.[/red]")
+        sys.exit(1)
     resume = console.input("[cyan]Resume de l'histoire biblique :[/cyan] ")
     morale = console.input("[cyan]Lecon de vie / morale (optionnel) :[/cyan] ")
 
@@ -998,6 +1051,7 @@ def reprendre(checkpoint: str, auto: bool):
             auto=auto,
             etape_depart=etape,
             checkpoint_data=data.get("rapport"),
+            type_episode=data.get("type_episode", "standard"),
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arretee : {e}[/bold yellow]")

@@ -49,7 +49,7 @@ class CoverArt:
 
         logger.info("Génération cover art pour %s : %s", episode_id, prompt[:80])
 
-        config.rate_limiter_anthropic.attendre()
+        config.rate_limiter_openai.attendre()
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",

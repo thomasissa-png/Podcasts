@@ -325,7 +325,7 @@ def _construire_structure_narrative(
         )
         if dernier.get("questions_ouvertes"):
             questions = dernier["questions_ouvertes"]
-            if isinstance(questions, list):
+            if isinstance(questions, list) and questions:
                 previously_on += f" Reprends la question ouverte : \"{questions[0]}\""
             elif isinstance(questions, str):
                 previously_on += f" Reprends la question ouverte : \"{questions}\""
@@ -444,7 +444,7 @@ class Scripteur:
             Dictionnaire JSON du script structuré.
         """
         # Déterminer le type d'épisode depuis le plan si disponible
-        if episode_plan and not type_episode:
+        if episode_plan and type_episode == "standard":
             type_episode = episode_plan.get("type", "standard")
 
         format_ep = config.FORMATS_EPISODES.get(type_episode, config.FORMATS_EPISODES["standard"])
@@ -522,8 +522,8 @@ class Scripteur:
             historique=historique,
         )
 
-        config.rate_limiter_anthropic.attendre()
-        response = self.client.messages.create(
+        response = config.appel_claude_avec_retry(
+            self.client,
             model=config.CLAUDE_MODEL,
             max_tokens=6144,
             system=system_prompt,

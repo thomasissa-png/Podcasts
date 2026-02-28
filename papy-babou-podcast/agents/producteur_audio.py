@@ -44,10 +44,10 @@ class ProducteurAudio:
             s for s in episode["segments"] if s["personnage"] != "sfx"
         ]
         total_segments = len(segments_voix)
-        max_workers = min(
+        max_workers = max(1, min(
             config.PRODUCTION.get("max_parallel_tts", 4),
             total_segments,
-        )
+        ))
 
         fichiers: list[Path] = []
 
@@ -111,10 +111,19 @@ class ProducteurAudio:
         personnage = segment["personnage"]
         voice_id = config.VOICE_IDS.get(personnage)
         if not voice_id or voice_id == "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID":
-            raise ValueError(
-                f"Voice ID non configuré pour '{personnage}'. "
-                "Configurez VOICE_IDS dans config.py ou les variables d'environnement."
-            )
+            # Fallback vers le narrateur pour les personnages secondaires
+            fallback_id = config.VOICE_IDS.get("narrateur")
+            if fallback_id and fallback_id != "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID":
+                logger.warning(
+                    "Voice ID non configuré pour '%s' — fallback vers la voix narrateur.",
+                    personnage,
+                )
+                voice_id = fallback_id
+            else:
+                raise ValueError(
+                    f"Voice ID non configuré pour '{personnage}'. "
+                    "Configurez VOICE_IDS dans config.py ou les variables d'environnement."
+                )
 
         settings = config.VOICE_SETTINGS.get(personnage, {})
         url = ELEVENLABS_TTS_URL.format(voice_id=voice_id)

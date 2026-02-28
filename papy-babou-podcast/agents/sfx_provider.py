@@ -55,6 +55,13 @@ class SfxProvider:
 
             # Vérifier le cache local (assets/sfx/)
             chemin_local = config.SFX_DIR / f"{segment['texte']}.mp3"
+            # Valider que le chemin résolu reste dans SFX_DIR (protection path traversal)
+            if not str(chemin_local.resolve()).startswith(str(config.SFX_DIR.resolve())):
+                logger.warning(
+                    "  SFX '%s' — chemin potentiellement dangereux, ignoré.",
+                    segment["texte"],
+                )
+                chemin_local = config.SFX_DIR / "nonexistent.mp3"
             if chemin_local.exists():
                 logger.info(
                     "  SFX '%s' trouvé en local : %s",

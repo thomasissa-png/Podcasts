@@ -6,7 +6,6 @@ import uuid
 from datetime import datetime, timezone
 from email.utils import formatdate
 from pathlib import Path
-from time import mktime
 from xml.etree import ElementTree as ET
 
 import requests
@@ -182,7 +181,7 @@ class Publisher:
 
         now = datetime.now(timezone.utc)
         ET.SubElement(item, "pubDate").text = formatdate(
-            mktime(now.timetuple()), usegmt=True
+            now.timestamp(), usegmt=True
         )
 
         ET.SubElement(

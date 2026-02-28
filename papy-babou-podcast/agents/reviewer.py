@@ -37,7 +37,9 @@ CRITÈRES D'ÉVALUATION (note sur 10) :
    - Les pauses sont-elles bien placées ?
 
 5. DURÉE ET FORMAT (2 pts)
-   - Environ 1400 mots (~13 min) ?
+   - Durée et mots cibles : vérifie selon le type d'épisode indiqué dans le script
+     (ouverture ~1600 mots/15 min, standard ~1400 mots/13 min,
+      mi-saison ~1600 mots/15 min, final ~1900 mots/18 min, bonus ~1000 mots/10 min).
    - Comptage : 100 mots/min pour enfants, 120 mots/min pour adultes.
    - Format JSON correct et complet ?
    - Les segments SFX (personnage "sfx") sont-ils bien placés et pertinents ?
@@ -102,8 +104,8 @@ class Reviewer:
             script["episode"]["numero"],
         )
 
-        config.rate_limiter_anthropic.attendre()
-        response = self.client.messages.create(
+        response = config.appel_claude_avec_retry(
+            self.client,
             model=config.CLAUDE_MODEL,
             max_tokens=8192,
             system=SYSTEM_PROMPT,

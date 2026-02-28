@@ -437,3 +437,46 @@ class RateLimiter:
 # Limiteurs globaux (partagés entre agents)
 rate_limiter_elevenlabs = RateLimiter(max_par_seconde=3.0)
 rate_limiter_anthropic = RateLimiter(max_par_seconde=5.0)
+rate_limiter_openai = RateLimiter(max_par_seconde=3.0)
+
+
+def appel_claude_avec_retry(
+    client,
+    max_tentatives: int = 3,
+    **kwargs,
+):
+    """Appelle l'API Claude avec retry et backoff exponentiel.
+
+    Args:
+        client: Instance anthropic.Anthropic.
+        max_tentatives: Nombre maximum de tentatives.
+        **kwargs: Arguments passés à client.messages.create().
+
+    Returns:
+        Réponse de l'API Claude.
+
+    Raises:
+        Exception: Si toutes les tentatives échouent.
+    """
+    import logging
+    import random
+
+    logger = logging.getLogger(__name__)
+
+    for tentative in range(1, max_tentatives + 1):
+        try:
+            rate_limiter_anthropic.attendre()
+            return client.messages.create(**kwargs)
+        except Exception as e:
+            err_str = str(e)
+            is_retryable = any(
+                code in err_str for code in ("429", "500", "502", "503", "529", "overloaded")
+            )
+            if not is_retryable or tentative == max_tentatives:
+                raise
+            delai = (2 ** tentative) + random.uniform(0, 1)
+            logger.warning(
+                "API Claude tentative %d/%d échouée (%s) — retry dans %.1fs",
+                tentative, max_tentatives, err_str[:80], delai,
+            )
+            time.sleep(delai)

@@ -73,8 +73,8 @@ class Metadonnees:
             episode["numero"],
         )
 
-        config.rate_limiter_anthropic.attendre()
-        response = self.client.messages.create(
+        response = config.appel_claude_avec_retry(
+            self.client,
             model=config.CLAUDE_MODEL,
             max_tokens=2048,
             system=SYSTEM_PROMPT,
@@ -185,16 +185,27 @@ class Metadonnees:
         Returns:
             Transcript formaté.
         """
-        noms = {
+        noms_base = {
             "papy_babou": "Papy Babou",
             "antoine": "Antoine",
             "noemie": "Noémie",
             "narrateur": "Narrateur",
         }
+        # Enrichir avec les noms depuis la bible des personnages
+        bible = config.charger_personnages()
+        for key, perso in bible.get("personnages", {}).items():
+            if key not in noms_base:
+                noms_base[key] = perso.get(
+                    "nom_complet", key.replace("_", " ").title()
+                )
+
         lignes = [f"TRANSCRIPT — {episode['titre']}\n"]
         for seg in episode["segments"]:
             if seg["personnage"] == "sfx":
                 continue
-            nom = noms.get(seg["personnage"], seg["personnage"])
+            nom = noms_base.get(
+                seg["personnage"],
+                seg["personnage"].replace("_", " ").title(),
+            )
             lignes.append(f"[{nom}] {seg['texte']}")
         return "\n\n".join(lignes)

@@ -156,8 +156,8 @@ class Planificateur:
 
         logger.info("Planification de la saison %d : %s", numero_saison, theme)
 
-        config.rate_limiter_anthropic.attendre()
-        response = self.client.messages.create(
+        response = config.appel_claude_avec_retry(
+            self.client,
             model=config.CLAUDE_MODEL,
             max_tokens=8192,
             system=SYSTEM_PROMPT,

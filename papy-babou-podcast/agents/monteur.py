@@ -298,7 +298,10 @@ class Monteur:
 
     def _preparer_fond(self, fond: AudioSegment, duree_voix_ms: int) -> AudioSegment:
         """Ajuste la musique de fond à la durée des voix avec le bon volume."""
-        if len(fond) < duree_voix_ms:
+        if len(fond) == 0:
+            logger.warning("Musique de fond vide — remplacement par du silence.")
+            fond = AudioSegment.silent(duration=max(duree_voix_ms, 1))
+        elif len(fond) < duree_voix_ms:
             repetitions = (duree_voix_ms // len(fond)) + 1
             fond = fond * repetitions
 
@@ -341,7 +344,10 @@ class Monteur:
     ) -> list[dict]:
         """Génère la liste de chapitres à partir des segments du script."""
         chapitres = []
-        temps_courant_ms = 0
+        # Offset initial : intro jingle + silence transition
+        intro_ms = config.PRODUCTION["intro_jingle_duree_ms"]
+        transition_ms = 500
+        temps_courant_ms = intro_ms + transition_ms
 
         for seg in segments:
             chemin = dossier / f"{seg['id']}.mp3"
