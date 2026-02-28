@@ -32,6 +32,19 @@ from agents import (
     Metadonnees, Publisher, CoverArt, Planificateur,
 )
 
+# Import optionnel PostgreSQL (fallback gracieux vers JSON)
+try:
+    import database
+    from db_models import (
+        SaisonRepo, EpisodeRepo, ScriptRepo, ReviewRepo,
+        ProductionRepo, MetadonneesRepo, FichierAudioRepo,
+        HistoriqueRepo, PersonnageRepo, CoutRepo, PublicationRepo,
+        AuditRepo,
+    )
+    _DB_AVAILABLE = True
+except ImportError:
+    _DB_AVAILABLE = False
+
 console = Console()
 
 # ── Configuration du logging ──────────────────────────────────────────────────
@@ -52,6 +65,26 @@ def configurer_logging() -> None:
     )
 
 
+def initialiser_db() -> bool:
+    """Initialise la base de données PostgreSQL si disponible.
+
+    Returns:
+        True si la DB est prête.
+    """
+    if not _DB_AVAILABLE:
+        return False
+    try:
+        if not database.DATABASE_URL:
+            return False
+        database.initialiser_schema()
+        console.print("[green]  PostgreSQL connecté et schéma initialisé[/green]")
+        return True
+    except Exception as e:
+        console.print(f"[yellow]  PostgreSQL indisponible : {e}[/yellow]")
+        console.print("[yellow]  Mode fichiers JSON activé (rétrocompatibilité)[/yellow]")
+        return False
+
+
 logger = logging.getLogger("papy-babou")
 
 
@@ -60,8 +93,25 @@ logger = logging.getLogger("papy-babou")
 HISTORIQUE_PATH = config.HISTORIQUE_DIR / "historique_episodes.json"
 
 
+def _use_db() -> bool:
+    """Vérifie si PostgreSQL est disponible et initialisé."""
+    if not _DB_AVAILABLE:
+        return False
+    try:
+        return database.verifier_connexion()
+    except Exception:
+        return False
+
+
 def charger_historique() -> list[dict]:
-    """Charge l'historique des épisodes produits."""
+    """Charge l'historique des épisodes produits (DB prioritaire, JSON fallback)."""
+    if _use_db():
+        try:
+            return HistoriqueRepo.charger_tout()
+        except Exception as e:
+            logger.warning("DB indisponible pour historique : %s", e)
+
+    # Fallback JSON
     if HISTORIQUE_PATH.exists():
         with open(HISTORIQUE_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -69,14 +119,13 @@ def charger_historique() -> list[dict]:
 
 
 def sauvegarder_historique(historique: list[dict]) -> None:
-    """Sauvegarde l'historique des épisodes."""
+    """Sauvegarde l'historique des épisodes (JSON — rétrocompatibilité)."""
     with open(HISTORIQUE_PATH, "w", encoding="utf-8") as f:
         json.dump(historique, f, ensure_ascii=False, indent=2)
 
 
 def ajouter_historique(rapport: dict, script: dict) -> None:
-    """Ajoute un épisode à l'historique avec contexte sériel complet."""
-    historique = charger_historique()
+    """Ajoute un épisode à l'historique (DB + JSON pour rétrocompatibilité)."""
     episode = script.get("episode", {})
 
     # Extraire les personnages présents dans le script
@@ -108,15 +157,46 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         "type_episode": episode.get("type", "standard"),
     }
 
+    # Sauvegarder en DB si disponible
+    if _use_db():
+        try:
+            HistoriqueRepo.ajouter(
+                episode_id=entree["episode_id"],
+                titre=entree["titre"],
+                morale=entree["morale"],
+                resume_court=entree["resume_court"],
+                score_review=entree["score_review"],
+                personnages_presents=entree["personnages_presents"],
+                moments_cles=entree["moments_cles"],
+                questions_ouvertes=entree["questions_ouvertes"],
+                evolutions_personnages=entree["evolutions_personnages"],
+                ambiance=entree["ambiance"],
+                type_episode=entree["type_episode"],
+                date_production=entree["date_production"],
+            )
+        except Exception as e:
+            logger.warning("DB indisponible pour ajout historique : %s", e)
+
+    # Toujours sauvegarder en JSON (rétrocompatibilité)
+    historique = []
+    if HISTORIQUE_PATH.exists():
+        with open(HISTORIQUE_PATH, "r", encoding="utf-8") as f:
+            historique = json.load(f)
     historique.append(entree)
     sauvegarder_historique(historique)
 
 
 # ── Système de checkpoints ───────────────────────────────────────────────────
 
+# Variable globale pour l'ID de production courante (DB)
+_production_id_courante: int | None = None
+
 
 def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
     """Sauvegarde un checkpoint pour permettre la reprise sur échec.
+
+    En mode PostgreSQL, le checkpoint est sauvegardé dans la table productions
+    (jamais supprimé). Le fichier JSON est aussi conservé pour rétrocompatibilité.
 
     Args:
         episode_id: Identifiant de l'épisode (ex: S01E01).
@@ -126,6 +206,21 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
     Returns:
         Chemin du fichier checkpoint.
     """
+    global _production_id_courante
+
+    # Sauvegarder en DB si disponible
+    if _use_db() and _production_id_courante:
+        try:
+            ProductionRepo.maj_etape(
+                _production_id_courante,
+                etape=etape,
+                rapport=data.get("rapport"),
+                checkpoint_data=data,
+            )
+        except Exception as e:
+            logger.warning("DB indisponible pour checkpoint : %s", e)
+
+    # Toujours sauvegarder en JSON (rétrocompatibilité + backup)
     chemin = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
     checkpoint = {
         "episode_id": episode_id,
@@ -141,6 +236,8 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
 
 def charger_checkpoint(chemin: Path) -> dict:
     """Charge un checkpoint pour reprendre la production.
+
+    Tente d'abord la DB, puis le fichier JSON.
 
     Raises:
         FileNotFoundError: Si le fichier n'existe pas.
@@ -159,12 +256,29 @@ def charger_checkpoint(chemin: Path) -> dict:
     return data
 
 
-def supprimer_checkpoint(episode_id: str) -> None:
-    """Supprime le checkpoint après une production réussie."""
+def archiver_checkpoint(episode_id: str) -> None:
+    """Archive le checkpoint après une production réussie.
+
+    CHANGEMENT CRITIQUE : le checkpoint n'est PLUS supprimé.
+    En DB, il est marqué 'completed'. Le fichier JSON est renommé avec un
+    suffixe _done pour conservation.
+    """
+    global _production_id_courante
+
+    # En DB : marquer terminé (jamais supprimé)
+    if _use_db() and _production_id_courante:
+        try:
+            # Le statut sera mis à jour par ProductionRepo.terminer()
+            pass
+        except Exception as e:
+            logger.warning("DB indisponible pour archivage checkpoint : %s", e)
+
+    # Fichier JSON : renommer au lieu de supprimer
     chemin = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
     if chemin.exists():
-        chemin.unlink()
-        logger.info("Checkpoint supprimé : %s", chemin)
+        archive = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint_done_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        chemin.rename(archive)
+        logger.info("Checkpoint archivé (non supprimé) : %s → %s", chemin, archive)
 
 
 # ── Métriques de coût ────────────────────────────────────────────────────────
@@ -469,6 +583,8 @@ def pipeline(
     Returns:
         Rapport de production complet.
     """
+    global _production_id_courante
+
     episode_id = f"S{saison:02d}E{numero:02d}"
     rapport = checkpoint_data or {
         "episode_id": episode_id,
@@ -477,6 +593,29 @@ def pipeline(
         "debut": datetime.now().isoformat(),
         "etapes": {},
     }
+
+    # Créer une production en DB si disponible
+    if _use_db():
+        try:
+            _production_id_courante = ProductionRepo.creer(
+                episode_id=episode_id,
+                dry_run=dry_run,
+                auto_mode=auto,
+            )
+            EpisodeRepo.creer_ou_maj(
+                episode_id=episode_id,
+                saison=saison,
+                numero=numero,
+                titre=titre,
+                type_episode=type_episode,
+                resume=resume,
+                morale=morale,
+                status="in_progress",
+            )
+            logger.info("Production DB #%d créée pour %s", _production_id_courante, episode_id)
+        except Exception as e:
+            logger.warning("DB indisponible pour création production : %s", e)
+            _production_id_courante = None
 
     # Charger le contexte de saison automatiquement si pas fourni
     if not contexte_saison:
@@ -581,6 +720,19 @@ def pipeline(
             nb_mots = scripteur.compter_mots(script)
             console.print(f"  Script v{iteration} : {nb_mots} mots, {len(script['episode']['segments'])} segments")
 
+            # Sauvegarder en DB
+            script_db_id = None
+            if _use_db():
+                try:
+                    script_db_id = ScriptRepo.sauvegarder(
+                        episode_id=episode_id,
+                        script=script,
+                        nb_mots=nb_mots,
+                        source="scripteur",
+                    )
+                except Exception as e:
+                    logger.warning("DB indisponible pour sauvegarde script : %s", e)
+
             # ── Reviewer ─────────────────────────────────────────────────────
 
             console.print(f"\n[bold cyan]Etape 2/8 — Relecture (iteration {iteration})[/bold cyan]")
@@ -605,6 +757,17 @@ def pipeline(
                 for a in resultat_review["review"]["alertes"]:
                     console.print(f"    ! {a}")
 
+            # Sauvegarder review en DB
+            if _use_db():
+                try:
+                    ReviewRepo.sauvegarder(
+                        episode_id=episode_id,
+                        script_id=script_db_id or 0,
+                        resultat_review=resultat_review,
+                    )
+                except Exception as e:
+                    logger.warning("DB indisponible pour sauvegarde review : %s", e)
+
             if reviewer.est_valide(resultat_review):
                 script = {"episode": resultat_review["episode"]}
                 console.print(f"[green]  Script valide (score {score}/10)[/green]")
@@ -621,6 +784,19 @@ def pipeline(
             script = {"episode": resultat_review["episode"]}
 
         scripteur.sauvegarder(script, chemin_valide)
+
+        # Marquer comme validé en DB
+        if _use_db():
+            try:
+                ScriptRepo.sauvegarder(
+                    episode_id=episode_id,
+                    script=script,
+                    nb_mots=scripteur.compter_mots(script),
+                    is_validated=True,
+                    source="reviewer",
+                )
+            except Exception as e:
+                logger.warning("DB indisponible pour script validé : %s", e)
 
         duree_estimee = reviewer.estimer_duree(script)
         console.print(f"  Duree estimee : {duree_estimee:.1f} minutes")
@@ -688,6 +864,37 @@ def pipeline(
                 "caracteres": dict(producteur.caracteres_utilises),
             }
 
+            # Enregistrer les segments audio et coûts en DB
+            if _use_db():
+                try:
+                    for seg_audio in script["episode"]["segments"]:
+                        if seg_audio["personnage"] == "sfx":
+                            continue
+                        chemin_seg = config.SEGMENTS_DIR / episode_id / f"{seg_audio['id']}.mp3"
+                        nb_chars = len(seg_audio.get("texte", ""))
+                        FichierAudioRepo.enregistrer(
+                            episode_id=episode_id,
+                            type_fichier="segment_voix",
+                            chemin=str(chemin_seg),
+                            production_id=_production_id_courante,
+                            segment_id=seg_audio["id"],
+                            personnage=seg_audio["personnage"],
+                            source="elevenlabs",
+                            nb_caracteres=nb_chars,
+                        )
+                    # Coût ElevenLabs TTS
+                    total_chars = sum(producteur.caracteres_utilises.values())
+                    cout_tts = total_chars * config.COUTS["elevenlabs_par_caractere"]
+                    CoutRepo.enregistrer(
+                        episode_id=episode_id,
+                        service="elevenlabs_tts",
+                        cout_estime=cout_tts,
+                        detail={"caracteres": dict(producteur.caracteres_utilises)},
+                        production_id=_production_id_courante,
+                    )
+                except Exception as e:
+                    logger.warning("DB indisponible pour enregistrement audio : %s", e)
+
             sauvegarder_checkpoint(episode_id, "sfx", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
                 "saison": saison, "numero": numero, "morale": morale,
@@ -720,6 +927,33 @@ def pipeline(
                 "sources": dict(sfx_provider.stats),
             }
 
+            # Enregistrer les SFX en DB
+            if _use_db():
+                try:
+                    for seg_id, source in sfx_provider.stats.items():
+                        chemin_sfx = config.SEGMENTS_DIR / episode_id / f"{seg_id}.mp3"
+                        FichierAudioRepo.enregistrer(
+                            episode_id=episode_id,
+                            type_fichier="segment_sfx",
+                            chemin=str(chemin_sfx),
+                            production_id=_production_id_courante,
+                            segment_id=seg_id,
+                            personnage="sfx",
+                            source=source,
+                        )
+                    # Coût SFX ElevenLabs
+                    nb_sfx_el = sum(1 for s in sfx_provider.stats.values() if s == "elevenlabs")
+                    if nb_sfx_el > 0:
+                        CoutRepo.enregistrer(
+                            episode_id=episode_id,
+                            service="elevenlabs_sfx",
+                            cout_estime=nb_sfx_el * 0.01,
+                            detail={"nb_sfx_elevenlabs": nb_sfx_el},
+                            production_id=_production_id_courante,
+                        )
+                except Exception as e:
+                    logger.warning("DB indisponible pour enregistrement SFX : %s", e)
+
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
 
     if etape_idx <= 4:
@@ -748,6 +982,27 @@ def pipeline(
                 "chemin_preview": str(resultat_montage["chemin_preview"]),
                 "chapitres": resultat_montage.get("chapitres", []),
             }
+
+            # Enregistrer les fichiers finaux en DB
+            if _use_db():
+                try:
+                    FichierAudioRepo.enregistrer(
+                        episode_id=episode_id,
+                        type_fichier="episode_hq",
+                        chemin=str(chemin_hq),
+                        production_id=_production_id_courante,
+                        taille_bytes=taille_bytes,
+                        duree_secondes=duree_secondes,
+                    )
+                    FichierAudioRepo.enregistrer(
+                        episode_id=episode_id,
+                        type_fichier="episode_preview",
+                        chemin=str(resultat_montage["chemin_preview"]),
+                        production_id=_production_id_courante,
+                        duree_secondes=duree_secondes,
+                    )
+                except Exception as e:
+                    logger.warning("DB indisponible pour enregistrement montage : %s", e)
 
             sauvegarder_checkpoint(episode_id, "metadonnees", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
@@ -800,6 +1055,30 @@ def pipeline(
             "cover_art_path": meta.get("cover_art_path", ""),
         }
 
+        # Sauvegarder métadonnées en DB
+        if _use_db():
+            try:
+                MetadonneesRepo.sauvegarder(
+                    episode_id=episode_id,
+                    meta=meta,
+                    production_id=_production_id_courante,
+                )
+                # Coût Claude pour métadonnées
+                if not dry_run:
+                    cout_claude_meta = (
+                        2000 * config.COUTS["claude_input_par_token"]
+                        + 4000 * config.COUTS["claude_output_par_token"]
+                    )
+                    CoutRepo.enregistrer(
+                        episode_id=episode_id,
+                        service="anthropic_claude",
+                        cout_estime=cout_claude_meta,
+                        detail={"operation": "metadonnees"},
+                        production_id=_production_id_courante,
+                    )
+            except Exception as e:
+                logger.warning("DB indisponible pour métadonnées : %s", e)
+
         # Générer le cover art si configuré
         if meta.get("cover_art_prompt") and config.COVER_ART_CONFIG.get("enabled"):
             console.print("  Génération du cover art...")
@@ -827,6 +1106,18 @@ def pipeline(
                 console.print(f"  Transcript : {rapport_pub['transcript_url']}")
             rapport["etapes"]["publication"] = rapport_pub
 
+            # Enregistrer publication en DB
+            if _use_db():
+                try:
+                    PublicationRepo.enregistrer(
+                        episode_id=episode_id,
+                        rapport_pub=rapport_pub,
+                        production_id=_production_id_courante,
+                    )
+                    EpisodeRepo.maj_status(episode_id, "published")
+                except Exception as e:
+                    logger.warning("DB indisponible pour publication : %s", e)
+
     # ── Étape 8 : Rapport final ───────────────────────────────────────────────
 
     console.print("\n[bold cyan]Etape 8/8 — Rapport final[/bold cyan]")
@@ -843,8 +1134,20 @@ def pipeline(
     # Ajouter à l'historique
     ajouter_historique(rapport, script)
 
-    # Supprimer le checkpoint (production réussie)
-    supprimer_checkpoint(episode_id)
+    # Archiver le checkpoint (JAMAIS supprimer — conservation des données)
+    archiver_checkpoint(episode_id)
+
+    # Finaliser la production en DB
+    if _use_db() and _production_id_courante:
+        try:
+            ProductionRepo.terminer(
+                _production_id_courante,
+                rapport=rapport,
+                couts=rapport.get("couts", {}),
+            )
+            EpisodeRepo.maj_status(episode_id, "produced" if dry_run else "published")
+        except Exception as e:
+            logger.warning("DB indisponible pour finalisation production : %s", e)
 
     # Afficher le résumé et les coûts
     couts = rapport["couts"]
@@ -873,6 +1176,7 @@ def pipeline(
 def cli(ctx):
     """Les Histoires de Papy Babou — Systeme de production automatisee."""
     configurer_logging()
+    initialiser_db()
     if ctx.invoked_subcommand is None:
         ctx.invoke(interactif)
 
@@ -1104,6 +1408,14 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
         chemin_json = config.SAISONS_DIR / f"saison_{saison:02d}.json"
         planificateur.sauvegarder(plan, chemin_json)
         console.print(f"  Plan sauvegarde : {chemin_json}")
+
+        # Sauvegarder en DB (versionnée — anciennes versions conservées)
+        if _use_db():
+            try:
+                db_id = SaisonRepo.sauvegarder(plan)
+                console.print(f"  Plan sauvegardé en PostgreSQL (id={db_id})")
+            except Exception as e:
+                console.print(f"  [yellow]DB indisponible pour plan : {e}[/yellow]")
 
         # Exporter en CSV et Markdown
         chemin_csv = config.SAISONS_DIR / f"saison_{saison:02d}.csv"
@@ -1353,6 +1665,87 @@ def dashboard(saison: int):
                 console.print(f"    - {cp['episode_id']} (etape: {cp['etape']}, {cp['timestamp']})")
             except (json.JSONDecodeError, FileNotFoundError):
                 console.print(f"    - {cp_path.name} (illisible)")
+
+
+@cli.command("db-status")
+def db_status():
+    """Affiche l'état de la base de données PostgreSQL."""
+    if not _DB_AVAILABLE:
+        console.print("[red]Module database non disponible. Installez psycopg2-binary.[/red]")
+        return
+
+    if not database.DATABASE_URL:
+        console.print("[yellow]DATABASE_URL non configurée.[/yellow]")
+        console.print("[dim]Le système fonctionne en mode fichiers JSON.[/dim]")
+        return
+
+    if not database.verifier_connexion():
+        console.print("[red]Connexion PostgreSQL échouée.[/red]")
+        return
+
+    console.print("[green]PostgreSQL connecté[/green]\n")
+
+    try:
+        stats = database.obtenir_stats_db()
+        table = Table(title="État de la base de données")
+        table.add_column("Table", style="cyan")
+        table.add_column("Enregistrements", justify="right", style="green")
+
+        total = 0
+        for table_name, count in stats.items():
+            table.add_row(table_name, str(count))
+            total += count
+
+        table.add_row("[bold]TOTAL[/bold]", f"[bold]{total}[/bold]")
+        console.print(table)
+
+        # Coûts totaux
+        cout_total = CoutRepo.total_par_episode("%")  # Hack - won't work, use direct query
+        with database.get_cursor(commit=False) as cur:
+            cur.execute("SELECT COALESCE(SUM(cout_estime), 0) AS total FROM couts_api")
+            row = cur.fetchone()
+            cout_total = float(row["total"]) if row else 0
+        console.print(f"\n  Coût total estimé : ${cout_total:.4f}")
+
+        # Dernières productions
+        with database.get_cursor(commit=False) as cur:
+            cur.execute(
+                "SELECT episode_id, status, started_at, completed_at "
+                "FROM productions ORDER BY started_at DESC LIMIT 5"
+            )
+            rows = cur.fetchall()
+        if rows:
+            console.print("\n[bold]  Dernières productions :[/bold]")
+            for row in rows:
+                status_style = "green" if row["status"] == "completed" else "yellow"
+                console.print(
+                    f"    {row['episode_id']} — "
+                    f"[{status_style}]{row['status']}[/{status_style}] "
+                    f"({str(row['started_at'])[:16]})"
+                )
+
+    except Exception as e:
+        console.print(f"[red]Erreur : {e}[/red]")
+
+
+@cli.command("migrer-json-vers-db")
+def migrer_json_vers_db():
+    """Migre toutes les données JSON existantes vers PostgreSQL."""
+    if not _use_db():
+        console.print("[red]PostgreSQL non disponible. Configurez DATABASE_URL.[/red]")
+        return
+
+    console.print(Panel(
+        "[bold]Migration JSON → PostgreSQL[/bold]\n"
+        "Toutes les données JSON existantes seront importées en DB.\n"
+        "[dim]Les données JSON ne sont pas supprimées.[/dim]",
+        title="Migration",
+        border_style="blue",
+    ))
+
+    from migrate_json_to_db import migrer_tout
+    migrer_tout()
+    console.print("[green]Migration terminée ![/green]")
 
 
 if __name__ == "__main__":

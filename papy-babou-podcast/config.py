@@ -1,6 +1,7 @@
 """Configuration globale du système de production podcast Papy Babou."""
 
 import json
+import logging
 import os
 import shutil
 import sys
@@ -11,6 +12,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
+
+_config_logger = logging.getLogger(__name__)
 
 # ── Chemins du projet ──────────────────────────────────────────────────────────
 
@@ -248,8 +251,36 @@ MOTS_INTERDITS = [
 PERSONNAGES_JSON_PATH = ASSETS_DIR / "bible" / "personnages.json"
 
 
+def _db_disponible() -> bool:
+    """Vérifie si PostgreSQL est disponible (sans crash si non configuré)."""
+    try:
+        from database import DATABASE_URL, verifier_connexion
+        if not DATABASE_URL:
+            return False
+        return verifier_connexion()
+    except Exception:
+        return False
+
+
 def charger_personnages() -> dict:
-    """Charge la bible des personnages depuis le fichier JSON."""
+    """Charge la bible des personnages (PostgreSQL prioritaire, JSON fallback)."""
+    if _db_disponible():
+        try:
+            from db_models import PersonnageRepo
+            bible = PersonnageRepo.charger_bible_complete()
+            if bible.get("personnages"):
+                # Enrichir avec le fichier JSON local (style_cover_art, décor, etc.)
+                if PERSONNAGES_JSON_PATH.exists():
+                    with open(PERSONNAGES_JSON_PATH, "r", encoding="utf-8") as f:
+                        local = json.load(f)
+                    for key in ("decor", "regles_interaction", "style_cover_art"):
+                        if key in local:
+                            bible[key] = local[key]
+                return bible
+        except Exception as e:
+            _config_logger.warning("DB indisponible pour personnages : %s", e)
+
+    # Fallback fichier JSON
     if PERSONNAGES_JSON_PATH.exists():
         with open(PERSONNAGES_JSON_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -262,7 +293,7 @@ def ajouter_personnage(
     voice_id: str = "",
     pan: float = 0.0,
 ) -> None:
-    """Ajoute un personnage secondaire à la bible et au système audio.
+    """Ajoute un personnage secondaire (DB + fichier JSON pour rétrocompatibilité).
 
     Args:
         personnage_id: Identifiant unique (ex: 'mamie_rose').
@@ -270,7 +301,19 @@ def ajouter_personnage(
         voice_id: ElevenLabs voice ID (optionnel).
         pan: Panoramique stéréo (-1.0 à 1.0).
     """
-    bible = charger_personnages()
+    # Sauvegarder en DB si disponible
+    if _db_disponible():
+        try:
+            from db_models import PersonnageRepo
+            PersonnageRepo.sauvegarder(personnage_id, data, voice_id, pan)
+        except Exception as e:
+            _config_logger.warning("DB indisponible pour ajout personnage : %s", e)
+
+    # Toujours sauvegarder en JSON (rétrocompatibilité)
+    bible = {}
+    if PERSONNAGES_JSON_PATH.exists():
+        with open(PERSONNAGES_JSON_PATH, "r", encoding="utf-8") as f:
+            bible = json.load(f)
     if "personnages" not in bible:
         bible["personnages"] = {}
     bible["personnages"][personnage_id] = data
@@ -306,7 +349,7 @@ def personnages_valides() -> set[str]:
 
 
 def charger_saison(numero: int) -> dict:
-    """Charge le plan d'une saison depuis son fichier JSON.
+    """Charge le plan d'une saison (PostgreSQL prioritaire, JSON fallback).
 
     Args:
         numero: Numéro de la saison.
@@ -314,6 +357,16 @@ def charger_saison(numero: int) -> dict:
     Returns:
         Plan de saison ou dictionnaire vide si inexistant.
     """
+    if _db_disponible():
+        try:
+            from db_models import SaisonRepo
+            plan = SaisonRepo.charger(numero)
+            if plan:
+                return plan
+        except Exception as e:
+            _config_logger.warning("DB indisponible pour saison %d : %s", numero, e)
+
+    # Fallback fichier JSON
     chemin = SAISONS_DIR / f"saison_{numero:02d}.json"
     if chemin.exists():
         with open(chemin, "r", encoding="utf-8") as f:
@@ -342,6 +395,16 @@ def charger_episode_saison(saison: int, numero: int) -> dict:
 
 def liste_saisons() -> list[int]:
     """Retourne la liste des numéros de saisons existantes."""
+    if _db_disponible():
+        try:
+            from db_models import SaisonRepo
+            nums = SaisonRepo.liste_saisons()
+            if nums:
+                return nums
+        except Exception as e:
+            _config_logger.warning("DB indisponible pour liste saisons : %s", e)
+
+    # Fallback fichier JSON
     numeros = []
     for f in SAISONS_DIR.glob("saison_*.json"):
         try:

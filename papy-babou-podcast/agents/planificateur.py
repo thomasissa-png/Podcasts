@@ -183,11 +183,22 @@ class Planificateur:
         return plan
 
     def sauvegarder(self, plan: dict, chemin: Path) -> Path:
-        """Sauvegarde le plan de saison en JSON."""
+        """Sauvegarde le plan de saison en JSON et en DB si disponible."""
         chemin.parent.mkdir(parents=True, exist_ok=True)
         with open(chemin, "w", encoding="utf-8") as f:
             json.dump(plan, f, ensure_ascii=False, indent=2)
-        logger.info("Plan de saison sauvegardé : %s", chemin)
+        logger.info("Plan de saison sauvegardé (JSON) : %s", chemin)
+
+        # Sauvegarder en DB si disponible
+        try:
+            from db_models import SaisonRepo
+            from database import DATABASE_URL, verifier_connexion
+            if DATABASE_URL and verifier_connexion():
+                db_id = SaisonRepo.sauvegarder(plan)
+                logger.info("Plan de saison sauvegardé en DB (id=%d)", db_id)
+        except Exception as e:
+            logger.debug("DB non disponible pour sauvegarde plan : %s", e)
+
         return chemin
 
     @staticmethod
