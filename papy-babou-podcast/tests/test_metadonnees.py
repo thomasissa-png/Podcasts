@@ -24,6 +24,12 @@ class TestMetadonneesTranscript:
         assert "Narrateur" in transcript
         assert "Le buisson ardent" in transcript
 
+    def test_generer_transcript_ignore_sfx(self, script_avec_sfx_overlay):
+        """Le transcript ne doit pas inclure les segments SFX."""
+        transcript = Metadonnees._generer_transcript(script_avec_sfx_overlay["episode"])
+        assert "vent dans le desert" not in transcript
+        assert "tonnerre" not in transcript
+
 
 class TestMetadonneesDryRun:
     """Tests du mode dry-run."""
@@ -37,6 +43,8 @@ class TestMetadonneesDryRun:
         assert "description_courte" in meta
         assert "description_longue" in meta
         assert "transcript" in meta
+        assert "cover_art_prompt" in meta
+        assert "cover_art_path" in meta
         assert meta["saison"] == 1
         assert meta["numero"] == 1
         assert meta["duree_secondes"] > 0
@@ -47,6 +55,13 @@ class TestMetadonneesDryRun:
         metadonnees = Metadonnees()
         meta = metadonnees.generer_dry_run(script_exemple)
         assert "Papy Babou" in meta["description_courte"]
+
+    def test_generer_dry_run_avec_morale(self, script_exemple):
+        """La morale doit apparaître dans la description longue."""
+        metadonnees = Metadonnees()
+        meta = metadonnees.generer_dry_run(script_exemple)
+        assert "Morale" in meta["description_longue"]
+        assert "grandes choses" in meta["description_longue"]
 
 
 class TestMetadonneesSauvegarde:
@@ -79,6 +94,7 @@ class TestMetadonneesGeneration:
             "tags": ["Moïse"],
             "categories_itunes": ["Kids & Family"],
             "sous_categories_itunes": ["Stories for Kids"],
+            "cover_art_prompt": "Moïse devant le buisson ardent",
         }
 
         mock_client = MagicMock()
@@ -94,3 +110,4 @@ class TestMetadonneesGeneration:
         assert result["saison"] == 1
         assert result["duree_secondes"] == 780
         assert "transcript" in result
+        assert "cover_art_path" in result

@@ -21,6 +21,8 @@ def script_avec_sfx():
             "numero": 1,
             "saison": 1,
             "duree_cible_minutes": 13,
+            "ambiance": "mystere",
+            "morale": "La confiance en Dieu",
             "segments": [
                 {
                     "id": "seg_001",
@@ -36,6 +38,7 @@ def script_avec_sfx():
                     "ton": "ambiance",
                     "pause_apres_ms": 300,
                     "duree_sfx_secondes": 5.0,
+                    "mode": "overlay",
                 },
                 {
                     "id": "seg_002",
@@ -51,6 +54,7 @@ def script_avec_sfx():
                     "ton": "ambiance",
                     "pause_apres_ms": 500,
                     "duree_sfx_secondes": 3.0,
+                    "mode": "insert",
                 },
             ],
         }
@@ -147,6 +151,7 @@ class TestSfxProviderElevenLabs:
                 "ton": "ambiance",
                 "pause_apres_ms": 300,
                 "duree_sfx_secondes": 4.0,
+                "mode": "insert",
             }
             chemin_sortie = tmp_path / "sfx_001.mp3"
             chemin_cache = tmp_path / "cache" / "tonnerre_grondant.mp3"
@@ -160,7 +165,51 @@ class TestSfxProviderElevenLabs:
 
     @patch("agents.sfx_provider.requests.post")
     @patch("agents.sfx_provider.time.sleep")
-    def test_generer_elevenlabs_retry_echec(self, mock_sleep, mock_post, tmp_path):
+    @patch("agents.sfx_provider.random.uniform", return_value=0.5)
+    def test_generer_elevenlabs_retry_avec_jitter(self, mock_random, mock_sleep, mock_post, tmp_path):
+        """En cas d'echec, le retry doit utiliser le jitter."""
+        import requests as req
+
+        mock_post.side_effect = [
+            req.exceptions.ConnectionError("timeout"),
+            MagicMock(
+                status_code=200,
+                content=b"fake elevenlabs sfx",
+                raise_for_status=MagicMock(),
+            ),
+        ]
+
+        with patch("agents.sfx_provider.config") as mock_config:
+            mock_config.ELEVENLABS_API_KEY = "test_key"
+            mock_config.FREESOUND_API_KEY = ""
+            mock_config.SFX_CACHE_DIR = tmp_path / "cache"
+            mock_config.SFX_DIR = tmp_path / "sfx_empty"
+            mock_config.PRODUCTION = {"max_retry_tts": 3}
+
+            provider = SfxProvider()
+            segment = {
+                "id": "sfx_001",
+                "personnage": "sfx",
+                "texte": "tonnerre",
+                "ton": "ambiance",
+                "duree_sfx_secondes": 3.0,
+                "mode": "insert",
+            }
+            chemin_sortie = tmp_path / "sfx_001.mp3"
+            chemin_cache = tmp_path / "cache" / "tonnerre.mp3"
+
+            ok = provider._generer_elevenlabs(segment, chemin_sortie, chemin_cache)
+
+            assert ok is True
+            assert mock_post.call_count == 2
+            mock_sleep.assert_called_once()
+            delai = mock_sleep.call_args[0][0]
+            assert delai > 2  # 2^1 + jitter
+
+    @patch("agents.sfx_provider.requests.post")
+    @patch("agents.sfx_provider.time.sleep")
+    @patch("agents.sfx_provider.random.uniform", return_value=0.5)
+    def test_generer_elevenlabs_retry_echec(self, mock_random, mock_sleep, mock_post, tmp_path):
         """En cas d'echec total, la méthode doit retourner False."""
         import requests as req
 
@@ -196,7 +245,6 @@ class TestSfxProviderFreesound:
     @patch("agents.sfx_provider.requests.get")
     def test_telecharger_freesound_succes(self, mock_get, tmp_path):
         """Un téléchargement Freesound réussi doit sauvegarder le fichier."""
-        # Mock de la recherche
         search_response = MagicMock()
         search_response.status_code = 200
         search_response.json.return_value = {
@@ -213,7 +261,6 @@ class TestSfxProviderFreesound:
         }
         search_response.raise_for_status = MagicMock()
 
-        # Mock du téléchargement
         download_response = MagicMock()
         download_response.status_code = 200
         download_response.content = b"fake freesound audio"
@@ -296,6 +343,7 @@ class TestSfxProviderSilence:
                 "texte": "test",
                 "ton": "ambiance",
                 "duree_sfx_secondes": 2.0,
+                "mode": "insert",
             }
             chemin = tmp_path / "silence.mp3"
             provider._generer_silence(segment, chemin)
@@ -305,7 +353,7 @@ class TestSfxProviderSilence:
 
 
 class TestScripteurSfxValidation:
-    """Tests que le scripteur accepte les segments SFX."""
+    """Tests que le scripteur accepte les segments SFX avec mode."""
 
     def test_valider_structure_avec_sfx(self):
         """Un script avec des segments SFX doit être valide."""
@@ -330,23 +378,9 @@ class TestScripteurSfxValidation:
                         "texte": "vent du desert",
                         "ton": "ambiance",
                         "pause_apres_ms": 300,
+                        "mode": "overlay",
                     },
                 ],
             }
         }
         Scripteur._valider_structure(script)
-
-    def test_compter_mots_ignore_sfx(self):
-        """Le comptage de mots doit ignorer les segments SFX."""
-        from agents.scripteur import Scripteur
-
-        script = {
-            "episode": {
-                "segments": [
-                    {"personnage": "narrateur", "texte": "Un deux trois"},
-                    {"personnage": "sfx", "texte": "vent du desert"},
-                    {"personnage": "papy_babou", "texte": "Quatre cinq"},
-                ]
-            }
-        }
-        assert Scripteur.compter_mots(script) == 5

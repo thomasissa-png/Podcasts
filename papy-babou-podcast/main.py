@@ -1,10 +1,13 @@
 """Orchestrateur principal — Pipeline de production du podcast Papy Babou.
 
 Usage:
-    python main.py produire -e "Le buisson ardent" -s 1 -n 2 -r "..."
+    python main.py produire -e "Le buisson ardent" -s 1 -n 2 -r "..." -m "La confiance en Dieu"
     python main.py produire -e "..." -s 1 -n 1 -r "..." --dry-run
     python main.py produire -e "..." -s 1 -n 1 -r "..." --auto  (sans validation humaine)
     python main.py interactif
+    python main.py batch -f planning.json
+    python main.py dashboard
+    python main.py reprendre -c checkpoints/S01E01_checkpoint.json
 """
 
 import json
@@ -46,6 +49,81 @@ def configurer_logging() -> None:
 logger = logging.getLogger("papy-babou")
 
 
+# ── Historique des épisodes ──────────────────────────────────────────────────
+
+HISTORIQUE_PATH = config.HISTORIQUE_DIR / "historique_episodes.json"
+
+
+def charger_historique() -> list[dict]:
+    """Charge l'historique des épisodes produits."""
+    if HISTORIQUE_PATH.exists():
+        with open(HISTORIQUE_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def sauvegarder_historique(historique: list[dict]) -> None:
+    """Sauvegarde l'historique des épisodes."""
+    with open(HISTORIQUE_PATH, "w", encoding="utf-8") as f:
+        json.dump(historique, f, ensure_ascii=False, indent=2)
+
+
+def ajouter_historique(rapport: dict, script: dict) -> None:
+    """Ajoute un épisode à l'historique pour la continuité inter-épisodes."""
+    historique = charger_historique()
+    episode = script.get("episode", {})
+    historique.append({
+        "episode_id": rapport.get("episode_id", ""),
+        "titre": rapport.get("titre", ""),
+        "morale": episode.get("morale", ""),
+        "resume_court": episode.get("titre", ""),
+        "date_production": rapport.get("debut", ""),
+        "score_review": rapport.get("etapes", {}).get("script", {}).get("score_review", 0),
+    })
+    sauvegarder_historique(historique)
+
+
+# ── Système de checkpoints ───────────────────────────────────────────────────
+
+
+def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
+    """Sauvegarde un checkpoint pour permettre la reprise sur échec.
+
+    Args:
+        episode_id: Identifiant de l'épisode (ex: S01E01).
+        etape: Nom de l'étape en cours.
+        data: Données à sauvegarder.
+
+    Returns:
+        Chemin du fichier checkpoint.
+    """
+    chemin = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    checkpoint = {
+        "episode_id": episode_id,
+        "etape": etape,
+        "timestamp": datetime.now().isoformat(),
+        "data": data,
+    }
+    with open(chemin, "w", encoding="utf-8") as f:
+        json.dump(checkpoint, f, ensure_ascii=False, indent=2)
+    logger.info("Checkpoint sauvegardé : %s (étape: %s)", chemin, etape)
+    return chemin
+
+
+def charger_checkpoint(chemin: Path) -> dict:
+    """Charge un checkpoint pour reprendre la production."""
+    with open(chemin, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def supprimer_checkpoint(episode_id: str) -> None:
+    """Supprime le checkpoint après une production réussie."""
+    chemin = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    if chemin.exists():
+        chemin.unlink()
+        logger.info("Checkpoint supprimé : %s", chemin)
+
+
 # ── Pipeline de production ────────────────────────────────────────────────────
 
 
@@ -68,7 +146,9 @@ def _afficher_script(script: dict) -> None:
 
     console.print(Panel(
         f"[bold]{episode['titre']}[/bold] — "
-        f"S{episode['saison']:02d}E{episode['numero']:02d}",
+        f"S{episode['saison']:02d}E{episode['numero']:02d}\n"
+        f"Ambiance : {episode.get('ambiance', 'non définie')} | "
+        f"Morale : {episode.get('morale', 'non définie')}",
         title="Script complet",
         border_style="cyan",
     ))
@@ -76,8 +156,9 @@ def _afficher_script(script: dict) -> None:
     for seg in episode["segments"]:
         nom = NOMS_PERSONNAGES.get(seg["personnage"], seg["personnage"])
         if seg["personnage"] == "sfx":
+            mode = seg.get("mode", "insert")
             console.print(
-                f"  [dim italic]  SFX : {seg['texte']} "
+                f"  [dim italic]  SFX ({mode}) : {seg['texte']} "
                 f"({seg.get('duree_sfx_secondes', '?')}s)[/dim italic]"
             )
         elif seg["personnage"] == "narrateur":
@@ -97,14 +178,8 @@ def _afficher_script(script: dict) -> None:
     console.print()
 
 
-def _validation_script(script: dict, chemin_script: Path) -> dict:
+def _validation_script(script: dict, chemin_script: Path, morale: str = "") -> dict:
     """Point de validation humaine apres la review du script.
-
-    Affiche le script, puis propose :
-      (v) Valider - continuer le pipeline
-      (m) Modifier - ouvrir le fichier JSON, recharger apres modification
-      (c) Corrections - saisir des instructions, relancer le scripteur
-      (a) Abandonner - arreter la production
 
     Returns:
         Le script (potentiellement modifie).
@@ -164,12 +239,15 @@ def _validation_script(script: dict, chemin_script: Path) -> dict:
                     "— relance du scripteur...[/cyan]"
                 )
                 scripteur = Scripteur()
+                historique = charger_historique()
                 script = scripteur.generer(
                     titre=script["episode"]["titre"],
                     resume="",
                     saison=script["episode"]["saison"],
                     numero=script["episode"]["numero"],
+                    morale=morale,
                     corrections=lignes,
+                    historique=historique,
                 )
                 scripteur.sauvegarder(script, chemin_script)
                 nb = scripteur.compter_mots(script)
@@ -239,9 +317,12 @@ def pipeline(
     resume: str,
     saison: int,
     numero: int,
+    morale: str = "",
     dry_run: bool = False,
     auto: bool = False,
     max_iterations_review: int = 3,
+    etape_depart: str = "script",
+    checkpoint_data: dict | None = None,
 ) -> dict:
     """Execute le pipeline complet de production d'un episode.
 
@@ -250,15 +331,18 @@ def pipeline(
         resume: Resume de l'histoire biblique.
         saison: Numero de saison.
         numero: Numero d'episode.
+        morale: Leçon de vie à transmettre.
         dry_run: Si True, pas de generation audio ni de publication.
-        auto: Si True, pas de validation humaine (pipeline 100% automatique).
+        auto: Si True, pas de validation humaine.
         max_iterations_review: Nombre max de boucles scripteur-reviewer.
+        etape_depart: Étape à laquelle reprendre (pour les checkpoints).
+        checkpoint_data: Données du checkpoint (pour la reprise).
 
     Returns:
         Rapport de production complet.
     """
     episode_id = f"S{saison:02d}E{numero:02d}"
-    rapport = {
+    rapport = checkpoint_data or {
         "episode_id": episode_id,
         "titre": titre,
         "dry_run": dry_run,
@@ -266,196 +350,236 @@ def pipeline(
         "etapes": {},
     }
 
+    # Validation des clés API au démarrage
+    erreurs_api = config.valider_cles_api(dry_run=dry_run)
+    if erreurs_api:
+        console.print(Panel(
+            "\n".join(f"[red]  {e}[/red]" for e in erreurs_api),
+            title="Erreurs de configuration",
+            border_style="red",
+        ))
+        sys.exit(1)
+
+    mode_str = "DRY RUN (pas d'audio ni de publication)" if dry_run else "PRODUCTION"
+    morale_str = morale or "non définie"
     console.print(
         Panel(
             f"[bold]Épisode {episode_id} — {titre}[/bold]\n"
-            f"Mode : {'DRY RUN (pas d\\'audio ni de publication)' if dry_run else 'PRODUCTION'}",
-            title="🎙️ Les Histoires de Papy Babou",
+            f"Mode : {mode_str}\n"
+            f"Morale : {morale_str}",
+            title="Les Histoires de Papy Babou",
             border_style="blue",
         )
     )
 
-    # ── Étape 1 : Scripteur ───────────────────────────────────────────────────
+    etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
+    etape_idx = etapes.index(etape_depart) if etape_depart in etapes else 0
 
-    console.print("\n[bold cyan]▶ Étape 1/8 — Génération du script[/bold cyan]")
-    scripteur = Scripteur()
-    corrections = None
+    # Charger l'historique pour la continuité
+    historique = charger_historique()
+
     script = None
     score = 0
-
-    for iteration in range(1, max_iterations_review + 1):
-        console.print(f"  Itération {iteration}/{max_iterations_review}...")
-
-        if dry_run and iteration == 1:
-            # En dry-run, charger un script existant ou générer via API
-            script = scripteur.generer(
-                titre=titre, resume=resume, saison=saison, numero=numero,
-                corrections=corrections,
-            )
-        else:
-            script = scripteur.generer(
-                titre=titre, resume=resume, saison=saison, numero=numero,
-                corrections=corrections,
-            )
-
-        # Sauvegarder le script brut
-        chemin_script = config.SCRIPTS_DIR / f"{episode_id}_v{iteration}.json"
-        scripteur.sauvegarder(script, chemin_script)
-        nb_mots = scripteur.compter_mots(script)
-        console.print(f"  Script v{iteration} : {nb_mots} mots, {len(script['episode']['segments'])} segments")
-
-        # ── Étape 2 : Reviewer ────────────────────────────────────────────────
-
-        console.print(f"\n[bold cyan]▶ Étape 2/8 — Relecture (itération {iteration})[/bold cyan]")
-        reviewer = Reviewer()
-        resultat_review = reviewer.evaluer(script)
-        score = resultat_review["review"]["score"]
-
-        # Afficher le rapport de review
-        table = Table(title=f"Score de review : {score}/10")
-        table.add_column("Critère", style="cyan")
-        table.add_column("Score", justify="right")
-        for critere, val in resultat_review["review"].get("details_score", {}).items():
-            table.add_row(critere.replace("_", " ").title(), f"{val}/2")
-        console.print(table)
-
-        if resultat_review["review"]["corrections"]:
-            console.print("[yellow]  Corrections :[/yellow]")
-            for c in resultat_review["review"]["corrections"]:
-                console.print(f"    • {c}")
-
-        if resultat_review["review"]["alertes"]:
-            console.print("[red]  Alertes :[/red]")
-            for a in resultat_review["review"]["alertes"]:
-                console.print(f"    ⚠ {a}")
-
-        if reviewer.est_valide(resultat_review):
-            script = {"episode": resultat_review["episode"]}
-            console.print(f"[green]  ✓ Script validé (score {score}/10)[/green]")
-            break
-
-        console.print(f"[yellow]  Score insuffisant ({score}/10 < 7) — relance du scripteur[/yellow]")
-        corrections = reviewer.extraire_corrections(resultat_review)
-
-    else:
-        console.print(
-            f"[red]  ⚠ Score final : {score}/10 après {max_iterations_review} itérations. "
-            "Poursuite avec le meilleur script disponible.[/red]"
-        )
-        script = {"episode": resultat_review["episode"]}
-
-    # Sauvegarder le script validé
     chemin_valide = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
-    scripteur.sauvegarder(script, chemin_valide)
 
-    # Estimer la durée
-    duree_estimee = reviewer.estimer_duree(script)
-    console.print(f"  Durée estimée : {duree_estimee:.1f} minutes")
+    # Si on reprend, charger le script existant
+    if etape_idx > 0 and chemin_valide.exists():
+        with open(chemin_valide, "r", encoding="utf-8") as f:
+            script = json.load(f)
+        logger.info("Script chargé depuis le checkpoint : %s", chemin_valide)
 
-    rapport["etapes"]["script"] = {
-        "score_review": score,
-        "nb_mots": scripteur.compter_mots(script),
-        "duree_estimee_min": round(duree_estimee, 1),
-        "chemin": str(chemin_valide),
-    }
+    # ── Étape 1-2 : Scripteur + Reviewer ─────────────────────────────────────
 
-    # ── Validation humaine : script ──────────────────────────────────────────
+    if etape_idx <= 1:
+        console.print("\n[bold cyan]Etape 1/8 — Generation du script[/bold cyan]")
+        scripteur = Scripteur()
+        corrections = None
 
-    if not auto:
-        console.print(
-            "\n[bold magenta]■ VALIDATION — Relisez le script avant "
-            "la production audio[/bold magenta]"
-        )
-        script = _validation_script(script, chemin_valide)
-        # Re-sauvegarder au cas ou le script a ete modifie
+        for iteration in range(1, max_iterations_review + 1):
+            console.print(f"  Iteration {iteration}/{max_iterations_review}...")
+
+            script = scripteur.generer(
+                titre=titre, resume=resume, saison=saison, numero=numero,
+                morale=morale, corrections=corrections, historique=historique,
+            )
+
+            chemin_script = config.SCRIPTS_DIR / f"{episode_id}_v{iteration}.json"
+            scripteur.sauvegarder(script, chemin_script)
+            nb_mots = scripteur.compter_mots(script)
+            console.print(f"  Script v{iteration} : {nb_mots} mots, {len(script['episode']['segments'])} segments")
+
+            # ── Reviewer ─────────────────────────────────────────────────────
+
+            console.print(f"\n[bold cyan]Etape 2/8 — Relecture (iteration {iteration})[/bold cyan]")
+            reviewer = Reviewer()
+            resultat_review = reviewer.evaluer(script)
+            score = resultat_review["review"]["score"]
+
+            table = Table(title=f"Score de review : {score}/10")
+            table.add_column("Critere", style="cyan")
+            table.add_column("Score", justify="right")
+            for critere, val in resultat_review["review"].get("details_score", {}).items():
+                table.add_row(critere.replace("_", " ").title(), f"{val}/2")
+            console.print(table)
+
+            if resultat_review["review"]["corrections"]:
+                console.print("[yellow]  Corrections :[/yellow]")
+                for c in resultat_review["review"]["corrections"]:
+                    console.print(f"    - {c}")
+
+            if resultat_review["review"]["alertes"]:
+                console.print("[red]  Alertes :[/red]")
+                for a in resultat_review["review"]["alertes"]:
+                    console.print(f"    ! {a}")
+
+            if reviewer.est_valide(resultat_review):
+                script = {"episode": resultat_review["episode"]}
+                console.print(f"[green]  Script valide (score {score}/10)[/green]")
+                break
+
+            console.print(f"[yellow]  Score insuffisant ({score}/10 < 7) — relance du scripteur[/yellow]")
+            corrections = reviewer.extraire_corrections(resultat_review)
+
+        else:
+            console.print(
+                f"[red]  Score final : {score}/10 apres {max_iterations_review} iterations. "
+                "Poursuite avec le meilleur script disponible.[/red]"
+            )
+            script = {"episode": resultat_review["episode"]}
+
         scripteur.sauvegarder(script, chemin_valide)
+
         duree_estimee = reviewer.estimer_duree(script)
-        rapport["etapes"]["script"]["validation_humaine"] = True
+        console.print(f"  Duree estimee : {duree_estimee:.1f} minutes")
+
+        rapport["etapes"]["script"] = {
+            "score_review": score,
+            "nb_mots": scripteur.compter_mots(script),
+            "duree_estimee_min": round(duree_estimee, 1),
+            "chemin": str(chemin_valide),
+        }
+
+        # Checkpoint après script
+        sauvegarder_checkpoint(episode_id, "audio", {
+            "episode_id": episode_id, "titre": titre, "resume": resume,
+            "saison": saison, "numero": numero, "morale": morale,
+            "dry_run": dry_run, "rapport": rapport,
+        })
+
+        # ── Validation humaine : script ──────────────────────────────────────
+
+        if not auto:
+            console.print(
+                "\n[bold magenta]VALIDATION — Relisez le script avant "
+                "la production audio[/bold magenta]"
+            )
+            script = _validation_script(script, chemin_valide, morale)
+            scripteur.sauvegarder(script, chemin_valide)
+            duree_estimee = reviewer.estimer_duree(script)
+            rapport["etapes"]["script"]["validation_humaine"] = True
 
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 
-    if dry_run:
-        console.print("\n[bold yellow]▶ Étape 3/8 — Production audio (SAUTÉE — dry-run)[/bold yellow]")
-        rapport["etapes"]["audio"] = {"status": "skipped (dry-run)"}
-    else:
-        console.print("\n[bold cyan]▶ Étape 3/8 — Production audio (voix)[/bold cyan]")
-        producteur = ProducteurAudio()
+    if etape_idx <= 2:
+        if dry_run:
+            console.print("\n[bold yellow]Etape 3/8 — Production audio (SAUTEE — dry-run)[/bold yellow]")
+            rapport["etapes"]["audio"] = {"status": "skipped (dry-run)"}
+        else:
+            console.print("\n[bold cyan]Etape 3/8 — Production audio (voix)[/bold cyan]")
+            producteur = ProducteurAudio()
 
-        segments_voix = [
-            s for s in script["episode"]["segments"] if s["personnage"] != "sfx"
-        ]
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,
-        ) as progress:
-            task = progress.add_task(
-                "Génération des segments audio...",
-                total=len(segments_voix),
-            )
-            fichiers_audio = producteur.produire_episode(script)
-            progress.update(task, completed=len(segments_voix))
+            segments_voix = [
+                s for s in script["episode"]["segments"] if s["personnage"] != "sfx"
+            ]
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+            ) as progress:
+                task = progress.add_task(
+                    "Generation des segments audio...",
+                    total=len(segments_voix),
+                )
+                fichiers_audio = producteur.produire_episode(script)
+                progress.update(task, completed=len(segments_voix))
 
-        console.print(f"  {len(fichiers_audio)} segments voix générés")
-        rapport["etapes"]["audio"] = {
-            "nb_segments": len(fichiers_audio),
-            "caracteres": dict(producteur.caracteres_utilises),
-        }
+            console.print(f"  {len(fichiers_audio)} segments voix generes")
+            rapport["etapes"]["audio"] = {
+                "nb_segments": len(fichiers_audio),
+                "caracteres": dict(producteur.caracteres_utilises),
+            }
+
+            sauvegarder_checkpoint(episode_id, "sfx", {
+                "episode_id": episode_id, "titre": titre, "resume": resume,
+                "saison": saison, "numero": numero, "morale": morale,
+                "dry_run": dry_run, "rapport": rapport,
+            })
 
     # ── Étape 4 : Bruitages (SFX) ─────────────────────────────────────────────
 
-    nb_sfx = len([s for s in script["episode"]["segments"] if s["personnage"] == "sfx"])
+    if etape_idx <= 3:
+        nb_sfx = len([s for s in script["episode"]["segments"] if s["personnage"] == "sfx"])
 
-    if dry_run:
-        console.print(f"\n[bold yellow]▶ Étape 4/8 — Bruitages SFX (SAUTÉE — dry-run) [{nb_sfx} SFX dans le script][/bold yellow]")
-        rapport["etapes"]["sfx"] = {"status": "skipped (dry-run)", "nb_sfx": nb_sfx}
-    elif nb_sfx == 0:
-        console.print("\n[bold cyan]▶ Étape 4/8 — Bruitages SFX (aucun dans le script)[/bold cyan]")
-        rapport["etapes"]["sfx"] = {"status": "no sfx segments", "nb_sfx": 0}
-    else:
-        console.print(f"\n[bold cyan]▶ Étape 4/8 — Bruitages SFX ({nb_sfx} bruitages)[/bold cyan]")
-        sfx_provider = SfxProvider()
-        fichiers_sfx = sfx_provider.produire_sfx(script)
+        if dry_run:
+            console.print(f"\n[bold yellow]Etape 4/8 — Bruitages SFX (SAUTEE — dry-run) [{nb_sfx} SFX][/bold yellow]")
+            rapport["etapes"]["sfx"] = {"status": "skipped (dry-run)", "nb_sfx": nb_sfx}
+        elif nb_sfx == 0:
+            console.print("\n[bold cyan]Etape 4/8 — Bruitages SFX (aucun dans le script)[/bold cyan]")
+            rapport["etapes"]["sfx"] = {"status": "no sfx segments", "nb_sfx": 0}
+        else:
+            console.print(f"\n[bold cyan]Etape 4/8 — Bruitages SFX ({nb_sfx} bruitages)[/bold cyan]")
+            sfx_provider = SfxProvider()
+            fichiers_sfx = sfx_provider.produire_sfx(script)
 
-        console.print(f"  {len(fichiers_sfx)} bruitages générés/téléchargés")
-        for seg_id, source in sfx_provider.stats.items():
-            console.print(f"    {seg_id} : {source}")
+            console.print(f"  {len(fichiers_sfx)} bruitages generes/telecharges")
+            for seg_id, source in sfx_provider.stats.items():
+                console.print(f"    {seg_id} : {source}")
 
-        rapport["etapes"]["sfx"] = {
-            "nb_sfx": len(fichiers_sfx),
-            "sources": dict(sfx_provider.stats),
-        }
+            rapport["etapes"]["sfx"] = {
+                "nb_sfx": len(fichiers_sfx),
+                "sources": dict(sfx_provider.stats),
+            }
 
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
 
-    if dry_run:
-        console.print("\n[bold yellow]▶ Étape 5/8 — Montage (SAUTÉ — dry-run)[/bold yellow]")
-        rapport["etapes"]["montage"] = {"status": "skipped (dry-run)"}
-        duree_secondes = duree_estimee * 60
-        taille_bytes = 0
-        chemin_hq = None
-    else:
-        console.print("\n[bold cyan]▶ Étape 5/8 — Montage[/bold cyan]")
-        monteur = Monteur()
-        resultat_montage = monteur.assembler(script)
+    if etape_idx <= 4:
+        if dry_run:
+            console.print("\n[bold yellow]Etape 5/8 — Montage (SAUTE — dry-run)[/bold yellow]")
+            rapport["etapes"]["montage"] = {"status": "skipped (dry-run)"}
+            reviewer = Reviewer()
+            duree_estimee = reviewer.estimer_duree(script)
+            duree_secondes = duree_estimee * 60
+            taille_bytes = 0
+            chemin_hq = None
+        else:
+            console.print("\n[bold cyan]Etape 5/8 — Montage[/bold cyan]")
+            monteur = Monteur()
+            resultat_montage = monteur.assembler(script)
 
-        duree_secondes = resultat_montage["duree_secondes"]
-        taille_bytes = resultat_montage["taille_bytes"]
-        chemin_hq = resultat_montage["chemin_hq"]
+            duree_secondes = resultat_montage["duree_secondes"]
+            taille_bytes = resultat_montage["taille_bytes"]
+            chemin_hq = resultat_montage["chemin_hq"]
 
-        console.print(f"  Épisode assemblé : {duree_secondes:.0f}s, {taille_bytes / 1024 / 1024:.1f} MB")
-        rapport["etapes"]["montage"] = {
-            "duree_secondes": duree_secondes,
-            "taille_mb": round(taille_bytes / 1024 / 1024, 1),
-            "chemin_hq": str(chemin_hq),
-            "chemin_preview": str(resultat_montage["chemin_preview"]),
-        }
+            console.print(f"  Episode assemble : {duree_secondes:.0f}s, {taille_bytes / 1024 / 1024:.1f} MB")
+            rapport["etapes"]["montage"] = {
+                "duree_secondes": duree_secondes,
+                "taille_mb": round(taille_bytes / 1024 / 1024, 1),
+                "chemin_hq": str(chemin_hq),
+                "chemin_preview": str(resultat_montage["chemin_preview"]),
+                "chapitres": resultat_montage.get("chapitres", []),
+            }
+
+            sauvegarder_checkpoint(episode_id, "metadonnees", {
+                "episode_id": episode_id, "titre": titre, "resume": resume,
+                "saison": saison, "numero": numero, "morale": morale,
+                "dry_run": dry_run, "rapport": rapport,
+            })
 
     # ── Validation humaine : montage ─────────────────────────────────────────
 
     if not auto and not dry_run and chemin_hq:
         console.print(
-            "\n[bold magenta]■ VALIDATION — Ecoutez l'episode avant "
+            "\n[bold magenta]VALIDATION — Ecoutez l'episode avant "
             "publication[/bold magenta]"
         )
         _validation_montage(
@@ -467,39 +591,46 @@ def pipeline(
 
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
-    console.print("\n[bold cyan]▶ Étape 6/8 — Génération des métadonnées[/bold cyan]")
-    metadonnees = Metadonnees()
+    if etape_idx <= 5:
+        console.print("\n[bold cyan]Etape 6/8 — Generation des metadonnees[/bold cyan]")
+        metadonnees = Metadonnees()
 
-    if dry_run:
-        meta = metadonnees.generer_dry_run(script)
-    else:
-        meta = metadonnees.generer(script, duree_secondes)
+        if dry_run:
+            meta = metadonnees.generer_dry_run(script)
+        else:
+            meta = metadonnees.generer(script, duree_secondes)
 
-    chemin_meta = config.SCRIPTS_DIR / f"{episode_id}_meta.json"
-    metadonnees.sauvegarder(meta, chemin_meta)
-    console.print(f"  Titre : {meta['titre']}")
-    console.print(f"  Description : {meta['description_courte']}")
+        chemin_meta = config.SCRIPTS_DIR / f"{episode_id}_meta.json"
+        metadonnees.sauvegarder(meta, chemin_meta)
+        console.print(f"  Titre : {meta['titre']}")
+        console.print(f"  Description : {meta['description_courte']}")
+        if meta.get("cover_art_prompt"):
+            console.print(f"  Cover art prompt : {meta['cover_art_prompt']}")
 
-    rapport["etapes"]["metadonnees"] = {
-        "titre": meta["titre"],
-        "chemin": str(chemin_meta),
-    }
+        rapport["etapes"]["metadonnees"] = {
+            "titre": meta["titre"],
+            "chemin": str(chemin_meta),
+            "cover_art_path": meta.get("cover_art_path", ""),
+        }
 
     # ── Étape 7 : Publication ─────────────────────────────────────────────────
 
-    if dry_run:
-        console.print("\n[bold yellow]▶ Étape 7/8 — Publication (SAUTÉE — dry-run)[/bold yellow]")
-        rapport["etapes"]["publication"] = {"status": "skipped (dry-run)"}
-    else:
-        console.print("\n[bold cyan]▶ Étape 7/8 — Publication[/bold cyan]")
-        publisher = Publisher()
-        rapport_pub = publisher.publier(meta, chemin_hq, taille_bytes)
-        console.print(f"  URL audio : {rapport_pub['url_audio']}")
-        rapport["etapes"]["publication"] = rapport_pub
+    if etape_idx <= 6:
+        if dry_run:
+            console.print("\n[bold yellow]Etape 7/8 — Publication (SAUTEE — dry-run)[/bold yellow]")
+            rapport["etapes"]["publication"] = {"status": "skipped (dry-run)"}
+        else:
+            console.print("\n[bold cyan]Etape 7/8 — Publication[/bold cyan]")
+            publisher = Publisher()
+            rapport_pub = publisher.publier(meta, chemin_hq, taille_bytes)
+            console.print(f"  URL audio : {rapport_pub['url_audio']}")
+            if rapport_pub.get("transcript_url"):
+                console.print(f"  Transcript : {rapport_pub['transcript_url']}")
+            rapport["etapes"]["publication"] = rapport_pub
 
     # ── Étape 8 : Rapport final ───────────────────────────────────────────────
 
-    console.print("\n[bold cyan]▶ Étape 8/8 — Rapport final[/bold cyan]")
+    console.print("\n[bold cyan]Etape 8/8 — Rapport final[/bold cyan]")
     rapport["fin"] = datetime.now().isoformat()
 
     # Sauvegarder le rapport
@@ -507,15 +638,21 @@ def pipeline(
     with open(chemin_rapport, "w", encoding="utf-8") as f:
         json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
 
+    # Ajouter à l'historique
+    ajouter_historique(rapport, script)
+
+    # Supprimer le checkpoint (production réussie)
+    supprimer_checkpoint(episode_id)
+
     # Afficher le résumé
     console.print(
         Panel(
-            f"[bold green]Production terminée ![/bold green]\n\n"
-            f"Épisode : {episode_id} — {titre}\n"
+            f"[bold green]Production terminee ![/bold green]\n\n"
+            f"Episode : {episode_id} — {titre}\n"
             f"Score review : {score}/10\n"
-            f"Durée estimée : {duree_estimee:.1f} min\n"
+            f"Morale : {script['episode'].get('morale', 'N/A')}\n"
             f"Rapport : {chemin_rapport}",
-            title="✅ Résumé",
+            title="Resume",
             border_style="green",
         )
     )
@@ -529,20 +666,21 @@ def pipeline(
 @click.group(invoke_without_command=True)
 @click.pass_context
 def cli(ctx):
-    """Les Histoires de Papy Babou — Système de production automatisée."""
+    """Les Histoires de Papy Babou — Systeme de production automatisee."""
     configurer_logging()
     if ctx.invoked_subcommand is None:
         ctx.invoke(interactif)
 
 
 @cli.command()
-@click.option("--episode", "-e", required=True, help="Titre de l'épisode")
-@click.option("--saison", "-s", type=int, required=True, help="Numéro de saison")
-@click.option("--numero", "-n", type=int, required=True, help="Numéro d'épisode")
-@click.option("--resume", "-r", required=True, help="Résumé de l'histoire biblique")
+@click.option("--episode", "-e", required=True, help="Titre de l'episode")
+@click.option("--saison", "-s", type=int, required=True, help="Numero de saison")
+@click.option("--numero", "-n", type=int, required=True, help="Numero d'episode")
+@click.option("--resume", "-r", required=True, help="Resume de l'histoire biblique")
+@click.option("--morale", "-m", default="", help="Lecon de vie a transmettre")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
-def produire(episode: str, saison: int, numero: int, resume: str, dry_run: bool, auto: bool):
+def produire(episode: str, saison: int, numero: int, resume: str, morale: str, dry_run: bool, auto: bool):
     """Produit un episode complet du podcast."""
     try:
         pipeline(
@@ -550,6 +688,7 @@ def produire(episode: str, saison: int, numero: int, resume: str, dry_run: bool,
             resume=resume,
             saison=saison,
             numero=numero,
+            morale=morale,
             dry_run=dry_run,
             auto=auto,
         )
@@ -579,6 +718,7 @@ def interactif():
     saison = int(console.input("[cyan]Numero de saison :[/cyan] "))
     numero = int(console.input("[cyan]Numero d'episode :[/cyan] "))
     resume = console.input("[cyan]Resume de l'histoire biblique :[/cyan] ")
+    morale = console.input("[cyan]Lecon de vie / morale (optionnel) :[/cyan] ")
 
     dry_run_str = console.input("[cyan]Mode dry-run ? (o/n) :[/cyan] ").strip().lower()
     dry_run = dry_run_str in ("o", "oui", "y", "yes")
@@ -590,6 +730,7 @@ def interactif():
             resume=resume,
             saison=saison,
             numero=numero,
+            morale=morale,
             dry_run=dry_run,
             auto=False,
         )
@@ -599,6 +740,184 @@ def interactif():
         console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
         logger.exception("Erreur dans le pipeline de production")
         sys.exit(1)
+
+
+@cli.command()
+@click.option("--fichier", "-f", required=True, type=click.Path(exists=True),
+              help="Fichier JSON de planning (liste d'episodes)")
+@click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
+@click.option("--auto", is_flag=True, default=True, help="Mode automatique (defaut: oui)")
+def batch(fichier: str, dry_run: bool, auto: bool):
+    """Mode batch — produit plusieurs episodes depuis un fichier de planning.
+
+    Le fichier JSON doit contenir une liste d'episodes :
+    [
+      {"titre": "...", "resume": "...", "saison": 1, "numero": 1, "morale": "..."},
+      ...
+    ]
+    """
+    with open(fichier, "r", encoding="utf-8") as f:
+        planning = json.load(f)
+
+    if not isinstance(planning, list):
+        console.print("[red]Le fichier doit contenir une liste d'episodes.[/red]")
+        sys.exit(1)
+
+    console.print(Panel(
+        f"[bold]Production en serie — {len(planning)} episodes[/bold]\n"
+        f"Mode : {'DRY RUN' if dry_run else 'PRODUCTION'}\n"
+        f"Validation humaine : {'Non (auto)' if auto else 'Oui'}",
+        title="Batch Mode",
+        border_style="blue",
+    ))
+
+    resultats = []
+    for i, ep in enumerate(planning, 1):
+        console.print(f"\n[bold]{'='*60}[/bold]")
+        console.print(f"[bold cyan]Episode {i}/{len(planning)} — {ep.get('titre', '?')}[/bold cyan]")
+        console.print(f"[bold]{'='*60}[/bold]")
+
+        try:
+            rapport = pipeline(
+                titre=ep["titre"],
+                resume=ep.get("resume", ""),
+                saison=ep.get("saison", 1),
+                numero=ep.get("numero", i),
+                morale=ep.get("morale", ""),
+                dry_run=dry_run,
+                auto=auto,
+            )
+            resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
+        except Exception as e:
+            logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
+            resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+
+    # Rapport batch
+    console.print(f"\n[bold]{'='*60}[/bold]")
+    console.print("[bold green]Rapport batch[/bold green]")
+    ok = sum(1 for r in resultats if r["status"] == "ok")
+    erreurs = sum(1 for r in resultats if r["status"] == "error")
+    console.print(f"  Reussis : {ok}/{len(planning)}")
+    console.print(f"  Echecs  : {erreurs}/{len(planning)}")
+
+    for r in resultats:
+        status = "[green]OK[/green]" if r["status"] == "ok" else "[red]ERREUR[/red]"
+        console.print(f"  {status} — {r['episode']}")
+        if r["status"] == "error":
+            console.print(f"    [red]{r['erreur']}[/red]")
+
+    # Sauvegarder le rapport batch
+    chemin_batch = config.LOGS_DIR / f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(chemin_batch, "w", encoding="utf-8") as f:
+        json.dump(resultats, f, ensure_ascii=False, indent=2, default=str)
+    console.print(f"\n  Rapport batch : {chemin_batch}")
+
+
+@cli.command()
+@click.option("--checkpoint", "-c", required=True, type=click.Path(exists=True),
+              help="Chemin du fichier checkpoint")
+@click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
+def reprendre(checkpoint: str, auto: bool):
+    """Reprend une production depuis un checkpoint."""
+    cp = charger_checkpoint(Path(checkpoint))
+    data = cp["data"]
+    etape = cp["etape"]
+
+    console.print(Panel(
+        f"[bold]Reprise depuis le checkpoint[/bold]\n"
+        f"Episode : {data['episode_id']} — {data['titre']}\n"
+        f"Etape de reprise : {etape}",
+        title="Reprise de production",
+        border_style="yellow",
+    ))
+
+    try:
+        pipeline(
+            titre=data["titre"],
+            resume=data.get("resume", ""),
+            saison=data["saison"],
+            numero=data["numero"],
+            morale=data.get("morale", ""),
+            dry_run=data.get("dry_run", False),
+            auto=auto,
+            etape_depart=etape,
+            checkpoint_data=data.get("rapport"),
+        )
+    except ProductionAbandonnee as e:
+        console.print(f"\n[bold yellow]Production arretee : {e}[/bold yellow]")
+    except Exception as e:
+        console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
+        logger.exception("Erreur lors de la reprise")
+        sys.exit(1)
+
+
+@cli.command()
+def dashboard():
+    """Affiche le dashboard de suivi des episodes produits."""
+    historique = charger_historique()
+
+    if not historique:
+        console.print("[yellow]Aucun episode produit pour le moment.[/yellow]")
+        return
+
+    # Tableau des épisodes
+    table = Table(title="Dashboard — Episodes produits")
+    table.add_column("Episode", style="cyan")
+    table.add_column("Titre", style="white")
+    table.add_column("Score", justify="right", style="green")
+    table.add_column("Morale", style="dim")
+    table.add_column("Date", style="dim")
+
+    for ep in historique:
+        score = ep.get("score_review", "?")
+        score_style = "green" if isinstance(score, (int, float)) and score >= 7 else "yellow"
+        table.add_row(
+            ep.get("episode_id", "?"),
+            ep.get("titre", "?"),
+            f"[{score_style}]{score}/10[/{score_style}]",
+            ep.get("morale", "")[:50],
+            ep.get("date_production", "")[:10],
+        )
+
+    console.print(table)
+
+    # Statistiques globales
+    scores = [ep.get("score_review", 0) for ep in historique if isinstance(ep.get("score_review"), (int, float))]
+    if scores:
+        console.print(f"\n  Episodes produits : {len(historique)}")
+        console.print(f"  Score moyen : {sum(scores)/len(scores):.1f}/10")
+        console.print(f"  Meilleur score : {max(scores)}/10")
+        console.print(f"  Plus bas score : {min(scores)}/10")
+
+    # Coûts ElevenLabs (depuis les rapports)
+    total_chars = 0
+    rapports_dir = config.LOGS_DIR
+    for rapport_path in rapports_dir.glob("S*_rapport.json"):
+        try:
+            with open(rapport_path, "r", encoding="utf-8") as f:
+                rapport = json.load(f)
+            chars = rapport.get("etapes", {}).get("audio", {}).get("caracteres", {})
+            if isinstance(chars, dict):
+                total_chars += sum(chars.values())
+        except (json.JSONDecodeError, FileNotFoundError):
+            pass
+
+    if total_chars > 0:
+        console.print(f"\n  Total caracteres ElevenLabs : {total_chars:,}")
+        cout_estime = total_chars * 0.000018  # ~$0.018 par 1000 caractères
+        console.print(f"  Cout estime ElevenLabs : ~${cout_estime:.2f}")
+
+    # Checkpoints en cours
+    checkpoints = list(config.CHECKPOINTS_DIR.glob("*_checkpoint.json"))
+    if checkpoints:
+        console.print(f"\n[yellow]  Checkpoints en attente : {len(checkpoints)}[/yellow]")
+        for cp_path in checkpoints:
+            try:
+                with open(cp_path, "r", encoding="utf-8") as f:
+                    cp = json.load(f)
+                console.print(f"    - {cp['episode_id']} (etape: {cp['etape']}, {cp['timestamp']})")
+            except (json.JSONDecodeError, FileNotFoundError):
+                console.print(f"    - {cp_path.name} (illisible)")
 
 
 if __name__ == "__main__":

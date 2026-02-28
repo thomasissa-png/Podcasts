@@ -1,6 +1,8 @@
 """Configuration globale du système de production podcast Papy Babou."""
 
+import json
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -19,9 +21,18 @@ LOGS_DIR = BASE_DIR / "logs"
 RSS_DIR = BASE_DIR / "rss"
 SFX_DIR = ASSETS_DIR / "sfx"
 SFX_CACHE_DIR = AUDIO_DIR / "sfx_cache"
+CHECKPOINTS_DIR = BASE_DIR / "checkpoints"
+HISTORIQUE_DIR = BASE_DIR / "data"
+COVERS_DIR = ASSETS_DIR / "covers"
+CHAPTERS_DIR = BASE_DIR / "output" / "chapters"
+TRANSCRIPTS_DIR = BASE_DIR / "output" / "transcripts"
 
 # Créer les répertoires s'ils n'existent pas
-for d in [SEGMENTS_DIR, OUTPUT_DIR, SCRIPTS_DIR, LOGS_DIR, RSS_DIR, SFX_DIR, SFX_CACHE_DIR]:
+for d in [
+    SEGMENTS_DIR, OUTPUT_DIR, SCRIPTS_DIR, LOGS_DIR, RSS_DIR,
+    SFX_DIR, SFX_CACHE_DIR, CHECKPOINTS_DIR, HISTORIQUE_DIR,
+    COVERS_DIR, CHAPTERS_DIR, TRANSCRIPTS_DIR,
+]:
     d.mkdir(parents=True, exist_ok=True)
 
 # ── Clés API ───────────────────────────────────────────────────────────────────
@@ -31,6 +42,45 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 BUZZSPROUT_API_KEY = os.getenv("BUZZSPROUT_API_KEY", "")
 BUZZSPROUT_PODCAST_ID = os.getenv("BUZZSPROUT_PODCAST_ID", "")
 FREESOUND_API_KEY = os.getenv("FREESOUND_API_KEY", "")
+
+
+def valider_cles_api(dry_run: bool = False) -> list[str]:
+    """Valide que les clés API requises sont configurées.
+
+    Args:
+        dry_run: Si True, seules les clés essentielles sont vérifiées.
+
+    Returns:
+        Liste des erreurs de configuration (vide si tout est OK).
+    """
+    erreurs = []
+
+    if not ANTHROPIC_API_KEY:
+        erreurs.append(
+            "ANTHROPIC_API_KEY non configurée. "
+            "Ajoutez-la dans votre fichier .env ou en variable d'environnement."
+        )
+
+    if not dry_run:
+        if not ELEVENLABS_API_KEY:
+            erreurs.append(
+                "ELEVENLABS_API_KEY non configurée. "
+                "Requise pour la génération audio (sauf en mode --dry-run)."
+            )
+
+        placeholders = [
+            (nom, vid) for nom, vid in VOICE_IDS.items()
+            if vid == "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"
+        ]
+        if placeholders:
+            noms = ", ".join(n for n, _ in placeholders)
+            erreurs.append(
+                f"Voice IDs non configurés pour : {noms}. "
+                "Configurez les variables ELEVENLABS_VOICE_* dans .env."
+            )
+
+    return erreurs
+
 
 # ── Configuration du podcast ──────────────────────────────────────────────────
 
@@ -83,6 +133,17 @@ VOICE_SETTINGS = {
     },
 }
 
+# ── Panoramique stéréo par personnage ────────────────────────────────────────
+# Valeurs de -1.0 (gauche) à 1.0 (droite), 0.0 = centre
+
+STEREO_PAN = {
+    "papy_babou": 0.0,
+    "antoine": -0.3,
+    "noemie": 0.3,
+    "narrateur": 0.0,
+    "sfx": 0.0,
+}
+
 # ── Paramètres de production ──────────────────────────────────────────────────
 
 PRODUCTION = {
@@ -94,10 +155,11 @@ PRODUCTION = {
     "outro_jingle_duree_ms": 8_000,
     "musique_fond_db": -20,
     "lufs_cible": -16,
-    "mp3_bitrate_final": "320k",
+    "mp3_bitrate_final": "192k",
     "mp3_bitrate_preview": "128k",
     "max_retry_tts": 3,
     "max_secondes_sans_dialogue": 90,
+    "max_parallel_tts": 4,
 }
 
 # ── Assets audio ──────────────────────────────────────────────────────────────
@@ -108,6 +170,18 @@ AUDIO_ASSETS = {
     "outro_jingle": ASSETS_DIR / "music" / "outro_jingle.mp3",
 }
 
+# ── Multi-ambiances musicales ────────────────────────────────────────────────
+# Le scripteur choisit l'ambiance dans le champ "ambiance" du script.
+# Si l'asset n'existe pas, on fallback sur "fond_doux".
+
+AMBIANCES_MUSICALES = {
+    "joyeux": ASSETS_DIR / "music" / "ambiance_joyeux.mp3",
+    "dramatique": ASSETS_DIR / "music" / "ambiance_dramatique.mp3",
+    "calme": ASSETS_DIR / "music" / "ambiance_calme.mp3",
+    "mystere": ASSETS_DIR / "music" / "ambiance_mystere.mp3",
+    "fond_doux": ASSETS_DIR / "music" / "fond_doux.mp3",
+}
+
 # ── Configuration SFX (bruitages) ────────────────────────────────────────────
 
 SFX_CONFIG = {
@@ -116,6 +190,37 @@ SFX_CONFIG = {
     "sfx_duree_max_secondes": 22.0,
     "sfx_fade_ms": 300,
 }
+
+# ── Mots interdits (vocabulaire inapproprié pour 6-10 ans) ───────────────────
+
+MOTS_INTERDITS = [
+    "tuer", "massacre", "massacrer", "égorger", "assassiner", "meurtre",
+    "sang", "sanglant", "ensanglante", "cadavre", "dépouille",
+    "enfer", "damnation", "damné", "châtiment éternel",
+    "horreur", "horrible", "terrifiant", "terrifier", "cauchemar",
+    "mourir", "mort", "mortelle", "agoniser", "agonie",
+    "vengeance", "venger", "punition", "punir sévèrement",
+    "haine", "haïr", "détester",
+    "idiot", "stupide", "imbécile", "crétin",
+    "sexuel", "sexualité", "prostitution",
+    "alcool", "ivre", "soûl",
+    "esclave", "esclavage",
+    "torturer", "torture", "supplicier", "supplice",
+    "décapiter", "mutiler", "amputer",
+]
+
+# ── Bible des personnages ────────────────────────────────────────────────────
+
+PERSONNAGES_JSON_PATH = ASSETS_DIR / "bible" / "personnages.json"
+
+
+def charger_personnages() -> dict:
+    """Charge la bible des personnages depuis le fichier JSON."""
+    if PERSONNAGES_JSON_PATH.exists():
+        with open(PERSONNAGES_JSON_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
 
 # ── Modèle Claude ─────────────────────────────────────────────────────────────
 

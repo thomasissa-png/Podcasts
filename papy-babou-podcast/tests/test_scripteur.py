@@ -9,7 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agents.scripteur import Scripteur
+from agents.scripteur import Scripteur, _construire_bible_personnages, _construire_system_prompt
 
 
 class TestScripteurValidation:
@@ -99,6 +99,19 @@ class TestScripteurComptage:
         }
         assert Scripteur.compter_mots(script) == 1
 
+    def test_compter_mots_ignore_sfx(self):
+        """Le comptage doit ignorer les segments SFX."""
+        script = {
+            "episode": {
+                "segments": [
+                    {"personnage": "narrateur", "texte": "Un deux trois"},
+                    {"personnage": "sfx", "texte": "vent du desert"},
+                    {"personnage": "papy_babou", "texte": "Quatre cinq"},
+                ]
+            }
+        }
+        assert Scripteur.compter_mots(script) == 5
+
 
 class TestScripteurSauvegarde:
     """Tests de sauvegarde du script."""
@@ -113,6 +126,77 @@ class TestScripteurSauvegarde:
         with open(chemin, encoding="utf-8") as f:
             data = json.load(f)
         assert data["episode"]["titre"] == "Le buisson ardent"
+
+
+class TestScripteurBiblePersonnages:
+    """Tests de l'injection de la bible des personnages."""
+
+    def test_construire_bible_avec_fichier(self, tmp_path, monkeypatch):
+        """La bible doit être construite à partir du fichier JSON."""
+        import config
+        personnages = {
+            "personnages": {
+                "papy_babou": {
+                    "nom_complet": "Papy Babou",
+                    "age": 72,
+                    "description": "Grand-père aimant",
+                    "ton": "chaleureux",
+                    "tics_de_langage": ["Ah mes petits loups..."],
+                    "vocabulaire_typique": ["formidable"],
+                    "interdictions": ["Pas d'argot moderne"],
+                },
+            },
+            "regles_interaction": {
+                "frequence_interruptions": "Toutes les 90 secondes",
+            },
+        }
+        chemin = tmp_path / "personnages.json"
+        with open(chemin, "w", encoding="utf-8") as f:
+            json.dump(personnages, f)
+
+        monkeypatch.setattr(config, "PERSONNAGES_JSON_PATH", chemin)
+
+        bible = _construire_bible_personnages()
+        assert "Papy Babou" in bible
+        assert "72 ans" in bible
+        assert "Ah mes petits loups..." in bible
+        assert "formidable" in bible
+        assert "Toutes les 90 secondes" in bible
+
+    def test_construire_bible_sans_fichier(self, monkeypatch):
+        """Sans fichier, le fallback doit être utilisé."""
+        import config
+        monkeypatch.setattr(config, "PERSONNAGES_JSON_PATH", Path("/nonexistent/path.json"))
+
+        bible = _construire_bible_personnages()
+        assert "Papy Babou" in bible
+        assert "Antoine" in bible
+
+    def test_system_prompt_contient_mots_interdits(self):
+        """Le system prompt doit inclure les mots interdits."""
+        prompt = _construire_system_prompt()
+        assert "tuer" in prompt
+        assert "MOTS INTERDITS" in prompt
+
+    def test_system_prompt_contient_3_actes(self):
+        """Le system prompt doit inclure la structure en 3 actes."""
+        prompt = _construire_system_prompt()
+        assert "ACCROCHE" in prompt
+        assert "DÉVELOPPEMENT" in prompt
+        assert "CONCLUSION" in prompt
+
+    def test_system_prompt_contient_ambiance(self):
+        """Le system prompt doit inclure le choix d'ambiance."""
+        prompt = _construire_system_prompt()
+        assert "joyeux" in prompt
+        assert "dramatique" in prompt
+        assert "mystere" in prompt
+
+    def test_system_prompt_contient_mode_sfx(self):
+        """Le system prompt doit inclure les modes SFX overlay/insert."""
+        prompt = _construire_system_prompt()
+        assert "overlay" in prompt
+        assert "insert" in prompt
 
 
 class TestScripteurGeneration:
@@ -136,7 +220,38 @@ class TestScripteurGeneration:
             resume="Moïse et le buisson ardent",
             saison=1,
             numero=1,
+            morale="La confiance en Dieu",
         )
 
         assert result["episode"]["titre"] == "Le buisson ardent"
         mock_client.messages.create.assert_called_once()
+
+    @patch("agents.scripteur.anthropic.Anthropic")
+    def test_generer_avec_historique(self, mock_anthropic, script_exemple):
+        """La génération avec historique doit mentionner les épisodes précédents."""
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            MagicMock(text=json.dumps(script_exemple))
+        ]
+        mock_client.messages.create.return_value = mock_response
+
+        scripteur = Scripteur()
+        scripteur.client = mock_client
+        historique = [
+            {"episode_id": "S01E01", "titre": "Noé", "morale": "Obéissance"},
+        ]
+        result = scripteur.generer(
+            titre="Le buisson ardent",
+            resume="Moïse",
+            saison=1,
+            numero=2,
+            historique=historique,
+        )
+
+        assert result["episode"]["titre"] == "Le buisson ardent"
+        # Vérifier que le prompt contient l'historique
+        call_args = mock_client.messages.create.call_args
+        user_msg = call_args[1]["messages"][0]["content"]
+        assert "Noé" in user_msg

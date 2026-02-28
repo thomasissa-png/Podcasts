@@ -22,7 +22,8 @@ FORMAT DE RÉPONSE — JSON STRICT :
   "description_longue": "Max 4000 caractères. Description complète pour la fiche épisode. Inclure un résumé de l'histoire, les personnages, et une invitation à écouter.",
   "tags": ["Histoires bibliques", "Enfants", "Famille", "Moïse"],
   "categories_itunes": ["Kids & Family", "Religion & Spirituality"],
-  "sous_categories_itunes": ["Stories for Kids"]
+  "sous_categories_itunes": ["Stories for Kids"],
+  "cover_art_prompt": "Description courte pour générer une illustration d'épisode (ex: 'Moïse devant le buisson ardent dans le désert, style illustration enfant')"
 }
 
 Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
@@ -52,9 +53,14 @@ class Metadonnees:
             f"- Titre : {episode['titre']}\n"
             f"- Saison : {episode['saison']}, Épisode : {episode['numero']}\n"
             f"- Durée : {duree_secondes:.0f} secondes\n"
-            f"- Nombre de segments : {len(episode['segments'])}\n\n"
-            f"Résumé du contenu (premiers segments) :\n"
+            f"- Nombre de segments : {len(episode['segments'])}\n"
         )
+
+        morale = episode.get("morale", "")
+        if morale:
+            prompt += f"- Morale / leçon de vie : {morale}\n"
+
+        prompt += "\nRésumé du contenu (premiers segments) :\n"
 
         # Ajouter les 5 premiers segments comme contexte
         for seg in episode["segments"][:5]:
@@ -92,6 +98,14 @@ class Metadonnees:
         # Générer le transcript
         meta["transcript"] = self._generer_transcript(episode)
 
+        # Chemin du cover art (si existe)
+        episode_id = f"S{episode['saison']:02d}E{episode['numero']:02d}"
+        cover_path = config.COVERS_DIR / f"{episode_id}_cover.jpg"
+        if cover_path.exists():
+            meta["cover_art_path"] = str(cover_path)
+        else:
+            meta["cover_art_path"] = ""
+
         logger.info("Métadonnées générées : %s", meta["titre"])
         return meta
 
@@ -111,6 +125,8 @@ class Metadonnees:
         nb_mots = sum(len(s["texte"].split()) for s in episode["segments"])
         duree_estimee = (nb_mots / 110) * 60  # Moyenne entre adulte et enfant
 
+        morale = episode.get("morale", "")
+
         meta = {
             "titre": f"{episode_id} — {episode['titre']} | Les Histoires de Papy Babou",
             "titre_court": episode["titre"],
@@ -119,10 +135,13 @@ class Metadonnees:
                 f"Dans cet épisode, Papy Babou raconte à Antoine et Noémie "
                 f"l'histoire de {episode['titre']}. "
                 f"Rejoignez-les pour découvrir cette belle histoire biblique !"
+                + (f"\n\nMorale : {morale}" if morale else "")
             ),
             "tags": ["Histoires bibliques", "Enfants", "Famille"],
             "categories_itunes": ["Kids & Family", "Religion & Spirituality"],
             "sous_categories_itunes": ["Stories for Kids"],
+            "cover_art_prompt": f"Illustration pour enfants de l'histoire biblique : {episode['titre']}",
+            "cover_art_path": "",
             "saison": episode["saison"],
             "numero": episode["numero"],
             "duree_secondes": int(duree_estimee),
@@ -130,6 +149,12 @@ class Metadonnees:
             "explicit": config.PODCAST_CONFIG["explicit"],
             "transcript": self._generer_transcript(episode),
         }
+
+        # Vérifier si un cover art existe
+        cover_path = config.COVERS_DIR / f"{episode_id}_cover.jpg"
+        if cover_path.exists():
+            meta["cover_art_path"] = str(cover_path)
+
         logger.info("Métadonnées dry-run générées : %s", meta["titre"])
         return meta
 
@@ -167,6 +192,8 @@ class Metadonnees:
         }
         lignes = [f"TRANSCRIPT — {episode['titre']}\n"]
         for seg in episode["segments"]:
+            if seg["personnage"] == "sfx":
+                continue
             nom = noms.get(seg["personnage"], seg["personnage"])
             lignes.append(f"[{nom}] {seg['texte']}")
         return "\n\n".join(lignes)

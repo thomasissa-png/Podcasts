@@ -18,6 +18,8 @@ def script_exemple():
             "numero": 1,
             "saison": 1,
             "duree_cible_minutes": 13,
+            "ambiance": "mystere",
+            "morale": "Dieu peut accomplir de grandes choses a travers nous",
             "segments": [
                 {
                     "id": "seg_001",
@@ -60,6 +62,54 @@ def script_exemple():
 
 
 @pytest.fixture
+def script_avec_sfx_overlay():
+    """Script avec des SFX en mode overlay et insert."""
+    return {
+        "episode": {
+            "titre": "Le buisson ardent",
+            "numero": 1,
+            "saison": 1,
+            "ambiance": "mystere",
+            "morale": "La confiance en Dieu",
+            "segments": [
+                {
+                    "id": "seg_001",
+                    "personnage": "narrateur",
+                    "texte": "Bienvenue.",
+                    "ton": "neutre",
+                    "pause_apres_ms": 500,
+                },
+                {
+                    "id": "sfx_001",
+                    "personnage": "sfx",
+                    "texte": "vent dans le desert",
+                    "ton": "ambiance",
+                    "pause_apres_ms": 0,
+                    "duree_sfx_secondes": 5.0,
+                    "mode": "overlay",
+                },
+                {
+                    "id": "seg_002",
+                    "personnage": "papy_babou",
+                    "texte": "Ah mes petits loups !",
+                    "ton": "chaleureux",
+                    "pause_apres_ms": 800,
+                },
+                {
+                    "id": "sfx_002",
+                    "personnage": "sfx",
+                    "texte": "tonnerre",
+                    "ton": "ambiance",
+                    "pause_apres_ms": 500,
+                    "duree_sfx_secondes": 3.0,
+                    "mode": "insert",
+                },
+            ],
+        }
+    }
+
+
+@pytest.fixture
 def review_exemple():
     """Résultat de review minimal valide pour les tests."""
     return {
@@ -80,6 +130,8 @@ def review_exemple():
             "numero": 1,
             "saison": 1,
             "duree_cible_minutes": 13,
+            "ambiance": "mystere",
+            "morale": "La confiance en Dieu",
             "segments": [
                 {
                     "id": "seg_001",

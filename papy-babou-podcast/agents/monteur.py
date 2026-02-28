@@ -1,5 +1,6 @@
 """Agent Monteur — Assemble les segments audio en un épisode final."""
 
+import json
 import logging
 from pathlib import Path
 
@@ -58,6 +59,28 @@ def _normaliser_lufs(audio: AudioSegment, cible_lufs: float = -16.0) -> AudioSeg
     return audio.apply_gain(gain_db)
 
 
+def _appliquer_pan(audio: AudioSegment, pan: float) -> AudioSegment:
+    """Applique un panoramique stéréo à un segment audio.
+
+    Args:
+        audio: Segment audio (mono ou stéréo).
+        pan: Valeur de -1.0 (gauche) à 1.0 (droite). 0.0 = centre.
+
+    Returns:
+        AudioSegment stéréo avec le panoramique appliqué.
+    """
+    if pan == 0.0:
+        if audio.channels == 1:
+            return audio.set_channels(2)
+        return audio
+
+    # Convertir en stéréo si nécessaire
+    if audio.channels == 1:
+        audio = audio.set_channels(2)
+
+    return audio.pan(pan)
+
+
 class Monteur:
     """Assemble les segments audio en un épisode final avec musique et jingles."""
 
@@ -86,32 +109,35 @@ class Monteur:
 
         logger.info("Assemblage de l'épisode %s — %s", episode_id, episode["titre"])
 
-        # 1. Charger et assembler les segments voix
+        # 1. Charger et assembler les segments voix avec overlay SFX
         voix = self._assembler_segments(episode["segments"], segments_dir)
         logger.info("Segments voix assemblés : %.1f secondes", len(voix) / 1000.0)
 
         # 2. Charger les assets audio
         intro = self._charger_asset("intro_jingle")
         outro = self._charger_asset("outro_jingle")
-        fond = self._charger_asset("fond_doux")
 
-        # 3. Préparer la musique de fond
+        # 3. Charger la musique de fond selon l'ambiance
+        ambiance = episode.get("ambiance", "fond_doux")
+        fond = self._charger_ambiance(ambiance)
+
+        # 4. Préparer la musique de fond
         fond_ajuste = self._preparer_fond(fond, len(voix))
 
-        # 4. Mixer voix + fond
+        # 5. Mixer voix + fond
         voix_avec_fond = voix.overlay(fond_ajuste)
 
-        # 5. Assembler : intro → voix+fond → outro
+        # 6. Assembler : intro → voix+fond → outro
         episode_complet = self._assembler_final(intro, voix_avec_fond, outro)
 
-        # 6. Normaliser LUFS
+        # 7. Normaliser LUFS
         episode_complet = _normaliser_lufs(
             episode_complet, config.PRODUCTION["lufs_cible"]
         )
 
-        # 7. Exporter
+        # 8. Exporter
         nom_fichier = f"{episode_id}_{self._slug(episode['titre'])}"
-        chemin_hq = output_dir / f"{nom_fichier}_320k.mp3"
+        chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
         chemin_preview = output_dir / f"{nom_fichier}_128k.mp3"
 
         episode_complet.export(
@@ -129,18 +155,33 @@ class Monteur:
         logger.info("Épisode exporté : %s (%.0f sec)", chemin_hq, duree_sec)
         logger.info("Preview exporté : %s", chemin_preview)
 
+        # 9. Générer les chapitres
+        chapitres = self._generer_chapitres(episode["segments"], segments_dir)
+        chemin_chapitres = config.CHAPTERS_DIR / f"{episode_id}_chapters.json"
+        with open(chemin_chapitres, "w", encoding="utf-8") as f:
+            json.dump(chapitres, f, ensure_ascii=False, indent=2)
+        logger.info("Chapitres générés : %s", chemin_chapitres)
+
         return {
             "chemin_hq": chemin_hq,
             "chemin_preview": chemin_preview,
             "duree_secondes": duree_sec,
             "taille_bytes": chemin_hq.stat().st_size,
+            "chapitres": chapitres,
+            "chemin_chapitres": chemin_chapitres,
         }
 
     def _assembler_segments(
         self, segments: list[dict], dossier: Path
     ) -> AudioSegment:
-        """Charge et concatène les segments audio (voix + SFX) avec les pauses."""
+        """Charge et concatène les segments audio (voix + SFX) avec les pauses.
+
+        Gère les modes SFX :
+        - "insert" : le SFX est inséré séquentiellement (ancien comportement).
+        - "overlay" : le SFX est superposé aux segments voix suivants.
+        """
         resultat = AudioSegment.empty()
+        overlays_pending: list[AudioSegment] = []
 
         for seg in segments:
             chemin = dossier / f"{seg['id']}.mp3"
@@ -151,7 +192,6 @@ class Monteur:
 
             audio = AudioSegment.from_mp3(str(chemin))
 
-            # Ajuster le volume des SFX pour ne pas couvrir les voix
             if seg["personnage"] == "sfx":
                 sfx_vol = config.SFX_CONFIG["sfx_volume_db"]
                 fade_ms = config.SFX_CONFIG["sfx_fade_ms"]
@@ -159,7 +199,32 @@ class Monteur:
                 if len(audio) > fade_ms * 2:
                     audio = audio.fade_in(fade_ms).fade_out(fade_ms)
 
-            resultat += audio
+                mode = seg.get("mode", "insert")
+                if mode == "overlay":
+                    overlays_pending.append(audio)
+                    continue
+                else:
+                    pan = config.STEREO_PAN.get("sfx", 0.0)
+                    audio = _appliquer_pan(audio, pan)
+                    resultat += audio
+            else:
+                pan = config.STEREO_PAN.get(seg["personnage"], 0.0)
+                audio = _appliquer_pan(audio, pan)
+
+                # Appliquer les SFX overlay en attente
+                if overlays_pending:
+                    for sfx_overlay in overlays_pending:
+                        if len(sfx_overlay) < len(audio):
+                            sfx_overlay = sfx_overlay + AudioSegment.silent(
+                                duration=len(audio) - len(sfx_overlay)
+                            )
+                        elif len(sfx_overlay) > len(audio):
+                            sfx_overlay = sfx_overlay[:len(audio)]
+                        sfx_overlay = _appliquer_pan(sfx_overlay, config.STEREO_PAN.get("sfx", 0.0))
+                        audio = audio.overlay(sfx_overlay)
+                    overlays_pending.clear()
+
+                resultat += audio
 
             pause_ms = seg.get("pause_apres_ms", 0)
             if pause_ms > 0:
@@ -185,24 +250,33 @@ class Monteur:
 
         return AudioSegment.from_mp3(str(chemin))
 
-    def _preparer_fond(self, fond: AudioSegment, duree_voix_ms: int) -> AudioSegment:
-        """Ajuste la musique de fond à la durée des voix avec le bon volume.
+    def _charger_ambiance(self, ambiance: str) -> AudioSegment:
+        """Charge la musique d'ambiance selon le type choisi par le scripteur.
 
-        La musique est mise en boucle si nécessaire et réduite en volume.
+        Fallback vers fond_doux si l'ambiance demandée n'existe pas.
         """
-        # Boucler si la musique est plus courte que les voix
+        chemin = config.AMBIANCES_MUSICALES.get(ambiance)
+        if chemin and chemin.exists():
+            logger.info("Ambiance musicale chargée : %s", ambiance)
+            return AudioSegment.from_mp3(str(chemin))
+
+        logger.warning(
+            "Ambiance '%s' introuvable — fallback vers fond_doux.", ambiance
+        )
+        return self._charger_asset("fond_doux")
+
+    def _preparer_fond(self, fond: AudioSegment, duree_voix_ms: int) -> AudioSegment:
+        """Ajuste la musique de fond à la durée des voix avec le bon volume."""
         if len(fond) < duree_voix_ms:
             repetitions = (duree_voix_ms // len(fond)) + 1
             fond = fond * repetitions
 
-        # Couper à la bonne longueur
         fond = fond[:duree_voix_ms]
-
-        # Réduire le volume
         fond = fond + config.PRODUCTION["musique_fond_db"]
-
-        # Fade in au début, fade out à la fin
         fond = fond.fade_in(3000).fade_out(3000)
+
+        if fond.channels == 1:
+            fond = fond.set_channels(2)
 
         return fond
 
@@ -213,7 +287,6 @@ class Monteur:
         outro: AudioSegment,
     ) -> AudioSegment:
         """Assemble intro + contenu + outro avec les transitions."""
-        # Ajuster les durées des jingles
         intro_duree = config.PRODUCTION["intro_jingle_duree_ms"]
         outro_duree = config.PRODUCTION["outro_jingle_duree_ms"]
 
@@ -222,14 +295,40 @@ class Monteur:
         if len(outro) > outro_duree:
             outro = outro[:outro_duree]
 
-        # Transitions douces
+        intro = intro.set_channels(2) if intro.channels == 1 else intro
+        outro = outro.set_channels(2) if outro.channels == 1 else outro
+
         intro = intro.fade_out(1500)
         outro = outro.fade_in(1500)
 
-        # Petite pause entre les parties
         silence_transition = AudioSegment.silent(duration=500)
 
         return intro + silence_transition + voix_avec_fond + silence_transition + outro
+
+    def _generer_chapitres(
+        self, segments: list[dict], dossier: Path
+    ) -> list[dict]:
+        """Génère la liste de chapitres à partir des segments du script."""
+        chapitres = []
+        temps_courant_ms = 0
+
+        for seg in segments:
+            chemin = dossier / f"{seg['id']}.mp3"
+            if chemin.exists():
+                audio = AudioSegment.from_mp3(str(chemin))
+                duree_ms = len(audio)
+            else:
+                duree_ms = seg.get("pause_apres_ms", 0)
+
+            if seg["personnage"] == "narrateur" or not chapitres:
+                chapitres.append({
+                    "startTime": temps_courant_ms / 1000.0,
+                    "title": seg["texte"][:80].rstrip(".") if seg["personnage"] != "sfx" else "Transition",
+                })
+
+            temps_courant_ms += duree_ms + seg.get("pause_apres_ms", 0)
+
+        return chapitres
 
     @staticmethod
     def _slug(texte: str) -> str:

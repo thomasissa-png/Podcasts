@@ -1,5 +1,6 @@
 """Agent Publisher — Publie l'épisode sur le flux RSS et notifie les plateformes."""
 
+import json
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -15,6 +16,7 @@ import config
 logger = logging.getLogger(__name__)
 
 ITUNES_NS = "http://www.itunes.com/dtds/podcast-1.0.dtd"
+PODCAST_NS = "https://podcastindex.org/namespace/1.0"
 
 
 class Publisher:
@@ -41,10 +43,13 @@ class Publisher:
         # 1. Upload vers Buzzsprout
         url_audio = self._upload_buzzsprout(meta, chemin_audio, taille_bytes)
 
-        # 2. Mettre à jour le flux RSS local
-        self._mettre_a_jour_rss(meta, url_audio, taille_bytes)
+        # 2. Sauvegarder le transcript
+        transcript_url = self._sauvegarder_transcript(meta)
 
-        # 3. Pinger les plateformes
+        # 3. Mettre à jour le flux RSS local
+        self._mettre_a_jour_rss(meta, url_audio, taille_bytes, transcript_url)
+
+        # 4. Pinger les plateformes
         plateformes = self._pinger_plateformes()
 
         rapport = {
@@ -52,6 +57,7 @@ class Publisher:
             "episode": f"S{meta['saison']:02d}E{meta['numero']:02d}",
             "titre": meta["titre"],
             "url_audio": url_audio,
+            "transcript_url": transcript_url,
             "flux_rss": str(config.RSS_DIR / "feed.xml"),
             "plateformes_notifiees": plateformes,
         }
@@ -109,15 +115,42 @@ class Publisher:
         logger.info("Upload Buzzsprout réussi : %s", url_audio)
         return url_audio
 
+    def _sauvegarder_transcript(self, meta: dict) -> str:
+        """Sauvegarde le transcript en fichier texte et retourne l'URL relative.
+
+        Args:
+            meta: Métadonnées contenant le transcript.
+
+        Returns:
+            URL relative du transcript.
+        """
+        episode_id = f"S{meta['saison']:02d}E{meta['numero']:02d}"
+        transcript = meta.get("transcript", "")
+        if not transcript:
+            return ""
+
+        chemin = config.TRANSCRIPTS_DIR / f"{episode_id}_transcript.txt"
+        with open(chemin, "w", encoding="utf-8") as f:
+            f.write(transcript)
+
+        logger.info("Transcript sauvegardé : %s", chemin)
+
+        site_web = config.PODCAST_CONFIG.get("site_web", "")
+        return f"{site_web}/transcripts/{episode_id}_transcript.txt"
+
     def _mettre_a_jour_rss(
-        self, meta: dict, url_audio: str, taille_bytes: int
+        self, meta: dict, url_audio: str, taille_bytes: int,
+        transcript_url: str = "",
     ) -> None:
         """Met à jour le flux RSS local avec le nouvel épisode.
+
+        Inclut les extensions podcast:transcript et podcast:chapters.
 
         Args:
             meta: Métadonnées de l'épisode.
             url_audio: URL publique du fichier audio.
             taille_bytes: Taille du fichier.
+            transcript_url: URL du transcript (optionnel).
         """
         feed_path = config.RSS_DIR / "feed.xml"
 
@@ -128,10 +161,15 @@ class Publisher:
         else:
             root = ET.Element("rss", version="2.0")
             root.set("xmlns:itunes", ITUNES_NS)
+            root.set("xmlns:podcast", PODCAST_NS)
             root.set("xmlns:content", "http://purl.org/rss/1.0/modules/content/")
             channel = ET.SubElement(root, "channel")
             self._creer_channel(channel)
             tree = ET.ElementTree(root)
+
+        # S'assurer que le namespace podcast est déclaré
+        if not root.get("xmlns:podcast"):
+            root.set("xmlns:podcast", PODCAST_NS)
 
         # Ajouter le nouvel épisode
         item = ET.SubElement(channel, "item")
@@ -170,6 +208,38 @@ class Publisher:
         ET.SubElement(
             item, f"{{{ITUNES_NS}}}summary"
         ).text = meta["description_courte"]
+
+        # Cover art par épisode (si disponible)
+        cover_path = meta.get("cover_art_path", "")
+        if cover_path:
+            site_web = config.PODCAST_CONFIG.get("site_web", "")
+            episode_id = f"S{meta['saison']:02d}E{meta['numero']:02d}"
+            cover_url = f"{site_web}/covers/{episode_id}_cover.jpg"
+            ET.SubElement(
+                item, f"{{{ITUNES_NS}}}image",
+                href=cover_url,
+            )
+
+        # podcast:transcript
+        if transcript_url:
+            ET.SubElement(
+                item, f"{{{PODCAST_NS}}}transcript",
+                url=transcript_url,
+                type="text/plain",
+                language="fr",
+            )
+
+        # podcast:chapters
+        episode_id = f"S{meta['saison']:02d}E{meta['numero']:02d}"
+        chapters_path = config.CHAPTERS_DIR / f"{episode_id}_chapters.json"
+        if chapters_path.exists():
+            site_web = config.PODCAST_CONFIG.get("site_web", "")
+            chapters_url = f"{site_web}/chapters/{episode_id}_chapters.json"
+            ET.SubElement(
+                item, f"{{{PODCAST_NS}}}chapters",
+                url=chapters_url,
+                type="application/json+chapters",
+            )
 
         # Indenter pour lisibilité
         ET.indent(tree, space="  ")
@@ -220,10 +290,8 @@ class Publisher:
         """
         plateformes_ok = []
 
-        # Les principales plateformes détectent automatiquement les mises à jour RSS.
-        # On peut tout de même pinger les hubs de distribution.
         hubs = {
-            "Google Podcasts Hub": "https://pubsubhubbub.appspot.com/",
+            "Podcast Index": "https://api.podcastindex.org/api/1.0/hub/pubnotify",
         }
 
         feed_url = config.PODCAST_CONFIG.get("site_web", "") + "/rss/feed.xml"
@@ -248,7 +316,6 @@ class Publisher:
             except requests.RequestException as e:
                 logger.warning("Ping %s échoué : %s", nom, e)
 
-        # Note pour l'utilisateur
         logger.info(
             "Apple Podcasts et Spotify détectent automatiquement "
             "les mises à jour du flux RSS. Deezer et Amazon Music "

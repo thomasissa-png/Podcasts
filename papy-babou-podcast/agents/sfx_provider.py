@@ -1,6 +1,7 @@
 """Agent SFX Provider — Fournit les bruitages via ElevenLabs ou Freesound."""
 
 import logging
+import random
 import time
 from pathlib import Path
 
@@ -109,6 +110,8 @@ class SfxProvider:
     ) -> bool:
         """Génère un bruitage via ElevenLabs Text-to-Sound-Effects.
 
+        Utilise un backoff exponentiel avec jitter.
+
         Args:
             segment: Segment SFX du script.
             chemin_sortie: Chemin du fichier MP3 final.
@@ -165,7 +168,8 @@ class SfxProvider:
                     e,
                 )
                 if tentative < max_tentatives:
-                    time.sleep(2 ** tentative)
+                    delai = (2 ** tentative) + random.uniform(0, 1)
+                    time.sleep(delai)
 
         return False
 
@@ -173,9 +177,6 @@ class SfxProvider:
         self, segment: dict, chemin_sortie: Path, chemin_cache: Path
     ) -> bool:
         """Télécharge un bruitage depuis Freesound.org.
-
-        Recherche par mots-clés, filtre par licence CC0, et télécharge le
-        preview MP3 du meilleur résultat.
 
         Args:
             segment: Segment SFX du script.

@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agents.monteur import Monteur
+from agents.monteur import Monteur, _appliquer_pan
 
 
 class TestMonteurSlug:
@@ -38,13 +38,29 @@ class TestMonteurAssets:
         """Un asset inexistant doit retourner un silence de remplacement."""
         monteur = Monteur()
         audio = monteur._charger_asset("intro_jingle")
-        # Doit retourner un AudioSegment de silence (pas d'erreur)
         assert len(audio) > 0
 
     def test_charger_asset_inconnu(self):
         """Un nom d'asset inconnu doit retourner un silence par défaut."""
         monteur = Monteur()
         audio = monteur._charger_asset("inexistant")
+        assert len(audio) > 0
+
+
+class TestMonteurAmbiance:
+    """Tests du chargement d'ambiance musicale."""
+
+    def test_charger_ambiance_inexistante(self):
+        """Une ambiance inexistante doit fallback vers fond_doux."""
+        monteur = Monteur()
+        audio = monteur._charger_ambiance("joyeux")
+        # Même si l'ambiance n'existe pas, on doit avoir du silence
+        assert len(audio) > 0
+
+    def test_charger_ambiance_inconnue(self):
+        """Un nom d'ambiance inconnu doit fallback vers fond_doux."""
+        monteur = Monteur()
+        audio = monteur._charger_ambiance("ambiance_inconnue_xyz")
         assert len(audio) > 0
 
 
@@ -59,3 +75,28 @@ class TestMonteurAssemblage:
                 script_exemple["episode"]["segments"],
                 tmp_path,
             )
+
+
+class TestAppliquerPan:
+    """Tests du panoramique stéréo."""
+
+    def test_pan_centre(self):
+        """Un pan à 0.0 doit retourner un audio stéréo."""
+        from pydub import AudioSegment
+        audio = AudioSegment.silent(duration=100)
+        result = _appliquer_pan(audio, 0.0)
+        assert result.channels == 2
+
+    def test_pan_gauche(self):
+        """Un pan négatif doit fonctionner."""
+        from pydub import AudioSegment
+        audio = AudioSegment.silent(duration=100)
+        result = _appliquer_pan(audio, -0.3)
+        assert result.channels == 2
+
+    def test_pan_droite(self):
+        """Un pan positif doit fonctionner."""
+        from pydub import AudioSegment
+        audio = AudioSegment.silent(duration=100)
+        result = _appliquer_pan(audio, 0.3)
+        assert result.channels == 2

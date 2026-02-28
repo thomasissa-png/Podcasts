@@ -1,7 +1,9 @@
 """Agent Producteur Audio — Génère les fichiers audio via ElevenLabs TTS."""
 
 import logging
+import random
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import requests
@@ -23,6 +25,8 @@ class ProducteurAudio:
     def produire_episode(self, script: dict, dossier_sortie: Path | None = None) -> list[Path]:
         """Produit tous les segments audio d'un épisode.
 
+        Utilise un ThreadPoolExecutor pour paralléliser les appels TTS.
+
         Args:
             script: Script JSON validé.
             dossier_sortie: Dossier de sortie (défaut : config.SEGMENTS_DIR).
@@ -36,31 +40,66 @@ class ProducteurAudio:
         dossier_episode = dossier / episode_id
         dossier_episode.mkdir(parents=True, exist_ok=True)
 
-        fichiers = []
         segments_voix = [
             s for s in episode["segments"] if s["personnage"] != "sfx"
         ]
         total_segments = len(segments_voix)
+        max_workers = min(
+            config.PRODUCTION.get("max_parallel_tts", 4),
+            total_segments,
+        )
 
-        for i, segment in enumerate(segments_voix, 1):
+        fichiers: list[Path] = []
+
+        if max_workers <= 1:
+            for i, segment in enumerate(segments_voix, 1):
+                logger.info(
+                    "[%s] Segment %d/%d — %s : %s...",
+                    episode_id, i, total_segments,
+                    segment["personnage"], segment["texte"][:50],
+                )
+                chemin = dossier_episode / f"{segment['id']}.mp3"
+                self._generer_segment(segment, chemin)
+                fichiers.append(chemin)
+        else:
             logger.info(
-                "[%s] Segment %d/%d — %s : %s...",
-                episode_id,
-                i,
-                total_segments,
-                segment["personnage"],
-                segment["texte"][:50],
+                "[%s] Génération parallèle de %d segments (max %d workers)",
+                episode_id, total_segments, max_workers,
             )
+            futures = {}
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                for i, segment in enumerate(segments_voix, 1):
+                    chemin = dossier_episode / f"{segment['id']}.mp3"
+                    future = executor.submit(self._generer_segment, segment, chemin)
+                    futures[future] = (i, segment, chemin)
 
-            chemin = dossier_episode / f"{segment['id']}.mp3"
-            self._generer_segment(segment, chemin)
-            fichiers.append(chemin)
+                for future in as_completed(futures):
+                    i, segment, chemin = futures[future]
+                    try:
+                        future.result()
+                        fichiers.append(chemin)
+                        logger.info(
+                            "[%s] Segment %d/%d terminé — %s",
+                            episode_id, i, total_segments, segment["id"],
+                        )
+                    except Exception as e:
+                        logger.error(
+                            "[%s] Échec segment %d/%d — %s : %s",
+                            episode_id, i, total_segments, segment["id"], e,
+                        )
+                        raise
+
+            # Réordonner les fichiers selon l'ordre du script
+            ordre = {seg["id"]: idx for idx, seg in enumerate(segments_voix)}
+            fichiers.sort(key=lambda p: ordre.get(p.stem, 0))
 
         self._logger_couts(episode_id)
         return fichiers
 
     def _generer_segment(self, segment: dict, chemin_sortie: Path) -> None:
         """Génère un fichier audio pour un segment via ElevenLabs TTS.
+
+        Utilise un backoff exponentiel avec jitter pour les retries.
 
         Args:
             segment: Segment du script.
@@ -95,7 +134,6 @@ class ProducteurAudio:
             },
         }
 
-        # Compteur de caractères pour le suivi des coûts
         nb_chars = len(segment["texte"])
         self.caracteres_utilises[personnage] = (
             self.caracteres_utilises.get(personnage, 0) + nb_chars
@@ -129,8 +167,8 @@ class ProducteurAudio:
                     e,
                 )
                 if tentative < max_tentatives:
-                    delai = 2 ** tentative
-                    logger.info("  Nouvelle tentative dans %ds...", delai)
+                    delai = (2 ** tentative) + random.uniform(0, 1)
+                    logger.info("  Nouvelle tentative dans %.1fs...", delai)
                     time.sleep(delai)
 
         raise RuntimeError(
