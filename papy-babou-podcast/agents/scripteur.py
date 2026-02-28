@@ -285,7 +285,18 @@ class Scripteur:
                 raise ValueError(f"Champ manquant dans episode: '{champ}'")
         if not ep["segments"]:
             raise ValueError("Le script ne contient aucun segment.")
+
+        # Valider les champs optionnels avec avertissement
+        if "ambiance" not in ep:
+            logger.warning("Champ 'ambiance' manquant — fallback vers 'fond_doux'.")
+        elif ep["ambiance"] not in ("joyeux", "dramatique", "calme", "mystere"):
+            logger.warning("Ambiance '%s' non reconnue — fallback vers 'fond_doux'.", ep["ambiance"])
+
+        if "morale" not in ep:
+            logger.warning("Champ 'morale' manquant dans le script.")
+
         personnages_valides = {"papy_babou", "antoine", "noemie", "narrateur", "sfx"}
+        sfx_count = 0
         for seg in ep["segments"]:
             for champ in ("id", "personnage", "texte", "ton", "pause_apres_ms"):
                 if champ not in seg:
@@ -297,3 +308,26 @@ class Scripteur:
                     f"Personnage inconnu '{seg['personnage']}' dans segment {seg['id']}. "
                     f"Valides : {personnages_valides}"
                 )
+            # Validation spécifique aux segments SFX
+            if seg["personnage"] == "sfx":
+                sfx_count += 1
+                if "duree_sfx_secondes" not in seg:
+                    logger.warning(
+                        "Champ 'duree_sfx_secondes' manquant dans SFX %s — défaut 5.0s.",
+                        seg["id"],
+                    )
+                if "mode" not in seg:
+                    logger.warning(
+                        "Champ 'mode' manquant dans SFX %s — défaut 'insert'.",
+                        seg["id"],
+                    )
+                elif seg["mode"] not in ("overlay", "insert"):
+                    logger.warning(
+                        "Mode SFX '%s' non reconnu dans %s — défaut 'insert'.",
+                        seg["mode"], seg["id"],
+                    )
+
+        if sfx_count > 8:
+            logger.warning("Trop de bruitages : %d (recommandé 3-8).", sfx_count)
+        elif sfx_count < 1:
+            logger.warning("Aucun bruitage dans le script (recommandé 3-8).")

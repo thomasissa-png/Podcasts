@@ -111,9 +111,23 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
 
 
 def charger_checkpoint(chemin: Path) -> dict:
-    """Charge un checkpoint pour reprendre la production."""
-    with open(chemin, "r", encoding="utf-8") as f:
-        return json.load(f)
+    """Charge un checkpoint pour reprendre la production.
+
+    Raises:
+        FileNotFoundError: Si le fichier n'existe pas.
+        ValueError: Si le fichier est corrompu ou invalide.
+    """
+    try:
+        with open(chemin, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Checkpoint corrompu ({chemin}) : {e}") from e
+
+    for champ in ("episode_id", "etape", "data"):
+        if champ not in data:
+            raise ValueError(f"Checkpoint invalide — champ manquant : '{champ}'")
+
+    return data
 
 
 def supprimer_checkpoint(episode_id: str) -> None:

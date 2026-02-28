@@ -42,6 +42,9 @@ CRITÈRES D'ÉVALUATION (note sur 10) :
    - Format JSON correct et complet ?
    - Les segments SFX (personnage "sfx") sont-ils bien placés et pertinents ?
    - Les bruitages enrichissent-ils l'histoire sans surcharger ? (3-8 SFX max)
+   - Chaque segment SFX doit avoir un champ "mode" : "overlay" (superposé aux voix)
+     ou "insert" (inséré séquentiellement entre les segments voix).
+   - Chaque segment SFX doit avoir un champ "duree_sfx_secondes" (durée en secondes).
 
 FORMAT DE RÉPONSE — JSON STRICT :
 {
@@ -196,3 +199,7 @@ class Reviewer:
             raise ValueError("Le score doit être un nombre.")
         if "episode" not in resultat:
             raise ValueError("Le résultat doit contenir le script corrigé sous 'episode'.")
+
+        # Valider la structure de l'épisode corrigé
+        from agents.scripteur import Scripteur
+        Scripteur._valider_structure({"episode": resultat["episode"]})

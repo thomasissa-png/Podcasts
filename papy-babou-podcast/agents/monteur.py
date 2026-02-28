@@ -230,6 +230,17 @@ class Monteur:
             if pause_ms > 0:
                 resultat += AudioSegment.silent(duration=pause_ms)
 
+        # Appliquer les overlays restants sur la fin du résultat
+        if overlays_pending:
+            logger.warning(
+                "SFX overlay en fin de script sans segment voix suivant — "
+                "insertion en séquentiel."
+            )
+            for sfx_overlay in overlays_pending:
+                sfx_overlay = _appliquer_pan(sfx_overlay, config.STEREO_PAN.get("sfx", 0.0))
+                resultat += sfx_overlay
+            overlays_pending.clear()
+
         return resultat
 
     def _charger_asset(self, nom: str) -> AudioSegment:

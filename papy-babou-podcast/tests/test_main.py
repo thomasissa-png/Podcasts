@@ -116,3 +116,25 @@ class TestCheckpoints:
         import config
         monkeypatch.setattr(config, "CHECKPOINTS_DIR", tmp_path)
         supprimer_checkpoint("S99E99")  # Ne devrait pas lever d'erreur
+
+    def test_charger_checkpoint_corrompu(self, tmp_path, monkeypatch):
+        """Un checkpoint JSON corrompu doit lever une ValueError."""
+        import config
+        monkeypatch.setattr(config, "CHECKPOINTS_DIR", tmp_path)
+
+        chemin = tmp_path / "S01E01_checkpoint.json"
+        chemin.write_text("{ceci n'est pas du JSON valide}", encoding="utf-8")
+
+        with pytest.raises(ValueError, match="corrompu"):
+            charger_checkpoint(chemin)
+
+    def test_charger_checkpoint_champ_manquant(self, tmp_path, monkeypatch):
+        """Un checkpoint avec un champ manquant doit lever une ValueError."""
+        import config
+        monkeypatch.setattr(config, "CHECKPOINTS_DIR", tmp_path)
+
+        chemin = tmp_path / "S01E01_checkpoint.json"
+        chemin.write_text('{"episode_id": "S01E01"}', encoding="utf-8")
+
+        with pytest.raises(ValueError, match="champ manquant"):
+            charger_checkpoint(chemin)

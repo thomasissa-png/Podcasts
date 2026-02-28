@@ -39,6 +39,14 @@ class TestReviewerValidation:
                 "review": {"score": 8, "corrections": [], "alertes": []},
             })
 
+    def test_valider_review_episode_invalide(self):
+        """Une review avec un épisode mal structuré doit lever une erreur."""
+        with pytest.raises(ValueError):
+            Reviewer._valider_review({
+                "review": {"score": 8, "corrections": [], "alertes": []},
+                "episode": {"titre": "Test"},  # segments manquant
+            })
+
 
 class TestReviewerLogique:
     """Tests de la logique métier du reviewer."""

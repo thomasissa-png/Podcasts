@@ -77,6 +77,36 @@ class TestMonteurAssemblage:
             )
 
 
+class TestMonteurOverlaysPending:
+    """Tests du nettoyage des overlays en fin de script."""
+
+    def test_overlay_en_fin_de_script(self, tmp_path):
+        """Un SFX overlay en fin de script doit être inséré séquentiellement."""
+        from unittest.mock import patch, MagicMock
+        from pydub import AudioSegment
+
+        voix = AudioSegment.silent(duration=500)
+        sfx = AudioSegment.silent(duration=300)
+
+        segments_dir = tmp_path / "segments"
+        segments_dir.mkdir()
+        # Créer des fichiers factices (le contenu n'importe pas car on mock from_mp3)
+        (segments_dir / "seg_001.mp3").write_bytes(b"fake")
+        (segments_dir / "sfx_001.mp3").write_bytes(b"fake")
+
+        segments = [
+            {"id": "seg_001", "personnage": "narrateur", "texte": "Bonjour", "ton": "neutre", "pause_apres_ms": 0},
+            {"id": "sfx_001", "personnage": "sfx", "texte": "vent", "ton": "ambiance", "pause_apres_ms": 0, "duree_sfx_secondes": 0.5, "mode": "overlay"},
+        ]
+
+        with patch.object(AudioSegment, "from_mp3", side_effect=[voix, sfx]):
+            monteur = Monteur()
+            result = monteur._assembler_segments(segments, segments_dir)
+
+        # L'overlay en fin de script doit être ajouté (voix 500ms + sfx 300ms)
+        assert len(result) >= len(voix) + len(sfx)
+
+
 class TestAppliquerPan:
     """Tests du panoramique stéréo."""
 
