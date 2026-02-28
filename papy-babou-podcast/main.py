@@ -389,6 +389,37 @@ def _afficher_script(script: dict) -> None:
     afficher_script(console, script)
 
 
+def _afficher_recap_script(script: dict, score: float, type_episode: str, rapport: dict | None = None) -> None:
+    """Affiche un recap du script avec score, duree et comparaison cible."""
+    episode = script["episode"]
+    scripteur = Scripteur()
+    reviewer = Reviewer()
+    nb_mots = scripteur.compter_mots(script)
+    duree_estimee = reviewer.estimer_duree(script)
+    nb_segments = len(episode.get("segments", []))
+    nb_sfx = sum(1 for s in episode.get("segments", []) if s["personnage"] == "sfx")
+
+    # Duree cible depuis le format
+    format_ep = config.FORMATS_EPISODES.get(type_episode, config.FORMATS_EPISODES["standard"])
+    duree_cible = format_ep["duree_cible_minutes"]
+    mots_cible = format_ep["mots_cible"]
+
+    # Ecart
+    ecart_duree = duree_estimee - duree_cible
+    ecart_mots = nb_mots - mots_cible
+    couleur_duree = "green" if abs(ecart_duree) < 2 else "yellow" if abs(ecart_duree) < 4 else "red"
+    couleur_mots = "green" if abs(ecart_mots) < 200 else "yellow" if abs(ecart_mots) < 400 else "red"
+
+    console.print(panel_info(
+        f"{Typo.label_valeur('Score review', f'{score}/10')}\n"
+        f"{Typo.label_valeur('Mots', f'{nb_mots} (cible: {mots_cible},')} [{couleur_mots}]ecart: {ecart_mots:+d}[/]\n"
+        f"{Typo.label_valeur('Duree estimee', f'{duree_estimee:.1f} min (cible: {duree_cible} min,')} [{couleur_duree}]ecart: {ecart_duree:+.1f} min[/]\n"
+        f"{Typo.label_valeur('Segments', f'{nb_segments} (dont {nb_sfx} SFX)')}\n"
+        f"{Typo.label_valeur('Type', type_episode)}",
+        titre="Recap du script",
+    ))
+
+
 def _validation_script(
     script: dict,
     chemin_script: Path,
@@ -397,22 +428,27 @@ def _validation_script(
     contexte_saison: dict | None = None,
     episode_plan: dict | None = None,
     type_episode: str = "standard",
-) -> dict:
+    score: float = 0,
+    rapport: dict | None = None,
+) -> tuple[dict, float]:
     """Point de validation humaine apres la review du script.
 
     Returns:
-        Le script (potentiellement modifie).
+        Tuple (script, score) — le script (potentiellement modifie) et le score actuel.
 
     Raises:
         ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
     """
+    nb_corrections_humaines = 0
+
     _afficher_script(script)
+    _afficher_recap_script(script, score, type_episode, rapport)
 
     while True:
         console.print(panel_validation([
             ("v", "Valider et continuer"),
             ("m", "Modifier le fichier JSON manuellement"),
-            ("c", "Donner des corrections (relance le scripteur)"),
+            ("c", "Donner des corrections (relance scripteur + reviewer)"),
             ("a", "Abandonner la production"),
         ], titre="Validation du script"))
 
@@ -420,7 +456,15 @@ def _validation_script(
 
         if choix in ("v", "valider"):
             console.print("[green]  Script valide par le producteur[/green]")
-            return script
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "script",
+                    "action": "valide",
+                    "nb_corrections": nb_corrections_humaines,
+                    "score_final": score,
+                    "timestamp": datetime.now().isoformat(),
+                })
+            return script, score
 
         elif choix in ("m", "modifier"):
             console.print(
@@ -432,13 +476,32 @@ def _validation_script(
             try:
                 with open(chemin_script, "r", encoding="utf-8") as f:
                     script = json.load(f)
-                console.print("[green]  Script recharge depuis le fichier[/green]")
+                # Valider la structure du script recharge (S3)
+                Scripteur._valider_structure(script)
+                console.print("[green]  Script recharge et structure validee[/green]")
+                if rapport is not None:
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "etape": "script",
+                        "action": "modification_json",
+                        "timestamp": datetime.now().isoformat(),
+                    })
                 _afficher_script(script)
+                _afficher_recap_script(script, score, type_episode, rapport)
             except (json.JSONDecodeError, FileNotFoundError) as e:
                 console.print(f"[red]  Erreur au rechargement : {e}[/red]")
                 console.print("[yellow]  Le script precedent est conserve.[/yellow]")
+            except ValueError as e:
+                console.print(f"[red]  Structure invalide : {e}[/red]")
+                console.print("[yellow]  Le script precedent est conserve.[/yellow]")
 
         elif choix in ("c", "corrections"):
+            nb_corrections_humaines += 1
+            if nb_corrections_humaines >= 3:
+                console.print(
+                    f"[yellow]  Attention : {nb_corrections_humaines}e correction humaine. "
+                    f"Chaque correction coute ~1 appel Claude (scripteur + reviewer).[/yellow]"
+                )
+
             console.print(
                 "\n[yellow]  Decrivez vos corrections "
                 "(terminez par une ligne vide) :[/yellow]"
@@ -474,9 +537,65 @@ def _validation_script(
                 console.print(
                     f"[green]  Nouveau script genere ({nb} mots)[/green]"
                 )
+
+                # Re-evaluer avec le Reviewer (S1)
+                console.print("[cyan]  Re-evaluation par le Reviewer...[/cyan]")
+                reviewer = Reviewer()
+                resultat_review = reviewer.evaluer(script)
+                score = resultat_review["review"]["score"]
+
+                console.print(table_review(
+                    score, resultat_review["review"].get("details_score", {})
+                ))
+
+                if resultat_review["review"]["corrections"]:
+                    console.print("[yellow]  Corrections du reviewer :[/yellow]")
+                    for c in resultat_review["review"]["corrections"]:
+                        console.print(f"    - {c}")
+
+                if resultat_review["review"]["alertes"]:
+                    console.print("[red]  Alertes :[/red]")
+                    for a in resultat_review["review"]["alertes"]:
+                        console.print(f"    ! {a}")
+
+                # Appliquer les corrections du reviewer au script
+                if reviewer.est_valide(resultat_review):
+                    script = {"episode": resultat_review["episode"]}
+                    console.print(f"[green]  Script corrige valide ({score}/10)[/green]")
+                else:
+                    script = {"episode": resultat_review["episode"]}
+                    console.print(
+                        f"[yellow]  Score {score}/10 (sous le seuil). "
+                        f"Vous pouvez re-corriger ou valider manuellement.[/yellow]"
+                    )
+
+                scripteur.sauvegarder(script, chemin_script)
+
+                # Mettre a jour le rapport (S2)
+                if rapport is not None:
+                    rapport["etapes"]["script"]["score_review"] = score
+                    rapport["etapes"]["script"]["nb_mots"] = scripteur.compter_mots(script)
+                    rapport["etapes"]["script"]["duree_estimee_min"] = round(
+                        reviewer.estimer_duree(script), 1
+                    )
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "etape": "script",
+                        "action": "correction_humaine",
+                        "corrections": lignes,
+                        "score_apres": score,
+                        "timestamp": datetime.now().isoformat(),
+                    })
+
                 _afficher_script(script)
+                _afficher_recap_script(script, score, type_episode, rapport)
 
         elif choix in ("a", "abandonner"):
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "script",
+                    "action": "abandonne",
+                    "timestamp": datetime.now().isoformat(),
+                })
             raise ProductionAbandonnee(
                 "Production abandonnee par l'utilisateur."
             )
@@ -521,6 +640,7 @@ def _validation_plan_saison(
             ("v", "Valider le plan — lancer la production"),
             ("m", "Modifier le fichier JSON manuellement"),
             ("r", "Regenerer le plan (nouvel appel au Planificateur)"),
+            ("i", "Regenerer avec instructions (guidee)"),
             ("a", "Abandonner"),
         ], titre="Validation du plan de saison"))
 
@@ -565,13 +685,48 @@ def _validation_plan_saison(
             console.print("[green]  Nouveau plan genere et sauvegarde[/green]")
             _afficher_plan_saison(plan)
 
+        elif choix in ("i", "instructions"):
+            console.print(
+                "\n[yellow]  Decrivez ce que vous souhaitez changer dans le plan "
+                "(terminez par une ligne vide) :[/yellow]"
+            )
+            lignes_instructions = []
+            while True:
+                ligne = console.input("  > ")
+                if not ligne.strip():
+                    break
+                lignes_instructions.append(ligne)
+
+            if lignes_instructions:
+                # Concatener les instructions a la description pour guider le LLM
+                instructions_texte = "\n".join(lignes_instructions)
+                description_enrichie = (
+                    f"{description}\n\n"
+                    f"INSTRUCTIONS DU PRODUCTEUR (prioritaires) :\n{instructions_texte}"
+                ) if description else (
+                    f"INSTRUCTIONS DU PRODUCTEUR (prioritaires) :\n{instructions_texte}"
+                )
+                console.print(
+                    "\n[cyan]  Regeneration guidee du plan...[/cyan]"
+                )
+                plan = planificateur.planifier_saison(
+                    numero_saison=saison,
+                    theme=theme,
+                    description=description_enrichie,
+                    personnages_secondaires=personnages_list,
+                    saisons_precedentes=saisons_prec or None,
+                )
+                planificateur.sauvegarder(plan, chemin_json)
+                console.print("[green]  Nouveau plan genere avec vos instructions[/green]")
+                _afficher_plan_saison(plan)
+
         elif choix in ("a", "abandonner"):
             raise ProductionAbandonnee(
                 "Planification abandonnee par l'utilisateur."
             )
 
         else:
-            console.print("[red]  Choix non reconnu. Tapez v, m, r ou a.[/red]")
+            console.print("[red]  Choix non reconnu. Tapez v, m, r, i ou a.[/red]")
 
 
 def _afficher_plan_saison(plan: dict) -> None:
@@ -579,7 +734,12 @@ def _afficher_plan_saison(plan: dict) -> None:
     saison_data = plan["saison"]
     saison_num = saison_data.get("numero", "?")
 
-    # Table des episodes
+    # Description de la saison
+    desc = saison_data.get("description", "")
+    if desc:
+        console.print(f"\n  [bold]Description :[/bold] {desc}")
+
+    # Table des episodes avec resume complet (P4)
     table = table_saison_plan(saison_num, saison_data["theme"])
     for ep in saison_data["episodes"]:
         table.add_row(
@@ -590,6 +750,23 @@ def _afficher_plan_saison(plan: dict) -> None:
             ep["morale"][:40],
         )
     console.print(table)
+
+    # Detail de chaque episode (P4 — resume + histoire biblique)
+    console.print(f"\n  [bold]Detail des episodes :[/bold]")
+    for ep in saison_data["episodes"]:
+        type_ep = ep.get("type", "standard")
+        format_ep = config.FORMATS_EPISODES.get(type_ep, config.FORMATS_EPISODES["standard"])
+        console.print(
+            f"    [bold]E{ep['numero']:02d}[/bold] {ep['titre']} "
+            f"[dim]({type_ep}, ~{format_ep['duree_cible_minutes']} min)[/dim]"
+        )
+        histoire = ep.get("histoire_biblique", "")
+        if histoire:
+            console.print(f"      Histoire : {histoire[:120]}")
+        resume_ep = ep.get("resume", "")
+        if resume_ep:
+            console.print(f"      Resume : {resume_ep[:120]}")
+        console.print(f"      Morale : {ep['morale']}")
 
     # Fil rouge
     fil_rouge = saison_data.get("fil_rouge", "")
@@ -614,7 +791,7 @@ def _afficher_plan_saison(plan: dict) -> None:
             console.print(
                 f"    {p.get('nom_complet', '?')} "
                 f"(episode {p.get('apparait_episode', '?')}) : "
-                f"{p.get('description', '')[:60]}"
+                f"{p.get('description', '')[:80]}"
             )
 
     # Rituels
@@ -624,27 +801,96 @@ def _afficher_plan_saison(plan: dict) -> None:
         for cle, val in rituels.items():
             console.print(f"    {cle.replace('_', ' ').title()} : {val}")
 
+    # Estimation des couts previsionnels (P5)
+    nb_episodes = len(saison_data["episodes"])
+    duree_totale = sum(
+        config.FORMATS_EPISODES.get(
+            ep.get("type", "standard"), config.FORMATS_EPISODES["standard"]
+        )["duree_cible_minutes"]
+        for ep in saison_data["episodes"]
+    )
+    mots_totaux = sum(
+        config.FORMATS_EPISODES.get(
+            ep.get("type", "standard"), config.FORMATS_EPISODES["standard"]
+        )["mots_cible"]
+        for ep in saison_data["episodes"]
+    )
+    # Estimation : ~3 appels Claude/episode (script, review, meta) + TTS
+    cout_claude_estime = nb_episodes * 3 * (
+        2000 * config.COUTS["claude_input_par_token"]
+        + 4000 * config.COUTS["claude_output_par_token"]
+    )
+    cout_tts_estime = mots_totaux * 5 * config.COUTS["elevenlabs_par_caractere"]  # ~5 chars/mot
+    cout_total_estime = cout_claude_estime + cout_tts_estime
+
+    console.print(panel_info(
+        f"{Typo.label_valeur('Episodes', str(nb_episodes))}\n"
+        f"{Typo.label_valeur('Duree totale estimee', f'~{duree_totale} min ({duree_totale / 60:.1f}h)')}\n"
+        f"{Typo.label_valeur('Mots totaux estimes', f'~{mots_totaux:,}')}\n"
+        f"{Typo.label_valeur('Cout estime', f'~${cout_total_estime:.2f}')} "
+        f"[dim](Claude: ${cout_claude_estime:.2f} + TTS: ${cout_tts_estime:.2f})[/dim]",
+        titre="Previsionnel de la saison",
+    ))
+
 
 def _validation_montage(
-    chemin_hq: Path, chemin_preview: Path, duree_secondes: float
-) -> None:
+    chemin_hq: Path,
+    chemin_preview: Path,
+    duree_secondes: float,
+    script: dict | None = None,
+    type_episode: str = "standard",
+    resultat_montage: dict | None = None,
+    rapport: dict | None = None,
+) -> bool:
     """Point de validation humaine apres le montage audio.
+
+    Returns:
+        True si le montage a ete relance (le pipeline doit refaire l'assemblage).
 
     Raises:
         ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
     """
+    # Duree cible depuis le format (M2)
+    format_ep = config.FORMATS_EPISODES.get(type_episode, config.FORMATS_EPISODES["standard"])
+    duree_cible = format_ep["duree_cible_minutes"]
+    ecart = (duree_secondes / 60) - duree_cible
+    couleur_ecart = "green" if abs(ecart) < 2 else "yellow" if abs(ecart) < 4 else "red"
+
+    # Infos enrichies (M2)
+    info_lines = [
+        f"{Typo.label_valeur('Durée', f'{duree_secondes:.0f}s ({duree_secondes / 60:.1f} min)')} "
+        f"[{couleur_ecart}](cible: {duree_cible} min, ecart: {ecart:+.1f} min)[/]",
+        f"{Typo.label_valeur('Fichier HQ', str(chemin_hq))}",
+        f"{Typo.label_valeur('Preview', str(chemin_preview))}",
+    ]
+
+    if resultat_montage:
+        chapitres = resultat_montage.get("chapitres", [])
+        if chapitres:
+            info_lines.append(f"{Typo.label_valeur('Chapitres', str(len(chapitres)))}")
+        taille_mb = resultat_montage.get("taille_mb", 0)
+        if taille_mb:
+            info_lines.append(f"{Typo.label_valeur('Taille', f'{taille_mb:.1f} MB')}")
+
+    if script:
+        nb_sfx = sum(1 for s in script["episode"].get("segments", []) if s["personnage"] == "sfx")
+        nb_voix = sum(1 for s in script["episode"].get("segments", []) if s["personnage"] != "sfx")
+        info_lines.append(f"{Typo.label_valeur('Segments', f'{nb_voix} voix + {nb_sfx} SFX')}")
+
+    info_lines.append("")
+    info_lines.append(Typo.dim("Ecoutez le fichier preview avant de valider la publication."))
+    info_lines.append(Typo.dim(f"  Fichier : {chemin_preview}"))
+
     console.print(panel_info(
-        f"{Typo.label_valeur('Durée', f'{duree_secondes:.0f}s ({duree_secondes / 60:.1f} min)')}\n"
-        f"{Typo.label_valeur('Fichier HQ', str(chemin_hq))}\n"
-        f"{Typo.label_valeur('Preview', str(chemin_preview))}\n\n"
-        f"{Typo.dim('Écoutez le fichier preview avant de valider la publication.')}",
-        titre=f"{Icons.MONTAGE} Écoute du montage",
+        "\n".join(info_lines),
+        titre=f"{Icons.MONTAGE} Ecoute du montage",
     ))
 
     while True:
         console.print(panel_validation([
             ("v", "Valider et publier"),
-            ("a", "Abandonner (l'audio est conservé, pas de publication)"),
+            ("r", "Relancer le montage"),
+            ("a", "Abandonner (l'audio est conserve, pas de publication)"),
         ], titre="Validation du montage"))
 
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
@@ -653,16 +899,206 @@ def _validation_montage(
             console.print(
                 "[green]  Montage valide — lancement de la publication[/green]"
             )
-            return
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "montage",
+                    "action": "valide",
+                    "timestamp": datetime.now().isoformat(),
+                })
+            return False  # Pas de remontage
+
+        elif choix in ("r", "relancer"):
+            console.print(
+                "[cyan]  Relance du montage demandee...[/cyan]"
+            )
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "montage",
+                    "action": "remontage",
+                    "timestamp": datetime.now().isoformat(),
+                })
+            return True  # Demande de remontage
 
         elif choix in ("a", "abandonner"):
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "montage",
+                    "action": "abandonne",
+                    "timestamp": datetime.now().isoformat(),
+                })
             raise ProductionAbandonnee(
                 "Production arretee apres montage. "
                 f"L'audio est conserve dans : {chemin_hq}"
             )
 
         else:
-            console.print("[red]  Choix non reconnu. Tapez v ou a.[/red]")
+            console.print("[red]  Choix non reconnu. Tapez v, r ou a.[/red]")
+
+
+def _validation_metadonnees(
+    meta: dict,
+    chemin_meta: Path,
+    rapport: dict | None = None,
+) -> dict:
+    """Point de validation humaine pour les metadonnees avant publication.
+
+    Returns:
+        Le dict meta (potentiellement modifie par l'utilisateur).
+    """
+    info_lines = [
+        f"{Typo.label_valeur('Titre', meta.get('titre', 'N/A'))}",
+        f"{Typo.label_valeur('Description', meta.get('description_courte', 'N/A'))}",
+    ]
+
+    tags = meta.get("tags", [])
+    if tags:
+        info_lines.append(f"{Typo.label_valeur('Tags', ', '.join(tags))}")
+
+    keywords = meta.get("keywords", [])
+    if keywords:
+        info_lines.append(f"{Typo.label_valeur('Mots-cles', ', '.join(keywords))}")
+
+    cover_path = meta.get("cover_art_path", "")
+    if cover_path:
+        info_lines.append(f"{Typo.label_valeur('Cover art', cover_path)}")
+    else:
+        info_lines.append(Typo.dim("  Pas de cover art genere."))
+
+    transcript = meta.get("transcript", "")
+    if transcript:
+        nb_lignes = len(transcript.strip().split("\n"))
+        info_lines.append(f"{Typo.label_valeur('Transcript', f'{nb_lignes} lignes')}")
+
+    console.print(panel_info(
+        "\n".join(info_lines),
+        titre=f"{Icons.METADONNEES} Metadonnees generees",
+    ))
+
+    while True:
+        console.print(panel_validation([
+            ("v", "Valider les metadonnees"),
+            ("m", "Modifier le JSON manuellement"),
+            ("a", "Abandonner"),
+        ], titre="Validation des metadonnees"))
+
+        choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+
+        if choix in ("v", "valider"):
+            console.print("[green]  Metadonnees validees.[/green]")
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "metadonnees",
+                    "action": "valide",
+                    "timestamp": datetime.now().isoformat(),
+                })
+            return meta
+
+        elif choix in ("m", "modifier"):
+            console.print(
+                f"[cyan]  Editez le fichier JSON : {chemin_meta}[/cyan]"
+            )
+            console.print("[dim]  Sauvegardez puis appuyez sur Entree...[/dim]")
+            console.input("  ")
+            try:
+                with open(chemin_meta, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+                console.print("[green]  Metadonnees rechargees depuis le fichier.[/green]")
+                if rapport is not None:
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "etape": "metadonnees",
+                        "action": "modifie_json",
+                        "timestamp": datetime.now().isoformat(),
+                    })
+                # Re-afficher les metadonnees modifiees
+                console.print(f"  Titre : {meta.get('titre', 'N/A')}")
+                console.print(f"  Description : {meta.get('description_courte', 'N/A')}")
+            except (json.JSONDecodeError, FileNotFoundError) as e:
+                console.print(f"[red]  Erreur de lecture : {e}[/red]")
+                console.print("[yellow]  Les metadonnees originales sont conservees.[/yellow]")
+
+        elif choix in ("a", "abandonner"):
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "metadonnees",
+                    "action": "abandonne",
+                    "timestamp": datetime.now().isoformat(),
+                })
+            raise ProductionAbandonnee(
+                "Production arretee apres generation des metadonnees."
+            )
+
+        else:
+            console.print("[red]  Choix non reconnu. Tapez v, m ou a.[/red]")
+
+
+def _validation_publication(
+    meta: dict,
+    episode_id: str,
+    rapport: dict | None = None,
+) -> bool:
+    """Point de confirmation avant publication RSS.
+
+    Returns:
+        True si l'utilisateur confirme la publication, False pour annuler.
+    """
+    info_lines = [
+        f"{Typo.label_valeur('Episode', episode_id)}",
+        f"{Typo.label_valeur('Titre', meta.get('titre', 'N/A'))}",
+        Typo.dim("La publication ajoutera l'episode au flux RSS public."),
+        Typo.dim("Cette action est irreversible sans intervention manuelle."),
+    ]
+
+    console.print(panel_info(
+        "\n".join(info_lines),
+        titre=f"{Icons.PUBLICATION} Confirmation de publication",
+    ))
+
+    while True:
+        console.print(panel_validation([
+            ("p", "Publier l'episode"),
+            ("s", "Sauter la publication (audio conserve)"),
+            ("a", "Abandonner la production"),
+        ], titre="Publication"))
+
+        choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+
+        if choix in ("p", "publier"):
+            console.print("[green]  Publication confirmee.[/green]")
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "publication",
+                    "action": "publie",
+                    "timestamp": datetime.now().isoformat(),
+                })
+            return True
+
+        elif choix in ("s", "sauter"):
+            console.print(
+                "[yellow]  Publication sautee — l'audio et les metadonnees "
+                "sont conserves pour publication ulterieure.[/yellow]"
+            )
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "publication",
+                    "action": "saute",
+                    "timestamp": datetime.now().isoformat(),
+                })
+            return False
+
+        elif choix in ("a", "abandonner"):
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "publication",
+                    "action": "abandonne",
+                    "timestamp": datetime.now().isoformat(),
+                })
+            raise ProductionAbandonnee(
+                "Production arretee avant publication. "
+                "L'audio et les metadonnees sont conserves."
+            )
+
+        else:
+            console.print("[red]  Choix non reconnu. Tapez p, s ou a.[/red]")
 
 
 # ── Pipeline de production ────────────────────────────────────────────────────
@@ -978,12 +1414,14 @@ def _pipeline_inner(
                 "\n[bold magenta]VALIDATION — Relisez le script avant "
                 "la production audio[/bold magenta]"
             )
-            script = _validation_script(
+            script, score = _validation_script(
                 script, chemin_valide, morale,
                 resume=resume,
                 contexte_saison=contexte_saison,
                 episode_plan=episode_plan,
                 type_episode=type_episode,
+                score=score,
+                rapport=rapport,
             )
             scripteur.sauvegarder(script, chemin_valide)
             duree_estimee = reviewer.estimer_duree(script)
@@ -1176,16 +1614,54 @@ def _pipeline_inner(
             else None
         )
         if preview_chemin:
-            console.print(
-                "\n[bold magenta]VALIDATION — Ecoutez l'episode avant "
-                "publication[/bold magenta]"
-            )
-            _validation_montage(
+            demande_remontage = _validation_montage(
                 chemin_hq,
                 preview_chemin,
                 duree_secondes,
+                script=script,
+                type_episode=type_episode,
+                resultat_montage=resultat_montage if isinstance(resultat_montage, dict) else None,
+                rapport=rapport,
             )
             rapport["etapes"]["montage"]["validation_humaine"] = True
+
+            # Boucle de remontage (M5)
+            while demande_remontage:
+                console.print(f"\n{Typo.etape(5, 8, 'Remontage')}")
+                monteur = Monteur()
+                resultat_montage = monteur.assembler(script)
+
+                duree_secondes = resultat_montage["duree_secondes"]
+                taille_bytes = resultat_montage["taille_bytes"]
+                chemin_hq = resultat_montage["chemin_hq"]
+
+                console.print(
+                    f"  Episode re-assemble : {duree_secondes:.0f}s, "
+                    f"{taille_bytes / 1024 / 1024:.1f} MB"
+                )
+                rapport["etapes"]["montage"].update({
+                    "duree_secondes": duree_secondes,
+                    "taille_mb": round(taille_bytes / 1024 / 1024, 1),
+                    "chemin_hq": str(chemin_hq),
+                    "chemin_preview": str(resultat_montage["chemin_preview"]),
+                    "chapitres": resultat_montage.get("chapitres", []),
+                })
+
+                preview_chemin = resultat_montage.get("chemin_preview")
+                demande_remontage = _validation_montage(
+                    chemin_hq,
+                    preview_chemin,
+                    duree_secondes,
+                    script=script,
+                    type_episode=type_episode,
+                    resultat_montage=resultat_montage,
+                    rapport=rapport,
+                )
+        else:
+            logger.warning(
+                "Pas de fichier preview disponible — validation du montage impossible. "
+                "Le montage sera publie sans ecoute prealable."
+            )
 
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
@@ -1247,6 +1723,15 @@ def _pipeline_inner(
                 console.print(f"  Cover art : {cover_path}")
                 rapport["etapes"]["metadonnees"]["cover_art_cout"] = config.COUTS["openai_dalle3_par_image"]
 
+    # ── Validation humaine : metadonnees ──────────────────────────────────────
+
+    if not auto and not dry_run and etape_idx <= 5:
+        meta = _validation_metadonnees(meta, chemin_meta, rapport=rapport)
+        # Resauvegarder si modifie
+        metadonnees_agent = Metadonnees()
+        metadonnees_agent.sauvegarder(meta, chemin_meta)
+        rapport["etapes"]["metadonnees"]["validation_humaine"] = True
+
     # ── Étape 7 : Publication ─────────────────────────────────────────────────
 
     if etape_idx <= 6:
@@ -1254,25 +1739,34 @@ def _pipeline_inner(
             console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention('SAUTÉ — dry-run')}")
             rapport["etapes"]["publication"] = {"status": "skipped (dry-run)"}
         else:
-            console.print(f"\n{Typo.etape(7, 8, 'Publication')}")
-            publisher = Publisher()
-            rapport_pub = publisher.publier(meta, chemin_hq, taille_bytes)
-            console.print(f"  URL audio : {rapport_pub['url_audio']}")
-            if rapport_pub.get("transcript_url"):
-                console.print(f"  Transcript : {rapport_pub['transcript_url']}")
-            rapport["etapes"]["publication"] = rapport_pub
+            # Confirmation avant publication (T4)
+            publier = True
+            if not auto:
+                publier = _validation_publication(meta, episode_id, rapport=rapport)
 
-            # Enregistrer publication en DB
-            if _use_db():
-                try:
-                    PublicationRepo.enregistrer(
-                        episode_id=episode_id,
-                        rapport_pub=rapport_pub,
-                        production_id=_production_id_courante,
-                    )
-                    EpisodeRepo.maj_status(episode_id, "published")
-                except Exception as e:
-                    logger.warning("DB indisponible pour publication : %s", e)
+            if publier:
+                console.print(f"\n{Typo.etape(7, 8, 'Publication')}")
+                publisher = Publisher()
+                rapport_pub = publisher.publier(meta, chemin_hq, taille_bytes)
+                console.print(f"  URL audio : {rapport_pub['url_audio']}")
+                if rapport_pub.get("transcript_url"):
+                    console.print(f"  Transcript : {rapport_pub['transcript_url']}")
+                rapport["etapes"]["publication"] = rapport_pub
+
+                # Enregistrer publication en DB
+                if _use_db():
+                    try:
+                        PublicationRepo.enregistrer(
+                            episode_id=episode_id,
+                            rapport_pub=rapport_pub,
+                            production_id=_production_id_courante,
+                        )
+                        EpisodeRepo.maj_status(episode_id, "published")
+                    except Exception as e:
+                        logger.warning("DB indisponible pour publication : %s", e)
+            else:
+                console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention('SAUTÉ — choix utilisateur')}")
+                rapport["etapes"]["publication"] = {"status": "skipped (user choice)"}
 
     # ── Étape 8 : Rapport final ───────────────────────────────────────────────
 
@@ -1429,7 +1923,7 @@ def interactif():
 @click.option("--fichier", "-f", required=True, type=click.Path(exists=True),
               help="Fichier JSON de planning (liste d'episodes)")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
-@click.option("--auto", is_flag=True, default=True, help="Mode automatique (defaut: oui)")
+@click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 def batch(fichier: str, dry_run: bool, auto: bool):
     """Mode batch — produit plusieurs episodes depuis un fichier de planning.
 
@@ -1633,7 +2127,7 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
 @click.option("--saison", "-s", type=click.IntRange(min=1), required=True, help="Numero de la saison (>= 1)")
 @click.option("--episodes", "-e", default="", help="Episodes specifiques (ex: '1,3,5' — vide = tous)")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
-@click.option("--auto", is_flag=True, default=True, help="Mode automatique (defaut: oui)")
+@click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
     """Produit les episodes d'une saison a partir du plan de saison."""
     plan = config.charger_saison(saison)

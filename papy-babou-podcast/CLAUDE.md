@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 255 tests (pytest)
+├── tests/                   # 266 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -49,11 +49,15 @@ papy-babou-podcast/
 - **Dynamic Characters**: `config.ajouter_personnage()` + `config.personnages_valides()` (set-based)
 - **Variable season length**: `nb_episodes` parameter in `planifier_saison()` (default 10)
 
-### Human Approval Workflow (3 steps)
-The pipeline has **3 human validation points** (skipped in `--auto` mode):
-1. **Plan de saison** (`_validation_plan_saison`): After season plan generation in `planifier-saison`, review the complete plan (episodes, arcs, characters, rituals). Options: validate, modify JSON, regenerate, abandon. Also a go/no-go confirmation before `produire-saison` starts.
-2. **Script** (`_validation_script`): After script generation + review loop. Options: validate, modify JSON, give corrections (re-runs scripteur), abandon.
-3. **Montage** (`_validation_montage`): After audio assembly. Options: validate (publish), abandon (audio kept).
+### Human Approval Workflow (5 steps)
+The pipeline has **5 human validation points** (skipped in `--auto` mode):
+1. **Plan de saison** (`_validation_plan_saison`): After season plan generation. Options: validate, modify JSON, regenerate, guided regeneration with instructions (i), abandon. Shows full episode details, cost estimates.
+2. **Script** (`_validation_script`): After script generation + review loop. Returns `tuple[dict, float]` (script, score). Options: validate, modify JSON (with structure validation), give corrections (re-runs scripteur + reviewer), abandon. Shows score recap, word count vs target, duration vs target, correction counter with cost warnings (≥3).
+3. **Montage** (`_validation_montage`): After audio assembly. Returns `bool` (True if remontage requested). Options: validate, relaunch montage (r), abandon. Shows duration vs target with color-coded ecart, chapters, file size, segment counts. Supports remontage loop.
+4. **Métadonnées** (`_validation_metadonnees`): After metadata generation, before publication. Options: validate, modify JSON manually, abandon. Shows title, description, tags, cover art, transcript line count.
+5. **Publication** (`_validation_publication`): Before RSS feed update. Options: publish, skip (audio conserved), abandon. Warns that publication is irreversible.
+
+All validation functions log decisions to `rapport["decisions_humaines"]` list (T3) with etape, action, timestamp. Uses `if rapport is not None:` (not `if rapport:`) since empty dicts are falsy.
 
 ### API Integration
 - **Claude (Anthropic)**: Script generation, review, metadata, season planning — all use `config.appel_claude_avec_retry()` with exponential backoff on 429/500/502/503/529
@@ -102,7 +106,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 255 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 266 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -123,7 +127,11 @@ python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 - `extraire_corrections()` returns corrections only; alertes used as fallback when no corrections (avoids infinite review loops)
 
 ### When modifying main.py
-- **3 validation functions**: `_validation_plan_saison()`, `_validation_script()`, `_validation_montage()`
+- **5 validation functions**: `_validation_plan_saison()`, `_validation_script()`, `_validation_montage()`, `_validation_metadonnees()`, `_validation_publication()`
+- `_validation_script()` returns `tuple[dict, float]` (script, score) — NOT just `dict`
+- `_validation_montage()` returns `bool` (True if remontage requested) — call site has remontage loop
+- Decision logging: all validation functions use `rapport.setdefault("decisions_humaines", []).append({...})`
+- Use `if rapport is not None:` (NOT `if rapport:`) — empty dicts are falsy
 - `_validation_script()` must receive and pass serial context: `contexte_saison`, `episode_plan`, `type_episode`
 - All `sauvegarder_checkpoint()` calls must include `type_episode` in data
 - `ajouter_historique()` builds `resume_court` from first 3 segments, not from title
@@ -216,6 +224,22 @@ All 32 bugs from comprehensive audit implemented and tested (255 tests, 0 failur
 - BUG 29: Pipeline error handling with DB rollback
 - BUG 31: Dynamic reviewer format criteria
 - BUG 32: Shared JSON parser (utils.py)
+
+## Human Validation Audit Improvements (Session 2)
+Complete audit of 3→5 validation points (overall score: 5/10 → improved):
+- P1/T1 CRITICAL: Fixed `--auto` flag in `produire-saison` and `batch` (was `default=True`, making validation dead code)
+- S1/S2: Reviewer re-evaluation after human corrections; rapport updated with new score
+- S3: Structure validation (`_valider_structure()`) on manual JSON reload
+- S4/S5/S6: Script recap panel with score, word count vs target, duration vs target, correction counter with cost warnings
+- P2: Guided regeneration option (i) with user instructions passed to LLM
+- P4/P5: Enriched plan display with full episode details and cost estimates
+- M1/M2/M5: Enriched montage validation with duration comparison, chapters, file size, remontage loop
+- M3: Warning when montage validation is skipped (no preview file)
+- T2/M4: New metadata validation step (`_validation_metadonnees`) before publication
+- T3: Decision logging in `rapport["decisions_humaines"]` across all validation points
+- T4: New publication confirmation step (`_validation_publication`) before RSS feed update
+- FIX: `if rapport:` → `if rapport is not None:` (empty dicts are falsy in Python)
+- `_validation_script` return type changed from `dict` to `tuple[dict, float]`
 
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`

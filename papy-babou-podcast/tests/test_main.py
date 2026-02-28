@@ -16,6 +16,10 @@ from main import (
     charger_checkpoint,
     archiver_checkpoint,
     _calculer_couts,
+    _validation_metadonnees,
+    _validation_publication,
+    _validation_montage,
+    ProductionAbandonnee,
 )
 
 
@@ -251,3 +255,207 @@ class TestCalculerCouts:
         }
         couts = _calculer_couts(rapport)
         assert couts["total_estime"] > 0.04  # Au moins cover art + autres
+
+
+class TestValidationMetadonnees:
+    """Tests du point de validation humaine des metadonnees (T2/M4)."""
+
+    def test_validation_valider(self, tmp_path, monkeypatch):
+        """L'option 'v' valide les metadonnees et log la decision."""
+        import main
+        meta = {"titre": "Test", "description_courte": "Desc", "tags": ["bible"]}
+        chemin = tmp_path / "meta.json"
+        with open(chemin, "w") as f:
+            json.dump(meta, f)
+        rapport = {}
+
+        inputs = iter(["v"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_metadonnees(meta, chemin, rapport=rapport)
+        assert result["titre"] == "Test"
+        assert len(rapport["decisions_humaines"]) == 1
+        assert rapport["decisions_humaines"][0]["etape"] == "metadonnees"
+        assert rapport["decisions_humaines"][0]["action"] == "valide"
+
+    def test_validation_modifier_json(self, tmp_path, monkeypatch):
+        """L'option 'm' recharge le JSON modifie."""
+        import main
+        meta = {"titre": "Ancien", "description_courte": "Desc"}
+        chemin = tmp_path / "meta.json"
+        # Ecrire le fichier modifie
+        meta_modifie = {"titre": "Nouveau", "description_courte": "Nouvelle desc"}
+        with open(chemin, "w") as f:
+            json.dump(meta_modifie, f)
+        rapport = {}
+
+        inputs = iter(["m", "", "v"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_metadonnees(meta, chemin, rapport=rapport)
+        assert result["titre"] == "Nouveau"
+        assert any(d["action"] == "modifie_json" for d in rapport["decisions_humaines"])
+
+    def test_validation_abandonner(self, tmp_path, monkeypatch):
+        """L'option 'a' leve ProductionAbandonnee."""
+        import main
+        meta = {"titre": "Test", "description_courte": "Desc"}
+        chemin = tmp_path / "meta.json"
+
+        inputs = iter(["a"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        with pytest.raises(ProductionAbandonnee):
+            _validation_metadonnees(meta, chemin)
+
+
+class TestValidationPublication:
+    """Tests du point de confirmation de publication (T4)."""
+
+    def test_publier(self, monkeypatch):
+        """L'option 'p' confirme la publication."""
+        import main
+        meta = {"titre": "Test"}
+        rapport = {}
+
+        inputs = iter(["p"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_publication(meta, "S01E01", rapport=rapport)
+        assert result is True
+        assert rapport["decisions_humaines"][0]["action"] == "publie"
+
+    def test_sauter_publication(self, monkeypatch):
+        """L'option 's' saute la publication sans erreur."""
+        import main
+        meta = {"titre": "Test"}
+        rapport = {}
+
+        inputs = iter(["s"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_publication(meta, "S01E01", rapport=rapport)
+        assert result is False
+        assert rapport["decisions_humaines"][0]["action"] == "saute"
+
+    def test_abandonner_publication(self, monkeypatch):
+        """L'option 'a' leve ProductionAbandonnee."""
+        import main
+        meta = {"titre": "Test"}
+
+        inputs = iter(["a"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        with pytest.raises(ProductionAbandonnee):
+            _validation_publication(meta, "S01E01")
+
+
+class TestValidationMontageEnrichie:
+    """Tests de la validation montage enrichie (M1/M2/M3/M5)."""
+
+    def test_valider_montage(self, tmp_path, monkeypatch):
+        """L'option 'v' valide le montage et retourne False (pas de remontage)."""
+        import main
+        rapport = {}
+
+        inputs = iter(["v"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_montage(
+            chemin_hq=tmp_path / "episode.mp3",
+            chemin_preview=tmp_path / "preview.mp3",
+            duree_secondes=780,
+            type_episode="standard",
+            rapport=rapport,
+        )
+        assert result is False
+        assert rapport["decisions_humaines"][0]["action"] == "valide"
+
+    def test_remontage(self, tmp_path, monkeypatch):
+        """L'option 'r' demande un remontage et retourne True."""
+        import main
+        rapport = {}
+
+        inputs = iter(["r"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_montage(
+            chemin_hq=tmp_path / "episode.mp3",
+            chemin_preview=tmp_path / "preview.mp3",
+            duree_secondes=780,
+            type_episode="standard",
+            rapport=rapport,
+        )
+        assert result is True
+        assert rapport["decisions_humaines"][0]["action"] == "remontage"
+
+    def test_abandonner_montage(self, tmp_path, monkeypatch):
+        """L'option 'a' leve ProductionAbandonnee."""
+        import main
+
+        inputs = iter(["a"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        with pytest.raises(ProductionAbandonnee):
+            _validation_montage(
+                chemin_hq=tmp_path / "episode.mp3",
+                chemin_preview=tmp_path / "preview.mp3",
+                duree_secondes=780,
+            )
+
+    def test_montage_affiche_info_script(self, tmp_path, monkeypatch):
+        """Avec un script, les infos segments sont affichees."""
+        import main
+        rapport = {}
+        script = {
+            "episode": {
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Il etait une fois"},
+                    {"personnage": "sfx", "texte": "bruit de vent"},
+                    {"personnage": "antoine", "texte": "Raconte-moi"},
+                ],
+            }
+        }
+
+        printed = []
+        monkeypatch.setattr(main.console, "input", lambda _: "v")
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: printed.append(str(a)))
+
+        result = _validation_montage(
+            chemin_hq=tmp_path / "episode.mp3",
+            chemin_preview=tmp_path / "preview.mp3",
+            duree_secondes=780,
+            script=script,
+            type_episode="standard",
+            resultat_montage={"chapitres": [{"titre": "Ch1"}], "taille_mb": 12.5},
+            rapport=rapport,
+        )
+        assert result is False
+
+    def test_ecart_duree_couleur(self, tmp_path, monkeypatch):
+        """L'ecart de duree colore correctement (vert < 2, jaune < 4, rouge >= 4)."""
+        import main
+        rapport = {}
+
+        # Standard = 13 min cible. 780s = 13 min = ecart 0 (vert)
+        inputs = iter(["v"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_montage(
+            chemin_hq=tmp_path / "episode.mp3",
+            chemin_preview=tmp_path / "preview.mp3",
+            duree_secondes=780,  # 13 min exactement
+            type_episode="standard",
+            rapport=rapport,
+        )
+        assert result is False
