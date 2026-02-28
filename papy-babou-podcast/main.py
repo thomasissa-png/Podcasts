@@ -136,6 +136,63 @@ def sauvegarder_historique(historique: list[dict]) -> None:
         json.dump(historique, f, ensure_ascii=False, indent=2)
 
 
+# ── Préférences producteur (mémoire persistante) ────────────────────────────
+
+
+def charger_preferences() -> list[dict]:
+    """Charge les preferences du producteur depuis le fichier JSON.
+
+    Returns:
+        Liste de regles/preferences persistantes.
+    """
+    if config.PREFERENCES_PATH.exists():
+        with open(config.PREFERENCES_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def sauvegarder_preferences(preferences: list[dict]) -> None:
+    """Sauvegarde les preferences du producteur."""
+    with fichier_lock(config.PREFERENCES_PATH):
+        with open(config.PREFERENCES_PATH, "w", encoding="utf-8") as f:
+            json.dump(preferences, f, ensure_ascii=False, indent=2)
+
+
+def ajouter_preference(regle: str, source_episode: str = "", categorie: str = "general") -> None:
+    """Ajoute une preference/regle du producteur a la memoire persistante.
+
+    Args:
+        regle: La regle ou preference en texte libre.
+        source_episode: Episode d'ou vient cette preference.
+        categorie: Categorie (style, ton, structure, personnages, technique, general).
+    """
+    preferences = charger_preferences()
+    preferences.append({
+        "regle": regle,
+        "categorie": categorie,
+        "source_episode": source_episode,
+        "date_ajout": datetime.now().isoformat(),
+    })
+    sauvegarder_preferences(preferences)
+    logger.info("Preference producteur ajoutee : %s", regle[:80])
+
+
+def _construire_bloc_preferences() -> str:
+    """Construit le bloc de preferences producteur pour injection dans les prompts.
+
+    Returns:
+        Texte formate pour inclusion dans un system prompt LLM.
+    """
+    preferences = charger_preferences()
+    if not preferences:
+        return ""
+
+    lignes = ["\nPRÉFÉRENCES DU PRODUCTEUR (à respecter impérativement) :"]
+    for i, pref in enumerate(preferences, 1):
+        lignes.append(f"  {i}. {pref['regle']}")
+    return "\n".join(lignes)
+
+
 def ajouter_historique(rapport: dict, script: dict) -> None:
     """Ajoute un épisode à l'historique (DB + JSON pour rétrocompatibilité)."""
     episode = script.get("episode", {})
@@ -153,6 +210,16 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
     ]
     resume_court = " ".join(premiers_textes)[:200] if premiers_textes else episode.get("titre", "")
 
+    # Construire un resume des retours humains pour la memoire (A2)
+    retours_humains = ""
+    decisions = rapport.get("decisions_humaines", [])
+    corrections_texte = []
+    for d in decisions:
+        if d.get("action") == "correction_humaine" and d.get("corrections"):
+            corrections_texte.extend(d["corrections"])
+    if corrections_texte:
+        retours_humains = "; ".join(corrections_texte[:5])  # Max 5 corrections resumees
+
     entree = {
         "episode_id": rapport.get("episode_id", ""),
         "titre": rapport.get("titre", ""),
@@ -167,6 +234,8 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         "evolutions_personnages": episode.get("evolutions_personnages", ""),
         "ambiance": episode.get("ambiance", ""),
         "type_episode": episode.get("type", "standard"),
+        # Retours humains pour la memoire inter-episodes (A2)
+        "retours_humains": retours_humains,
     }
 
     # Sauvegarder en DB si disponible
@@ -464,6 +533,33 @@ def _validation_script(
                     "score_final": score,
                     "timestamp": datetime.now().isoformat(),
                 })
+
+            # Proposer de memoriser les corrections comme preferences (A6)
+            if nb_corrections_humaines > 0:
+                all_corrections = []
+                for d in rapport.get("decisions_humaines", []) if rapport else []:
+                    if d.get("action") == "correction_humaine" and d.get("corrections"):
+                        all_corrections.extend(d["corrections"])
+                if all_corrections:
+                    console.print(
+                        f"\n[yellow]  Vous avez donne {len(all_corrections)} correction(s) "
+                        f"sur cet episode.[/yellow]"
+                    )
+                    console.print(
+                        "[dim]  Voulez-vous les memoriser comme regles permanentes "
+                        "pour les prochains episodes ? (o/n)[/dim]"
+                    )
+                    choix_mem = console.input(f"  [{Palette.MIEL}]>[/] ").strip().lower()
+                    if choix_mem in ("o", "oui", "y", "yes"):
+                        episode = script.get("episode", {})
+                        ep_id = f"S{episode.get('saison', 0):02d}E{episode.get('numero', 0):02d}"
+                        for corr in all_corrections:
+                            ajouter_preference(corr, source_episode=ep_id, categorie="style")
+                        console.print(
+                            f"[green]  {len(all_corrections)} preference(s) memorisee(s) "
+                            f"pour les prochains episodes.[/green]"
+                        )
+
             return script, score
 
         elif choix in ("m", "modifier"):
@@ -485,6 +581,18 @@ def _validation_script(
                         "action": "modification_json",
                         "timestamp": datetime.now().isoformat(),
                     })
+                # Re-evaluation par le Reviewer apres edition manuelle (A4)
+                console.print("[cyan]  Re-evaluation par le Reviewer...[/cyan]")
+                reviewer = Reviewer()
+                resultat_review = reviewer.evaluer(script)
+                score = resultat_review["review"]["score"]
+                console.print(table_review(resultat_review["review"]))
+                if reviewer.est_valide(resultat_review):
+                    script = {"episode": resultat_review["episode"]}
+                else:
+                    script = {"episode": resultat_review["episode"]}
+                if rapport is not None:
+                    rapport["etapes"]["script"]["score_review"] = score
                 _afficher_script(script)
                 _afficher_recap_script(script, score, type_episode, rapport)
             except (json.JSONDecodeError, FileNotFoundError) as e:
@@ -531,6 +639,7 @@ def _validation_script(
                     contexte_saison=contexte_saison,
                     episode_plan=episode_plan,
                     type_episode=type_episode,
+                    preferences_producteur=_construire_bloc_preferences(),
                 )
                 scripteur.sauvegarder(script, chemin_script)
                 nb = scripteur.compter_mots(script)
@@ -648,6 +757,10 @@ def _validation_plan_saison(
 
         if choix in ("v", "valider"):
             console.print("[green]  Plan de saison valide par le producteur[/green]")
+            plan["saison"].setdefault("decisions_humaines", []).append({
+                "action": "valide",
+                "timestamp": datetime.now().isoformat(),
+            })
             return plan
 
         elif choix in ("m", "modifier"):
@@ -661,6 +774,10 @@ def _validation_plan_saison(
                 with open(chemin_json, "r", encoding="utf-8") as f:
                     plan = json.load(f)
                 planificateur._valider_plan(plan)
+                plan["saison"].setdefault("decisions_humaines", []).append({
+                    "action": "modification_json",
+                    "timestamp": datetime.now().isoformat(),
+                })
                 console.print("[green]  Plan recharge et valide depuis le fichier[/green]")
                 _afficher_plan_saison(plan)
             except (json.JSONDecodeError, FileNotFoundError) as e:
@@ -680,6 +797,7 @@ def _validation_plan_saison(
                 description=description,
                 personnages_secondaires=personnages_list,
                 saisons_precedentes=saisons_prec or None,
+                preferences_producteur=_construire_bloc_preferences(),
             )
             planificateur.sauvegarder(plan, chemin_json)
             console.print("[green]  Nouveau plan genere et sauvegarde[/green]")
@@ -715,12 +833,22 @@ def _validation_plan_saison(
                     description=description_enrichie,
                     personnages_secondaires=personnages_list,
                     saisons_precedentes=saisons_prec or None,
+                    preferences_producteur=_construire_bloc_preferences(),
                 )
+                # Stocker les instructions dans le plan pour reference future (A5)
+                plan["saison"].setdefault("instructions_producteur", []).append({
+                    "instructions": instructions_texte,
+                    "date": datetime.now().isoformat(),
+                })
                 planificateur.sauvegarder(plan, chemin_json)
                 console.print("[green]  Nouveau plan genere avec vos instructions[/green]")
                 _afficher_plan_saison(plan)
 
         elif choix in ("a", "abandonner"):
+            plan["saison"].setdefault("decisions_humaines", []).append({
+                "action": "abandonne",
+                "timestamp": datetime.now().isoformat(),
+            })
             raise ProductionAbandonnee(
                 "Planification abandonnee par l'utilisateur."
             )
@@ -886,12 +1014,23 @@ def _validation_montage(
         titre=f"{Icons.MONTAGE} Ecoute du montage",
     ))
 
+    # Trouver le chemin du script pour l'edition (A3)
+    script_path = None
+    if script:
+        episode = script.get("episode", {})
+        ep_id = f"S{episode.get('saison', 0):02d}E{episode.get('numero', 0):02d}"
+        chemin_candidat = config.SCRIPTS_DIR / f"{ep_id}_valide.json"
+        if chemin_candidat.exists():
+            script_path = chemin_candidat
+
     while True:
-        console.print(panel_validation([
+        options = [
             ("v", "Valider et publier"),
-            ("r", "Relancer le montage"),
+            ("e", "Editer le script (pauses, SFX) puis relancer le montage"),
+            ("r", "Relancer le montage tel quel"),
             ("a", "Abandonner (l'audio est conserve, pas de publication)"),
-        ], titre="Validation du montage"))
+        ]
+        console.print(panel_validation(options, titre="Validation du montage"))
 
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
@@ -907,9 +1046,42 @@ def _validation_montage(
                 })
             return False  # Pas de remontage
 
+        elif choix in ("e", "editer"):
+            if script_path:
+                console.print(
+                    f"\n[yellow]  Editez les segments du script (pauses, SFX, tons) :[/yellow]"
+                    f"\n  [bold]{script_path}[/bold]"
+                    f"\n[dim]  Modifiez pause_apres_ms, duree_sfx_secondes, mode, etc.[/dim]\n"
+                )
+                console.input("[cyan]  Appuyez sur Entree quand c'est fait...[/cyan]")
+                try:
+                    with open(script_path, "r", encoding="utf-8") as f:
+                        script_recharge = json.load(f)
+                    Scripteur._valider_structure(script_recharge)
+                    # Mettre a jour le script en place pour le remontage
+                    script.clear()
+                    script.update(script_recharge)
+                    console.print("[green]  Script recharge et valide — relance du montage[/green]")
+                except (json.JSONDecodeError, FileNotFoundError) as e:
+                    console.print(f"[red]  Erreur : {e}[/red]")
+                    console.print("[yellow]  Le script original est conserve pour le remontage.[/yellow]")
+                except ValueError as e:
+                    console.print(f"[red]  Structure invalide : {e}[/red]")
+                    console.print("[yellow]  Le script original est conserve pour le remontage.[/yellow]")
+            else:
+                console.print("[yellow]  Fichier script introuvable — relance sans modification.[/yellow]")
+
+            if rapport is not None:
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "montage",
+                    "action": "remontage_apres_edition",
+                    "timestamp": datetime.now().isoformat(),
+                })
+            return True  # Remontage avec script potentiellement modifie
+
         elif choix in ("r", "relancer"):
             console.print(
-                "[cyan]  Relance du montage demandee...[/cyan]"
+                "[cyan]  Relance du montage...[/cyan]"
             )
             if rapport is not None:
                 rapport.setdefault("decisions_humaines", []).append({
@@ -932,12 +1104,14 @@ def _validation_montage(
             )
 
         else:
-            console.print("[red]  Choix non reconnu. Tapez v, r ou a.[/red]")
+            console.print("[red]  Choix non reconnu. Tapez v, e, r ou a.[/red]")
 
 
 def _validation_metadonnees(
     meta: dict,
     chemin_meta: Path,
+    script: dict | None = None,
+    duree_secondes: float = 0,
     rapport: dict | None = None,
 ) -> dict:
     """Point de validation humaine pour les metadonnees avant publication.
@@ -975,11 +1149,13 @@ def _validation_metadonnees(
     ))
 
     while True:
-        console.print(panel_validation([
+        options = [
             ("v", "Valider les metadonnees"),
+            ("c", "Regenerer avec instructions"),
             ("m", "Modifier le JSON manuellement"),
             ("a", "Abandonner"),
-        ], titre="Validation des metadonnees"))
+        ]
+        console.print(panel_validation(options, titre="Validation des metadonnees"))
 
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
@@ -992,6 +1168,41 @@ def _validation_metadonnees(
                     "timestamp": datetime.now().isoformat(),
                 })
             return meta
+
+        elif choix in ("c", "corrections"):
+            console.print(
+                "\n[yellow]  Decrivez ce que vous souhaitez changer dans les metadonnees "
+                "(terminez par une ligne vide) :[/yellow]"
+            )
+            lignes = []
+            while True:
+                ligne = console.input("  > ")
+                if not ligne.strip():
+                    break
+                lignes.append(ligne)
+            if lignes and script:
+                console.print("[cyan]  Regeneration des metadonnees...[/cyan]")
+                metadonnees_agent = Metadonnees()
+                instructions = "\n".join(lignes)
+                # Passer les instructions via le script enrichi
+                script_enrichi = dict(script)
+                script_enrichi["_instructions_metadonnees"] = instructions
+                if duree_secondes > 0:
+                    meta = metadonnees_agent.generer(script_enrichi, duree_secondes)
+                else:
+                    meta = metadonnees_agent.generer_dry_run(script_enrichi)
+                metadonnees_agent.sauvegarder(meta, chemin_meta)
+                console.print(f"  Titre : {meta.get('titre', 'N/A')}")
+                console.print(f"  Description : {meta.get('description_courte', 'N/A')}")
+                if rapport is not None:
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "etape": "metadonnees",
+                        "action": "regenere_avec_instructions",
+                        "instructions": lignes,
+                        "timestamp": datetime.now().isoformat(),
+                    })
+            elif not script:
+                console.print("[yellow]  Script non disponible — regeneration impossible.[/yellow]")
 
         elif choix in ("m", "modifier"):
             console.print(
@@ -1306,6 +1517,7 @@ def _pipeline_inner(
                 morale=morale, corrections=corrections, historique=historique,
                 contexte_saison=contexte_saison, episode_plan=episode_plan,
                 type_episode=type_episode,
+                preferences_producteur=_construire_bloc_preferences(),
             )
 
             chemin_script = config.SCRIPTS_DIR / f"{episode_id}_v{iteration}.json"
@@ -1726,7 +1938,11 @@ def _pipeline_inner(
     # ── Validation humaine : metadonnees ──────────────────────────────────────
 
     if not auto and not dry_run and etape_idx <= 5:
-        meta = _validation_metadonnees(meta, chemin_meta, rapport=rapport)
+        meta = _validation_metadonnees(
+            meta, chemin_meta,
+            script=script, duree_secondes=duree_secondes,
+            rapport=rapport,
+        )
         # Resauvegarder si modifie
         metadonnees_agent = Metadonnees()
         metadonnees_agent.sauvegarder(meta, chemin_meta)
@@ -2066,6 +2282,7 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
             description=description,
             personnages_secondaires=personnages_list,
             saisons_precedentes=saisons_prec or None,
+            preferences_producteur=_construire_bloc_preferences(),
         )
 
         # Sauvegarder le plan (brouillon)

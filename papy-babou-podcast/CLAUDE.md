@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 266 tests (pytest)
+├── tests/                   # 276 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -35,6 +35,7 @@ papy-babou-podcast/
 ├── assets/                  # Audio assets (jingles, music)
 ├── data/
 │   ├── personnages.json     # Character bible
+│   ├── preferences_producteur.json  # Persistent producer preferences/rules
 │   └── saisons/             # Season plans (saison_01.json, etc.)
 └── output/                  # Generated episodes, scripts, segments
 ```
@@ -51,13 +52,19 @@ papy-babou-podcast/
 
 ### Human Approval Workflow (5 steps)
 The pipeline has **5 human validation points** (skipped in `--auto` mode):
-1. **Plan de saison** (`_validation_plan_saison`): After season plan generation. Options: validate, modify JSON, regenerate, guided regeneration with instructions (i), abandon. Shows full episode details, cost estimates.
-2. **Script** (`_validation_script`): After script generation + review loop. Returns `tuple[dict, float]` (script, score). Options: validate, modify JSON (with structure validation), give corrections (re-runs scripteur + reviewer), abandon. Shows score recap, word count vs target, duration vs target, correction counter with cost warnings (≥3).
-3. **Montage** (`_validation_montage`): After audio assembly. Returns `bool` (True if remontage requested). Options: validate, relaunch montage (r), abandon. Shows duration vs target with color-coded ecart, chapters, file size, segment counts. Supports remontage loop.
-4. **Métadonnées** (`_validation_metadonnees`): After metadata generation, before publication. Options: validate, modify JSON manually, abandon. Shows title, description, tags, cover art, transcript line count.
-5. **Publication** (`_validation_publication`): Before RSS feed update. Options: publish, skip (audio conserved), abandon. Warns that publication is irreversible.
+1. **Plan de saison** (`_validation_plan_saison`): Options: validate, modify JSON, regenerate, guided regeneration with instructions (i), abandon. Shows full episode details, cost estimates. Instructions stored in plan JSON (`instructions_producteur`). Decisions logged in `plan["saison"]["decisions_humaines"]`.
+2. **Script** (`_validation_script`): Returns `tuple[dict, float]`. Options: validate, modify JSON (triggers Reviewer re-evaluation), corrections (re-runs scripteur + reviewer), abandon. After validation with corrections, proposes memorizing corrections as permanent preferences (A6). Score recap with duration/word targets.
+3. **Montage** (`_validation_montage`): Returns `bool`. Options: validate, edit script then remontage (e), relaunch montage (r), abandon. Edit option reloads and validates modified script before re-assembling.
+4. **Métadonnées** (`_validation_metadonnees`): Options: validate, regenerate with instructions (c), modify JSON manually, abandon. Regeneration calls `Metadonnees.generer()` with user instructions.
+5. **Publication** (`_validation_publication`): Options: publish, skip (audio conserved), abandon.
 
-All validation functions log decisions to `rapport["decisions_humaines"]` list (T3) with etape, action, timestamp. Uses `if rapport is not None:` (not `if rapport:`) since empty dicts are falsy.
+All pipeline validation functions log decisions to `rapport["decisions_humaines"]`. Plan validation logs to `plan["saison"]["decisions_humaines"]`. Uses `if rapport is not None:` (not `if rapport:`) since empty dicts are falsy.
+
+### Producer Memory System
+- **Preferences** (`data/preferences_producteur.json`): Persistent rules/preferences accumulated from human corrections. Functions: `charger_preferences()`, `sauvegarder_preferences()`, `ajouter_preference()`, `_construire_bloc_preferences()`.
+- **Injection**: Preferences injected into scripteur system prompt (`{preferences_producteur}` placeholder in `SYSTEM_PROMPT_BASE`) and planificateur prompt. All `scripteur.generer()` and `planificateur.planifier_saison()` calls pass `preferences_producteur=_construire_bloc_preferences()`.
+- **Historique enrichi**: `ajouter_historique()` includes `retours_humains` field (corrections text from `rapport["decisions_humaines"]`). Scripteur sees these in the "ÉPISODES PRÉCÉDENTS" section of its prompt.
+- **A6 flow**: After script validation with corrections, user is asked "memoriser comme regles permanentes?". If yes, corrections are added to `preferences_producteur.json` via `ajouter_preference()`.
 
 ### API Integration
 - **Claude (Anthropic)**: Script generation, review, metadata, season planning — all use `config.appel_claude_avec_retry()` with exponential backoff on 429/500/502/503/529
@@ -106,13 +113,15 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 266 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 276 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
 ### When modifying scripteur.py
 - `type_episode` default is `"standard"` — comparison must be `== "standard"` not `not type_episode`
-- `_construire_system_prompt()` accepts: `type_episode`, `contexte_saison`, `episode_plan`, `historique`
+- `_construire_system_prompt()` accepts: `type_episode`, `contexte_saison`, `episode_plan`, `historique`, `preferences_producteur`
+- `Scripteur.generer()` accepts `preferences_producteur` param — passed through to `_construire_system_prompt()`
+- `SYSTEM_PROMPT_BASE` has `{preferences_producteur}` placeholder for producer rules injection
 - `_valider_structure()` uses `config.personnages_valides()` (dynamic set), not a hardcoded set
 - `STRUCTURES_NARRATIVES` dict has templates for all 5 episode types
 - Adaptive `max_tokens` by episode type: final=8192, ouverture/mi-saison=7168, standard=6144, bonus=4096
@@ -134,7 +143,10 @@ python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 - Use `if rapport is not None:` (NOT `if rapport:`) — empty dicts are falsy
 - `_validation_script()` must receive and pass serial context: `contexte_saison`, `episode_plan`, `type_episode`
 - All `sauvegarder_checkpoint()` calls must include `type_episode` in data
-- `ajouter_historique()` builds `resume_court` from first 3 segments, not from title
+- `ajouter_historique()` builds `resume_court` from first 3 segments, not from title; includes `retours_humains` from `rapport["decisions_humaines"]`
+- All `scripteur.generer()` calls must pass `preferences_producteur=_construire_bloc_preferences()`
+- All `planificateur.planifier_saison()` calls must pass `preferences_producteur=_construire_bloc_preferences()`
+- `_validation_metadonnees()` accepts `script` and `duree_secondes` for regeneration option
 - Pipeline variables (`chemin_hq`, `resultat_montage`, `duree_secondes`, `taille_bytes`, `score`) must be initialized before the step loop for checkpoint resume safety
 - `_production_id_courante` reset to None at pipeline start
 
@@ -183,6 +195,8 @@ python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ### When modifying planificateur.py
 - Variable season length via `nb_episodes` parameter (default 10)
 - Plan coherence validation: episode type checks, ambiance variety warnings
+- `planifier_saison()` accepts `preferences_producteur` param — injected into user prompt
+- Plan JSON may contain `instructions_producteur` list (A5) and `decisions_humaines` list
 
 ## Common Pitfalls
 - ffmpeg is not available in test environment — mock `AudioSegment.from_mp3` and `silence.export`
@@ -240,6 +254,17 @@ Complete audit of 3→5 validation points (overall score: 5/10 → improved):
 - T4: New publication confirmation step (`_validation_publication`) before RSS feed update
 - FIX: `if rapport:` → `if rapport is not None:` (empty dicts are falsy in Python)
 - `_validation_script` return type changed from `dict` to `tuple[dict, float]`
+
+## Feedback Memory System (Session 3)
+Complete audit of feedback→memory→future-use chain (overall: 4/10 → fixed). 7 improvements:
+- A1: Producer preferences system (`preferences_producteur.json`) — persistent rules injected into scripteur + planificateur prompts
+- A2: Historique enriched with `retours_humains` field — human corrections visible in future episodes' context
+- A3: Remontage with script editing (option 'e') — edit pauses/SFX/tons before re-assembly (no longer a no-op)
+- A4: Re-review after manual JSON edit — Reviewer auto-re-evaluates after manual script modification
+- A5: Producer instructions stored in plan JSON (`instructions_producteur` list) for future reference
+- A6: Auto-memorization of corrections — after script validation, user can promote corrections to permanent preferences
+- A7: Metadata regeneration with free-text feedback (option 'c') — re-calls Metadonnees.generer() with instructions
+- Decision logging added to `_validation_plan_saison` (stored in `plan["saison"]["decisions_humaines"]`)
 
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`

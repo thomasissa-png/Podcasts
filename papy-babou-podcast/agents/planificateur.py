@@ -114,6 +114,7 @@ class Planificateur:
         personnages_secondaires: list[str] | None = None,
         saisons_precedentes: list[dict] | None = None,
         nb_episodes: int = 10,
+        preferences_producteur: str = "",
     ) -> dict:
         """Génère le plan complet d'une saison.
 
@@ -124,6 +125,7 @@ class Planificateur:
             personnages_secondaires: Personnages à introduire cette saison.
             saisons_precedentes: Résumés des saisons précédentes.
             nb_episodes: Nombre d'épisodes dans la saison (défaut : 10).
+            preferences_producteur: Bloc de preferences du producteur.
 
         Returns:
             Plan de saison structuré.
@@ -156,6 +158,9 @@ class Planificateur:
             prompt += "\nBIBLE DES PERSONNAGES (référence) :\n"
             for key, perso in personnages.get("personnages", {}).items():
                 prompt += f"  - {perso.get('nom_complet', key)} : {perso.get('description', '')}\n"
+
+        if preferences_producteur:
+            prompt += f"\n{preferences_producteur}\n"
 
         logger.info("Planification de la saison %d : %s", numero_saison, theme)
 

@@ -19,6 +19,10 @@ from main import (
     _validation_metadonnees,
     _validation_publication,
     _validation_montage,
+    charger_preferences,
+    sauvegarder_preferences,
+    ajouter_preference,
+    _construire_bloc_preferences,
     ProductionAbandonnee,
 )
 
@@ -459,3 +463,214 @@ class TestValidationMontageEnrichie:
             rapport=rapport,
         )
         assert result is False
+
+
+class TestPreferencesProducteur:
+    """Tests du systeme de preferences producteur (A1)."""
+
+    def test_charger_preferences_vide(self, tmp_path, monkeypatch):
+        """Sans fichier, les preferences sont vides."""
+        import config
+        monkeypatch.setattr(config, "PREFERENCES_PATH", tmp_path / "prefs.json")
+        assert charger_preferences() == []
+
+    def test_sauvegarder_et_charger_preferences(self, tmp_path, monkeypatch):
+        """Les preferences doivent etre sauvegardees et rechargees."""
+        import config
+        chemin = tmp_path / "prefs.json"
+        monkeypatch.setattr(config, "PREFERENCES_PATH", chemin)
+
+        prefs = [{"regle": "Sois plus subtil", "categorie": "style"}]
+        sauvegarder_preferences(prefs)
+
+        recharge = charger_preferences()
+        assert len(recharge) == 1
+        assert recharge[0]["regle"] == "Sois plus subtil"
+
+    def test_ajouter_preference(self, tmp_path, monkeypatch):
+        """ajouter_preference ajoute une regle avec metadata."""
+        import config
+        chemin = tmp_path / "prefs.json"
+        monkeypatch.setattr(config, "PREFERENCES_PATH", chemin)
+
+        ajouter_preference("Papy doit etre chaleureux", source_episode="S01E03", categorie="ton")
+        prefs = charger_preferences()
+        assert len(prefs) == 1
+        assert prefs[0]["regle"] == "Papy doit etre chaleureux"
+        assert prefs[0]["source_episode"] == "S01E03"
+        assert prefs[0]["categorie"] == "ton"
+        assert "date_ajout" in prefs[0]
+
+    def test_construire_bloc_preferences_vide(self, tmp_path, monkeypatch):
+        """Sans preferences, le bloc est vide."""
+        import config
+        monkeypatch.setattr(config, "PREFERENCES_PATH", tmp_path / "prefs.json")
+        assert _construire_bloc_preferences() == ""
+
+    def test_construire_bloc_preferences_non_vide(self, tmp_path, monkeypatch):
+        """Avec preferences, le bloc contient les regles numerotees."""
+        import config
+        chemin = tmp_path / "prefs.json"
+        monkeypatch.setattr(config, "PREFERENCES_PATH", chemin)
+
+        ajouter_preference("Regle un")
+        ajouter_preference("Regle deux")
+        bloc = _construire_bloc_preferences()
+        assert "PRÉFÉRENCES DU PRODUCTEUR" in bloc
+        assert "1. Regle un" in bloc
+        assert "2. Regle deux" in bloc
+
+
+class TestHistoriqueEnrichi:
+    """Tests de l'historique enrichi avec retours humains (A2)."""
+
+    def test_historique_avec_retours(self, tmp_path, monkeypatch):
+        """Les retours humains du rapport sont inclus dans l'historique."""
+        import main
+        chemin = tmp_path / "historique.json"
+        monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+
+        rapport = {
+            "episode_id": "S01E01",
+            "titre": "Le buisson ardent",
+            "debut": "2026-01-01T10:00:00",
+            "etapes": {
+                "script": {"score_review": 8},
+            },
+            "decisions_humaines": [
+                {"action": "correction_humaine", "corrections": ["Plus de suspense", "Papy plus doux"]},
+            ],
+        }
+        script = {
+            "episode": {
+                "titre": "Le buisson ardent",
+                "morale": "La confiance",
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Il etait une fois..."},
+                ],
+            }
+        }
+        ajouter_historique(rapport, script)
+        historique = json.load(open(chemin))
+        assert len(historique) == 1
+        assert "retours_humains" in historique[0]
+        assert "Plus de suspense" in historique[0]["retours_humains"]
+
+    def test_historique_sans_retours(self, tmp_path, monkeypatch):
+        """Sans corrections, retours_humains est vide."""
+        import main
+        chemin = tmp_path / "historique.json"
+        monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+
+        rapport = {
+            "episode_id": "S01E02",
+            "titre": "Noe et l'arche",
+            "debut": "2026-01-02T10:00:00",
+            "etapes": {"script": {"score_review": 9}},
+        }
+        script = {
+            "episode": {
+                "titre": "Noe et l'arche",
+                "morale": "L'obeissance",
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Ce soir..."},
+                ],
+            }
+        }
+        ajouter_historique(rapport, script)
+        historique = json.load(open(chemin))
+        assert historique[0]["retours_humains"] == ""
+
+
+class TestMontageEdition:
+    """Tests du remontage avec edition de script (A3)."""
+
+    def test_edition_script_puis_remontage(self, tmp_path, monkeypatch):
+        """L'option 'e' recharge le script et demande remontage."""
+        import main
+        import config
+        rapport = {}
+        script = {
+            "episode": {
+                "saison": 1, "numero": 1, "titre": "Test",
+                "segments": [
+                    {"id": "seg_001", "personnage": "papy_babou", "texte": "Hello",
+                     "ton": "chaleureux", "pause_apres_ms": 800},
+                ],
+            }
+        }
+        # Creer le fichier script valide
+        ep_id = "S01E01"
+        chemin_script = config.SCRIPTS_DIR / f"{ep_id}_valide.json"
+        chemin_script.parent.mkdir(parents=True, exist_ok=True)
+        with open(chemin_script, "w") as f:
+            json.dump(script, f)
+
+        inputs = iter(["e", "", "v"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        # Le premier choix est 'e' => remontage (True), puis 'v' => valider
+        result = _validation_montage(
+            chemin_hq=tmp_path / "episode.mp3",
+            chemin_preview=tmp_path / "preview.mp3",
+            duree_secondes=780,
+            script=script,
+            type_episode="standard",
+            rapport=rapport,
+        )
+        assert result is True
+        assert any(
+            d.get("action") == "remontage_apres_edition"
+            for d in rapport.get("decisions_humaines", [])
+        )
+
+
+class TestMetadonneesRegeneration:
+    """Tests de la regeneration des metadonnees avec feedback (A7)."""
+
+    def test_validation_avec_regeneration(self, tmp_path, monkeypatch):
+        """L'option 'c' sans script disponible affiche un warning."""
+        import main
+        meta = {"titre": "Test", "description_courte": "Desc"}
+        chemin = tmp_path / "meta.json"
+        with open(chemin, "w") as f:
+            json.dump(meta, f)
+
+        inputs = iter(["c", "change le titre", "", "v"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        # Sans script, la regeneration est impossible, on retombe sur validation
+        result = _validation_metadonnees(meta, chemin, script=None, rapport={})
+        assert result["titre"] == "Test"
+
+
+class TestPlanDecisionLogging:
+    """Tests du logging des decisions dans la validation plan."""
+
+    def test_plan_validation_logs_decision(self, monkeypatch):
+        """L'option 'v' ajoute une decision au plan."""
+        import main
+        plan = {
+            "saison": {
+                "numero": 1,
+                "theme": "Test",
+                "episodes": [{"numero": 1, "titre": "Ep1", "resume": "R", "morale": "M"}],
+            }
+        }
+
+        inputs = iter(["v"])
+        monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        from main import _validation_plan_saison
+        result = _validation_plan_saison(
+            plan=plan,
+            chemin_json=Path("/tmp/test.json"),
+            planificateur=None,
+            saison=1,
+            theme="Test",
+        )
+        assert "decisions_humaines" in result["saison"]
+        assert result["saison"]["decisions_humaines"][0]["action"] == "valide"

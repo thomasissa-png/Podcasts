@@ -52,7 +52,7 @@ RÈGLES STRICTES :
 
 MOTS INTERDITS (ne jamais utiliser ces mots, préférer des alternatives douces) :
 {mots_interdits}
-
+{preferences_producteur}
 FORMAT DE SORTIE — JSON STRICT :
 {{
   "episode": {{
@@ -357,6 +357,7 @@ def _construire_system_prompt(
     episode_plan: dict | None = None,
     type_episode: str = "standard",
     historique: list[dict] | None = None,
+    preferences_producteur: str = "",
 ) -> str:
     """Construit le system prompt complet avec bible, contexte sériel et mots interdits.
 
@@ -365,6 +366,7 @@ def _construire_system_prompt(
         episode_plan: Données de l'épisode dans le plan de saison.
         type_episode: Type d'épisode.
         historique: Historique des épisodes précédents.
+        preferences_producteur: Bloc de préférences du producteur à injecter.
     """
     bible = _construire_bible_personnages()
     mots = ", ".join(config.MOTS_INTERDITS)
@@ -401,6 +403,7 @@ def _construire_system_prompt(
         mots_cible=mots_cible,
         personnages_format=personnages_format,
         regles_personnages_dynamiques=regles_dyn,
+        preferences_producteur=preferences_producteur,
     )
 
 
@@ -426,6 +429,7 @@ class Scripteur:
         contexte_saison: dict | None = None,
         episode_plan: dict | None = None,
         type_episode: str = "standard",
+        preferences_producteur: str = "",
     ) -> dict:
         """Génère un script JSON structuré pour un épisode.
 
@@ -440,6 +444,7 @@ class Scripteur:
             contexte_saison: Plan de saison complet pour le contexte sériel (optionnel).
             episode_plan: Données de l'épisode depuis le plan de saison (optionnel).
             type_episode: Type d'épisode (ouverture, standard, mi-saison, final, bonus).
+            preferences_producteur: Bloc de preferences du producteur a injecter.
 
         Returns:
             Dictionnaire JSON du script structuré.
@@ -511,6 +516,8 @@ class Scripteur:
                         ep_info += f" | Moments clés : {', '.join(cles[:2])}"
                 if ep.get("evolutions_personnages"):
                     ep_info += f" | Évolutions : {ep['evolutions_personnages']}"
+                if ep.get("retours_humains"):
+                    ep_info += f" | Retours producteur : {ep['retours_humains']}"
                 prompt += ep_info + "\n"
 
         if corrections:
@@ -531,6 +538,7 @@ class Scripteur:
             episode_plan=episode_plan,
             type_episode=type_episode,
             historique=historique,
+            preferences_producteur=preferences_producteur,
         )
 
         # max_tokens adaptatif selon le type d'épisode
