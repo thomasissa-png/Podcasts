@@ -24,11 +24,13 @@ class TestMetadonneesTranscript:
         assert "Narrateur" in transcript
         assert "Le buisson ardent" in transcript
 
-    def test_generer_transcript_ignore_sfx(self, script_avec_sfx_overlay):
-        """Le transcript ne doit pas inclure les segments SFX."""
+    def test_generer_transcript_sfx_comme_son(self, script_avec_sfx_overlay):
+        """Le transcript doit inclure les SFX sous forme [Son : ...]."""
         transcript = Metadonnees._generer_transcript(script_avec_sfx_overlay["episode"])
-        assert "vent dans le desert" not in transcript
-        assert "tonnerre" not in transcript
+        assert "[Son : vent dans le desert]" in transcript
+        assert "[Son : tonnerre]" in transcript
+        # Les SFX ne doivent pas apparaitre comme des personnages
+        assert "[sfx]" not in transcript
 
 
 class TestMetadonneesDryRun:

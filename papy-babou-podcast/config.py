@@ -469,6 +469,7 @@ CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 # Tarifs par défaut, surchargeable via env pour suivre les évolutions de prix
 COUTS = {
     "elevenlabs_par_caractere": float(os.getenv("COUT_ELEVENLABS_PAR_CHAR", "0.000018")),
+    "elevenlabs_sfx_par_generation": float(os.getenv("COUT_ELEVENLABS_SFX", "0.01")),
     "claude_input_par_token": float(os.getenv("COUT_CLAUDE_INPUT", "0.000003")),
     "claude_output_par_token": float(os.getenv("COUT_CLAUDE_OUTPUT", "0.000015")),
     "openai_dalle3_par_image": float(os.getenv("COUT_DALLE3_IMAGE", "0.040")),

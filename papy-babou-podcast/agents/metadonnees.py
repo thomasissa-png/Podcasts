@@ -211,6 +211,7 @@ class Metadonnees:
         lignes = [f"TRANSCRIPT — {episode['titre']}\n"]
         for seg in episode["segments"]:
             if seg["personnage"] == "sfx":
+                lignes.append(f"[Son : {seg['texte']}]")
                 continue
             nom = noms_base.get(
                 seg["personnage"],

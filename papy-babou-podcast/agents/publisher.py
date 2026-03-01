@@ -26,6 +26,7 @@ class Publisher:
         meta: dict,
         chemin_audio: Path,
         taille_bytes: int,
+        pubdate_offset_seconds: int = 0,
     ) -> dict:
         """Publie un épisode complet.
 
@@ -33,6 +34,9 @@ class Publisher:
             meta: Métadonnées de l'épisode.
             chemin_audio: Chemin du fichier MP3 final.
             taille_bytes: Taille du fichier en bytes.
+            pubdate_offset_seconds: Décalage en secondes pour le pubDate RSS.
+                Utile en production sérielle pour espacer les épisodes
+                et garantir un tri correct dans les apps podcast.
 
         Returns:
             Rapport de publication avec URLs et timestamps.
@@ -46,7 +50,10 @@ class Publisher:
         transcript_url = self._sauvegarder_transcript(meta)
 
         # 3. Mettre à jour le flux RSS local
-        self._mettre_a_jour_rss(meta, url_audio, taille_bytes, transcript_url)
+        self._mettre_a_jour_rss(
+            meta, url_audio, taille_bytes, transcript_url,
+            pubdate_offset_seconds=pubdate_offset_seconds,
+        )
 
         # 4. Pinger les plateformes
         plateformes = self._pinger_plateformes()
@@ -141,6 +148,7 @@ class Publisher:
     def _mettre_a_jour_rss(
         self, meta: dict, url_audio: str, taille_bytes: int,
         transcript_url: str = "",
+        pubdate_offset_seconds: int = 0,
     ) -> None:
         """Met à jour le flux RSS local avec le nouvel épisode.
 
@@ -151,6 +159,7 @@ class Publisher:
             url_audio: URL publique du fichier audio.
             taille_bytes: Taille du fichier.
             transcript_url: URL du transcript (optionnel).
+            pubdate_offset_seconds: Décalage en secondes pour le pubDate.
         """
         feed_path = config.RSS_DIR / "feed.xml"
 
@@ -197,8 +206,9 @@ class Publisher:
         guid.text = guid_value
 
         now = datetime.now(timezone.utc)
+        pubdate_ts = now.timestamp() + pubdate_offset_seconds
         ET.SubElement(item, "pubDate").text = formatdate(
-            now.timestamp(), usegmt=True
+            pubdate_ts, usegmt=True
         )
 
         ET.SubElement(

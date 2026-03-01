@@ -4,6 +4,7 @@ import fcntl
 import json
 import logging
 import re
+import unicodedata
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -112,3 +113,18 @@ def masquer_secret(valeur: str, visible: int = 4) -> str:
     if not valeur or len(valeur) <= visible:
         return "****"
     return "*" * (len(valeur) - visible) + valeur[-visible:]
+
+
+def slug(texte: str) -> str:
+    """Convertit un texte en slug pour nom de fichier.
+
+    Args:
+        texte: Texte à convertir (ex: "Le Buisson Ardent").
+
+    Returns:
+        Slug ASCII (ex: "le_buisson_ardent").
+    """
+    texte = unicodedata.normalize("NFKD", texte)
+    texte = texte.encode("ascii", "ignore").decode("ascii")
+    texte = re.sub(r"[^\w\s-]", "", texte).strip().lower()
+    return re.sub(r"[-\s]+", "_", texte)

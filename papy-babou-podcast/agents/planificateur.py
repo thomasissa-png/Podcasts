@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """\
 Tu es un directeur éditorial de podcast sériel pour enfants (6-10 ans).
-Tu planifies des saisons complètes de 10 épisodes pour le podcast
+Tu planifies des saisons complètes pour le podcast
 "Les Histoires de Papy Babou" (histoires bibliques racontées par un grand-père
 à ses petits-enfants Antoine et Noémie).
 
@@ -22,11 +22,11 @@ ou "Les Voyages d'Amélie" : chaque saison a un THÈME, un ARC NARRATIF, et les
 personnages ÉVOLUENT au fil des épisodes.
 
 RÈGLES DE PLANIFICATION :
-1. Les 10 épisodes doivent former un arc cohérent avec une progression thématique.
+1. Les épisodes doivent former un arc cohérent avec une progression thématique.
 2. Chaque personnage principal doit avoir un arc émotionnel sur la saison.
 3. Introduire des personnages secondaires progressivement (max 1-2 par saison).
 4. Varier les ambiances et les formats au fil de la saison.
-5. L'épisode 1 est l'ouverture (présentation du thème), l'épisode 10 est le final.
+5. Le premier épisode est l'ouverture (présentation du thème), le dernier est le final.
 6. Prévoir des liens entre épisodes (rappels, fil rouge, running gags).
 7. Chaque épisode a un teasing vers l'épisode suivant.
 8. Adapter la difficulté et la profondeur au fil de la saison (progression).
@@ -186,22 +186,15 @@ class Planificateur:
         return plan
 
     def sauvegarder(self, plan: dict, chemin: Path) -> Path:
-        """Sauvegarde le plan de saison en JSON et en DB si disponible."""
+        """Sauvegarde le plan de saison en JSON.
+
+        La sauvegarde en DB est gérée par la commande CLI planifier-saison
+        pour éviter les doublons.
+        """
         chemin.parent.mkdir(parents=True, exist_ok=True)
         with open(chemin, "w", encoding="utf-8") as f:
             json.dump(plan, f, ensure_ascii=False, indent=2)
         logger.info("Plan de saison sauvegardé (JSON) : %s", chemin)
-
-        # Sauvegarder en DB si disponible
-        try:
-            from db_models import SaisonRepo
-            from database import DATABASE_URL, verifier_connexion
-            if DATABASE_URL and verifier_connexion():
-                db_id = SaisonRepo.sauvegarder(plan)
-                logger.info("Plan de saison sauvegardé en DB (id=%d)", db_id)
-        except Exception as e:
-            logger.debug("DB non disponible pour sauvegarde plan : %s", e)
-
         return chemin
 
     @staticmethod

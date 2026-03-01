@@ -412,22 +412,27 @@ def _calculer_couts(rapport: dict) -> dict:
         if src == "elevenlabs"
     )
     if nb_sfx_elevenlabs > 0:
-        cout_sfx = nb_sfx_elevenlabs * 0.01  # ~$0.01 par SFX généré
+        cout_sfx = nb_sfx_elevenlabs * couts["elevenlabs_sfx_par_generation"]
         detail["elevenlabs_sfx"] = {
             "nb_sfx": nb_sfx_elevenlabs,
             "cout": round(cout_sfx, 4),
         }
         total += cout_sfx
 
-    # Coût Claude (estimation basée sur les tokens)
-    # ~2000 tokens input + ~4000 tokens output par appel (script, review, meta)
-    nb_appels_claude = sum(1 for etape in ("script", "metadonnees") if etape in rapport.get("etapes", {}))
-    score_review = rapport.get("etapes", {}).get("script", {}).get("score_review", 0)
-    if score_review > 0:
-        nb_appels_claude += 1  # review
+    # Coût Claude — compter les vrais appels (scripteur × itérations + reviewer × itérations + meta)
+    etapes = rapport.get("etapes", {})
+    script_data = etapes.get("script", {})
+    nb_appels_claude = 0
+    if script_data:
+        nb_iterations = script_data.get("iterations", 1)
+        # Chaque itération = 1 appel scripteur + 1 appel reviewer
+        nb_appels_claude = nb_iterations * 2
+    if "metadonnees" in etapes:
+        nb_appels_claude += 1
+    # Tokens réalistes : system prompt ~3500 + user ~1500 = ~5000 input, ~5000 output
     if nb_appels_claude > 0:
-        cout_input = nb_appels_claude * 2000 * couts["claude_input_par_token"]
-        cout_output = nb_appels_claude * 4000 * couts["claude_output_par_token"]
+        cout_input = nb_appels_claude * 5000 * couts["claude_input_par_token"]
+        cout_output = nb_appels_claude * 5000 * couts["claude_output_par_token"]
         cout_claude = cout_input + cout_output
         detail["anthropic_claude"] = {
             "nb_appels": nb_appels_claude,
@@ -735,6 +740,7 @@ def _validation_plan_saison(
     description: str = "",
     personnages_list: list[str] | None = None,
     saisons_prec: list[dict] | None = None,
+    nb_episodes: int = 10,
 ) -> dict:
     """Point de validation humaine du plan de saison (go/no-go).
 
@@ -821,6 +827,7 @@ def _validation_plan_saison(
                 description=description,
                 personnages_secondaires=personnages_list,
                 saisons_precedentes=saisons_prec or None,
+                nb_episodes=nb_episodes,
                 preferences_producteur=_construire_bloc_preferences(),
             )
             planificateur.sauvegarder(plan, chemin_json)
@@ -857,6 +864,7 @@ def _validation_plan_saison(
                     description=description_enrichie,
                     personnages_secondaires=personnages_list,
                     saisons_precedentes=saisons_prec or None,
+                    nb_episodes=nb_episodes,
                     preferences_producteur=_construire_bloc_preferences(),
                 )
                 # Stocker les instructions dans le plan pour reference future (A5)
@@ -1365,6 +1373,7 @@ def pipeline(
     checkpoint_data: dict | None = None,
     contexte_saison: dict | None = None,
     type_episode: str = "standard",
+    pubdate_offset_seconds: int = 0,
 ) -> dict:
     """Execute le pipeline complet de production d'un episode.
 
@@ -1428,6 +1437,7 @@ def pipeline(
             etape_depart=etape_depart, checkpoint_data=checkpoint_data,
             contexte_saison=contexte_saison, type_episode=type_episode,
             episode_id=episode_id, rapport=rapport,
+            pubdate_offset_seconds=pubdate_offset_seconds,
         )
     except ProductionAbandonnee:
         raise
@@ -1457,6 +1467,7 @@ def _pipeline_inner(
     titre, resume, saison, numero, morale, dry_run, auto,
     max_iterations_review, etape_depart, checkpoint_data,
     contexte_saison, type_episode, episode_id, rapport,
+    pubdate_offset_seconds=0,
 ):
     """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
     global _production_id_courante
@@ -1658,6 +1669,7 @@ def _pipeline_inner(
 
         rapport["etapes"]["script"] = {
             "score_review": score,
+            "iterations": iteration,
             "nb_mots": scripteur.compter_mots(script),
             "duree_estimee_min": round(duree_estimee, 1),
             "chemin": str(chemin_valide),
@@ -1806,7 +1818,7 @@ def _pipeline_inner(
                         CoutRepo.enregistrer(
                             episode_id=episode_id,
                             service="elevenlabs_sfx",
-                            cout_estime=nb_sfx_el * 0.01,
+                            cout_estime=nb_sfx_el * config.COUTS["elevenlabs_sfx_par_generation"],
                             detail={"nb_sfx_elevenlabs": nb_sfx_el},
                             production_id=_production_id_courante,
                         )
@@ -2016,7 +2028,10 @@ def _pipeline_inner(
             if publier:
                 console.print(f"\n{Typo.etape(7, 8, 'Publication')}")
                 publisher = Publisher()
-                rapport_pub = publisher.publier(meta, chemin_hq, taille_bytes)
+                rapport_pub = publisher.publier(
+                    meta, chemin_hq, taille_bytes,
+                    pubdate_offset_seconds=pubdate_offset_seconds,
+                )
                 console.print(f"  URL audio : {rapport_pub['url_audio']}")
                 if rapport_pub.get("transcript_url"):
                     console.print(f"  Transcript : {rapport_pub['transcript_url']}")
@@ -2374,6 +2389,7 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 description=description,
                 personnages_list=personnages_list,
                 saisons_prec=saisons_prec,
+                nb_episodes=nb_episodes,
             )
         else:
             plan["saison"].setdefault("decisions_humaines", []).append({
@@ -2433,13 +2449,50 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
 
     # Filtrer les épisodes si spécifié
     if episodes:
-        nums = [int(n.strip()) for n in episodes.split(",")]
+        try:
+            nums = [int(n.strip()) for n in episodes.split(",") if n.strip()]
+        except ValueError:
+            console.print(
+                "[red]Format invalide pour --episodes. "
+                "Utilisez des numeros separes par des virgules : --episodes '1,3,5'[/red]"
+            )
+            sys.exit(1)
         episodes_plan = [ep for ep in episodes_plan if ep["numero"] in nums]
+        if not episodes_plan:
+            console.print(f"[red]Aucun episode trouve pour les numeros {nums} dans le plan.[/red]")
+            sys.exit(1)
+
+    # Detecter les episodes deja produits pour les skipper
+    historique = charger_historique()
+    deja_produits = {
+        h["episode_id"] for h in historique
+        if h.get("episode_id", "").startswith(f"S{saison:02d}")
+    }
+    episodes_a_produire = []
+    episodes_skipped = []
+    for ep in episodes_plan:
+        ep_id = f"S{saison:02d}E{ep['numero']:02d}"
+        if ep_id in deja_produits:
+            episodes_skipped.append(ep)
+        else:
+            episodes_a_produire.append(ep)
+
+    if episodes_skipped:
+        noms_skipped = ", ".join(
+            f"E{ep['numero']:02d}" for ep in episodes_skipped
+        )
+        console.print(
+            f"[yellow]  Episodes deja produits (skipped) : {noms_skipped}[/yellow]"
+        )
+
+    if not episodes_a_produire:
+        console.print("[green]Tous les episodes de cette saison sont deja produits.[/green]")
+        return
 
     console.print(Panel(
         f"[bold]Production sérielle — Saison {saison}[/bold]\n"
         f"Theme : {saison_data['theme']}\n"
-        f"Episodes : {len(episodes_plan)}\n"
+        f"A produire : {len(episodes_a_produire)}/{len(episodes_plan)} episodes\n"
         f"Mode : {'DRY RUN' if dry_run else 'PRODUCTION'}",
         title="Production de saison",
         border_style="blue",
@@ -2464,10 +2517,14 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
             console.print("[yellow]  Choix non reconnu — lancement par défaut.[/yellow]")
 
     resultats = []
-    for i, ep in enumerate(episodes_plan, 1):
+    # Ajouter les episodes skippés au rapport
+    for ep in episodes_skipped:
+        resultats.append({"status": "skipped", "episode": ep["titre"], "raison": "deja produit"})
+
+    for i, ep in enumerate(episodes_a_produire, 1):
         console.print(f"\n[bold]{'='*60}[/bold]")
         console.print(
-            f"[bold cyan]Épisode {i}/{len(episodes_plan)} — "
+            f"[bold cyan]Épisode {i}/{len(episodes_a_produire)} — "
             f"S{saison:02d}E{ep['numero']:02d} {ep['titre']} "
             f"[{ep.get('type', 'standard')}][/bold cyan]"
         )
@@ -2484,6 +2541,9 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
                 auto=auto,
                 contexte_saison=plan,
                 type_episode=ep.get("type", "standard"),
+                # Espacer les pubDate RSS d'1h entre chaque épisode
+                # pour garantir un tri correct dans les apps podcast
+                pubdate_offset_seconds=i * 3600,
             )
             resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
         except ProductionAbandonnee as e:
@@ -2494,15 +2554,16 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
             resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
 
     # Rapport de saison
+    nb_total = len(episodes_plan)
     console.print(f"\n[bold]{'='*60}[/bold]")
     console.print(f"[bold {Palette.SUCCES}]Rapport de saison[/]")
     ok = sum(1 for r in resultats if r["status"] == "ok")
     skipped = sum(1 for r in resultats if r["status"] == "skipped")
     erreurs = sum(1 for r in resultats if r["status"] == "error")
-    console.print(f"  Réussis    : {ok}/{len(episodes_plan)}")
+    console.print(f"  Réussis    : {ok}/{nb_total}")
     if skipped:
-        console.print(f"  Abandonnés : {skipped}/{len(episodes_plan)}")
-    console.print(f"  Échecs     : {erreurs}/{len(episodes_plan)}")
+        console.print(f"  Skippés    : {skipped}/{nb_total}")
+    console.print(f"  Échecs     : {erreurs}/{nb_total}")
 
     for r in resultats:
         if r["status"] == "ok":

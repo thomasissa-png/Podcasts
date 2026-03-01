@@ -8,6 +8,7 @@ from pathlib import Path
 import requests
 
 import config
+from utils import slug as _slug_util
 
 logger = logging.getLogger(__name__)
 
@@ -283,10 +284,4 @@ def _copier_fichier(source: Path, destination: Path) -> None:
 
 def _slug_sfx(texte: str) -> str:
     """Convertit une description SFX en slug pour nom de fichier cache."""
-    import re
-    import unicodedata
-
-    texte = unicodedata.normalize("NFKD", texte)
-    texte = texte.encode("ascii", "ignore").decode("ascii")
-    texte = re.sub(r"[^\w\s-]", "", texte).strip().lower()
-    return re.sub(r"[-\s]+", "_", texte)
+    return _slug_util(texte)

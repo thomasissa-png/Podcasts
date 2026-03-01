@@ -9,6 +9,7 @@ import soundfile as sf
 from pydub import AudioSegment
 
 import config
+from utils import slug as _slug_util
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +144,7 @@ class Monteur:
         )
 
         # 8. Exporter
-        nom_fichier = f"{episode_id}_{self._slug(episode['titre'])}"
+        nom_fichier = f"{episode_id}_{_slug_util(episode['titre'])}"
         chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
         chemin_preview = output_dir / f"{nom_fichier}_128k.mp3"
 
@@ -422,10 +423,4 @@ class Monteur:
     @staticmethod
     def _slug(texte: str) -> str:
         """Convertit un texte en slug pour nom de fichier."""
-        import re
-        import unicodedata
-
-        texte = unicodedata.normalize("NFKD", texte)
-        texte = texte.encode("ascii", "ignore").decode("ascii")
-        texte = re.sub(r"[^\w\s-]", "", texte).strip().lower()
-        return re.sub(r"[-\s]+", "_", texte)
+        return _slug_util(texte)
