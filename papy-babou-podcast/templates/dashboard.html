@@ -865,6 +865,9 @@
 <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
     <div class="loading-text" id="loadingText">Production en cours...</div>
+    <button class="btn btn-corail" onclick="cancelProduction()" style="margin-top: 1.25rem; font-size: 0.9rem;">
+        &#10005; Annuler la production
+    </button>
 </div>
 
 <!-- ═══ HEADER ═════════════════════════════════════════════════════════════ -->
@@ -1529,6 +1532,11 @@ function showPage(pageId, tabEl) {
     }
 }
 
+/* ── Helper : naviguer vers le suivi d'une saison ──────────────────────── */
+function goToSuivi(saison) {
+    window.location.href = '/?saison=' + saison;
+}
+
 /* ── Helper : echapper le HTML (anti-XSS) ──────────────────────────────── */
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -1569,6 +1577,14 @@ function hideLoading() {
     document.getElementById('loadingOverlay').classList.remove('show');
 }
 
+/* ── Helper : annuler la production en cours ───────────────────────────── */
+async function cancelProduction() {
+    try {
+        await fetch('/api/cancel', { method: 'POST' });
+    } catch (e) { /* ignore network errors on cancel */ }
+    hideLoading();
+}
+
 /* ── Helper : appel API (POST) ──────────────────────────────────────────── */
 async function apiCall(url, body) {
     const resp = await fetch(url, {
@@ -1584,7 +1600,9 @@ async function apiCall(url, body) {
 
 /* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */
 function handleCliResponse(data, alertId, consoleId, successMsg) {
-    if (data.error) {
+    if (data.status === 'cancelled') {
+        showAlert(alertId, 'info', 'Production annulee.');
+    } else if (data.error) {
         showAlert(alertId, 'error', escapeHtml('Erreur : ' + data.error));
     } else if (data.status === 'ok') {
         showAlert(alertId, 'success', successMsg);
@@ -1667,7 +1685,7 @@ async function submitPlanifier(e) {
         });
         hideLoading();
         handleCliResponse(data, 'alert-planifier', 'console-planifier',
-            'Saison ' + saison + ' planifiee ! <a href="/?saison=' + saison + '" style="color: inherit; text-decoration: underline;">Voir le dashboard</a>');
+            'Saison ' + saison + ' planifiee ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
     } catch (err) {
         hideLoading();
         showAlert('alert-planifier', 'error', 'Erreur reseau : ' + err.message);
@@ -1699,7 +1717,7 @@ async function submitProduireSaison(e) {
         });
         hideLoading();
         handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
-            'Saison ' + saison + ' terminee ! <a href="/?saison=' + saison + '" style="color: inherit; text-decoration: underline;">Voir le dashboard</a>');
+            'Saison ' + saison + ' terminee ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
     } catch (err) {
         hideLoading();
         showAlert('alert-produire-saison', 'error', 'Erreur reseau : ' + err.message);

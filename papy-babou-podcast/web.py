@@ -11,6 +11,7 @@ import logging
 import os
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 # Ensure imports work when launched from repo root (Replit)
@@ -30,29 +31,49 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "papy-babou-dev-key")
 logger = logging.getLogger(__name__)
 
 
-# ── Helper : lancer une commande CLI ─────────────────────────────────────────
+# ── Helper : lancer une commande CLI (avec support annulation) ───────────────
+
+_current_process = None
+_process_lock = threading.Lock()
 
 
 def _run_cli(cmd_args, timeout=300):
-    """Lance une commande main.py et retourne le resultat."""
+    """Lance une commande main.py et retourne le resultat.
+
+    Utilise Popen pour permettre l'annulation via /api/cancel.
+    """
+    global _current_process
     cmd = [sys.executable, "main.py"] + cmd_args
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            cwd=str(_THIS_DIR),
-        )
+        with _process_lock:
+            _current_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                cwd=str(_THIS_DIR),
+            )
+        proc = _current_process
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.communicate()
+            return {"error": f"Timeout ({timeout}s)", "status": "error"}
+
+        if proc.returncode == -9 or proc.returncode == -15:
+            return {"error": "Production annulee par l'utilisateur.", "status": "cancelled"}
+
         return {
-            "status": "ok" if result.returncode == 0 else "error",
-            "stdout": result.stdout[-4000:] if result.stdout else "",
-            "stderr": result.stderr[-1000:] if result.stderr else "",
+            "status": "ok" if proc.returncode == 0 else "error",
+            "stdout": stdout[-4000:] if stdout else "",
+            "stderr": stderr[-1000:] if stderr else "",
         }
-    except subprocess.TimeoutExpired:
-        return {"error": f"Timeout ({timeout}s)", "status": "error"}
     except Exception as e:
         return {"error": str(e), "status": "error"}
+    finally:
+        with _process_lock:
+            _current_process = None
 
 
 # ── Routes pages ─────────────────────────────────────────────────────────────
@@ -133,6 +154,20 @@ def api_config():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ── Route API — Annulation ───────────────────────────────────────────────────
+
+
+@app.route("/api/cancel", methods=["POST"])
+def api_cancel():
+    """Annule la production en cours."""
+    with _process_lock:
+        proc = _current_process
+    if proc and proc.poll() is None:
+        proc.terminate()
+        return jsonify({"status": "ok", "message": "Production annulee."})
+    return jsonify({"status": "ok", "message": "Aucune production en cours."})
 
 
 # ── Routes API (JSON) — Actions ─────────────────────────────────────────────
