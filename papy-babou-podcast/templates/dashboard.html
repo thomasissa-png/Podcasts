@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les Histoires de Papy Babou — Dashboard</title>
+    <style>
+        /* ═══════════════════════════════════════════════════════════════
+           PALETTE PAPY BABOU — Flat Design Provence
+           ═══════════════════════════════════════════════════════════════ */
+        :root {
+            --ocre: #D4A054;
+            --bleu-ciel: #7BAFD4;
+            --rose-poudre: #D4869A;
+            --vert-olive: #8BAF6E;
+            --beige-chaud: #F5E6D0;
+            --lavande: #9B8EC4;
+            --terre-cuite: #C47A5A;
+            --miel: #E8B84B;
+            --ardoise: #5A6978;
+            --ivoire: #FDF8F0;
+            --succes: #6BA368;
+            --attention: #D4A054;
+            --erreur: #C45A5A;
+            --fond: #1a1a2e;
+            --fond-carte: #16213e;
+            --fond-table: #0f3460;
+            --texte: #FDF8F0;
+            --texte-dim: #8899aa;
+            --border: #2a2a4a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--fond);
+            color: var(--texte);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ── Header ─────────────────────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+            border-bottom: 3px solid var(--ocre);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title .icon { font-size: 2rem; }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--ocre);
+            letter-spacing: -0.02em;
+        }
+
+        .header-title .subtitle {
+            font-size: 0.85rem;
+            color: var(--ardoise);
+            margin-top: 0.1rem;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-saison {
+            background: var(--fond-carte);
+            color: var(--texte-dim);
+            border-color: var(--border);
+        }
+
+        .btn-saison:hover, .btn-saison.active {
+            background: var(--ocre);
+            color: var(--fond);
+            border-color: var(--ocre);
+        }
+
+        .btn-all {
+            background: var(--fond-carte);
+            color: var(--bleu-ciel);
+            border-color: var(--bleu-ciel);
+        }
+
+        .btn-all:hover, .btn-all.active {
+            background: var(--bleu-ciel);
+            color: var(--fond);
+        }
+
+        /* ── Layout principal ───────────────────────────────────────── */
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .row-2-1 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 900px) {
+            .row-2, .row-3, .row-2-1 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Cartes ─────────────────────────────────────────────────── */
+        .card {
+            background: var(--fond-carte);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .card-header .icon { font-size: 1.1rem; }
+        .card-header .label { color: var(--ocre); }
+        .card-header .count {
+            margin-left: auto;
+            background: var(--fond);
+            color: var(--texte-dim);
+            padding: 0.15rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        /* ── Stats KPI ──────────────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 700px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .stat-card {
+            background: var(--fond-carte);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--texte-dim);
+            margin-top: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value.ocre { color: var(--ocre); }
+        .stat-value.bleu { color: var(--bleu-ciel); }
+        .stat-value.vert { color: var(--succes); }
+        .stat-value.miel { color: var(--miel); }
+
+        /* ── Table des episodes ─────────────────────────────────────── */
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        thead th {
+            padding: 0.7rem 1rem;
+            text-align: left;
+            color: var(--ardoise);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover { background: rgba(122, 175, 212, 0.06); }
+        tbody tr:nth-child(even) { background: rgba(26, 26, 46, 0.4); }
+        tbody tr:nth-child(even):hover { background: rgba(122, 175, 212, 0.08); }
+
+        td {
+            padding: 0.65rem 1rem;
+            vertical-align: middle;
+        }
+
+        .ep-id {
+            font-weight: 700;
+            color: var(--bleu-ciel);
+            white-space: nowrap;
+        }
+
+        .ep-titre {
+            color: var(--texte);
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ep-type {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .type-standard { background: var(--fond); color: var(--texte-dim); }
+        .type-ouverture { background: rgba(232, 184, 75, 0.15); color: var(--miel); }
+        .type-final { background: rgba(212, 134, 154, 0.15); color: var(--rose-poudre); }
+        .type-mi-saison { background: rgba(155, 142, 196, 0.15); color: var(--lavande); }
+        .type-bonus { background: rgba(196, 122, 90, 0.15); color: var(--terre-cuite); }
+
+        /* ── Score bar ──────────────────────────────────────────────── */
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .score-track {
+            flex: 1;
+            height: 6px;
+            background: var(--fond);
+            border-radius: 3px;
+            overflow: hidden;
+            min-width: 60px;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .score-fill.high { background: var(--succes); }
+        .score-fill.mid { background: var(--miel); }
+        .score-fill.low { background: var(--erreur); }
+
+        .score-num {
+            font-weight: 700;
+            font-size: 0.85rem;
+            min-width: 2.5rem;
+            text-align: right;
+        }
+
+        .score-num.high { color: var(--succes); }
+        .score-num.mid { color: var(--miel); }
+        .score-num.low { color: var(--erreur); }
+
+        /* ── Progression bar ────────────────────────────────────────── */
+        .progress-section { margin-bottom: 1rem; }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-header .theme {
+            font-weight: 700;
+            color: var(--ocre);
+        }
+
+        .progress-header .pct {
+            font-weight: 800;
+            color: var(--miel);
+            font-size: 1.5rem;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: var(--fond);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--vert-olive), var(--miel));
+            border-radius: 5px;
+            transition: width 0.6s ease;
+        }
+
+        .ep-plan-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .ep-plan-chip {
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            border: 1px solid var(--border);
+        }
+
+        .ep-plan-chip.done {
+            background: rgba(107, 163, 104, 0.2);
+            color: var(--succes);
+            border-color: var(--succes);
+        }
+
+        .ep-plan-chip.pending {
+            background: var(--fond);
+            color: var(--texte-dim);
+        }
+
+        /* ── Personnages ────────────────────────────────────────────── */
+        .perso-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .perso-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            background: var(--fond);
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .perso-chip .name { font-weight: 600; }
+        .perso-chip .count {
+            background: var(--fond-carte);
+            padding: 0.1rem 0.4rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            color: var(--texte-dim);
+        }
+
+        .perso-papy_babou .name { color: var(--ocre); }
+        .perso-antoine .name { color: var(--bleu-ciel); }
+        .perso-noemie .name { color: var(--rose-poudre); }
+        .perso-narrateur .name { color: var(--ardoise); }
+
+        /* ── Listes (retours, prefs, checkpoints) ───────────────────── */
+        .list-item {
+            padding: 0.65rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .list-item:last-child { border-bottom: none; }
+
+        .list-item .badge {
+            flex-shrink: 0;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: rgba(122, 175, 212, 0.15);
+            color: var(--bleu-ciel);
+            white-space: nowrap;
+        }
+
+        .list-item .text {
+            color: var(--texte);
+            font-size: 0.85rem;
+        }
+
+        .pref-cat {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: rgba(232, 184, 75, 0.15);
+            color: var(--miel);
+            margin-right: 0.4rem;
+        }
+
+        .checkpoint-etape {
+            background: rgba(212, 160, 84, 0.15);
+            color: var(--attention);
+        }
+
+        /* ── Coûts ──────────────────────────────────────────────────── */
+        .cout-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .cout-row:last-child { border-bottom: none; }
+        .cout-row .service { color: var(--texte-dim); }
+        .cout-row .montant { font-weight: 700; color: var(--miel); }
+        .cout-row.total .service { color: var(--texte); font-weight: 700; }
+        .cout-row.total .montant { color: var(--ocre); font-size: 1.1rem; }
+
+        /* ── Vide / placeholder ─────────────────────────────────────── */
+        .empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--texte-dim);
+            font-style: italic;
+        }
+
+        .empty .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+        /* ── Footer ─────────────────────────────────────────────────── */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--ardoise);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+
+        .footer a { color: var(--bleu-ciel); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* ── Animations ─────────────────────────────────────────────── */
+        .card { animation: fadeUp 0.4s ease-out both; }
+        .card:nth-child(2) { animation-delay: 0.05s; }
+        .card:nth-child(3) { animation-delay: 0.1s; }
+        .card:nth-child(4) { animation-delay: 0.15s; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
+<header class="header">
+    <div class="header-title">
+        <span class="icon">📖</span>
+        <div>
+            <h1>Les Histoires de Papy Babou</h1>
+            <div class="subtitle">Dashboard de production</div>
+        </div>
+    </div>
+    <nav class="header-nav">
+        <a href="/" class="btn btn-all {{ 'active' if saison_filtre == 0 }}">Tout</a>
+        {% for s in saisons_dispo %}
+        <a href="/?saison={{ s }}" class="btn btn-saison {{ 'active' if saison_filtre == s }}">
+            Saison {{ s }}
+        </a>
+        {% endfor %}
+    </nav>
+</header>
+
+<main class="dashboard">
+
+    <!-- ═══ STATS KPI ════════════════════════════════════════════════════ -->
+    {% if episodes %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value ocre">{{ stats.nb_episodes }}</div>
+            <div class="stat-label">Episodes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value bleu">{{ stats.score_moyen }}<span style="font-size: 0.9rem; color: var(--texte-dim)">/10</span></div>
+            <div class="stat-label">Score moyen</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value vert">{{ stats.score_max }}</div>
+            <div class="stat-label">Meilleur score</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value miel">${{ "%.4f"|format(couts.total) }}</div>
+            <div class="stat-label">Budget total</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ PROGRESSION DE SAISON ════════════════════════════════════════ -->
+    {% if progression %}
+    <div class="card">
+        <div class="card-header">
+            <span class="icon">📚</span>
+            <span class="label">Progression — Saison {{ saison_filtre }}</span>
+            <span class="count">{{ progression.produits }}/{{ progression.total }}</span>
+        </div>
+        <div class="card-body">
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="theme">{{ progression.theme }}</span>
+                    <span class="pct">{{ progression.pourcentage }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: {{ progression.pourcentage }}%"></div>
+                </div>
+                {% if progression.fil_rouge %}
+                <p style="color: var(--texte-dim); font-size: 0.85rem; margin-bottom: 1rem;">
+                    Fil rouge : {{ progression.fil_rouge }}
+                </p>
+                {% endif %}
+                <div class="ep-plan-grid">
+                    {% for ep in progression.episodes_plan %}
+                    <span class="ep-plan-chip {{ 'done' if ep.produit else 'pending' }}"
+                          title="{{ ep.titre }}">
+                        E{{ "%02d"|format(ep.numero) }}
+                        {% if ep.produit %}&#10003;{% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ TABLE DES EPISODES ═══════════════════════════════════════════ -->
+    {% if episodes %}
+    <div class="card">
+        <div class="card-header">
+            <span class="icon">📄</span>
+            <span class="label">
+                {% if saison_filtre > 0 %}Saison {{ saison_filtre }}{% else %}Tous les episodes{% endif %}
+            </span>
+            <span class="count">{{ episodes|length }}</span>
+        </div>
+        <div class="card-body table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Episode</th>
+                        <th>Titre</th>
+                        <th>Type</th>
+                        <th>Score</th>
+                        <th>Ambiance</th>
+                        <th>Morale</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ep in episodes %}
+                    <tr>
+                        <td style="color: var(--succes); font-weight: 700;">&#10003;</td>
+                        <td class="ep-id">{{ ep.episode_id }}</td>
+                        <td class="ep-titre" title="{{ ep.titre }}">{{ ep.titre[:35] }}{% if ep.titre|length > 35 %}&hellip;{% endif %}</td>
+                        <td>
+                            <span class="ep-type type-{{ ep.type_episode }}">
+                                {{ ep.type_episode }}
+                            </span>
+                        </td>
+                        <td>
+                            {% set score_class = 'high' if ep.score >= 7 else ('mid' if ep.score >= 5 else 'low') %}
+                            <div class="score-bar">
+                                <div class="score-track">
+                                    <div class="score-fill {{ score_class }}"
+                                         style="width: {{ (ep.score / 10 * 100)|int }}%"></div>
+                                </div>
+                                <span class="score-num {{ score_class }}">{{ ep.score }}</span>
+                            </div>
+                        </td>
+                        <td style="color: var(--texte-dim);">{{ ep.ambiance }}</td>
+                        <td style="color: var(--texte-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                            title="{{ ep.morale }}">
+                            {{ ep.morale[:30] }}{% if ep.morale|length > 30 %}&hellip;{% endif %}
+                        </td>
+                        <td style="color: var(--texte-dim); white-space: nowrap; font-size: 0.8rem;">
+                            {{ ep.date[:10] if ep.date else '' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body empty">
+            <div class="icon">📖</div>
+            <p>Aucun episode produit pour le moment.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem;">
+                Lancez <code style="background: var(--fond); padding: 0.2rem 0.5rem; border-radius: 4px;">python main.py interactif</code> pour commencer.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ RANGEE : PERSONNAGES + RETOURS HUMAINS ═══════════════════════ -->
+    <div class="row-2">
+        <!-- Personnages -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">👤</span>
+                <span class="label">Personnages</span>
+                <span class="count">{{ personnages|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if personnages %}
+                <div class="perso-grid">
+                    {% for nom, count in personnages|dictsort(by='value', reverse=true) %}
+                    <div class="perso-chip perso-{{ nom }}">
+                        <span class="name">{{ nom.replace('_', ' ').title() }}</span>
+                        <span class="count">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty">Aucun personnage</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Retours humains -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📋</span>
+                <span class="label">Retours humains</span>
+                <span class="count">{{ retours_humains|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if retours_humains %}
+                {% for r in retours_humains %}
+                <div class="list-item">
+                    <span class="badge">{{ r.episode_id }}</span>
+                    <span class="text">{{ r.retours[:120] }}</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty">Aucun retour</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ RANGEE : PREFERENCES + CHECKPOINTS + COUTS ═══════════════════ -->
+    <div class="row-3">
+        <!-- Preferences -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📖</span>
+                <span class="label">Preferences producteur</span>
+                <span class="count">{{ preferences|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if preferences %}
+                {% for pref in preferences[-8:] %}
+                <div class="list-item">
+                    <span class="pref-cat">{{ pref.categorie[:8] }}</span>
+                    <span class="text">
+                        {{ pref.regle[:80] }}
+                        {% if pref.source_episode %}
+                        <span style="color: var(--ardoise); font-size: 0.75rem;">({{ pref.source_episode }})</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+                {% if preferences|length > 8 %}
+                <p style="color: var(--texte-dim); font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">
+                    &hellip; et {{ preferences|length - 8 }} autre(s)
+                </p>
+                {% endif %}
+                {% else %}
+                <div class="empty">Aucune preference</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Checkpoints -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">&#9873;</span>
+                <span class="label">Checkpoints en attente</span>
+                <span class="count">{{ checkpoints|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if checkpoints %}
+                {% for cp in checkpoints %}
+                <div class="list-item">
+                    <span class="badge">{{ cp.episode_id }}</span>
+                    <span class="text">
+                        <span class="pref-cat checkpoint-etape">{{ cp.etape }}</span>
+                        <span style="color: var(--texte-dim); font-size: 0.8rem;">{{ cp.timestamp[:16] }}</span>
+                    </span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty">Aucun checkpoint</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Couts -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">💰</span>
+                <span class="label">Budget</span>
+            </div>
+            <div class="card-body">
+                {% if couts.total > 0 or couts.total_chars > 0 %}
+                {% if couts.total_chars > 0 %}
+                <div class="cout-row">
+                    <span class="service">ElevenLabs</span>
+                    <span class="montant">{{ "{:,}".format(couts.total_chars) }} chars</span>
+                </div>
+                {% endif %}
+                {% for service, cout in couts.par_service|dictsort %}
+                <div class="cout-row">
+                    <span class="service">{{ service }}</span>
+                    <span class="montant">${{ "%.4f"|format(cout) }}</span>
+                </div>
+                {% endfor %}
+                {% if couts.total > 0 %}
+                <div class="cout-row total">
+                    <span class="service">TOTAL</span>
+                    <span class="montant">${{ "%.4f"|format(couts.total) }}</span>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="empty">Aucun cout</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SAISONS DISPONIBLES ══════════════════════════════════════════ -->
+    {% if saisons_dispo and saison_filtre == 0 %}
+    <div class="card">
+        <div class="card-header">
+            <span class="icon">📚</span>
+            <span class="label">Saisons planifiees</span>
+        </div>
+        <div class="card-body">
+            <div class="perso-grid">
+                {% for s in saisons_dispo %}
+                <a href="/?saison={{ s }}" class="perso-chip" style="text-decoration: none; cursor: pointer;">
+                    <span class="name" style="color: var(--ocre);">Saison {{ s }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</main>
+
+<footer class="footer">
+    Les Histoires de Papy Babou &mdash; Systeme de production podcast
+    &middot; <a href="/api/dashboard{% if saison_filtre > 0 %}?saison={{ saison_filtre }}{% endif %}">API JSON</a>
+</footer>
+
+</body>
+</html>
