@@ -879,26 +879,29 @@
 </header>
 
 <!-- ═══ NAVIGATION ═════════════════════════════════════════════════════════ -->
+<!-- Ordre chronologique du workflow de production :
+     1. Planifier → 2. Produire saison → 3. Produire (unitaire) → 4. Batch
+     → 5. Reprendre → 6. Dashboard (suivi) → 7. Configuration -->
 <nav class="nav-bar">
-    <button class="nav-tab active" onclick="showPage('dashboard', this)">
-        <span class="tab-icon">&#127968;</span> Dashboard
+    <button class="nav-tab" data-page="planifier" onclick="showPage('planifier', this)">
+        <span class="tab-icon">&#128197;</span> 1. Planifier
     </button>
-    <button class="nav-tab" onclick="showPage('produire', this)">
-        <span class="tab-icon">&#127908;</span> Produire
+    <button class="nav-tab" data-page="produire-saison" onclick="showPage('produire-saison', this)">
+        <span class="tab-icon">&#127916;</span> 2. Produire saison
     </button>
-    <button class="nav-tab" onclick="showPage('batch', this)">
-        <span class="tab-icon">&#128230;</span> Batch
+    <button class="nav-tab" data-page="produire" onclick="showPage('produire', this)">
+        <span class="tab-icon">&#127908;</span> 3. Episode
     </button>
-    <button class="nav-tab" onclick="showPage('planifier', this)">
-        <span class="tab-icon">&#128197;</span> Planifier saison
+    <button class="nav-tab" data-page="batch" onclick="showPage('batch', this)">
+        <span class="tab-icon">&#128230;</span> 4. Batch
     </button>
-    <button class="nav-tab" onclick="showPage('produire-saison', this)">
-        <span class="tab-icon">&#127916;</span> Produire saison
+    <button class="nav-tab" data-page="reprendre" onclick="showPage('reprendre', this)">
+        <span class="tab-icon">&#9654;</span> 5. Reprendre
     </button>
-    <button class="nav-tab" onclick="showPage('reprendre', this)">
-        <span class="tab-icon">&#9654;</span> Reprendre
+    <button class="nav-tab" data-page="dashboard" onclick="showPage('dashboard', this)">
+        <span class="tab-icon">&#127968;</span> 6. Suivi
     </button>
-    <button class="nav-tab" onclick="showPage('config', this)">
+    <button class="nav-tab" data-page="config" onclick="showPage('config', this)">
         <span class="tab-icon">&#9881;</span> Configuration
     </button>
 </nav>
@@ -906,9 +909,285 @@
 <main class="main">
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  PAGE : DASHBOARD                                                     ║
+     ║  1. PLANIFIER UNE SAISON                                              ║
      ╚════════════════════════════════════════════════════════════════════════╝ -->
-<div class="page active" id="page-dashboard">
+<div class="page" id="page-planifier">
+    <div class="page-header">
+        <h2>&#128197; Planifier une saison</h2>
+        <p>Generez automatiquement un plan complet de saison avec 10 episodes structures.</p>
+    </div>
+
+    <!-- Saisons existantes -->
+    {% if saisons_dispo %}
+    <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-header">
+            <span class="icon">&#128218;</span> Saisons existantes
+        </div>
+        <div class="card-body">
+            <div class="perso-grid">
+                {% for s in saisons_dispo %}
+                <a href="/?saison={{ s }}" class="perso-chip" style="text-decoration: none; cursor: pointer;">
+                    <span class="name" style="color: var(--orange-chaud);">Saison {{ s }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <div id="alert-planifier" class="alert"></div>
+
+            <form id="form-planifier" onsubmit="return submitPlanifier(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="plan-saison">Numero de saison *</label>
+                        <input type="number" id="plan-saison" class="form-input" min="1" value="{{ (saisons_dispo[-1] + 1) if saisons_dispo else 1 }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="plan-theme">Theme central *</label>
+                        <input type="text" id="plan-theme" class="form-input" placeholder="Ex: Les Grands Voyages bibliques" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="plan-description">Vision du producteur</label>
+                    <textarea id="plan-description" class="form-textarea" rows="3" placeholder="Decrivez votre vision pour cette saison... (optionnel)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="plan-personnages">Personnages secondaires a introduire</label>
+                    <input type="text" id="plan-personnages" class="form-input" placeholder="Ex: mamie_rose, cousin_paul (separes par des virgules)">
+                    <div class="hint">Personnages en plus de Papy Babou, Antoine et Noemie</div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btn-planifier">
+                        &#128197; Generer le plan de saison
+                    </button>
+                </div>
+            </form>
+
+            <div class="console-output" id="console-planifier"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  2. PRODUIRE UNE SAISON                                               ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-produire-saison">
+    <div class="page-header">
+        <h2>&#127916; Produire une saison</h2>
+        <p>Produisez tous les episodes (ou une selection) d'une saison planifiee.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div id="alert-produire-saison" class="alert"></div>
+
+            <form id="form-produire-saison" onsubmit="return submitProduireSaison(event)">
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label for="ps-saison">Saison *</label>
+                        <input type="number" id="ps-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ps-episodes">Episodes (optionnel)</label>
+                        <input type="text" id="ps-episodes" class="form-input" placeholder="Ex: 1,3,5 (vide = tous)">
+                        <div class="hint">Numeros separes par des virgules</div>
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; padding-top: 1.2rem;">
+                        <div class="form-check">
+                            <input type="checkbox" id="ps-dryrun">
+                            <label for="ps-dryrun">Mode test</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="ps-auto">
+                            <label for="ps-auto">Mode auto</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btn-produire-saison">
+                        &#127916; Lancer la production
+                    </button>
+                </div>
+            </form>
+
+            <div class="console-output" id="console-produire-saison"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  3. PRODUIRE UN EPISODE                                               ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-produire">
+    <div class="page-header">
+        <h2>&#127908; Produire un episode</h2>
+        <p>Lancez la production d'un episode du podcast. Remplissez le formulaire et cliquez sur Produire.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div id="alert-produire" class="alert"></div>
+
+            <form id="form-produire" onsubmit="return submitProduire(event)">
+                <div class="form-group">
+                    <label for="prod-titre">Titre de l'episode *</label>
+                    <input type="text" id="prod-titre" class="form-input" placeholder="Ex: Le Buisson Ardent" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prod-saison">Saison *</label>
+                        <input type="number" id="prod-saison" class="form-input" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-numero">Numero *</label>
+                        <input type="number" id="prod-numero" class="form-input" min="1" value="1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="prod-resume">Resume de l'histoire biblique *</label>
+                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Resumez l'histoire biblique que Papy Babou va raconter..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="prod-morale">Morale / lecon de vie</label>
+                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Quelle lecon les enfants doivent retenir ? (optionnel)"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="prod-dryrun">
+                            <label for="prod-dryrun">Mode test (dry-run) — pas d'audio ni de publication</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="prod-auto">
+                            <label for="prod-auto">Mode automatique — sans validation humaine</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btn-produire">
+                        &#127908; Lancer la production
+                    </button>
+                </div>
+            </form>
+
+            <div class="console-output" id="console-produire"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  4. BATCH                                                              ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-batch">
+    <div class="page-header">
+        <h2>&#128230; Production batch</h2>
+        <p>Produisez plusieurs episodes d'un coup en remplissant la liste ci-dessous.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div id="alert-batch" class="alert"></div>
+
+            <div class="section-title">Liste des episodes</div>
+            <div id="batch-episodes">
+                <!-- Episode rows will be added here -->
+            </div>
+            <div style="margin-top: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="addBatchRow()">+ Ajouter un episode</button>
+            </div>
+
+            <div class="form-row" style="margin-top: 1.25rem;">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" id="batch-dryrun">
+                        <label for="batch-dryrun">Mode test (dry-run)</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" id="batch-auto">
+                        <label for="batch-auto">Mode automatique</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="btn-batch" onclick="submitBatch()">
+                    &#128230; Lancer le batch
+                </button>
+            </div>
+
+            <div class="console-output" id="console-batch"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  5. REPRENDRE UN CHECKPOINT                                           ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-reprendre">
+    <div class="page-header">
+        <h2>&#9654; Reprendre une production</h2>
+        <p>Si une production a ete interrompue, reprenez-la depuis son dernier checkpoint.</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-body">
+            <div id="alert-reprendre" class="alert"></div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <div class="form-check">
+                    <input type="checkbox" id="reprendre-auto" checked>
+                    <label for="reprendre-auto">Mode automatique (sans validation humaine)</label>
+                </div>
+            </div>
+
+            {% if checkpoints %}
+            {% for cp in checkpoints %}
+            <div class="checkpoint-card">
+                <div class="checkpoint-info">
+                    <span class="ep-id">{{ cp.episode_id }}</span>
+                    <span class="etape">{{ cp.etape }}</span>
+                    <span class="date">{{ cp.timestamp }}</span>
+                </div>
+                <button class="btn btn-turquoise" onclick="submitReprendre('{{ cp.fichier }}')">
+                    &#9654; Reprendre
+                </button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty">
+                <div class="icon">&#9654;</div>
+                <p>Aucun checkpoint en attente.</p>
+                <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">
+                    Les checkpoints apparaissent lorsqu'une production est interrompue.
+                </p>
+            </div>
+            {% endif %}
+
+            <div class="console-output" id="console-reprendre"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  6. SUIVI / DASHBOARD                                                 ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-dashboard">
 
     <!-- Filtre par saison -->
     <div class="btn-group">
@@ -1167,283 +1446,7 @@
 </div>
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  PAGE : PRODUIRE UN EPISODE                                           ║
-     ╚════════════════════════════════════════════════════════════════════════╝ -->
-<div class="page" id="page-produire">
-    <div class="page-header">
-        <h2>&#127908; Produire un episode</h2>
-        <p>Lancez la production d'un episode du podcast. Remplissez le formulaire et cliquez sur Produire.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div id="alert-produire" class="alert"></div>
-
-            <form id="form-produire" onsubmit="return submitProduire(event)">
-                <div class="form-group">
-                    <label for="prod-titre">Titre de l'episode *</label>
-                    <input type="text" id="prod-titre" class="form-input" placeholder="Ex: Le Buisson Ardent" required>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="prod-saison">Saison *</label>
-                        <input type="number" id="prod-saison" class="form-input" min="1" value="1" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="prod-numero">Numero *</label>
-                        <input type="number" id="prod-numero" class="form-input" min="1" value="1" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="prod-resume">Resume de l'histoire biblique *</label>
-                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Resumez l'histoire biblique que Papy Babou va raconter..." required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="prod-morale">Morale / lecon de vie</label>
-                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Quelle lecon les enfants doivent retenir ? (optionnel)"></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input type="checkbox" id="prod-dryrun">
-                            <label for="prod-dryrun">Mode test (dry-run) — pas d'audio ni de publication</label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input type="checkbox" id="prod-auto">
-                            <label for="prod-auto">Mode automatique — sans validation humaine</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" id="btn-produire">
-                        &#127908; Lancer la production
-                    </button>
-                </div>
-            </form>
-
-            <div class="console-output" id="console-produire"></div>
-        </div>
-    </div>
-</div>
-
-<!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  PAGE : BATCH                                                          ║
-     ╚════════════════════════════════════════════════════════════════════════╝ -->
-<div class="page" id="page-batch">
-    <div class="page-header">
-        <h2>&#128230; Production batch</h2>
-        <p>Produisez plusieurs episodes d'un coup en remplissant la liste ci-dessous.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div id="alert-batch" class="alert"></div>
-
-            <div class="section-title">Liste des episodes</div>
-            <div id="batch-episodes">
-                <!-- Episode rows will be added here -->
-            </div>
-            <div style="margin-top: 0.75rem;">
-                <button type="button" class="btn btn-secondary" onclick="addBatchRow()">+ Ajouter un episode</button>
-            </div>
-
-            <div class="form-row" style="margin-top: 1.25rem;">
-                <div class="form-group">
-                    <div class="form-check">
-                        <input type="checkbox" id="batch-dryrun">
-                        <label for="batch-dryrun">Mode test (dry-run)</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-check">
-                        <input type="checkbox" id="batch-auto">
-                        <label for="batch-auto">Mode automatique</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-actions">
-                <button type="button" class="btn btn-primary" id="btn-batch" onclick="submitBatch()">
-                    &#128230; Lancer le batch
-                </button>
-            </div>
-
-            <div class="console-output" id="console-batch"></div>
-        </div>
-    </div>
-</div>
-
-<!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  PAGE : PLANIFIER UNE SAISON                                          ║
-     ╚════════════════════════════════════════════════════════════════════════╝ -->
-<div class="page" id="page-planifier">
-    <div class="page-header">
-        <h2>&#128197; Planifier une saison</h2>
-        <p>Generez automatiquement un plan complet de saison avec 10 episodes structures.</p>
-    </div>
-
-    <!-- Saisons existantes -->
-    {% if saisons_dispo %}
-    <div class="card" style="margin-bottom: 1.25rem;">
-        <div class="card-header">
-            <span class="icon">&#128218;</span> Saisons existantes
-        </div>
-        <div class="card-body">
-            <div class="perso-grid">
-                {% for s in saisons_dispo %}
-                <a href="/?saison={{ s }}" class="perso-chip" style="text-decoration: none; cursor: pointer;">
-                    <span class="name" style="color: var(--orange-chaud);">Saison {{ s }}</span>
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <div class="card">
-        <div class="card-body">
-            <div id="alert-planifier" class="alert"></div>
-
-            <form id="form-planifier" onsubmit="return submitPlanifier(event)">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="plan-saison">Numero de saison *</label>
-                        <input type="number" id="plan-saison" class="form-input" min="1" value="{{ (saisons_dispo[-1] + 1) if saisons_dispo else 1 }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="plan-theme">Theme central *</label>
-                        <input type="text" id="plan-theme" class="form-input" placeholder="Ex: Les Grands Voyages bibliques" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="plan-description">Vision du producteur</label>
-                    <textarea id="plan-description" class="form-textarea" rows="3" placeholder="Decrivez votre vision pour cette saison... (optionnel)"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="plan-personnages">Personnages secondaires a introduire</label>
-                    <input type="text" id="plan-personnages" class="form-input" placeholder="Ex: mamie_rose, cousin_paul (separes par des virgules)">
-                    <div class="hint">Personnages en plus de Papy Babou, Antoine et Noemie</div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" id="btn-planifier">
-                        &#128197; Generer le plan de saison
-                    </button>
-                </div>
-            </form>
-
-            <div class="console-output" id="console-planifier"></div>
-        </div>
-    </div>
-</div>
-
-<!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  PAGE : PRODUIRE UNE SAISON                                           ║
-     ╚════════════════════════════════════════════════════════════════════════╝ -->
-<div class="page" id="page-produire-saison">
-    <div class="page-header">
-        <h2>&#127916; Produire une saison</h2>
-        <p>Produisez tous les episodes (ou une selection) d'une saison planifiee.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div id="alert-produire-saison" class="alert"></div>
-
-            <form id="form-produire-saison" onsubmit="return submitProduireSaison(event)">
-                <div class="form-row-3">
-                    <div class="form-group">
-                        <label for="ps-saison">Saison *</label>
-                        <input type="number" id="ps-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="ps-episodes">Episodes (optionnel)</label>
-                        <input type="text" id="ps-episodes" class="form-input" placeholder="Ex: 1,3,5 (vide = tous)">
-                        <div class="hint">Numeros separes par des virgules</div>
-                    </div>
-                    <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; padding-top: 1.2rem;">
-                        <div class="form-check">
-                            <input type="checkbox" id="ps-dryrun">
-                            <label for="ps-dryrun">Mode test</label>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" id="ps-auto">
-                            <label for="ps-auto">Mode auto</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" id="btn-produire-saison">
-                        &#127916; Lancer la production
-                    </button>
-                </div>
-            </form>
-
-            <div class="console-output" id="console-produire-saison"></div>
-        </div>
-    </div>
-</div>
-
-<!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  PAGE : REPRENDRE UN CHECKPOINT                                       ║
-     ╚════════════════════════════════════════════════════════════════════════╝ -->
-<div class="page" id="page-reprendre">
-    <div class="page-header">
-        <h2>&#9654; Reprendre une production</h2>
-        <p>Si une production a ete interrompue, reprenez-la depuis son dernier checkpoint.</p>
-    </div>
-
-    <div class="card" style="margin-bottom: 1.25rem;">
-        <div class="card-body">
-            <div id="alert-reprendre" class="alert"></div>
-
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <div class="form-check">
-                    <input type="checkbox" id="reprendre-auto" checked>
-                    <label for="reprendre-auto">Mode automatique (sans validation humaine)</label>
-                </div>
-            </div>
-
-            {% if checkpoints %}
-            {% for cp in checkpoints %}
-            <div class="checkpoint-card">
-                <div class="checkpoint-info">
-                    <span class="ep-id">{{ cp.episode_id }}</span>
-                    <span class="etape">{{ cp.etape }}</span>
-                    <span class="date">{{ cp.timestamp }}</span>
-                </div>
-                <button class="btn btn-turquoise" onclick="submitReprendre('{{ cp.fichier }}')">
-                    &#9654; Reprendre
-                </button>
-            </div>
-            {% endfor %}
-            {% else %}
-            <div class="empty">
-                <div class="icon">&#9654;</div>
-                <p>Aucun checkpoint en attente.</p>
-                <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">
-                    Les checkpoints apparaissent lorsqu'une production est interrompue.
-                </p>
-            </div>
-            {% endif %}
-
-            <div class="console-output" id="console-reprendre"></div>
-        </div>
-    </div>
-</div>
-
-<!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  PAGE : CONFIGURATION                                                 ║
+     ║  7. CONFIGURATION                                                     ║
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-config">
     <div class="page-header">
@@ -1867,6 +1870,28 @@ async function loadConfig() {
         });
     }
 }
+
+/* ── Initialisation au chargement ───────────────────────────────────────── */
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    /* Si ?saison= est dans l'URL, l'utilisateur veut voir le suivi */
+    /* Si ?tab= est dans l'URL, on ouvre cet onglet directement */
+    let startPage = 'planifier';
+    if (params.has('saison')) {
+        startPage = 'dashboard';
+    }
+    if (params.has('tab')) {
+        startPage = params.get('tab');
+    }
+    const tabEl = document.querySelector('.nav-tab[data-page="' + startPage + '"]');
+    if (tabEl) {
+        showPage(startPage, tabEl);
+    } else {
+        /* Fallback: planifier */
+        const fallback = document.querySelector('.nav-tab[data-page="planifier"]');
+        showPage('planifier', fallback);
+    }
+})();
 </script>
 
 </body>
