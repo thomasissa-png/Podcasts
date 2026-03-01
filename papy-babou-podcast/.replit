@@ -1,8 +1,12 @@
 run = "python web.py"
+entrypoint = "web.py"
 language = "python3"
 
 [nix]
 channel = "stable-23_11"
 
 [env]
-PYTHONPATH = "${REPL_HOME}"
+PYTHONPATH = "${REPL_HOME}/papy-babou-podcast"
+
+[deployment]
+run = ["sh", "-c", "python web.py"]
