@@ -876,7 +876,7 @@
         <div class="logo">&#128218;</div>
         <div>
             <h1>Les Histoires de Papy Babou</h1>
-            <div class="subtitle">Studio de production podcast</div>
+            <div class="subtitle">Studio de production podcast — Creez des histoires bibliques pour enfants</div>
         </div>
     </div>
 </header>
@@ -887,22 +887,22 @@
      → 5. Reprendre → 6. Dashboard (suivi) → 7. Configuration -->
 <nav class="nav-bar">
     <button class="nav-tab" data-page="planifier" onclick="showPage('planifier', this)">
-        <span class="tab-icon">&#128197;</span> 1. Planifier
+        <span class="tab-icon">&#128197;</span> 1. Planifier une saison
     </button>
     <button class="nav-tab" data-page="produire-saison" onclick="showPage('produire-saison', this)">
-        <span class="tab-icon">&#127916;</span> 2. Produire saison
+        <span class="tab-icon">&#127916;</span> 2. Lancer la saison
     </button>
     <button class="nav-tab" data-page="produire" onclick="showPage('produire', this)">
-        <span class="tab-icon">&#127908;</span> 3. Episode
+        <span class="tab-icon">&#127908;</span> 3. Un seul episode
     </button>
     <button class="nav-tab" data-page="batch" onclick="showPage('batch', this)">
-        <span class="tab-icon">&#128230;</span> 4. Batch
+        <span class="tab-icon">&#128230;</span> 4. Plusieurs episodes
     </button>
     <button class="nav-tab" data-page="reprendre" onclick="showPage('reprendre', this)">
         <span class="tab-icon">&#9654;</span> 5. Reprendre
     </button>
     <button class="nav-tab" data-page="dashboard" onclick="showPage('dashboard', this)">
-        <span class="tab-icon">&#127968;</span> 6. Suivi
+        <span class="tab-icon">&#127968;</span> 6. Suivi &amp; resultats
     </button>
     <button class="nav-tab" data-page="config" onclick="showPage('config', this)">
         <span class="tab-icon">&#9881;</span> Configuration
@@ -916,17 +916,30 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-planifier">
     <div class="page-header">
-        <h2>&#128197; Planifier une saison</h2>
-        <p>Generez automatiquement un plan complet de saison avec 10 episodes structures.</p>
+        <h2>&#128197; Etape 1 — Planifier une saison</h2>
+        <p>
+            C'est ici que tout commence ! Une saison, c'est un ensemble de 10 episodes
+            lies par un <strong>theme commun</strong> (ex : les grands voyages bibliques,
+            les miracles de Jesus...). L'IA va generer automatiquement un plan complet :
+            titres, resumes, progression narrative et fil rouge.
+        </p>
+        <p style="margin-top: 0.4rem; font-size: 0.82rem; color: var(--texte-light);">
+            Vous n'avez pas encore de saison ? Remplissez le formulaire ci-dessous pour en creer une.
+            Vous avez deja une saison planifiee ? Passez directement a l'onglet
+            <a href="javascript:void(0)" onclick="showPage('produire-saison', document.querySelector('[data-page=produire-saison]'))" style="color: var(--turquoise); font-weight: 700;">2. Lancer la saison</a>.
+        </p>
     </div>
 
     <!-- Saisons existantes -->
     {% if saisons_dispo %}
     <div class="card" style="margin-bottom: 1.25rem;">
         <div class="card-header">
-            <span class="icon">&#128218;</span> Saisons existantes
+            <span class="icon">&#128218;</span> Saisons deja planifiees
         </div>
         <div class="card-body">
+            <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
+                Cliquez sur une saison pour voir son avancement dans l'onglet Suivi.
+            </p>
             <div class="perso-grid">
                 {% for s in saisons_dispo %}
                 <a href="/?saison={{ s }}" class="perso-chip" style="text-decoration: none; cursor: pointer;">
@@ -939,6 +952,9 @@
     {% endif %}
 
     <div class="card">
+        <div class="card-header">
+            <span class="icon">&#10024;</span> Creer un nouveau plan de saison
+        </div>
         <div class="card-body">
             <div id="alert-planifier" class="alert"></div>
 
@@ -947,22 +963,25 @@
                     <div class="form-group">
                         <label for="plan-saison">Numero de saison *</label>
                         <input type="number" id="plan-saison" class="form-input" min="1" value="{{ (saisons_dispo[-1] + 1) if saisons_dispo else 1 }}" required>
+                        <div class="hint">Le numero est pre-rempli avec la prochaine saison disponible</div>
                     </div>
                     <div class="form-group">
-                        <label for="plan-theme">Theme central *</label>
+                        <label for="plan-theme">Theme central de la saison *</label>
                         <input type="text" id="plan-theme" class="form-input" placeholder="Ex: Les Grands Voyages bibliques" required>
+                        <div class="hint">Le fil conducteur qui relie les 10 episodes entre eux</div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="plan-description">Vision du producteur</label>
-                    <textarea id="plan-description" class="form-textarea" rows="3" placeholder="Decrivez votre vision pour cette saison... (optionnel)"></textarea>
+                    <label for="plan-description">Votre vision pour cette saison</label>
+                    <textarea id="plan-description" class="form-textarea" rows="3" placeholder="Decrivez ce que vous aimeriez pour cette saison : le ton, les histoires a aborder, l'ambiance... (optionnel)"></textarea>
+                    <div class="hint">Plus vous decrivez votre vision, plus le plan sera personnalise</div>
                 </div>
 
                 <div class="form-group">
                     <label for="plan-personnages">Personnages secondaires a introduire</label>
                     <input type="text" id="plan-personnages" class="form-input" placeholder="Ex: mamie_rose, cousin_paul (separes par des virgules)">
-                    <div class="hint">Personnages en plus de Papy Babou, Antoine et Noemie</div>
+                    <div class="hint">En plus des personnages habituels : Papy Babou, Antoine et Noemie</div>
                 </div>
 
                 <div class="form-actions">
@@ -982,40 +1001,53 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-produire-saison">
     <div class="page-header">
-        <h2>&#127916; Produire une saison</h2>
-        <p>Produisez tous les episodes (ou une selection) d'une saison planifiee.</p>
+        <h2>&#127916; Etape 2 — Lancer la production d'une saison</h2>
+        <p>
+            Vous avez planifie une saison a l'etape precedente ? Parfait !
+            Ici, vous lancez la <strong>production automatique</strong> de tous ses episodes
+            (ou seulement ceux de votre choix). L'IA va ecrire les scripts, generer les voix
+            et assembler chaque episode.
+        </p>
+        <p style="margin-top: 0.4rem; font-size: 0.82rem; color: var(--texte-light);">
+            Vous n'avez pas encore de saison planifiee ?
+            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Retour a l'etape 1</a>.
+        </p>
     </div>
 
     <div class="card">
+        <div class="card-header">
+            <span class="icon">&#127916;</span> Lancer la production
+        </div>
         <div class="card-body">
             <div id="alert-produire-saison" class="alert"></div>
 
             <form id="form-produire-saison" onsubmit="return submitProduireSaison(event)">
                 <div class="form-row-3">
                     <div class="form-group">
-                        <label for="ps-saison">Saison *</label>
+                        <label for="ps-saison">Quelle saison produire ? *</label>
                         <input type="number" id="ps-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
+                        <div class="hint">Numero de la saison planifiee a l'etape 1</div>
                     </div>
                     <div class="form-group">
-                        <label for="ps-episodes">Episodes (optionnel)</label>
-                        <input type="text" id="ps-episodes" class="form-input" placeholder="Ex: 1,3,5 (vide = tous)">
-                        <div class="hint">Numeros separes par des virgules</div>
+                        <label for="ps-episodes">Quels episodes ?</label>
+                        <input type="text" id="ps-episodes" class="form-input" placeholder="Vide = tous les episodes">
+                        <div class="hint">Laissez vide pour tout produire, ou indiquez les numeros : 1,3,5</div>
                     </div>
                     <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; padding-top: 1.2rem;">
                         <div class="form-check">
                             <input type="checkbox" id="ps-dryrun">
-                            <label for="ps-dryrun">Mode test</label>
+                            <label for="ps-dryrun">Mode test (sans audio)</label>
                         </div>
                         <div class="form-check">
                             <input type="checkbox" id="ps-auto">
-                            <label for="ps-auto">Mode auto</label>
+                            <label for="ps-auto">Tout automatique</label>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary" id="btn-produire-saison">
-                        &#127916; Lancer la production
+                        &#127916; Lancer la production de la saison
                     </button>
                 </div>
             </form>
@@ -1030,18 +1062,31 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-produire">
     <div class="page-header">
-        <h2>&#127908; Produire un episode</h2>
-        <p>Lancez la production d'un episode du podcast. Remplissez le formulaire et cliquez sur Produire.</p>
+        <h2>&#127908; Un seul episode</h2>
+        <p>
+            Vous voulez produire un episode <strong>en dehors d'une saison planifiee</strong> ?
+            C'est ici. Decrivez l'histoire biblique, donnez un titre et l'IA s'occupe de tout :
+            ecriture du script, voix des personnages, musique et montage.
+        </p>
+        <p style="margin-top: 0.4rem; font-size: 0.82rem; color: var(--texte-light);">
+            Si vous avez deja planifie une saison, preferez l'onglet
+            <a href="javascript:void(0)" onclick="showPage('produire-saison', document.querySelector('[data-page=produire-saison]'))" style="color: var(--turquoise); font-weight: 700;">2. Lancer la saison</a>
+            qui utilise le plan existant.
+        </p>
     </div>
 
     <div class="card">
+        <div class="card-header">
+            <span class="icon">&#127908;</span> Creer un episode
+        </div>
         <div class="card-body">
             <div id="alert-produire" class="alert"></div>
 
             <form id="form-produire" onsubmit="return submitProduire(event)">
                 <div class="form-group">
                     <label for="prod-titre">Titre de l'episode *</label>
-                    <input type="text" id="prod-titre" class="form-input" placeholder="Ex: Le Buisson Ardent" required>
+                    <input type="text" id="prod-titre" class="form-input" placeholder="Ex: Le Buisson Ardent, L'Arche de Noe..." required>
+                    <div class="hint">Le titre qui apparaitra dans le podcast</div>
                 </div>
 
                 <div class="form-row">
@@ -1050,32 +1095,34 @@
                         <input type="number" id="prod-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
                     </div>
                     <div class="form-group">
-                        <label for="prod-numero">Numero *</label>
+                        <label for="prod-numero">Numero de l'episode *</label>
                         <input type="number" id="prod-numero" class="form-input" min="1" value="1" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="prod-resume">Resume de l'histoire biblique *</label>
-                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Resumez l'histoire biblique que Papy Babou va raconter..." required></textarea>
+                    <label for="prod-resume">L'histoire biblique a raconter *</label>
+                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Racontez l'histoire biblique en quelques phrases. Ex : Moise decouvre un buisson en feu qui ne se consume pas. Dieu lui parle et lui confie la mission de liberer les Hebreux..." required></textarea>
+                    <div class="hint">Plus le resume est detaille, plus l'episode sera riche</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="prod-morale">Morale / lecon de vie</label>
-                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Quelle lecon les enfants doivent retenir ? (optionnel)"></textarea>
+                    <label for="prod-morale">Lecon de vie pour les enfants</label>
+                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Ex: Le courage de faire confiance meme quand on a peur (optionnel)"></textarea>
+                    <div class="hint">La morale que Papy Babou transmettra a la fin de l'episode</div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <div class="form-check">
                             <input type="checkbox" id="prod-dryrun">
-                            <label for="prod-dryrun">Mode test (dry-run) — pas d'audio ni de publication</label>
+                            <label for="prod-dryrun">Mode test — genere le script sans creer l'audio</label>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="form-check">
                             <input type="checkbox" id="prod-auto">
-                            <label for="prod-auto">Mode automatique — sans validation humaine</label>
+                            <label for="prod-auto">Tout automatique — sans demander de validation</label>
                         </div>
                     </div>
                 </div>
@@ -1097,15 +1144,29 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-batch">
     <div class="page-header">
-        <h2>&#128230; Production batch</h2>
-        <p>Produisez plusieurs episodes d'un coup en remplissant la liste ci-dessous.</p>
+        <h2>&#128230; Produire plusieurs episodes d'un coup</h2>
+        <p>
+            Vous avez plusieurs histoires en tete et vous voulez tout lancer en une seule fois ?
+            Remplissez la liste ci-dessous avec vos episodes et l'IA les produira les uns apres les autres.
+        </p>
+        <p style="margin-top: 0.4rem; font-size: 0.82rem; color: var(--texte-light);">
+            Contrairement a l'onglet
+            <a href="javascript:void(0)" onclick="showPage('produire-saison', document.querySelector('[data-page=produire-saison]'))" style="color: var(--turquoise); font-weight: 700;">2. Lancer la saison</a>
+            qui utilise un plan existant, ici vous definissez chaque episode manuellement.
+        </p>
     </div>
 
     <div class="card">
+        <div class="card-header">
+            <span class="icon">&#128230;</span> Liste des episodes a produire
+        </div>
         <div class="card-body">
             <div id="alert-batch" class="alert"></div>
 
-            <div class="section-title">Liste des episodes</div>
+            <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 1rem;">
+                Ajoutez autant d'episodes que vous voulez. Pour chaque episode, indiquez au minimum
+                un <strong>titre</strong> et un <strong>resume</strong> de l'histoire.
+            </p>
             <div id="batch-episodes">
                 <!-- Episode rows will be added here -->
             </div>
@@ -1117,20 +1178,20 @@
                 <div class="form-group">
                     <div class="form-check">
                         <input type="checkbox" id="batch-dryrun">
-                        <label for="batch-dryrun">Mode test (dry-run)</label>
+                        <label for="batch-dryrun">Mode test — scripts uniquement, sans audio</label>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-check">
                         <input type="checkbox" id="batch-auto">
-                        <label for="batch-auto">Mode automatique</label>
+                        <label for="batch-auto">Tout automatique — sans demander de validation</label>
                     </div>
                 </div>
             </div>
 
             <div class="form-actions">
                 <button type="button" class="btn btn-primary" id="btn-batch" onclick="submitBatch()">
-                    &#128230; Lancer le batch
+                    &#128230; Lancer la production
                 </button>
             </div>
 
@@ -1144,22 +1205,36 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-reprendre">
     <div class="page-header">
-        <h2>&#9654; Reprendre une production</h2>
-        <p>Si une production a ete interrompue, reprenez-la depuis son dernier checkpoint.</p>
+        <h2>&#9654; Reprendre une production interrompue</h2>
+        <p>
+            Une production a plante ou a ete annulee en cours de route ? Pas de panique !
+            Le systeme sauvegarde automatiquement l'avancement. Vous pouvez reprendre
+            exactement la ou ca s'est arrete, sans rien perdre.
+        </p>
+        <p style="margin-top: 0.4rem; font-size: 0.82rem; color: var(--texte-light);">
+            Si aucun checkpoint n'apparait ci-dessous, c'est que toutes les productions
+            se sont terminees normalement.
+        </p>
     </div>
 
     <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-header">
+            <span class="icon">&#9654;</span> Productions en attente de reprise
+        </div>
         <div class="card-body">
             <div id="alert-reprendre" class="alert"></div>
 
             <div class="form-group" style="margin-bottom: 1rem;">
                 <div class="form-check">
                     <input type="checkbox" id="reprendre-auto" checked>
-                    <label for="reprendre-auto">Mode automatique (sans validation humaine)</label>
+                    <label for="reprendre-auto">Tout automatique — reprendre sans demander de validation</label>
                 </div>
             </div>
 
             {% if checkpoints %}
+            <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
+                Cliquez sur <strong>Reprendre</strong> a cote de l'episode que vous voulez relancer.
+            </p>
             {% for cp in checkpoints %}
             <div class="checkpoint-card">
                 <div class="checkpoint-info">
@@ -1174,10 +1249,10 @@
             {% endfor %}
             {% else %}
             <div class="empty">
-                <div class="icon">&#9654;</div>
-                <p>Aucun checkpoint en attente.</p>
+                <div class="icon">&#10003;</div>
+                <p>Rien a reprendre — tout est a jour !</p>
                 <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">
-                    Les checkpoints apparaissent lorsqu'une production est interrompue.
+                    Les checkpoints apparaissent automatiquement si une production est interrompue.
                 </p>
             </div>
             {% endif %}
@@ -1191,6 +1266,14 @@
      ║  6. SUIVI / DASHBOARD                                                 ║
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-dashboard">
+    <div class="page-header">
+        <h2>&#127968; Suivi &amp; resultats</h2>
+        <p>
+            Retrouvez ici tout ce qui a ete produit : episodes, scores de qualite,
+            progression des saisons, budget et personnages. Filtrez par saison pour
+            voir l'avancement d'une saison en particulier.
+        </p>
+    </div>
 
     <!-- Filtre par saison -->
     <div class="btn-group">
@@ -1454,7 +1537,11 @@
 <div class="page" id="page-config">
     <div class="page-header">
         <h2>&#9881; Configuration</h2>
-        <p>Parametres de production, voix, couts et informations systeme.</p>
+        <p>
+            Vue d'ensemble de la configuration du studio : parametres de production,
+            voix des personnages, couts unitaires et cles API. Ces parametres sont
+            definis dans le fichier <code>config.py</code> du projet.
+        </p>
     </div>
 
     <div class="grid-2" style="margin-bottom: 1.25rem;">
