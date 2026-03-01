@@ -63,6 +63,67 @@ def charger_checkpoints() -> list[dict]:
     return checkpoints
 
 
+def charger_publications() -> dict:
+    """Charge les informations de publication (flux RSS, Buzzsprout)."""
+    import os
+    from xml.etree import ElementTree as ET
+
+    result = {
+        "rss_existe": False,
+        "nb_episodes_rss": 0,
+        "episodes_publies": [],
+        "buzzsprout_configure": bool(os.getenv("BUZZSPROUT_API_KEY")) and bool(os.getenv("BUZZSPROUT_PODCAST_ID")),
+        "podcast_config": {},
+    }
+
+    # Charger PODCAST_CONFIG
+    if hasattr(config, "PODCAST_CONFIG"):
+        pc = config.PODCAST_CONFIG
+        result["podcast_config"] = {
+            "titre": pc.get("titre", ""),
+            "auteur": pc.get("auteur", ""),
+            "site_web": pc.get("site_web", ""),
+        }
+
+    # Lire le flux RSS
+    feed_path = config.RSS_DIR / "feed.xml"
+    if feed_path.exists():
+        result["rss_existe"] = True
+        try:
+            tree = ET.parse(str(feed_path))
+            root = tree.getroot()
+            channel = root.find("channel")
+            if channel is not None:
+                items = channel.findall("item")
+                result["nb_episodes_rss"] = len(items)
+                for item in items[-10:]:
+                    title = item.find("title")
+                    pub_date = item.find("pubDate")
+                    enclosure = item.find("enclosure")
+                    result["episodes_publies"].append({
+                        "titre": title.text if title is not None else "?",
+                        "date": pub_date.text if pub_date is not None else "",
+                        "url_audio": enclosure.get("url", "") if enclosure is not None else "",
+                    })
+                result["episodes_publies"].reverse()
+        except Exception as e:
+            logger.warning("Erreur lecture flux RSS : %s", e)
+
+    # Vérifier les rapports de production pour les publications
+    for rapport_path in config.LOGS_DIR.glob("S*_rapport.json"):
+        try:
+            with open(rapport_path, "r", encoding="utf-8") as f:
+                rapport = json.load(f)
+            pub = rapport.get("etapes", {}).get("publication", {})
+            if isinstance(pub, dict) and pub.get("url_audio"):
+                # Déjà couvert par le RSS, mais on note les infos supplémentaires
+                pass
+        except (json.JSONDecodeError, FileNotFoundError):
+            pass
+
+    return result
+
+
 def calculer_couts(saison: int = 0) -> dict:
     """Calcule les coûts à partir des rapports JSON."""
     cout_total = 0.0
@@ -192,6 +253,9 @@ def get_dashboard_data(saison: int = 0) -> dict:
     # Checkpoints
     checkpoints = charger_checkpoints()
 
+    # Publications
+    publications = charger_publications()
+
     return {
         "saison_filtre": saison,
         "episodes": episodes,
@@ -203,4 +267,5 @@ def get_dashboard_data(saison: int = 0) -> dict:
         "saisons_dispo": saisons_dispo,
         "couts": couts,
         "checkpoints": checkpoints,
+        "publications": publications,
     }

@@ -23,7 +23,7 @@ os.chdir(_THIS_DIR)
 from flask import Flask, jsonify, render_template, request
 
 import config
-from dashboard_data import get_dashboard_data, charger_preferences, charger_checkpoints
+from dashboard_data import get_dashboard_data, charger_preferences, charger_checkpoints, charger_publications
 
 app = Flask(__name__, template_folder=str(_THIS_DIR / "templates"))
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "papy-babou-dev-key")
@@ -116,6 +116,12 @@ def api_preferences():
 def api_checkpoints():
     """API JSON — Checkpoints en attente."""
     return jsonify(charger_checkpoints())
+
+
+@app.route("/api/publications")
+def api_publications():
+    """API JSON — Statut des publications (RSS, Buzzsprout)."""
+    return jsonify(charger_publications())
 
 
 @app.route("/api/config")
