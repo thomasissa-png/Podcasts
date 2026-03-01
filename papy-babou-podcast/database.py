@@ -449,6 +449,7 @@ _TABLES_CONNUES = (
     "saisons", "episodes", "scripts", "reviews", "productions",
     "metadonnees", "fichiers_audio", "historique_episodes",
     "personnages", "couts_api", "publications", "audit_log",
+    "preferences_producteur",
 )
 
 

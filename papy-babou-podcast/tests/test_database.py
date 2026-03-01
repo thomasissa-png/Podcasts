@@ -180,7 +180,7 @@ class TestDatabasePool:
             database.close_pool()  # Ne doit pas lever d'erreur
 
     def test_obtenir_stats_db_liste_toutes_tables(self):
-        """obtenir_stats_db doit interroger les 12 tables."""
+        """obtenir_stats_db doit interroger les 13 tables."""
         with patch.dict("sys.modules", {
             "psycopg2": MagicMock(),
             "psycopg2.extras": MagicMock(),
@@ -206,9 +206,10 @@ class TestDatabasePool:
 
             stats = database.obtenir_stats_db()
 
-            assert len(stats) == 12
+            assert len(stats) == 13
             assert "audit_log" in stats
             assert "scripts" in stats
+            assert "preferences_producteur" in stats
             assert all(v == 5 for v in stats.values())
 
 
