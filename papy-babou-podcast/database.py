@@ -250,9 +250,32 @@ CREATE TABLE IF NOT EXISTS historique_episodes (
     ambiance        VARCHAR(30) DEFAULT '',
     type_episode    VARCHAR(30) DEFAULT 'standard',
     date_production TIMESTAMPTZ,
+    retours_humains TEXT DEFAULT '',
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_historique_episode_id ON historique_episodes(episode_id);
+
+-- Migration : ajouter retours_humains si la colonne n'existe pas encore
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'historique_episodes'
+                   AND column_name = 'retours_humains') THEN
+        ALTER TABLE historique_episodes ADD COLUMN retours_humains TEXT DEFAULT '';
+    END IF;
+END $$;
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Table: preferences_producteur — Mémoire persistante des préférences
+-- ══════════════════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS preferences_producteur (
+    id              SERIAL PRIMARY KEY,
+    regle           TEXT NOT NULL,
+    categorie       VARCHAR(50) DEFAULT 'general',
+    source_episode  VARCHAR(20) DEFAULT '',
+    date_ajout      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    is_active       BOOLEAN DEFAULT TRUE
+);
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- Table: personnages — Bible des personnages (versionnée, jamais supprimée)

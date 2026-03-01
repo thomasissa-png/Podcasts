@@ -41,7 +41,8 @@ class SaisonRepo:
         with get_cursor() as cur:
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM saisons WHERE numero = %s",
+                "FROM saisons WHERE numero = %s "
+                "FOR UPDATE",
                 (numero,),
             )
             next_version = cur.fetchone()["next_v"]
@@ -244,7 +245,8 @@ class ScriptRepo:
             # Prochaine version
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM scripts WHERE episode_id = %s",
+                "FROM scripts WHERE episode_id = %s "
+                "FOR UPDATE",
                 (episode_id,),
             )
             next_version = cur.fetchone()["next_v"]
@@ -620,6 +622,7 @@ class HistoriqueRepo:
         ambiance: str = "",
         type_episode: str = "standard",
         date_production: str = "",
+        retours_humains: str = "",
     ) -> int:
         """Ajoute ou met à jour une entrée dans l'historique.
 
@@ -642,8 +645,9 @@ class HistoriqueRepo:
                 """INSERT INTO historique_episodes
                    (episode_id, titre, morale, resume_court, score_review,
                     personnages_presents, moments_cles, questions_ouvertes,
-                    evolutions_personnages, ambiance, type_episode, date_production)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    evolutions_personnages, ambiance, type_episode, date_production,
+                    retours_humains)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                    ON CONFLICT (episode_id)
                    DO UPDATE SET
                      titre = EXCLUDED.titre,
@@ -656,7 +660,8 @@ class HistoriqueRepo:
                      evolutions_personnages = EXCLUDED.evolutions_personnages,
                      ambiance = EXCLUDED.ambiance,
                      type_episode = EXCLUDED.type_episode,
-                     date_production = EXCLUDED.date_production
+                     date_production = EXCLUDED.date_production,
+                     retours_humains = EXCLUDED.retours_humains
                    RETURNING id""",
                 (
                     episode_id,
@@ -671,6 +676,7 @@ class HistoriqueRepo:
                     ambiance,
                     type_episode,
                     dt_production,
+                    retours_humains,
                 ),
             )
             return cur.fetchone()["id"]
@@ -731,7 +737,8 @@ class PersonnageRepo:
         with get_cursor() as cur:
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM personnages WHERE personnage_id = %s",
+                "FROM personnages WHERE personnage_id = %s "
+                "FOR UPDATE",
                 (personnage_id,),
             )
             next_version = cur.fetchone()["next_v"]
@@ -952,3 +959,52 @@ class AuditRepo:
                 params,
             )
             return [dict(row) for row in cur.fetchall()]
+
+
+# ── Préférences producteur ──────────────────────────────────────────────────
+
+
+class PreferencesRepo:
+    """Mémoire persistante des préférences producteur en DB."""
+
+    @staticmethod
+    def ajouter(regle: str, categorie: str = "general", source_episode: str = "") -> int:
+        """Ajoute une préférence.
+
+        Returns:
+            ID de l'enregistrement.
+        """
+        with get_cursor() as cur:
+            cur.execute(
+                """INSERT INTO preferences_producteur
+                   (regle, categorie, source_episode)
+                   VALUES (%s, %s, %s)
+                   RETURNING id""",
+                (regle, categorie, source_episode),
+            )
+            return cur.fetchone()["id"]
+
+    @staticmethod
+    def charger_actives() -> list[dict]:
+        """Charge toutes les préférences actives.
+
+        Returns:
+            Liste de dicts avec regle, categorie, source_episode, date_ajout.
+        """
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                "SELECT regle, categorie, source_episode, date_ajout "
+                "FROM preferences_producteur "
+                "WHERE is_active = TRUE "
+                "ORDER BY date_ajout"
+            )
+            return [dict(row) for row in cur.fetchall()]
+
+    @staticmethod
+    def desactiver(regle_id: int) -> None:
+        """Désactive une préférence (soft-delete)."""
+        with get_cursor() as cur:
+            cur.execute(
+                "UPDATE preferences_producteur SET is_active = FALSE WHERE id = %s",
+                (regle_id,),
+            )

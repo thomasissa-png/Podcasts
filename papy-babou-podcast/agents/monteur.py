@@ -12,6 +12,12 @@ import config
 
 logger = logging.getLogger(__name__)
 
+# Constantes audio (en ms sauf mention contraire)
+FADE_JINGLE_MS = 1500          # Durée du fade in/out pour les jingles
+SILENCE_TRANSITION_MS = 500     # Silence entre jingle et contenu
+FADE_AMBIANCE_MS = 3000         # Durée du fade in/out pour la musique de fond
+FALLBACK_ASSET_DUREE_MS = 5000  # Durée du silence de remplacement d'un asset manquant
+
 
 def _normaliser_lufs(audio: AudioSegment, cible_lufs: float = -16.0) -> AudioSegment:
     """Normalise le volume d'un AudioSegment au niveau LUFS cible.
@@ -289,7 +295,7 @@ class Monteur:
                 "intro_jingle": config.PRODUCTION["intro_jingle_duree_ms"],
                 "outro_jingle": config.PRODUCTION["outro_jingle_duree_ms"],
                 "fond_doux": 60_000,
-            }.get(nom, 5000)
+            }.get(nom, FALLBACK_ASSET_DUREE_MS)
             return AudioSegment.silent(duration=duree)
 
         return AudioSegment.from_mp3(str(chemin))
@@ -320,7 +326,7 @@ class Monteur:
 
         fond = fond[:duree_voix_ms]
         fond = fond + config.PRODUCTION["musique_fond_db"]
-        fond = fond.fade_in(3000).fade_out(3000)
+        fond = fond.fade_in(FADE_AMBIANCE_MS).fade_out(FADE_AMBIANCE_MS)
 
         if fond.channels == 1:
             fond = fond.set_channels(2)
@@ -345,10 +351,10 @@ class Monteur:
         intro = intro.set_channels(2) if intro.channels == 1 else intro
         outro = outro.set_channels(2) if outro.channels == 1 else outro
 
-        intro = intro.fade_out(1500)
-        outro = outro.fade_in(1500)
+        intro = intro.fade_out(FADE_JINGLE_MS)
+        outro = outro.fade_in(FADE_JINGLE_MS)
 
-        silence_transition = AudioSegment.silent(duration=500)
+        silence_transition = AudioSegment.silent(duration=SILENCE_TRANSITION_MS)
 
         return intro + silence_transition + voix_avec_fond + silence_transition + outro
 
@@ -363,8 +369,7 @@ class Monteur:
         chapitres = []
         # Offset initial : intro jingle + silence transition
         intro_ms = config.PRODUCTION["intro_jingle_duree_ms"]
-        transition_ms = 500
-        temps_courant_ms = intro_ms + transition_ms
+        temps_courant_ms = intro_ms + SILENCE_TRANSITION_MS
 
         # Identifier les chapitres logiques (max 5-7 chapitres)
         # Un chapitre commence au 1er segment, puis à chaque segment
@@ -381,7 +386,8 @@ class Monteur:
                 if seg["personnage"] == "sfx":
                     duree_ms = int(seg.get("duree_sfx_secondes", 5.0) * 1000)
                 else:
-                    duree_ms = seg.get("pause_apres_ms", 1000)
+                    nb_mots = len(seg.get("texte", "").split())
+                    duree_ms = max(int((nb_mots / 110) * 60 * 1000), 1000)
 
             # Créer un chapitre si :
             # - C'est le premier segment

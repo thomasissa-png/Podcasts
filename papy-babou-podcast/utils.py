@@ -24,9 +24,7 @@ def extraire_json_llm(texte_brut: str) -> str:
 
     Returns:
         Chaîne JSON nettoyée prête à être parsée.
-
-    Raises:
-        ValueError: Si aucun JSON valide n'est trouvé.
+        Retourne le texte brut si aucun JSON n'est détecté.
     """
     texte = texte_brut.strip()
 
@@ -39,18 +37,15 @@ def extraire_json_llm(texte_brut: str) -> str:
     if texte.startswith(("{", "[")):
         return texte
 
-    # Cas 3 : Texte avant le JSON — chercher le premier { ou [
+    # Cas 3 : Texte avant le JSON — chercher chaque { ou [
     for i, char in enumerate(texte):
         if char in ("{", "["):
-            # Trouver la parenthèse fermante correspondante
             candidate = texte[i:]
             try:
                 json.loads(candidate)
                 return candidate
             except json.JSONDecodeError:
-                # Le JSON va peut-être jusqu'à la fin
                 pass
-            break
 
     # Cas 4 : Fallback — ancien comportement (supprimer les lignes ```)
     if "```" in texte:

@@ -394,16 +394,22 @@ def _construire_system_prompt(
             "personnages présents de cet épisode."
         )
 
+    # Échapper les accolades dans les valeurs textuelles libres
+    # pour éviter un crash de str.format() (KeyError/ValueError)
+    safe_preferences = preferences_producteur.replace("{", "{{").replace("}", "}}")
+    safe_bible = bible.replace("{", "{{").replace("}", "}}")
+    safe_mots = mots.replace("{", "{{").replace("}", "}}")
+
     return SYSTEM_PROMPT_BASE.format(
-        bible_personnages=bible,
-        mots_interdits=mots,
+        bible_personnages=safe_bible,
+        mots_interdits=safe_mots,
         contexte_serie=contexte_serie,
         structure_narrative=structure,
         duree_cible=duree_cible,
         mots_cible=mots_cible,
         personnages_format=personnages_format,
         regles_personnages_dynamiques=regles_dyn,
-        preferences_producteur=preferences_producteur,
+        preferences_producteur=safe_preferences,
     )
 
 
@@ -639,6 +645,14 @@ class Scripteur:
 
         if "morale" not in ep:
             logger.warning("Champ 'morale' manquant dans le script.")
+
+        # Vérifier l'unicité des IDs de segments
+        ids_vus = set()
+        for seg in ep["segments"]:
+            seg_id = seg.get("id", "")
+            if seg_id in ids_vus:
+                raise ValueError(f"ID de segment dupliqué : '{seg_id}'")
+            ids_vus.add(seg_id)
 
         personnages_ok = config.personnages_valides()
         sfx_count = 0

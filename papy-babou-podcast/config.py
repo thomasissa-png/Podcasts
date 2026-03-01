@@ -466,11 +466,12 @@ CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 
 # ── Coûts estimés (pour le suivi budgétaire) ─────────────────────────────────
 
+# Tarifs par défaut, surchargeable via env pour suivre les évolutions de prix
 COUTS = {
-    "elevenlabs_par_caractere": 0.000018,   # ~$0.018 / 1000 chars
-    "claude_input_par_token": 0.000003,     # $3 / 1M tokens (Sonnet)
-    "claude_output_par_token": 0.000015,    # $15 / 1M tokens (Sonnet)
-    "openai_dalle3_par_image": 0.040,       # $0.04 / image (1024x1024)
+    "elevenlabs_par_caractere": float(os.getenv("COUT_ELEVENLABS_PAR_CHAR", "0.000018")),
+    "claude_input_par_token": float(os.getenv("COUT_CLAUDE_INPUT", "0.000003")),
+    "claude_output_par_token": float(os.getenv("COUT_CLAUDE_OUTPUT", "0.000015")),
+    "openai_dalle3_par_image": float(os.getenv("COUT_DALLE3_IMAGE", "0.040")),
 }
 
 # ── Configuration cover art ──────────────────────────────────────────────────
@@ -510,12 +511,15 @@ class RateLimiter:
 
     def attendre(self) -> None:
         """Attend le temps nécessaire avant le prochain appel."""
+        attente = 0.0
         with self._lock:
             maintenant = time.monotonic()
             ecart = maintenant - self._dernier_appel
             if ecart < self._min_interval:
-                time.sleep(self._min_interval - ecart)
-            self._dernier_appel = time.monotonic()
+                attente = self._min_interval - ecart
+            self._dernier_appel = maintenant + attente
+        if attente > 0:
+            time.sleep(attente)
 
 
 # Limiteurs globaux (partagés entre agents)

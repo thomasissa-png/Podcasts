@@ -51,7 +51,7 @@ try:
         SaisonRepo, EpisodeRepo, ScriptRepo, ReviewRepo,
         ProductionRepo, MetadonneesRepo, FichierAudioRepo,
         HistoriqueRepo, PersonnageRepo, CoutRepo, PublicationRepo,
-        AuditRepo,
+        AuditRepo, PreferencesRepo,
     )
     _DB_AVAILABLE = True
 except ImportError:
@@ -166,14 +166,27 @@ def ajouter_preference(regle: str, source_episode: str = "", categorie: str = "g
         source_episode: Episode d'ou vient cette preference.
         categorie: Categorie (style, ton, structure, personnages, technique, general).
     """
-    preferences = charger_preferences()
-    preferences.append({
-        "regle": regle,
-        "categorie": categorie,
-        "source_episode": source_episode,
-        "date_ajout": datetime.now().isoformat(),
-    })
-    sauvegarder_preferences(preferences)
+    # Stocker en DB si disponible
+    if _use_db():
+        try:
+            PreferencesRepo.ajouter(regle, categorie=categorie, source_episode=source_episode)
+        except Exception as e:
+            logger.warning("DB indisponible pour préférence : %s", e)
+
+    # Toujours sauvegarder en JSON (rétrocompatibilité)
+    with fichier_lock(config.PREFERENCES_PATH):
+        preferences = []
+        if config.PREFERENCES_PATH.exists():
+            with open(config.PREFERENCES_PATH, "r", encoding="utf-8") as f:
+                preferences = json.load(f)
+        preferences.append({
+            "regle": regle,
+            "categorie": categorie,
+            "source_episode": source_episode,
+            "date_ajout": datetime.now().isoformat(),
+        })
+        with open(config.PREFERENCES_PATH, "w", encoding="utf-8") as f:
+            json.dump(preferences, f, ensure_ascii=False, indent=2)
     logger.info("Preference producteur ajoutee : %s", regle[:80])
 
 
@@ -252,6 +265,7 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
                 questions_ouvertes=entree["questions_ouvertes"],
                 evolutions_personnages=entree["evolutions_personnages"],
                 ambiance=entree["ambiance"],
+                retours_humains=entree.get("retours_humains", ""),
                 type_episode=entree["type_episode"],
                 date_production=entree["date_production"],
             )
@@ -586,11 +600,10 @@ def _validation_script(
                 reviewer = Reviewer()
                 resultat_review = reviewer.evaluer(script)
                 score = resultat_review["review"]["score"]
-                console.print(table_review(resultat_review["review"]))
-                if reviewer.est_valide(resultat_review):
-                    script = {"episode": resultat_review["episode"]}
-                else:
-                    script = {"episode": resultat_review["episode"]}
+                console.print(table_review(score, resultat_review["review"].get("details_score", {})))
+                script = {"episode": resultat_review["episode"]}
+                if not reviewer.est_valide(resultat_review):
+                    console.print(f"[{Palette.ATTENTION}]  Score sous le seuil ({score}/10) — vous pourrez re-corriger.[/]")
                 if rapport is not None:
                     rapport["etapes"]["script"]["score_review"] = score
                 _afficher_script(script)
@@ -1058,6 +1071,7 @@ def _validation_montage(
             return False  # Pas de remontage
 
         elif choix in ("e", "editer"):
+            reload_ok = False
             if script_path:
                 console.print(
                     f"\n[yellow]  Éditez les segments du script (pauses, SFX, tons) :[/yellow]"
@@ -1073,22 +1087,25 @@ def _validation_montage(
                     script.clear()
                     script.update(script_recharge)
                     console.print(f"[{Palette.SUCCES}]  Script rechargé et validé — relance du montage.[/]")
+                    reload_ok = True
                 except (json.JSONDecodeError, FileNotFoundError) as e:
                     console.print(f"[red]  Erreur au rechargement : {e}[/red]")
-                    console.print("[yellow]  Les données précédentes sont conservées.[/yellow]")
+                    console.print("[yellow]  Les données précédentes sont conservées. Retour au menu.[/yellow]")
                 except ValueError as e:
                     console.print(f"[red]  Structure invalide : {e}[/red]")
-                    console.print("[yellow]  Les données précédentes sont conservées.[/yellow]")
+                    console.print("[yellow]  Les données précédentes sont conservées. Retour au menu.[/yellow]")
             else:
                 console.print("[yellow]  Fichier script introuvable — relance sans modification.[/yellow]")
+                reload_ok = True
 
-            if rapport is not None:
-                rapport.setdefault("decisions_humaines", []).append({
-                    "etape": "montage",
-                    "action": "remontage_apres_edition",
-                    "timestamp": datetime.now().isoformat(),
-                })
-            return True  # Remontage avec script potentiellement modifie
+            if reload_ok:
+                if rapport is not None:
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "etape": "montage",
+                        "action": "remontage_apres_edition",
+                        "timestamp": datetime.now().isoformat(),
+                    })
+                return True  # Remontage avec script potentiellement modifie
 
         elif choix in ("r", "relancer"):
             console.print(
@@ -1479,7 +1496,7 @@ def _pipeline_inner(
             title="Erreurs de configuration",
             border_style="red",
         ))
-        sys.exit(1)
+        raise RuntimeError("Configuration API invalide : " + "; ".join(erreurs_api))
 
     mode_str = "DRY RUN" if dry_run else "PRODUCTION"
     console.print(panel_episode(
@@ -1499,6 +1516,8 @@ def _pipeline_inner(
     duree_secondes = 0.0
     taille_bytes = 0
     score = 0
+    meta = None
+    chemin_meta = config.SCRIPTS_DIR / f"{episode_id}_meta.json"
 
     # Restaurer les variables depuis le checkpoint si on reprend après le montage
     if checkpoint_data and etape_idx > 4:
@@ -1509,6 +1528,12 @@ def _pipeline_inner(
         taille_bytes = int(montage_data.get("taille_mb", 0) * 1024 * 1024) if montage_data.get("taille_mb") else 0
         resultat_montage = montage_data
 
+    # Restaurer les métadonnées depuis le fichier si on reprend après l'étape metadonnees
+    if etape_idx > 5 and chemin_meta.exists():
+        with open(chemin_meta, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+        logger.info("Métadonnées chargées depuis : %s", chemin_meta)
+
     # Charger l'historique pour la continuité
     historique = charger_historique()
 
@@ -1516,11 +1541,19 @@ def _pipeline_inner(
     score = 0
     chemin_valide = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
 
-    # Si on reprend, charger le script existant
+    # Si on reprend, charger le script existant et restaurer le score
     if etape_idx > 0 and chemin_valide.exists():
         with open(chemin_valide, "r", encoding="utf-8") as f:
             script = json.load(f)
+        if checkpoint_data:
+            score = checkpoint_data.get("etapes", {}).get("script", {}).get("score_review", 0)
         logger.info("Script chargé depuis le checkpoint : %s", chemin_valide)
+    elif etape_idx > 0:
+        logger.warning(
+            "Reprise à l'étape %s mais le script validé %s est introuvable. "
+            "Les étapes suivantes risquent d'échouer.",
+            etape_depart, chemin_valide,
+        )
 
     # ── Étape 1-2 : Scripteur + Reviewer ─────────────────────────────────────
 
@@ -2201,20 +2234,31 @@ def batch(fichier: str, dry_run: bool, auto: bool):
                 auto=auto,
             )
             resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
+        except ProductionAbandonnee as e:
+            console.print(f"\n[bold yellow]Production abandonnée : {e}[/bold yellow]")
+            resultats.append({"status": "skipped", "episode": ep["titre"], "raison": str(e)})
         except Exception as e:
             logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
             resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
 
     # Rapport batch
     console.print(f"\n[bold]{'='*60}[/bold]")
-    console.print("[bold green]Rapport batch[/bold green]")
+    console.print(f"[bold {Palette.SUCCES}]Rapport batch[/]")
     ok = sum(1 for r in resultats if r["status"] == "ok")
+    skipped = sum(1 for r in resultats if r["status"] == "skipped")
     erreurs = sum(1 for r in resultats if r["status"] == "error")
-    console.print(f"  Reussis : {ok}/{len(planning)}")
-    console.print(f"  Echecs  : {erreurs}/{len(planning)}")
+    console.print(f"  Réussis    : {ok}/{len(planning)}")
+    if skipped:
+        console.print(f"  Abandonnés : {skipped}/{len(planning)}")
+    console.print(f"  Échecs     : {erreurs}/{len(planning)}")
 
     for r in resultats:
-        status = "[green]OK[/green]" if r["status"] == "ok" else "[red]ERREUR[/red]"
+        if r["status"] == "ok":
+            status = f"[{Palette.SUCCES}]OK[/]"
+        elif r["status"] == "skipped":
+            status = "[yellow]ABANDONNÉ[/yellow]"
+        else:
+            status = "[red]ERREUR[/red]"
         console.print(f"  {status} — {r['episode']}")
         if r["status"] == "error":
             console.print(f"    [red]{r['erreur']}[/red]")
@@ -2430,20 +2474,31 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
                 type_episode=ep.get("type", "standard"),
             )
             resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
+        except ProductionAbandonnee as e:
+            console.print(f"\n[bold yellow]Production abandonnée : {e}[/bold yellow]")
+            resultats.append({"status": "skipped", "episode": ep["titre"], "raison": str(e)})
         except Exception as e:
             logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
             resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
 
     # Rapport de saison
     console.print(f"\n[bold]{'='*60}[/bold]")
-    console.print("[bold green]Rapport de saison[/bold green]")
+    console.print(f"[bold {Palette.SUCCES}]Rapport de saison[/]")
     ok = sum(1 for r in resultats if r["status"] == "ok")
+    skipped = sum(1 for r in resultats if r["status"] == "skipped")
     erreurs = sum(1 for r in resultats if r["status"] == "error")
-    console.print(f"  Reussis : {ok}/{len(episodes_plan)}")
-    console.print(f"  Echecs  : {erreurs}/{len(episodes_plan)}")
+    console.print(f"  Réussis    : {ok}/{len(episodes_plan)}")
+    if skipped:
+        console.print(f"  Abandonnés : {skipped}/{len(episodes_plan)}")
+    console.print(f"  Échecs     : {erreurs}/{len(episodes_plan)}")
 
     for r in resultats:
-        status = "[green]OK[/green]" if r["status"] == "ok" else "[red]ERREUR[/red]"
+        if r["status"] == "ok":
+            status = f"[{Palette.SUCCES}]OK[/]"
+        elif r["status"] == "skipped":
+            status = "[yellow]ABANDONNÉ[/yellow]"
+        else:
+            status = "[red]ERREUR[/red]"
         console.print(f"  {status} — {r['episode']}")
         if r["status"] == "error":
             console.print(f"    [red]{r['erreur']}[/red]")
@@ -2712,7 +2767,7 @@ def migrer_json_vers_db():
 
     from migrate_json_to_db import migrer_tout
     migrer_tout()
-    console.print("[green]Migration terminée ![/green]")
+    console.print(f"[{Palette.SUCCES}]Migration terminée ![/]")
 
 
 if __name__ == "__main__":

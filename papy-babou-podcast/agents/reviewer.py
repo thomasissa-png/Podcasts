@@ -171,10 +171,7 @@ class Reviewer:
         Returns:
             Liste de corrections textuelles.
         """
-        corrections = list(resultat_review["review"]["corrections"])
-        if not corrections:
-            corrections = list(resultat_review["review"]["alertes"])
-        return corrections
+        return list(resultat_review["review"]["corrections"])
 
     @staticmethod
     def estimer_duree(script: dict) -> float:

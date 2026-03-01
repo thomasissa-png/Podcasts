@@ -77,14 +77,14 @@ class TestReviewerLogique:
         assert len(corrections) == 1
         assert "Une alerte" not in corrections
 
-    def test_extraire_corrections_vides_fallback_alertes(self, review_exemple):
-        """Sans corrections, les alertes sont utilisées en fallback."""
+    def test_extraire_corrections_vides_pas_fallback_alertes(self, review_exemple):
+        """Sans corrections, les alertes ne sont PAS utilisées (évite les boucles infinies)."""
         reviewer = Reviewer()
         review_exemple["review"]["corrections"] = []
         review_exemple["review"]["alertes"] = ["Une alerte"]
         corrections = reviewer.extraire_corrections(review_exemple)
-        assert len(corrections) == 1
-        assert "Une alerte" in corrections
+        assert len(corrections) == 0
+        assert "Une alerte" not in corrections
 
     def test_estimer_duree(self, script_exemple):
         """L'estimation de durée doit retourner une valeur positive."""

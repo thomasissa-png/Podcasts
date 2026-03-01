@@ -230,7 +230,8 @@ class Publisher:
         if cover_path:
             site_web = config.PODCAST_CONFIG.get("site_web", "")
             episode_id = f"S{meta['saison']:02d}E{meta['numero']:02d}"
-            cover_url = f"{site_web}/covers/{episode_id}_cover.jpg"
+            ext = Path(cover_path).suffix or ".png"
+            cover_url = f"{site_web}/covers/{episode_id}_cover{ext}"
             ET.SubElement(
                 item, f"{{{ITUNES_NS}}}image",
                 href=cover_url,
