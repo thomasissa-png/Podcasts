@@ -3,53 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Les Histoires de Papy Babou — Dashboard</title>
+    <title>Les Histoires de Papy Babou</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════════════════════════
-           PALETTE PAPY BABOU — Flat Design Provence
+           PALETTE PAPY BABOU — Chaud & Enfantin (inspiré Minilek)
            ═══════════════════════════════════════════════════════════════ */
         :root {
-            --ocre: #D4A054;
-            --bleu-ciel: #7BAFD4;
-            --rose-poudre: #D4869A;
-            --vert-olive: #8BAF6E;
-            --beige-chaud: #F5E6D0;
-            --lavande: #9B8EC4;
-            --terre-cuite: #C47A5A;
-            --miel: #E8B84B;
-            --ardoise: #5A6978;
-            --ivoire: #FDF8F0;
-            --succes: #6BA368;
-            --attention: #D4A054;
-            --erreur: #C45A5A;
-            --fond: #1a1a2e;
-            --fond-carte: #16213e;
-            --fond-table: #0f3460;
-            --texte: #FDF8F0;
-            --texte-dim: #8899aa;
-            --border: #2a2a4a;
+            --soleil: #F9B233;
+            --corail: #FF6B6B;
+            --turquoise: #13A69C;
+            --bleu-doux: #5B9BD5;
+            --rose-tendre: #F2A7B3;
+            --vert-prairie: #7BC67E;
+            --violet-doux: #A78BDB;
+            --orange-chaud: #F28B50;
+            --sable: #FFF5E6;
+            --blanc: #FFFFFF;
+            --fond: #FFF9F0;
+            --fond-carte: #FFFFFF;
+            --texte: #3D3225;
+            --texte-dim: #8B7D6B;
+            --texte-light: #B8A99A;
+            --border: #F0E4D4;
+            --border-hover: #E8D5BF;
+            --ombre: 0 2px 12px rgba(60, 40, 20, 0.08);
+            --ombre-hover: 0 4px 20px rgba(60, 40, 20, 0.14);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
             background: var(--fond);
             color: var(--texte);
             line-height: 1.6;
             min-height: 100vh;
         }
 
-        /* ── Header ─────────────────────────────────────────────────── */
+        /* ── Header ──────────────────────────────────────────────── */
         .header {
-            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
-            border-bottom: 3px solid var(--ocre);
-            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, var(--soleil) 0%, var(--orange-chaud) 100%);
+            padding: 1.25rem 2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 1rem;
+            box-shadow: 0 4px 20px rgba(242, 139, 80, 0.25);
         }
 
         .header-title {
@@ -58,104 +63,110 @@
             gap: 0.75rem;
         }
 
-        .header-title .icon { font-size: 2rem; }
+        .header-title .logo {
+            width: 48px;
+            height: 48px;
+            background: var(--blanc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
 
         .header-title h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--ocre);
-            letter-spacing: -0.02em;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--blanc);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
 
         .header-title .subtitle {
-            font-size: 0.85rem;
-            color: var(--ardoise);
-            margin-top: 0.1rem;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.85);
+            font-weight: 600;
         }
 
-        .header-nav {
+        /* ── Navigation principale (onglets) ─────────────────────── */
+        .nav-bar {
+            background: var(--blanc);
+            border-bottom: 2px solid var(--border);
+            padding: 0 1.5rem;
             display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
+            gap: 0;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
-        .btn {
-            display: inline-flex;
+        .nav-tab {
+            padding: 0.85rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--texte-dim);
+            cursor: pointer;
+            border: none;
+            background: none;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
             align-items: center;
             gap: 0.4rem;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-decoration: none;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
+            font-family: inherit;
         }
 
-        .btn-saison {
-            background: var(--fond-carte);
-            color: var(--texte-dim);
-            border-color: var(--border);
+        .nav-tab:hover {
+            color: var(--orange-chaud);
+            background: rgba(249, 178, 51, 0.06);
         }
 
-        .btn-saison:hover, .btn-saison.active {
-            background: var(--ocre);
-            color: var(--fond);
-            border-color: var(--ocre);
+        .nav-tab.active {
+            color: var(--orange-chaud);
+            border-bottom-color: var(--orange-chaud);
         }
 
-        .btn-all {
-            background: var(--fond-carte);
-            color: var(--bleu-ciel);
-            border-color: var(--bleu-ciel);
-        }
+        .nav-tab .tab-icon { font-size: 1.1rem; }
 
-        .btn-all:hover, .btn-all.active {
-            background: var(--bleu-ciel);
-            color: var(--fond);
-        }
-
-        /* ── Layout principal ───────────────────────────────────────── */
-        .dashboard {
-            max-width: 1400px;
+        /* ── Layout ──────────────────────────────────────────────── */
+        .main {
+            max-width: 1300px;
             margin: 0 auto;
             padding: 1.5rem;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.25rem;
         }
 
-        .row-2 {
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.25rem;
         }
 
-        .row-3 {
+        .grid-3 {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 1.25rem;
         }
 
-        .row-2-1 {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1.25rem;
-        }
-
         @media (max-width: 900px) {
-            .row-2, .row-3, .row-2-1 {
-                grid-template-columns: 1fr;
-            }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
         }
 
-        /* ── Cartes ─────────────────────────────────────────────────── */
+        /* ── Cartes ──────────────────────────────────────────────── */
         .card {
             background: var(--fond-carte);
-            border-radius: 12px;
+            border-radius: var(--radius);
             border: 1px solid var(--border);
+            box-shadow: var(--ombre);
             overflow: hidden;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: var(--ombre-hover);
+            transform: translateY(-1px);
         }
 
         .card-header {
@@ -164,30 +175,31 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-weight: 700;
+            font-weight: 800;
             font-size: 0.9rem;
+            color: var(--texte);
         }
 
         .card-header .icon { font-size: 1.1rem; }
-        .card-header .label { color: var(--ocre); }
+
         .card-header .count {
             margin-left: auto;
-            background: var(--fond);
+            background: var(--sable);
             color: var(--texte-dim);
             padding: 0.15rem 0.6rem;
             border-radius: 20px;
             font-size: 0.75rem;
+            font-weight: 700;
         }
 
-        .card-body {
-            padding: 1.25rem;
-        }
+        .card-body { padding: 1.25rem; }
 
-        /* ── Stats KPI ──────────────────────────────────────────────── */
+        /* ── Stats KPI ───────────────────────────────────────────── */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1.25rem;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         @media (max-width: 700px) {
@@ -197,31 +209,49 @@
         .stat-card {
             background: var(--fond-carte);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: var(--radius);
             padding: 1.25rem;
             text-align: center;
+            box-shadow: var(--ombre);
+            position: relative;
+            overflow: hidden;
         }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-card.soleil::before { background: var(--soleil); }
+        .stat-card.turquoise::before { background: var(--turquoise); }
+        .stat-card.vert::before { background: var(--vert-prairie); }
+        .stat-card.corail::before { background: var(--corail); }
 
         .stat-value {
             font-size: 2rem;
-            font-weight: 800;
+            font-weight: 900;
             line-height: 1.2;
         }
 
+        .stat-value.soleil { color: var(--soleil); }
+        .stat-value.turquoise { color: var(--turquoise); }
+        .stat-value.vert { color: var(--vert-prairie); }
+        .stat-value.corail { color: var(--corail); }
+
         .stat-label {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--texte-dim);
             margin-top: 0.3rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
         }
 
-        .stat-value.ocre { color: var(--ocre); }
-        .stat-value.bleu { color: var(--bleu-ciel); }
-        .stat-value.vert { color: var(--succes); }
-        .stat-value.miel { color: var(--miel); }
-
-        /* ── Table des episodes ─────────────────────────────────────── */
+        /* ── Table des episodes ──────────────────────────────────── */
         .table-wrap { overflow-x: auto; }
 
         table {
@@ -233,12 +263,13 @@
         thead th {
             padding: 0.7rem 1rem;
             text-align: left;
-            color: var(--ardoise);
-            font-weight: 600;
+            color: var(--texte-dim);
+            font-weight: 700;
             font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
             border-bottom: 2px solid var(--border);
+            background: var(--sable);
         }
 
         tbody tr {
@@ -246,23 +277,15 @@
             transition: background 0.15s;
         }
 
-        tbody tr:hover { background: rgba(122, 175, 212, 0.06); }
-        tbody tr:nth-child(even) { background: rgba(26, 26, 46, 0.4); }
-        tbody tr:nth-child(even):hover { background: rgba(122, 175, 212, 0.08); }
+        tbody tr:hover { background: rgba(249, 178, 51, 0.06); }
 
-        td {
-            padding: 0.65rem 1rem;
-            vertical-align: middle;
-        }
+        td { padding: 0.65rem 1rem; vertical-align: middle; }
 
-        .ep-id {
-            font-weight: 700;
-            color: var(--bleu-ciel);
-            white-space: nowrap;
-        }
+        .ep-id { font-weight: 800; color: var(--orange-chaud); white-space: nowrap; }
 
         .ep-titre {
             color: var(--texte);
+            font-weight: 600;
             max-width: 250px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -271,59 +294,47 @@
 
         .ep-type {
             display: inline-block;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
             font-size: 0.7rem;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
         }
 
-        .type-standard { background: var(--fond); color: var(--texte-dim); }
-        .type-ouverture { background: rgba(232, 184, 75, 0.15); color: var(--miel); }
-        .type-final { background: rgba(212, 134, 154, 0.15); color: var(--rose-poudre); }
-        .type-mi-saison { background: rgba(155, 142, 196, 0.15); color: var(--lavande); }
-        .type-bonus { background: rgba(196, 122, 90, 0.15); color: var(--terre-cuite); }
+        .type-standard { background: var(--sable); color: var(--texte-dim); }
+        .type-ouverture { background: rgba(249, 178, 51, 0.15); color: #C78A1B; }
+        .type-final { background: rgba(255, 107, 107, 0.12); color: var(--corail); }
+        .type-mi-saison { background: rgba(167, 139, 219, 0.15); color: var(--violet-doux); }
+        .type-bonus { background: rgba(19, 166, 156, 0.12); color: var(--turquoise); }
 
-        /* ── Score bar ──────────────────────────────────────────────── */
-        .score-bar {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+        /* ── Score bar ───────────────────────────────────────────── */
+        .score-bar { display: flex; align-items: center; gap: 0.5rem; }
 
         .score-track {
             flex: 1;
-            height: 6px;
-            background: var(--fond);
-            border-radius: 3px;
+            height: 8px;
+            background: var(--sable);
+            border-radius: 4px;
             overflow: hidden;
             min-width: 60px;
         }
 
         .score-fill {
             height: 100%;
-            border-radius: 3px;
+            border-radius: 4px;
             transition: width 0.5s ease;
         }
 
-        .score-fill.high { background: var(--succes); }
-        .score-fill.mid { background: var(--miel); }
-        .score-fill.low { background: var(--erreur); }
+        .score-fill.high { background: var(--vert-prairie); }
+        .score-fill.mid { background: var(--soleil); }
+        .score-fill.low { background: var(--corail); }
 
-        .score-num {
-            font-weight: 700;
-            font-size: 0.85rem;
-            min-width: 2.5rem;
-            text-align: right;
-        }
+        .score-num { font-weight: 800; font-size: 0.85rem; min-width: 2.5rem; text-align: right; }
+        .score-num.high { color: var(--vert-prairie); }
+        .score-num.mid { color: var(--soleil); }
+        .score-num.low { color: var(--corail); }
 
-        .score-num.high { color: var(--succes); }
-        .score-num.mid { color: var(--miel); }
-        .score-num.low { color: var(--erreur); }
-
-        /* ── Progression bar ────────────────────────────────────────── */
-        .progress-section { margin-bottom: 1rem; }
-
+        /* ── Progression ─────────────────────────────────────────── */
         .progress-header {
             display: flex;
             justify-content: space-between;
@@ -331,90 +342,81 @@
             margin-bottom: 0.5rem;
         }
 
-        .progress-header .theme {
-            font-weight: 700;
-            color: var(--ocre);
-        }
-
-        .progress-header .pct {
-            font-weight: 800;
-            color: var(--miel);
-            font-size: 1.5rem;
-        }
+        .progress-header .theme { font-weight: 800; color: var(--orange-chaud); }
+        .progress-header .pct { font-weight: 900; color: var(--turquoise); font-size: 1.5rem; }
 
         .progress-bar {
-            height: 10px;
-            background: var(--fond);
-            border-radius: 5px;
+            height: 12px;
+            background: var(--sable);
+            border-radius: 6px;
             overflow: hidden;
             margin-bottom: 1rem;
         }
 
         .progress-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--vert-olive), var(--miel));
-            border-radius: 5px;
+            background: linear-gradient(90deg, var(--turquoise), var(--vert-prairie));
+            border-radius: 6px;
             transition: width 0.6s ease;
         }
 
-        .ep-plan-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-        }
+        .ep-plan-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
         .ep-plan-chip {
-            padding: 0.25rem 0.6rem;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            border: 1px solid var(--border);
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            border: 2px solid var(--border);
         }
 
         .ep-plan-chip.done {
-            background: rgba(107, 163, 104, 0.2);
-            color: var(--succes);
-            border-color: var(--succes);
+            background: rgba(123, 198, 126, 0.15);
+            color: var(--vert-prairie);
+            border-color: var(--vert-prairie);
         }
 
         .ep-plan-chip.pending {
-            background: var(--fond);
-            color: var(--texte-dim);
+            background: var(--sable);
+            color: var(--texte-light);
         }
 
-        /* ── Personnages ────────────────────────────────────────────── */
-        .perso-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-        }
+        /* ── Personnages ─────────────────────────────────────────── */
+        .perso-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 
         .perso-chip {
             display: flex;
             align-items: center;
             gap: 0.4rem;
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
-            background: var(--fond);
-            border: 1px solid var(--border);
+            padding: 0.5rem 0.9rem;
+            border-radius: 20px;
+            background: var(--sable);
+            border: 2px solid var(--border);
             font-size: 0.85rem;
+            transition: all 0.2s;
         }
 
-        .perso-chip .name { font-weight: 600; }
+        .perso-chip:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--ombre);
+        }
+
+        .perso-chip .name { font-weight: 700; }
         .perso-chip .count {
             background: var(--fond-carte);
-            padding: 0.1rem 0.4rem;
+            padding: 0.1rem 0.5rem;
             border-radius: 10px;
             font-size: 0.7rem;
+            font-weight: 800;
             color: var(--texte-dim);
         }
 
-        .perso-papy_babou .name { color: var(--ocre); }
-        .perso-antoine .name { color: var(--bleu-ciel); }
-        .perso-noemie .name { color: var(--rose-poudre); }
-        .perso-narrateur .name { color: var(--ardoise); }
+        .perso-papy_babou .name { color: var(--orange-chaud); }
+        .perso-antoine .name { color: var(--bleu-doux); }
+        .perso-noemie .name { color: var(--rose-tendre); }
+        .perso-narrateur .name { color: var(--texte-dim); }
 
-        /* ── Listes (retours, prefs, checkpoints) ───────────────────── */
+        /* ── Listes ──────────────────────────────────────────────── */
         .list-item {
             padding: 0.65rem 0;
             border-bottom: 1px solid var(--border);
@@ -427,38 +429,35 @@
 
         .list-item .badge {
             flex-shrink: 0;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
             font-size: 0.7rem;
-            font-weight: 700;
-            background: rgba(122, 175, 212, 0.15);
-            color: var(--bleu-ciel);
+            font-weight: 800;
+            background: rgba(91, 155, 213, 0.12);
+            color: var(--bleu-doux);
             white-space: nowrap;
         }
 
-        .list-item .text {
-            color: var(--texte);
-            font-size: 0.85rem;
-        }
+        .list-item .text { color: var(--texte); font-size: 0.85rem; }
 
         .pref-cat {
             display: inline-block;
-            padding: 0.1rem 0.4rem;
-            border-radius: 3px;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
             font-size: 0.65rem;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
-            background: rgba(232, 184, 75, 0.15);
-            color: var(--miel);
+            background: rgba(249, 178, 51, 0.12);
+            color: #C78A1B;
             margin-right: 0.4rem;
         }
 
         .checkpoint-etape {
-            background: rgba(212, 160, 84, 0.15);
-            color: var(--attention);
+            background: rgba(255, 107, 107, 0.12);
+            color: var(--corail);
         }
 
-        /* ── Coûts ──────────────────────────────────────────────────── */
+        /* ── Couts ───────────────────────────────────────────────── */
         .cout-row {
             display: flex;
             justify-content: space-between;
@@ -468,135 +467,517 @@
         }
 
         .cout-row:last-child { border-bottom: none; }
-        .cout-row .service { color: var(--texte-dim); }
-        .cout-row .montant { font-weight: 700; color: var(--miel); }
-        .cout-row.total .service { color: var(--texte); font-weight: 700; }
-        .cout-row.total .montant { color: var(--ocre); font-size: 1.1rem; }
+        .cout-row .service { color: var(--texte-dim); font-weight: 600; }
+        .cout-row .montant { font-weight: 800; color: var(--turquoise); }
+        .cout-row.total .service { color: var(--texte); font-weight: 800; }
+        .cout-row.total .montant { color: var(--orange-chaud); font-size: 1.1rem; }
 
-        /* ── Vide / placeholder ─────────────────────────────────────── */
+        /* ── Vide ────────────────────────────────────────────────── */
         .empty {
             text-align: center;
-            padding: 2rem;
+            padding: 2.5rem;
             color: var(--texte-dim);
-            font-style: italic;
         }
 
-        .empty .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .empty .icon { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.5; }
+        .empty p { font-weight: 600; }
 
-        /* ── Footer ─────────────────────────────────────────────────── */
-        .footer {
-            text-align: center;
-            padding: 1.5rem;
-            color: var(--ardoise);
+        /* ── Boutons ─────────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: inherit;
+            text-decoration: none;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--soleil), var(--orange-chaud));
+            color: var(--blanc);
+            border: none;
+            box-shadow: 0 3px 12px rgba(249, 178, 51, 0.35);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 5px 20px rgba(249, 178, 51, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--blanc);
+            color: var(--texte);
+            border-color: var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--soleil);
+            background: rgba(249, 178, 51, 0.05);
+        }
+
+        .btn-turquoise {
+            background: var(--turquoise);
+            color: var(--blanc);
+            border: none;
+            box-shadow: 0 3px 12px rgba(19, 166, 156, 0.3);
+        }
+
+        .btn-turquoise:hover {
+            box-shadow: 0 5px 20px rgba(19, 166, 156, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-corail {
+            background: var(--corail);
+            color: var(--blanc);
+            border: none;
+        }
+
+        .btn-saison-filter {
+            background: var(--fond-carte);
+            color: var(--texte-dim);
+            border: 2px solid var(--border);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .btn-saison-filter:hover, .btn-saison-filter.active {
+            background: var(--soleil);
+            color: var(--blanc);
+            border-color: var(--soleil);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Formulaires ─────────────────────────────────────────── */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--texte);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-group .hint {
             font-size: 0.75rem;
-            border-top: 1px solid var(--border);
+            color: var(--texte-dim);
+            margin-top: 0.25rem;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--texte);
+            background: var(--blanc);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--soleil);
+            box-shadow: 0 0 0 3px rgba(249, 178, 51, 0.15);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .form-check input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--soleil);
+        }
+
+        .form-check label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* ── Alerte / Feedback ───────────────────────────────────── */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .alert.show { display: block; }
+
+        .alert-success {
+            background: rgba(123, 198, 126, 0.15);
+            color: #2D7A30;
+            border: 1px solid rgba(123, 198, 126, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(255, 107, 107, 0.12);
+            color: #C44;
+            border: 1px solid rgba(255, 107, 107, 0.25);
+        }
+
+        .alert-info {
+            background: rgba(91, 155, 213, 0.12);
+            color: #3A7BC8;
+            border: 1px solid rgba(91, 155, 213, 0.25);
+        }
+
+        /* ── Console output ──────────────────────────────────────── */
+        .console-output {
+            background: #2D2A24;
+            color: #F0E8D8;
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            display: none;
             margin-top: 1rem;
         }
 
-        .footer a { color: var(--bleu-ciel); text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
+        .console-output.show { display: block; }
 
-        /* ── Animations ─────────────────────────────────────────────── */
-        .card { animation: fadeUp 0.4s ease-out both; }
-        .card:nth-child(2) { animation-delay: 0.05s; }
-        .card:nth-child(3) { animation-delay: 0.1s; }
-        .card:nth-child(4) { animation-delay: 0.15s; }
+        /* ── Spinner ─────────────────────────────────────────────── */
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: var(--blanc);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 249, 240, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading-overlay.show { display: flex; }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border);
+            border-top-color: var(--soleil);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            font-weight: 700;
+            color: var(--texte);
+            font-size: 1rem;
+        }
+
+        /* ── Checkpoint cards ────────────────────────────────────── */
+        .checkpoint-card {
+            background: var(--sable);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .checkpoint-card:hover {
+            border-color: var(--soleil);
+            box-shadow: var(--ombre);
+        }
+
+        .checkpoint-info { flex: 1; }
+        .checkpoint-info .ep-id { font-weight: 800; color: var(--orange-chaud); }
+        .checkpoint-info .etape {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            background: rgba(255, 107, 107, 0.12);
+            color: var(--corail);
+            margin-left: 0.5rem;
+        }
+        .checkpoint-info .date {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--texte-dim);
+            margin-top: 0.2rem;
+        }
+
+        /* ── Season card in planner ──────────────────────────────── */
+        .season-card {
+            background: var(--sable);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .season-card:hover {
+            border-color: var(--soleil);
+            box-shadow: var(--ombre-hover);
+        }
+
+        .season-card .season-num {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--orange-chaud);
+        }
+
+        /* ── Footer ──────────────────────────────────────────────── */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--texte-dim);
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-top: 2px solid var(--border);
+            margin-top: 2rem;
+        }
+
+        /* ── Animations ──────────────────────────────────────────── */
+        .card { animation: fadeUp 0.3s ease-out both; }
 
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(12px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Section title ───────────────────────────────────────── */
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: var(--texte);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title .icon { font-size: 1.3rem; }
+
+        .section-desc {
+            color: var(--texte-dim);
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* ── Page header ─────────────────────────────────────────── */
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--texte);
+            margin-bottom: 0.25rem;
+        }
+
+        .page-header p {
+            color: var(--texte-dim);
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
-<!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
+<!-- ═══ LOADING OVERLAY ════════════════════════════════════════════════════ -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Production en cours...</div>
+</div>
+
+<!-- ═══ HEADER ═════════════════════════════════════════════════════════════ -->
 <header class="header">
     <div class="header-title">
-        <span class="icon">📖</span>
+        <div class="logo">&#128218;</div>
         <div>
             <h1>Les Histoires de Papy Babou</h1>
-            <div class="subtitle">Dashboard de production</div>
+            <div class="subtitle">Studio de production podcast</div>
         </div>
     </div>
-    <nav class="header-nav">
-        <a href="/" class="btn btn-all {{ 'active' if saison_filtre == 0 }}">Tout</a>
+</header>
+
+<!-- ═══ NAVIGATION ═════════════════════════════════════════════════════════ -->
+<nav class="nav-bar">
+    <button class="nav-tab active" onclick="showPage('dashboard')">
+        <span class="tab-icon">&#127968;</span> Dashboard
+    </button>
+    <button class="nav-tab" onclick="showPage('produire')">
+        <span class="tab-icon">&#127908;</span> Produire
+    </button>
+    <button class="nav-tab" onclick="showPage('planifier')">
+        <span class="tab-icon">&#128197;</span> Planifier saison
+    </button>
+    <button class="nav-tab" onclick="showPage('produire-saison')">
+        <span class="tab-icon">&#127916;</span> Produire saison
+    </button>
+    <button class="nav-tab" onclick="showPage('reprendre')">
+        <span class="tab-icon">&#9654;</span> Reprendre
+    </button>
+    <button class="nav-tab" onclick="showPage('config')">
+        <span class="tab-icon">&#9881;</span> Configuration
+    </button>
+</nav>
+
+<main class="main">
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  PAGE : DASHBOARD                                                     ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page active" id="page-dashboard">
+
+    <!-- Filtre par saison -->
+    <div class="btn-group">
+        <a href="/" class="btn btn-saison-filter {{ 'active' if saison_filtre == 0 }}">Tout</a>
         {% for s in saisons_dispo %}
-        <a href="/?saison={{ s }}" class="btn btn-saison {{ 'active' if saison_filtre == s }}">
+        <a href="/?saison={{ s }}" class="btn btn-saison-filter {{ 'active' if saison_filtre == s }}">
             Saison {{ s }}
         </a>
         {% endfor %}
-    </nav>
-</header>
+    </div>
 
-<main class="dashboard">
-
-    <!-- ═══ STATS KPI ════════════════════════════════════════════════════ -->
+    <!-- Stats KPI -->
     {% if episodes %}
     <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-value ocre">{{ stats.nb_episodes }}</div>
+        <div class="stat-card soleil">
+            <div class="stat-value soleil">{{ stats.nb_episodes }}</div>
             <div class="stat-label">Episodes</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-value bleu">{{ stats.score_moyen }}<span style="font-size: 0.9rem; color: var(--texte-dim)">/10</span></div>
+        <div class="stat-card turquoise">
+            <div class="stat-value turquoise">{{ stats.score_moyen }}<span style="font-size: 0.9rem; color: var(--texte-dim)">/10</span></div>
             <div class="stat-label">Score moyen</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card vert">
             <div class="stat-value vert">{{ stats.score_max }}</div>
             <div class="stat-label">Meilleur score</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-value miel">${{ "%.4f"|format(couts.total) }}</div>
+        <div class="stat-card corail">
+            <div class="stat-value corail">${{ "%.4f"|format(couts.total) }}</div>
             <div class="stat-label">Budget total</div>
         </div>
     </div>
     {% endif %}
 
-    <!-- ═══ PROGRESSION DE SAISON ════════════════════════════════════════ -->
+    <!-- Progression saison -->
     {% if progression %}
-    <div class="card">
+    <div class="card" style="margin-bottom: 1.25rem;">
         <div class="card-header">
-            <span class="icon">📚</span>
-            <span class="label">Progression — Saison {{ saison_filtre }}</span>
+            <span class="icon">&#128218;</span>
+            Progression — Saison {{ saison_filtre }}
             <span class="count">{{ progression.produits }}/{{ progression.total }}</span>
         </div>
         <div class="card-body">
-            <div class="progress-section">
-                <div class="progress-header">
-                    <span class="theme">{{ progression.theme }}</span>
-                    <span class="pct">{{ progression.pourcentage }}%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-bar-fill" style="width: {{ progression.pourcentage }}%"></div>
-                </div>
-                {% if progression.fil_rouge %}
-                <p style="color: var(--texte-dim); font-size: 0.85rem; margin-bottom: 1rem;">
-                    Fil rouge : {{ progression.fil_rouge }}
-                </p>
-                {% endif %}
-                <div class="ep-plan-grid">
-                    {% for ep in progression.episodes_plan %}
-                    <span class="ep-plan-chip {{ 'done' if ep.produit else 'pending' }}"
-                          title="{{ ep.titre }}">
-                        E{{ "%02d"|format(ep.numero) }}
-                        {% if ep.produit %}&#10003;{% endif %}
-                    </span>
-                    {% endfor %}
-                </div>
+            <div class="progress-header">
+                <span class="theme">{{ progression.theme }}</span>
+                <span class="pct">{{ progression.pourcentage }}%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" style="width: {{ progression.pourcentage }}%"></div>
+            </div>
+            {% if progression.fil_rouge %}
+            <p style="color: var(--texte-dim); font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600;">
+                Fil rouge : {{ progression.fil_rouge }}
+            </p>
+            {% endif %}
+            <div class="ep-plan-grid">
+                {% for ep in progression.episodes_plan %}
+                <span class="ep-plan-chip {{ 'done' if ep.produit else 'pending' }}" title="{{ ep.titre }}">
+                    E{{ "%02d"|format(ep.numero) }}
+                    {% if ep.produit %}&#10003;{% endif %}
+                </span>
+                {% endfor %}
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- ═══ TABLE DES EPISODES ═══════════════════════════════════════════ -->
+    <!-- Table des episodes -->
     {% if episodes %}
-    <div class="card">
+    <div class="card" style="margin-bottom: 1.25rem;">
         <div class="card-header">
-            <span class="icon">📄</span>
-            <span class="label">
-                {% if saison_filtre > 0 %}Saison {{ saison_filtre }}{% else %}Tous les episodes{% endif %}
-            </span>
+            <span class="icon">&#127911;</span>
+            {% if saison_filtre > 0 %}Saison {{ saison_filtre }}{% else %}Tous les episodes{% endif %}
             <span class="count">{{ episodes|length }}</span>
         </div>
         <div class="card-body table-wrap">
@@ -616,27 +997,21 @@
                 <tbody>
                     {% for ep in episodes %}
                     <tr>
-                        <td style="color: var(--succes); font-weight: 700;">&#10003;</td>
+                        <td style="color: var(--vert-prairie); font-weight: 800;">&#10003;</td>
                         <td class="ep-id">{{ ep.episode_id }}</td>
-                        <td class="ep-titre" title="{{ ep.titre }}">{{ ep.titre[:35] }}{% if ep.titre|length > 35 %}&hellip;{% endif %}</td>
-                        <td>
-                            <span class="ep-type type-{{ ep.type_episode }}">
-                                {{ ep.type_episode }}
-                            </span>
-                        </td>
+                        <td class="ep-titre" title="{{ ep.titre }}">{{ ep.titre[:40] }}{% if ep.titre|length > 40 %}&hellip;{% endif %}</td>
+                        <td><span class="ep-type type-{{ ep.type_episode }}">{{ ep.type_episode }}</span></td>
                         <td>
                             {% set score_class = 'high' if ep.score >= 7 else ('mid' if ep.score >= 5 else 'low') %}
                             <div class="score-bar">
                                 <div class="score-track">
-                                    <div class="score-fill {{ score_class }}"
-                                         style="width: {{ (ep.score / 10 * 100)|int }}%"></div>
+                                    <div class="score-fill {{ score_class }}" style="width: {{ (ep.score / 10 * 100)|int }}%"></div>
                                 </div>
                                 <span class="score-num {{ score_class }}">{{ ep.score }}</span>
                             </div>
                         </td>
-                        <td style="color: var(--texte-dim);">{{ ep.ambiance }}</td>
-                        <td style="color: var(--texte-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-                            title="{{ ep.morale }}">
+                        <td style="color: var(--texte-dim); font-weight: 600;">{{ ep.ambiance }}</td>
+                        <td style="color: var(--texte-dim); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;" title="{{ ep.morale }}">
                             {{ ep.morale[:30] }}{% if ep.morale|length > 30 %}&hellip;{% endif %}
                         </td>
                         <td style="color: var(--texte-dim); white-space: nowrap; font-size: 0.8rem;">
@@ -649,24 +1024,22 @@
         </div>
     </div>
     {% else %}
-    <div class="card">
+    <div class="card" style="margin-bottom: 1.25rem;">
         <div class="card-body empty">
-            <div class="icon">📖</div>
+            <div class="icon">&#128218;</div>
             <p>Aucun episode produit pour le moment.</p>
-            <p style="margin-top: 0.5rem; font-size: 0.8rem;">
-                Lancez <code style="background: var(--fond); padding: 0.2rem 0.5rem; border-radius: 4px;">python main.py interactif</code> pour commencer.
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">
+                Cliquez sur l'onglet <strong>Produire</strong> pour lancer votre premier episode !
             </p>
         </div>
     </div>
     {% endif %}
 
-    <!-- ═══ RANGEE : PERSONNAGES + RETOURS HUMAINS ═══════════════════════ -->
-    <div class="row-2">
-        <!-- Personnages -->
+    <!-- Personnages + Retours humains -->
+    <div class="grid-2" style="margin-bottom: 1.25rem;">
         <div class="card">
             <div class="card-header">
-                <span class="icon">👤</span>
-                <span class="label">Personnages</span>
+                <span class="icon">&#128100;</span> Personnages
                 <span class="count">{{ personnages|length }}</span>
             </div>
             <div class="card-body">
@@ -680,16 +1053,14 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="empty">Aucun personnage</div>
+                <div class="empty"><p>Aucun personnage</p></div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Retours humains -->
         <div class="card">
             <div class="card-header">
-                <span class="icon">📋</span>
-                <span class="label">Retours humains</span>
+                <span class="icon">&#128172;</span> Retours humains
                 <span class="count">{{ retours_humains|length }}</span>
             </div>
             <div class="card-body">
@@ -701,19 +1072,17 @@
                 </div>
                 {% endfor %}
                 {% else %}
-                <div class="empty">Aucun retour</div>
+                <div class="empty"><p>Aucun retour</p></div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- ═══ RANGEE : PREFERENCES + CHECKPOINTS + COUTS ═══════════════════ -->
-    <div class="row-3">
-        <!-- Preferences -->
+    <!-- Preferences + Checkpoints + Couts -->
+    <div class="grid-3">
         <div class="card">
             <div class="card-header">
-                <span class="icon">📖</span>
-                <span class="label">Preferences producteur</span>
+                <span class="icon">&#9881;</span> Preferences producteur
                 <span class="count">{{ preferences|length }}</span>
             </div>
             <div class="card-body">
@@ -724,27 +1093,25 @@
                     <span class="text">
                         {{ pref.regle[:80] }}
                         {% if pref.source_episode %}
-                        <span style="color: var(--ardoise); font-size: 0.75rem;">({{ pref.source_episode }})</span>
+                        <span style="color: var(--texte-light); font-size: 0.75rem;">({{ pref.source_episode }})</span>
                         {% endif %}
                     </span>
                 </div>
                 {% endfor %}
                 {% if preferences|length > 8 %}
-                <p style="color: var(--texte-dim); font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">
+                <p style="color: var(--texte-dim); font-size: 0.8rem; margin-top: 0.5rem; text-align: center; font-weight: 600;">
                     &hellip; et {{ preferences|length - 8 }} autre(s)
                 </p>
                 {% endif %}
                 {% else %}
-                <div class="empty">Aucune preference</div>
+                <div class="empty"><p>Aucune preference</p></div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Checkpoints -->
         <div class="card">
             <div class="card-header">
-                <span class="icon">&#9873;</span>
-                <span class="label">Checkpoints en attente</span>
+                <span class="icon">&#9873;</span> Checkpoints
                 <span class="count">{{ checkpoints|length }}</span>
             </div>
             <div class="card-body">
@@ -759,16 +1126,14 @@
                 </div>
                 {% endfor %}
                 {% else %}
-                <div class="empty">Aucun checkpoint</div>
+                <div class="empty"><p>Aucun checkpoint</p></div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Couts -->
         <div class="card">
             <div class="card-header">
-                <span class="icon">💰</span>
-                <span class="label">Budget</span>
+                <span class="icon">&#128176;</span> Budget
             </div>
             <div class="card-body">
                 {% if couts.total > 0 or couts.total_chars > 0 %}
@@ -791,24 +1156,100 @@
                 </div>
                 {% endif %}
                 {% else %}
-                <div class="empty">Aucun cout</div>
+                <div class="empty"><p>Aucun cout</p></div>
                 {% endif %}
             </div>
         </div>
     </div>
+</div>
 
-    <!-- ═══ SAISONS DISPONIBLES ══════════════════════════════════════════ -->
-    {% if saisons_dispo and saison_filtre == 0 %}
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  PAGE : PRODUIRE UN EPISODE                                           ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-produire">
+    <div class="page-header">
+        <h2>&#127908; Produire un episode</h2>
+        <p>Lancez la production d'un episode du podcast. Remplissez le formulaire et cliquez sur Produire.</p>
+    </div>
+
     <div class="card">
+        <div class="card-body">
+            <div id="alert-produire" class="alert"></div>
+
+            <form id="form-produire" onsubmit="return submitProduire(event)">
+                <div class="form-group">
+                    <label for="prod-titre">Titre de l'episode *</label>
+                    <input type="text" id="prod-titre" class="form-input" placeholder="Ex: Le Buisson Ardent" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prod-saison">Saison *</label>
+                        <input type="number" id="prod-saison" class="form-input" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-numero">Numero *</label>
+                        <input type="number" id="prod-numero" class="form-input" min="1" value="1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="prod-resume">Resume de l'histoire biblique *</label>
+                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Resumez l'histoire biblique que Papy Babou va raconter..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="prod-morale">Morale / lecon de vie</label>
+                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Quelle lecon les enfants doivent retenir ? (optionnel)"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="prod-dryrun">
+                            <label for="prod-dryrun">Mode test (dry-run) — pas d'audio ni de publication</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="prod-auto">
+                            <label for="prod-auto">Mode automatique — sans validation humaine</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btn-produire">
+                        &#127908; Lancer la production
+                    </button>
+                </div>
+            </form>
+
+            <div class="console-output" id="console-produire"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  PAGE : PLANIFIER UNE SAISON                                          ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-planifier">
+    <div class="page-header">
+        <h2>&#128197; Planifier une saison</h2>
+        <p>Generez automatiquement un plan complet de saison avec 10 episodes structures.</p>
+    </div>
+
+    <!-- Saisons existantes -->
+    {% if saisons_dispo %}
+    <div class="card" style="margin-bottom: 1.25rem;">
         <div class="card-header">
-            <span class="icon">📚</span>
-            <span class="label">Saisons planifiees</span>
+            <span class="icon">&#128218;</span> Saisons existantes
         </div>
         <div class="card-body">
             <div class="perso-grid">
                 {% for s in saisons_dispo %}
                 <a href="/?saison={{ s }}" class="perso-chip" style="text-decoration: none; cursor: pointer;">
-                    <span class="name" style="color: var(--ocre);">Saison {{ s }}</span>
+                    <span class="name" style="color: var(--orange-chaud);">Saison {{ s }}</span>
                 </a>
                 {% endfor %}
             </div>
@@ -816,12 +1257,478 @@
     </div>
     {% endif %}
 
+    <div class="card">
+        <div class="card-body">
+            <div id="alert-planifier" class="alert"></div>
+
+            <form id="form-planifier" onsubmit="return submitPlanifier(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="plan-saison">Numero de saison *</label>
+                        <input type="number" id="plan-saison" class="form-input" min="1" value="{{ (saisons_dispo[-1] + 1) if saisons_dispo else 1 }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="plan-theme">Theme central *</label>
+                        <input type="text" id="plan-theme" class="form-input" placeholder="Ex: Les Grands Voyages bibliques" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="plan-description">Vision du producteur</label>
+                    <textarea id="plan-description" class="form-textarea" rows="3" placeholder="Decrivez votre vision pour cette saison... (optionnel)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="plan-personnages">Personnages secondaires a introduire</label>
+                    <input type="text" id="plan-personnages" class="form-input" placeholder="Ex: mamie_rose, cousin_paul (separes par des virgules)">
+                    <div class="hint">Personnages en plus de Papy Babou, Antoine et Noemie</div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btn-planifier">
+                        &#128197; Generer le plan de saison
+                    </button>
+                </div>
+            </form>
+
+            <div class="console-output" id="console-planifier"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  PAGE : PRODUIRE UNE SAISON                                           ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-produire-saison">
+    <div class="page-header">
+        <h2>&#127916; Produire une saison</h2>
+        <p>Produisez tous les episodes (ou une selection) d'une saison planifiee.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div id="alert-produire-saison" class="alert"></div>
+
+            <form id="form-produire-saison" onsubmit="return submitProduireSaison(event)">
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label for="ps-saison">Saison *</label>
+                        <input type="number" id="ps-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ps-episodes">Episodes (optionnel)</label>
+                        <input type="text" id="ps-episodes" class="form-input" placeholder="Ex: 1,3,5 (vide = tous)">
+                        <div class="hint">Numeros separes par des virgules</div>
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; padding-top: 1.2rem;">
+                        <div class="form-check">
+                            <input type="checkbox" id="ps-dryrun">
+                            <label for="ps-dryrun">Mode test</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="ps-auto">
+                            <label for="ps-auto">Mode auto</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btn-produire-saison">
+                        &#127916; Lancer la production
+                    </button>
+                </div>
+            </form>
+
+            <div class="console-output" id="console-produire-saison"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  PAGE : REPRENDRE UN CHECKPOINT                                       ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-reprendre">
+    <div class="page-header">
+        <h2>&#9654; Reprendre une production</h2>
+        <p>Si une production a ete interrompue, reprenez-la depuis son dernier checkpoint.</p>
+    </div>
+
+    <div id="alert-reprendre" class="alert"></div>
+
+    {% if checkpoints %}
+    {% for cp in checkpoints %}
+    <div class="checkpoint-card">
+        <div class="checkpoint-info">
+            <span class="ep-id">{{ cp.episode_id }}</span>
+            <span class="etape">{{ cp.etape }}</span>
+            <span class="date">{{ cp.timestamp }}</span>
+        </div>
+        <button class="btn btn-turquoise" onclick="submitReprendre('{{ cp.fichier }}')">
+            &#9654; Reprendre
+        </button>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="card">
+        <div class="card-body empty">
+            <div class="icon">&#9654;</div>
+            <p>Aucun checkpoint en attente.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">
+                Les checkpoints apparaissent lorsqu'une production est interrompue.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="console-output" id="console-reprendre"></div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  PAGE : CONFIGURATION                                                 ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-config">
+    <div class="page-header">
+        <h2>&#9881; Configuration</h2>
+        <p>Parametres de production, voix, couts et informations systeme.</p>
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 1.25rem;">
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">&#127908;</span> Production
+            </div>
+            <div class="card-body" id="config-production">
+                <p style="color: var(--texte-dim);">Chargement...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">&#128483;</span> Voix
+            </div>
+            <div class="card-body" id="config-voix">
+                <p style="color: var(--texte-dim);">Chargement...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 1.25rem;">
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">&#128176;</span> Couts unitaires
+            </div>
+            <div class="card-body" id="config-couts">
+                <p style="color: var(--texte-dim);">Chargement...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">&#128273;</span> Cles API
+            </div>
+            <div class="card-body" id="config-api">
+                <p style="color: var(--texte-dim);">Chargement...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="icon">&#128193;</span> Formats d'episodes
+        </div>
+        <div class="card-body" id="config-formats">
+            <p style="color: var(--texte-dim);">Chargement...</p>
+        </div>
+    </div>
+</div>
+
 </main>
 
 <footer class="footer">
-    Les Histoires de Papy Babou &mdash; Systeme de production podcast
-    &middot; <a href="/api/dashboard{% if saison_filtre > 0 %}?saison={{ saison_filtre }}{% endif %}">API JSON</a>
+    Les Histoires de Papy Babou &mdash; Studio de production podcast
 </footer>
+
+<!-- ═══ JAVASCRIPT ═════════════════════════════════════════════════════════ -->
+<script>
+/* ── Navigation par onglets ─────────────────────────────────────────────── */
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + pageId).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (pageId === 'config') loadConfig();
+}
+
+/* ── Helper : afficher une alerte ───────────────────────────────────────── */
+function showAlert(containerId, type, message) {
+    const el = document.getElementById(containerId);
+    el.className = 'alert alert-' + type + ' show';
+    el.innerHTML = message;
+}
+
+function hideAlert(containerId) {
+    const el = document.getElementById(containerId);
+    el.className = 'alert';
+}
+
+/* ── Helper : afficher la console ───────────────────────────────────────── */
+function showConsole(consoleId, text) {
+    const el = document.getElementById(consoleId);
+    el.textContent = text;
+    el.classList.add('show');
+}
+
+/* ── Helper : loading overlay ───────────────────────────────────────────── */
+function showLoading(message) {
+    document.getElementById('loadingText').textContent = message || 'En cours...';
+    document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+/* ── Helper : appel API ─────────────────────────────────────────────────── */
+async function apiCall(url, body) {
+    const resp = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+    });
+    return await resp.json();
+}
+
+/* ── Produire un episode ────────────────────────────────────────────────── */
+async function submitProduire(e) {
+    e.preventDefault();
+    hideAlert('alert-produire');
+
+    const titre = document.getElementById('prod-titre').value.trim();
+    const saison = parseInt(document.getElementById('prod-saison').value);
+    const numero = parseInt(document.getElementById('prod-numero').value);
+    const resume = document.getElementById('prod-resume').value.trim();
+    const morale = document.getElementById('prod-morale').value.trim();
+    const dryRun = document.getElementById('prod-dryrun').checked;
+    const auto = document.getElementById('prod-auto').checked;
+
+    if (!titre || !resume) {
+        showAlert('alert-produire', 'error', 'Veuillez remplir le titre et le resume.');
+        return false;
+    }
+
+    const btn = document.getElementById('btn-produire');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Production en cours...';
+    showLoading('Production de S' + String(saison).padStart(2, '0') + 'E' + String(numero).padStart(2, '0') + '...');
+
+    try {
+        const data = await apiCall('/api/produire', {
+            titre, saison, numero, resume, morale,
+            dry_run: dryRun, auto: auto
+        });
+
+        hideLoading();
+
+        if (data.error) {
+            showAlert('alert-produire', 'error', 'Erreur : ' + data.error);
+        } else if (data.status === 'ok') {
+            showAlert('alert-produire', 'success', 'Episode produit avec succes !');
+        } else {
+            showAlert('alert-produire', 'error', 'La production a rencontre une erreur.');
+        }
+
+        if (data.stdout || data.stderr) {
+            showConsole('console-produire', (data.stdout || '') + '\n' + (data.stderr || ''));
+        }
+    } catch (err) {
+        hideLoading();
+        showAlert('alert-produire', 'error', 'Erreur reseau : ' + err.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '&#127908; Lancer la production';
+    return false;
+}
+
+/* ── Planifier une saison ───────────────────────────────────────────────── */
+async function submitPlanifier(e) {
+    e.preventDefault();
+    hideAlert('alert-planifier');
+
+    const saison = parseInt(document.getElementById('plan-saison').value);
+    const theme = document.getElementById('plan-theme').value.trim();
+    const description = document.getElementById('plan-description').value.trim();
+    const personnages = document.getElementById('plan-personnages').value.trim();
+
+    if (!theme) {
+        showAlert('alert-planifier', 'error', 'Veuillez saisir un theme.');
+        return false;
+    }
+
+    const btn = document.getElementById('btn-planifier');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Generation en cours...';
+    showLoading('Planification de la saison ' + saison + '...');
+
+    try {
+        const data = await apiCall('/api/planifier-saison', {
+            saison, theme, description, personnages
+        });
+
+        hideLoading();
+
+        if (data.error) {
+            showAlert('alert-planifier', 'error', 'Erreur : ' + data.error);
+        } else if (data.status === 'ok') {
+            showAlert('alert-planifier', 'success',
+                'Saison ' + saison + ' planifiee avec succes ! <a href="/?saison=' + saison + '" style="color: inherit; text-decoration: underline;">Voir le dashboard</a>');
+        } else {
+            showAlert('alert-planifier', 'error', 'La planification a rencontre une erreur.');
+        }
+
+        if (data.stdout || data.stderr) {
+            showConsole('console-planifier', (data.stdout || '') + '\n' + (data.stderr || ''));
+        }
+    } catch (err) {
+        hideLoading();
+        showAlert('alert-planifier', 'error', 'Erreur reseau : ' + err.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '&#128197; Generer le plan de saison';
+    return false;
+}
+
+/* ── Produire une saison ────────────────────────────────────────────────── */
+async function submitProduireSaison(e) {
+    e.preventDefault();
+    hideAlert('alert-produire-saison');
+
+    const saison = parseInt(document.getElementById('ps-saison').value);
+    const episodes = document.getElementById('ps-episodes').value.trim();
+    const dryRun = document.getElementById('ps-dryrun').checked;
+    const auto = document.getElementById('ps-auto').checked;
+
+    const btn = document.getElementById('btn-produire-saison');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Production en cours...';
+    showLoading('Production de la saison ' + saison + '...');
+
+    try {
+        const data = await apiCall('/api/produire-saison', {
+            saison, episodes, dry_run: dryRun, auto: auto
+        });
+
+        hideLoading();
+
+        if (data.error) {
+            showAlert('alert-produire-saison', 'error', 'Erreur : ' + data.error);
+        } else if (data.status === 'ok') {
+            showAlert('alert-produire-saison', 'success',
+                'Production de la saison ' + saison + ' terminee ! <a href="/?saison=' + saison + '" style="color: inherit; text-decoration: underline;">Voir le dashboard</a>');
+        } else {
+            showAlert('alert-produire-saison', 'error', 'La production a rencontre une erreur.');
+        }
+
+        if (data.stdout || data.stderr) {
+            showConsole('console-produire-saison', (data.stdout || '') + '\n' + (data.stderr || ''));
+        }
+    } catch (err) {
+        hideLoading();
+        showAlert('alert-produire-saison', 'error', 'Erreur reseau : ' + err.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '&#127916; Lancer la production';
+    return false;
+}
+
+/* ── Reprendre un checkpoint ────────────────────────────────────────────── */
+async function submitReprendre(fichier) {
+    hideAlert('alert-reprendre');
+    showLoading('Reprise de la production...');
+
+    try {
+        const data = await apiCall('/api/reprendre', { fichier });
+        hideLoading();
+
+        if (data.error) {
+            showAlert('alert-reprendre', 'error', 'Erreur : ' + data.error);
+        } else if (data.status === 'ok') {
+            showAlert('alert-reprendre', 'success', 'Production reprise avec succes !');
+        } else {
+            showAlert('alert-reprendre', 'error', 'La reprise a rencontre une erreur.');
+        }
+
+        if (data.stdout || data.stderr) {
+            showConsole('console-reprendre', (data.stdout || '') + '\n' + (data.stderr || ''));
+        }
+    } catch (err) {
+        hideLoading();
+        showAlert('alert-reprendre', 'error', 'Erreur reseau : ' + err.message);
+    }
+}
+
+/* ── Charger la configuration ───────────────────────────────────────────── */
+async function loadConfig() {
+    try {
+        const resp = await fetch('/api/config');
+        const cfg = await resp.json();
+
+        // Production
+        let prodHTML = '';
+        if (cfg.production) {
+            for (const [k, v] of Object.entries(cfg.production)) {
+                prodHTML += '<div class="cout-row"><span class="service">' + k.replace(/_/g, ' ') + '</span><span class="montant" style="color: var(--texte);">' + v + '</span></div>';
+            }
+        }
+        document.getElementById('config-production').innerHTML = prodHTML || '<div class="empty"><p>Non disponible</p></div>';
+
+        // Voix
+        let voixHTML = '';
+        if (cfg.voix) {
+            for (const [nom, id] of Object.entries(cfg.voix)) {
+                const displayId = id ? (id.substring(0, 12) + '...') : 'Non configure';
+                voixHTML += '<div class="cout-row"><span class="service" style="font-weight: 700; color: var(--orange-chaud);">' + nom.replace(/_/g, ' ') + '</span><span class="montant" style="color: var(--texte-dim); font-size: 0.8rem;">' + displayId + '</span></div>';
+            }
+        }
+        document.getElementById('config-voix').innerHTML = voixHTML || '<div class="empty"><p>Non disponible</p></div>';
+
+        // Couts
+        let coutsHTML = '';
+        if (cfg.couts) {
+            for (const [k, v] of Object.entries(cfg.couts)) {
+                coutsHTML += '<div class="cout-row"><span class="service">' + k.replace(/_/g, ' ') + '</span><span class="montant">' + v + '</span></div>';
+            }
+        }
+        document.getElementById('config-couts').innerHTML = coutsHTML || '<div class="empty"><p>Non disponible</p></div>';
+
+        // API Keys
+        let apiHTML = '';
+        if (cfg.api_keys) {
+            for (const [k, v] of Object.entries(cfg.api_keys)) {
+                const statusClass = v ? 'vert-prairie' : 'corail';
+                const statusIcon = v ? '&#10003;' : '&#10007;';
+                apiHTML += '<div class="cout-row"><span class="service">' + k + '</span><span class="montant" style="color: var(--' + statusClass + ');">' + statusIcon + ' ' + (v ? 'Configure' : 'Manquant') + '</span></div>';
+            }
+        }
+        document.getElementById('config-api').innerHTML = apiHTML || '<div class="empty"><p>Non disponible</p></div>';
+
+        // Formats
+        let fmtHTML = '<table style="width: 100%;"><thead><tr><th>Type</th><th>Duree cible</th><th>Mots cible</th></tr></thead><tbody>';
+        if (cfg.formats) {
+            for (const [type, vals] of Object.entries(cfg.formats)) {
+                fmtHTML += '<tr><td><span class="ep-type type-' + type + '">' + type + '</span></td><td>' + vals.duree_cible_minutes + ' min</td><td>' + vals.mots_cible + '</td></tr>';
+            }
+        }
+        fmtHTML += '</tbody></table>';
+        document.getElementById('config-formats').innerHTML = fmtHTML;
+
+    } catch (err) {
+        document.getElementById('config-production').innerHTML = '<div class="empty"><p>Erreur de chargement</p></div>';
+    }
+}
+</script>
 
 </body>
 </html>
