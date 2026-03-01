@@ -1044,7 +1044,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="prod-saison">Saison *</label>
-                        <input type="number" id="prod-saison" class="form-input" min="1" value="1" required>
+                        <input type="number" id="prod-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
                     </div>
                     <div class="form-group">
                         <label for="prod-numero">Numero *</label>
@@ -1529,6 +1529,13 @@ function showPage(pageId, tabEl) {
     }
 }
 
+/* ── Helper : echapper le HTML (anti-XSS) ──────────────────────────────── */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+}
+
 /* ── Helper : afficher une alerte ───────────────────────────────────────── */
 function showAlert(containerId, type, message) {
     const el = document.getElementById(containerId);
@@ -1578,15 +1585,17 @@ async function apiCall(url, body) {
 /* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */
 function handleCliResponse(data, alertId, consoleId, successMsg) {
     if (data.error) {
-        showAlert(alertId, 'error', 'Erreur : ' + data.error);
+        showAlert(alertId, 'error', escapeHtml('Erreur : ' + data.error));
     } else if (data.status === 'ok') {
         showAlert(alertId, 'success', successMsg);
         _dashboardDirty = true;
     } else {
-        showAlert(alertId, 'error', 'L\'operation a rencontre une erreur.');
+        /* Combiner le message principal et le stderr en un seul appel */
+        let errMsg = 'L\'operation a rencontre une erreur.';
         if (data.stderr) {
-            showAlert(alertId, 'error', 'Erreur : ' + data.stderr.substring(0, 300));
+            errMsg += '<br><small>' + escapeHtml(data.stderr.substring(0, 300)) + '</small>';
         }
+        showAlert(alertId, 'error', errMsg);
     }
     const output = ((data.stdout || '') + '\n' + (data.stderr || '')).trim();
     if (output) showConsole(consoleId, output);
@@ -1719,6 +1728,7 @@ async function submitReprendre(fichier) {
 
 /* ── Batch : gestion des lignes ─────────────────────────────────────────── */
 let _batchCounter = 0;
+const _defaultSaison = {{ saisons_dispo[-1] if saisons_dispo else 1 }};
 
 function addBatchRow() {
     _batchCounter++;
@@ -1734,7 +1744,7 @@ function addBatchRow() {
         + '</div>'
         + '<div class="form-row" style="margin-bottom: 0.5rem;">'
         + '  <div class="form-group" style="margin-bottom: 0.5rem;"><input type="text" class="form-input" placeholder="Titre *" data-batch="titre-' + id + '"></div>'
-        + '  <div class="form-group" style="margin-bottom: 0.5rem;"><input type="number" class="form-input" placeholder="Saison" value="1" min="1" data-batch="saison-' + id + '"></div>'
+        + '  <div class="form-group" style="margin-bottom: 0.5rem;"><input type="number" class="form-input" placeholder="Saison" value="' + _defaultSaison + '" min="1" data-batch="saison-' + id + '"></div>'
         + '  <div class="form-group" style="margin-bottom: 0.5rem;"><input type="number" class="form-input" placeholder="Numero" value="' + id + '" min="1" data-batch="numero-' + id + '"></div>'
         + '</div>'
         + '<div class="form-group" style="margin-bottom: 0.5rem;"><textarea class="form-textarea" rows="2" placeholder="Resume de l\'histoire *" data-batch="resume-' + id + '"></textarea></div>'
