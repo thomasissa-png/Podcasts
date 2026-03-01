@@ -2128,9 +2128,10 @@ def cli(ctx):
 @click.option("--numero", "-n", type=click.IntRange(min=1), required=True, help="Numero d'episode (>= 1)")
 @click.option("--resume", "-r", required=True, help="Resume de l'histoire biblique")
 @click.option("--morale", "-m", default="", help="Lecon de vie a transmettre")
+@click.option("--type-episode", "-t", type=click.Choice(["standard", "ouverture", "mi-saison", "final", "bonus"]), default="standard", help="Type d'episode (structure narrative)")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
-def produire(episode: str, saison: int, numero: int, resume: str, morale: str, dry_run: bool, auto: bool):
+def produire(episode: str, saison: int, numero: int, resume: str, morale: str, type_episode: str, dry_run: bool, auto: bool):
     """Produit un episode complet du podcast."""
     try:
         pipeline(
@@ -2141,6 +2142,7 @@ def produire(episode: str, saison: int, numero: int, resume: str, morale: str, d
             morale=morale,
             dry_run=dry_run,
             auto=auto,
+            type_episode=type_episode,
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")

@@ -1066,10 +1066,6 @@
                             <input type="checkbox" id="ps-dryrun">
                             <label for="ps-dryrun">Mode test (sans audio)</label>
                         </div>
-                        <div class="form-check">
-                            <input type="checkbox" id="ps-auto">
-                            <label for="ps-auto">Tout automatique</label>
-                        </div>
                     </div>
                 </div>
 
@@ -1117,42 +1113,49 @@
                     <div class="hint">Le titre qui apparaîtra dans le podcast</div>
                 </div>
 
-                <div class="form-row">
+                <div class="form-row-3">
                     <div class="form-group">
                         <label for="prod-saison">Saison *</label>
                         <input type="number" id="prod-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
                     </div>
                     <div class="form-group">
-                        <label for="prod-numero">Numéro de l'épisode *</label>
+                        <label for="prod-numero">Num\u00e9ro de l'\u00e9pisode *</label>
                         <input type="number" id="prod-numero" class="form-input" min="1" value="1" required>
+                        <div class="hint" id="hint-prod-numero">Num\u00e9ro s\u00e9quentiel dans la saison</div>
                     </div>
+                    <div class="form-group">
+                        <label for="prod-type">Type d'\u00e9pisode</label>
+                        <select id="prod-type" class="form-select">
+                            <option value="standard">Standard (13 min)</option>
+                            <option value="ouverture">Ouverture de saison (15 min)</option>
+                            <option value="mi-saison">Mi-saison (15 min)</option>
+                            <option value="final">Final de saison (18 min)</option>
+                            <option value="bonus">Bonus (10 min)</option>
+                        </select>
+                        <div class="hint">Adapte la structure narrative et la dur\u00e9e cible</div>
+                    </div>
+                </div>
+
+                <div id="warning-episode-existe" class="alert alert-warning" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="prod-resume">L'histoire biblique \u00e0 raconter *</label>
+                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Racontez l'histoire biblique en quelques phrases. Ex : Mo\u00efse d\u00e9couvre un buisson en feu qui ne se consume pas. Dieu lui parle et lui confie la mission de lib\u00e9rer les H\u00e9breux..." required></textarea>
+                    <div class="hint">Plus le r\u00e9sum\u00e9 est d\u00e9taill\u00e9, plus l'\u00e9pisode sera riche</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="prod-resume">L'histoire biblique à raconter *</label>
-                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Racontez l'histoire biblique en quelques phrases. Ex : Moïse découvre un buisson en feu qui ne se consume pas. Dieu lui parle et lui confie la mission de libérer les Hébreux..." required></textarea>
-                    <div class="hint">Plus le résumé est détaillé, plus l'épisode sera riche</div>
+                    <label for="prod-morale">Le\u00e7on de vie pour les enfants</label>
+                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Ex: Le courage de faire confiance m\u00eame quand on a peur (optionnel)"></textarea>
+                    <div class="hint">La morale que Papy Babou transmettra \u00e0 la fin de l'\u00e9pisode</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="prod-morale">Leçon de vie pour les enfants</label>
-                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Ex: Le courage de faire confiance même quand on a peur (optionnel)"></textarea>
-                    <div class="hint">La morale que Papy Babou transmettra à la fin de l'épisode</div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input type="checkbox" id="prod-dryrun">
-                            <label for="prod-dryrun">Mode test — génère le script sans créer l'audio</label>
-                        </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="prod-dryrun">
+                        <label for="prod-dryrun">Mode test — g\u00e9n\u00e8re le script sans cr\u00e9er l'audio</label>
                     </div>
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input type="checkbox" id="prod-auto">
-                            <label for="prod-auto">Tout automatique — sans demander de validation</label>
-                        </div>
-                    </div>
+                    <div class="hint" style="margin-top: 0.3rem; margin-left: 1.6rem;">La production compl\u00e8te est enti\u00e8rement automatique (script, voix, montage, publication)</div>
                 </div>
 
                 <div class="form-actions">
@@ -1209,12 +1212,6 @@
                         <label for="batch-dryrun">Mode test — scripts uniquement, sans audio</label>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="form-check">
-                        <input type="checkbox" id="batch-auto">
-                        <label for="batch-auto">Tout automatique — sans demander de validation</label>
-                    </div>
-                </div>
             </div>
 
             <div class="form-actions">
@@ -1251,13 +1248,6 @@
         </div>
         <div class="card-body">
             <div id="alert-reprendre" class="alert"></div>
-
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <div class="form-check">
-                    <input type="checkbox" id="reprendre-auto" checked>
-                    <label for="reprendre-auto">Tout automatique — reprendre sans demander de validation</label>
-                </div>
-            </div>
 
             {% if checkpoints %}
             <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
@@ -1812,7 +1802,43 @@ function handleCliResponse(data, alertId, consoleId, successMsg) {
     if (output) showConsole(consoleId, output);
 }
 
-/* ── Produire un épisode ───────────────────────────────────────────────── */
+/* ── Auto-incr\u00e9ment du num\u00e9ro d'\u00e9pisode quand la saison change ──────────── */
+document.getElementById('prod-saison').addEventListener('change', async function() {
+    const num = parseInt(this.value);
+    if (!num || num < 1) return;
+    try {
+        const resp = await fetch('/api/episodes-saison/' + num);
+        const info = await resp.json();
+        document.getElementById('prod-numero').value = info.prochain_numero;
+        const hint = document.getElementById('hint-prod-numero');
+        if (info.episodes_produits.length > 0) {
+            hint.textContent = '\u00c9pisodes d\u00e9j\u00e0 produits : ' + info.episodes_produits.join(', ') + ' \u2014 prochain : ' + info.prochain_numero;
+        } else {
+            hint.textContent = 'Aucun \u00e9pisode produit pour cette saison';
+        }
+    } catch (e) { /* ignore */ }
+});
+
+/* ── V\u00e9rification doublon \u00e9pisode ──────────────────────────────────────── */
+document.getElementById('prod-numero').addEventListener('change', async function() {
+    const saison = parseInt(document.getElementById('prod-saison').value);
+    const numero = parseInt(this.value);
+    const warning = document.getElementById('warning-episode-existe');
+    if (!saison || !numero) { warning.style.display = 'none'; return; }
+    try {
+        const resp = await fetch('/api/episodes-saison/' + saison);
+        const info = await resp.json();
+        if (info.episodes_produits.includes(numero)) {
+            warning.innerHTML = '&#9888; L\'\u00e9pisode S' + String(saison).padStart(2, '0') + 'E' + String(numero).padStart(2, '0')
+                + ' existe d\u00e9j\u00e0. Lancer la production <strong>\u00e9crasera</strong> les fichiers existants.';
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
+        }
+    } catch (e) { warning.style.display = 'none'; }
+});
+
+/* ── Produire un \u00e9pisode ───────────────────────────────────────────────── */
 async function submitProduire(e) {
     e.preventDefault();
     hideAlert('alert-produire');
@@ -1822,29 +1848,53 @@ async function submitProduire(e) {
     const numero = parseInt(document.getElementById('prod-numero').value);
     const resume = document.getElementById('prod-resume').value.trim();
     const morale = document.getElementById('prod-morale').value.trim();
+    const typeEpisode = document.getElementById('prod-type').value;
     const dryRun = document.getElementById('prod-dryrun').checked;
-    const auto = document.getElementById('prod-auto').checked;
 
     if (!titre || !resume) {
-        showAlert('alert-produire', 'error', 'Veuillez remplir le titre et le résumé.');
+        showAlert('alert-produire', 'error', 'Veuillez remplir le titre et le r\u00e9sum\u00e9.');
         return false;
     }
 
+    const epId = 'S' + String(saison).padStart(2, '0') + 'E' + String(numero).padStart(2, '0');
     const btn = document.getElementById('btn-produire');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Production en cours...';
-    showLoading('Production de S' + String(saison).padStart(2, '0') + 'E' + String(numero).padStart(2, '0') + '...');
+    showLoading('Production de ' + epId + ' \u2014 ' + escapeHtml(titre) + '...');
 
     try {
         const data = await apiCall('/api/produire', {
             titre, saison, numero, resume, morale,
-            dry_run: dryRun, auto: auto
+            type_episode: typeEpisode, dry_run: dryRun
         });
         hideLoading();
-        handleCliResponse(data, 'alert-produire', 'console-produire', 'Épisode produit avec succès !');
+
+        if (data.status === 'ok') {
+            let msg = epId + ' \u2014 <strong>' + escapeHtml(titre) + '</strong> produit avec succ\u00e8s !';
+            /* Extraire les infos du stdout si disponible */
+            const stdout = data.stdout || '';
+            const scoreMatch = stdout.match(/score\s+(\d+)\/10/i);
+            const dureeMatch = stdout.match(/(\d+(?:\.\d+)?)\s*s,\s*(\d+(?:\.\d+)?)\s*MB/i);
+            const coutMatch = stdout.match(/\$(\d+\.\d+)/);
+            if (scoreMatch || dureeMatch || coutMatch) {
+                msg += '<br><small style="font-weight: 400;">';
+                if (scoreMatch) msg += 'Score : ' + scoreMatch[1] + '/10';
+                if (dureeMatch) msg += (scoreMatch ? ' \u2022 ' : '') + 'Dur\u00e9e : ' + dureeMatch[1] + 's (' + dureeMatch[2] + ' MB)';
+                if (coutMatch) msg += ' \u2022 Co\u00fbt : ' + coutMatch[0];
+                msg += '</small>';
+            }
+            msg += '<br><a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>';
+            showAlert('alert-produire', 'success', msg);
+            _dashboardDirty = true;
+        } else {
+            handleCliResponse(data, 'alert-produire', 'console-produire', '');
+        }
+
+        const output = ((data.stdout || '') + '\n' + (data.stderr || '')).trim();
+        if (output) showConsole('console-produire', output);
     } catch (err) {
         hideLoading();
-        showAlert('alert-produire', 'error', 'Erreur réseau : ' + err.message);
+        showAlert('alert-produire', 'error', 'Erreur r\u00e9seau : ' + err.message);
     }
 
     btn.disabled = false;
@@ -1981,7 +2031,6 @@ async function submitProduireSaison(e) {
     const saison = parseInt(document.getElementById('ps-saison').value);
     const episodes = document.getElementById('ps-episodes').value.trim();
     const dryRun = document.getElementById('ps-dryrun').checked;
-    const auto = document.getElementById('ps-auto').checked;
 
     const btn = document.getElementById('btn-produire-saison');
     btn.disabled = true;
@@ -1990,7 +2039,7 @@ async function submitProduireSaison(e) {
 
     try {
         const data = await apiCall('/api/produire-saison', {
-            saison, episodes, dry_run: dryRun, auto: auto
+            saison, episodes, dry_run: dryRun
         });
         hideLoading();
         handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
@@ -2008,11 +2057,10 @@ async function submitProduireSaison(e) {
 /* ── Reprendre un checkpoint ────────────────────────────────────────────── */
 async function submitReprendre(fichier) {
     hideAlert('alert-reprendre');
-    const auto = document.getElementById('reprendre-auto').checked;
     showLoading('Reprise de la production...');
 
     try {
-        const data = await apiCall('/api/reprendre', { fichier, auto });
+        const data = await apiCall('/api/reprendre', { fichier });
         hideLoading();
         handleCliResponse(data, 'alert-reprendre', 'console-reprendre', 'Production reprise avec succès !');
     } catch (err) {
@@ -2087,15 +2135,14 @@ async function submitBatch() {
     }
 
     const dryRun = document.getElementById('batch-dryrun').checked;
-    const auto = document.getElementById('batch-auto').checked;
 
     const btn = document.getElementById('btn-batch');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Batch en cours...';
-    showLoading('Production batch de ' + episodes.length + ' épisode(s)...');
+    showLoading('Production batch de ' + episodes.length + ' \u00e9pisode(s)...');
 
     try {
-        const data = await apiCall('/api/batch', { episodes, dry_run: dryRun, auto: auto });
+        const data = await apiCall('/api/batch', { episodes, dry_run: dryRun });
         hideLoading();
         handleCliResponse(data, 'alert-batch', 'console-batch',
             'Batch terminé : ' + episodes.length + ' épisode(s) traité(s) !');
@@ -2271,10 +2318,16 @@ async function loadConfig() {
         showPage('planifier', fallback);
     }
 
-    /* Vérifier si la saison pré-remplie existe déjà */
+    /* V\u00e9rifier si la saison pr\u00e9-remplie existe d\u00e9j\u00e0 */
     const planSaisonInput = document.getElementById('plan-saison');
     if (planSaisonInput && planSaisonInput.value) {
         planSaisonInput.dispatchEvent(new Event('change'));
+    }
+
+    /* Auto-incr\u00e9menter le num\u00e9ro d'\u00e9pisode pour la saison s\u00e9lectionn\u00e9e */
+    const prodSaisonInput = document.getElementById('prod-saison');
+    if (prodSaisonInput && prodSaisonInput.value) {
+        prodSaisonInput.dispatchEvent(new Event('change'));
     }
 })();
 </script>

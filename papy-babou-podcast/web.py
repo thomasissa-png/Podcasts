@@ -148,6 +148,30 @@ def api_saison_existe(numero):
     return jsonify({"existe": False})
 
 
+@app.route("/api/episodes-saison/<int:numero>")
+def api_episodes_saison(numero):
+    """API JSON — Episodes existants d'une saison (produits ou planifies)."""
+    episodes_produits = []
+
+    # Episodes dans l'historique
+    data = get_dashboard_data(numero)
+    for ep in data.get("episodes", []):
+        episodes_produits.append(ep.get("numero", 0))
+
+    # Episodes dans le plan de saison
+    plan = config.charger_saison(numero)
+    nb_planifies = 0
+    if plan:
+        nb_planifies = len(plan.get("saison", {}).get("episodes", []))
+
+    return jsonify({
+        "saison": numero,
+        "episodes_produits": sorted(set(episodes_produits)),
+        "nb_planifies": nb_planifies,
+        "prochain_numero": max(episodes_produits, default=0) + 1,
+    })
+
+
 @app.route("/api/config")
 def api_config():
     """API JSON — Configuration du systeme."""
@@ -212,13 +236,17 @@ def api_produire():
     numero = body.get("numero", 1)
     resume = body.get("resume", "").strip()
     morale = body.get("morale", "").strip()
+    type_episode = body.get("type_episode", "standard")
     dry_run = body.get("dry_run", False)
-    auto = body.get("auto", False)
 
     if not titre:
         return jsonify({"error": "Titre requis"}), 400
     if not resume:
         return jsonify({"error": "Resume requis"}), 400
+
+    types_valides = ("standard", "ouverture", "mi-saison", "final", "bonus")
+    if type_episode not in types_valides:
+        type_episode = "standard"
 
     cmd = [
         "produire",
@@ -226,14 +254,15 @@ def api_produire():
         "-s", str(saison),
         "-n", str(numero),
         "-r", resume,
-        "-m", morale,
+        "-t", type_episode,
+        "--auto",
     ]
+    if morale:
+        cmd.extend(["-m", morale])
     if dry_run:
         cmd.append("--dry-run")
-    if auto:
-        cmd.append("--auto")
 
-    return jsonify(_run_cli(cmd, timeout=300))
+    return jsonify(_run_cli(cmd, timeout=600))
 
 
 @app.route("/api/planifier-saison", methods=["POST"])
@@ -271,18 +300,16 @@ def api_produire_saison():
     saison = body.get("saison", 1)
     episodes = body.get("episodes", "").strip()
     dry_run = body.get("dry_run", False)
-    auto = body.get("auto", False)
 
     cmd = [
         "produire-saison",
         "-s", str(saison),
+        "--auto",
     ]
     if episodes:
         cmd.extend(["-e", episodes])
     if dry_run:
         cmd.append("--dry-run")
-    if auto:
-        cmd.append("--auto")
 
     return jsonify(_run_cli(cmd, timeout=600))
 
@@ -292,7 +319,6 @@ def api_reprendre():
     """Reprend une production depuis un checkpoint."""
     body = request.get_json(force=True)
     fichier = body.get("fichier", "").strip()
-    auto = body.get("auto", True)
 
     if not fichier:
         return jsonify({"error": "Fichier checkpoint requis"}), 400
@@ -308,11 +334,10 @@ def api_reprendre():
     cmd = [
         "reprendre",
         "-c", str(checkpoint_path),
+        "--auto",
     ]
-    if auto:
-        cmd.append("--auto")
 
-    return jsonify(_run_cli(cmd, timeout=300))
+    return jsonify(_run_cli(cmd, timeout=600))
 
 
 @app.route("/api/batch", methods=["POST"])
@@ -324,7 +349,6 @@ def api_batch():
     body = request.get_json(force=True)
     episodes_list = body.get("episodes", [])
     dry_run = body.get("dry_run", False)
-    auto = body.get("auto", False)
 
     if not episodes_list or not isinstance(episodes_list, list):
         return jsonify({"error": "Liste d'episodes requise (tableau JSON)"}), 400
@@ -346,11 +370,9 @@ def api_batch():
         tmp_path = tmp.name
 
     try:
-        cmd = ["batch", "-f", tmp_path]
+        cmd = ["batch", "-f", tmp_path, "--auto"]
         if dry_run:
             cmd.append("--dry-run")
-        if auto:
-            cmd.append("--auto")
         return jsonify(_run_cli(cmd, timeout=600))
     finally:
         try:
