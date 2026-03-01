@@ -11,13 +11,20 @@ import logging
 import os
 import subprocess
 import sys
+from pathlib import Path
+
+# Ensure imports work when launched from repo root (Replit)
+_THIS_DIR = Path(__file__).resolve().parent
+if str(_THIS_DIR) not in sys.path:
+    sys.path.insert(0, str(_THIS_DIR))
+os.chdir(_THIS_DIR)
 
 from flask import Flask, jsonify, render_template, request
 
 import config
 from dashboard_data import get_dashboard_data, charger_preferences, charger_checkpoints
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=str(_THIS_DIR / "templates"))
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "papy-babou-dev-key")
 
 logger = logging.getLogger(__name__)
