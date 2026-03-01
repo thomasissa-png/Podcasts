@@ -680,6 +680,12 @@
             border: 1px solid rgba(91, 155, 213, 0.25);
         }
 
+        .alert-warning {
+            background: rgba(249, 178, 51, 0.12);
+            color: #A87200;
+            border: 1px solid rgba(249, 178, 51, 0.3);
+        }
+
         /* ── Console output ──────────────────────────────────────── */
         .console-output {
             background: #2D2A24;
@@ -945,9 +951,10 @@
             </p>
             <div class="perso-grid">
                 {% for s in saisons_dispo %}
-                <a href="/?saison={{ s }}" class="perso-chip" style="text-decoration: none; cursor: pointer;">
+                <div class="perso-chip" style="cursor: pointer;" onclick="loadPlanDetail({{ s }})">
                     <span class="name" style="color: var(--orange-chaud);">Saison {{ s }}</span>
-                </a>
+                    <span class="count" style="font-size: 0.7rem;">Voir le plan</span>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -981,11 +988,20 @@
                     <div class="hint">Plus vous décrivez votre vision, plus le plan sera personnalisé</div>
                 </div>
 
-                <div class="form-group">
-                    <label for="plan-personnages">Personnages secondaires à introduire</label>
-                    <input type="text" id="plan-personnages" class="form-input" placeholder="Ex: mamie_rose, cousin_paul (séparés par des virgules)">
-                    <div class="hint">En plus des personnages habituels : Papy Babou, Antoine et Noémie</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="plan-personnages">Personnages secondaires à introduire</label>
+                        <input type="text" id="plan-personnages" class="form-input" placeholder="Ex: mamie_rose, cousin_paul (séparés par des virgules)">
+                        <div class="hint">En plus des personnages habituels : Papy Babou, Antoine et Noémie</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="plan-nb-episodes">Nombre d'épisodes</label>
+                        <input type="number" id="plan-nb-episodes" class="form-input" min="3" max="20" value="10">
+                        <div class="hint">Entre 3 et 20 épisodes par saison (10 par défaut)</div>
+                    </div>
                 </div>
+
+                <div id="warning-saison-existe" class="alert alert-warning" style="display: none;"></div>
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary" id="btn-planifier">
@@ -995,6 +1011,15 @@
             </form>
 
             <div class="console-output" id="console-planifier"></div>
+        </div>
+    </div>
+
+    <!-- Détail du plan généré -->
+    <div class="card" id="card-plan-detail" style="display: none; margin-top: 1.25rem;">
+        <div class="card-header">
+            <span class="icon">&#128214;</span> <span id="plan-detail-titre">Plan de saison</span>
+        </div>
+        <div class="card-body" id="plan-detail-body">
         </div>
     </div>
 </div>
@@ -1827,6 +1852,85 @@ async function submitProduire(e) {
     return false;
 }
 
+/* ── Vérification saison existante ─────────────────────────────────────── */
+document.getElementById('plan-saison').addEventListener('change', async function() {
+    const num = parseInt(this.value);
+    const warning = document.getElementById('warning-saison-existe');
+    if (!num || num < 1) { warning.style.display = 'none'; return; }
+    try {
+        const resp = await fetch('/api/saison-existe/' + num);
+        const info = await resp.json();
+        if (info.existe) {
+            warning.innerHTML = '&#9888; La saison ' + num + ' existe d\u00e9j\u00e0 (th\u00e8me : <strong>' + escapeHtml(info.theme) + '</strong>, '
+                + info.nb_episodes + ' \u00e9pisodes). G\u00e9n\u00e9rer un nouveau plan <strong>remplacera</strong> le plan actuel.';
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
+        }
+    } catch (e) { warning.style.display = 'none'; }
+});
+
+/* ── Charger et afficher le détail d'un plan ──────────────────────────── */
+async function loadPlanDetail(numero) {
+    const card = document.getElementById('card-plan-detail');
+    const body = document.getElementById('plan-detail-body');
+    const titre = document.getElementById('plan-detail-titre');
+    try {
+        const resp = await fetch('/api/plan-saison/' + numero);
+        if (!resp.ok) { card.style.display = 'none'; return; }
+        const plan = await resp.json();
+        const s = plan.saison || {};
+        titre.textContent = 'Saison ' + (s.numero || numero) + ' \u2014 ' + (s.theme || '');
+
+        let html = '<div style="margin-bottom: 1rem;">'
+            + '<strong>Th\u00e8me :</strong> ' + escapeHtml(s.theme || '') + '<br>'
+            + '<strong>Fil rouge :</strong> ' + escapeHtml(s.fil_rouge || '') + '<br>';
+        if (s.description) html += '<strong>Description :</strong> ' + escapeHtml(s.description) + '<br>';
+        html += '</div>';
+
+        /* Arcs personnages */
+        if (s.arcs_personnages) {
+            html += '<div style="margin-bottom: 1rem;"><strong>Arcs de personnages :</strong><div class="perso-grid" style="margin-top: 0.5rem;">';
+            for (const [id, arc] of Object.entries(s.arcs_personnages)) {
+                html += '<div class="perso-chip"><span class="name">' + escapeHtml(id) + '</span>'
+                    + '<span class="count" style="font-size: 0.7rem;">' + escapeHtml(arc.depart || '') + ' \u2192 ' + escapeHtml(arc.arrivee || '') + '</span></div>';
+            }
+            html += '</div></div>';
+        }
+
+        /* Rituels */
+        if (s.rituels) {
+            html += '<div style="margin-bottom: 1rem;"><strong>Rituels :</strong><ul style="margin: 0.3rem 0 0 1.2rem; font-size: 0.82rem;">';
+            for (const [k, v] of Object.entries(s.rituels)) {
+                html += '<li><em>' + escapeHtml(k) + '</em> : ' + escapeHtml(v) + '</li>';
+            }
+            html += '</ul></div>';
+        }
+
+        /* Épisodes */
+        const eps = s.episodes || [];
+        html += '<table class="episode-table"><thead><tr>'
+            + '<th>N\u00b0</th><th>Titre</th><th>Type</th><th>Morale</th><th>Dur\u00e9e</th>'
+            + '</tr></thead><tbody>';
+        for (const ep of eps) {
+            html += '<tr>'
+                + '<td><span class="badge badge-turquoise">E' + (ep.numero || '?') + '</span></td>'
+                + '<td>' + escapeHtml(ep.titre || '') + '</td>'
+                + '<td>' + escapeHtml(ep.type || 'standard') + '</td>'
+                + '<td style="font-size: 0.78rem;">' + escapeHtml(ep.morale || '') + '</td>'
+                + '<td>' + (ep.duree_cible_minutes || '?') + ' min</td>'
+                + '</tr>';
+        }
+        html += '</tbody></table>';
+
+        body.innerHTML = html;
+        card.style.display = 'block';
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+        card.style.display = 'none';
+    }
+}
+
 /* ── Planifier une saison ───────────────────────────────────────────────── */
 async function submitPlanifier(e) {
     e.preventDefault();
@@ -1836,31 +1940,36 @@ async function submitPlanifier(e) {
     const theme = document.getElementById('plan-theme').value.trim();
     const description = document.getElementById('plan-description').value.trim();
     const personnages = document.getElementById('plan-personnages').value.trim();
+    const nb_episodes = parseInt(document.getElementById('plan-nb-episodes').value) || 10;
 
     if (!theme) {
-        showAlert('alert-planifier', 'error', 'Veuillez saisir un thème.');
+        showAlert('alert-planifier', 'error', 'Veuillez saisir un th\u00e8me.');
         return false;
     }
 
     const btn = document.getElementById('btn-planifier');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Génération en cours...';
+    btn.innerHTML = '<span class="spinner"></span> G\u00e9n\u00e9ration en cours...';
     showLoading('Planification de la saison ' + saison + '...');
 
     try {
         const data = await apiCall('/api/planifier-saison', {
-            saison, theme, description, personnages
+            saison, theme, description, personnages, nb_episodes
         });
         hideLoading();
         handleCliResponse(data, 'alert-planifier', 'console-planifier',
-            'Saison ' + saison + ' planifiée ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
+            'Saison ' + saison + ' planifi\u00e9e ! <a href="javascript:void(0)" onclick="loadPlanDetail(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le plan d\u00e9taill\u00e9 &rarr;</a>'
+            + ' &bull; <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Suivi &rarr;</a>');
+        if (data.status === 'ok') {
+            loadPlanDetail(saison);
+        }
     } catch (err) {
         hideLoading();
-        showAlert('alert-planifier', 'error', 'Erreur réseau : ' + err.message);
+        showAlert('alert-planifier', 'error', 'Erreur r\u00e9seau : ' + err.message);
     }
 
     btn.disabled = false;
-    btn.innerHTML = '&#128197; Générer le plan de saison';
+    btn.innerHTML = '&#128197; G\u00e9n\u00e9rer le plan de saison';
     return false;
 }
 
@@ -2160,6 +2269,12 @@ async function loadConfig() {
         /* Fallback: planifier */
         const fallback = document.querySelector('.nav-tab[data-page="planifier"]');
         showPage('planifier', fallback);
+    }
+
+    /* Vérifier si la saison pré-remplie existe déjà */
+    const planSaisonInput = document.getElementById('plan-saison');
+    if (planSaisonInput && planSaisonInput.value) {
+        planSaisonInput.dispatchEvent(new Event('change'));
     }
 })();
 </script>

@@ -2314,11 +2314,14 @@ def reprendre(checkpoint: str, auto: bool):
 @click.option("--theme", "-t", required=True, help="Theme central de la saison")
 @click.option("--description", "-d", default="", help="Description / vision du producteur")
 @click.option("--personnages", "-p", default="", help="Personnages secondaires a introduire (separes par des virgules)")
-def planifier_saison(saison: int, theme: str, description: str, personnages: str):
+@click.option("--nb-episodes", "-n", type=click.IntRange(min=3, max=20), default=10, help="Nombre d'episodes (defaut 10)")
+@click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
+def planifier_saison(saison: int, theme: str, description: str, personnages: str, nb_episodes: int, auto: bool):
     """Planifie une saison complete de 10 episodes avec arcs narratifs."""
     console.print(Panel(
         f"[bold]Planification — Saison {saison}[/bold]\n"
         f"Theme : {theme}\n"
+        f"Episodes : {nb_episodes}\n"
         f"Description : {description or 'non fournie'}",
         title="Planificateur de saison",
         border_style="blue",
@@ -2347,6 +2350,7 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
             personnages_secondaires=personnages_list,
             saisons_precedentes=saisons_prec or None,
             preferences_producteur=_construire_bloc_preferences(),
+            nb_episodes=nb_episodes,
         )
 
         # Sauvegarder le plan (brouillon)
@@ -2358,16 +2362,22 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
         _afficher_plan_saison(plan)
 
         # ── Validation humaine du plan de saison (go/no-go) ──────────
-        plan = _validation_plan_saison(
-            plan=plan,
-            chemin_json=chemin_json,
-            planificateur=planificateur,
-            saison=saison,
-            theme=theme,
-            description=description,
-            personnages_list=personnages_list,
-            saisons_prec=saisons_prec,
-        )
+        if not auto:
+            plan = _validation_plan_saison(
+                plan=plan,
+                chemin_json=chemin_json,
+                planificateur=planificateur,
+                saison=saison,
+                theme=theme,
+                description=description,
+                personnages_list=personnages_list,
+                saisons_prec=saisons_prec,
+            )
+        else:
+            plan["saison"].setdefault("decisions_humaines", []).append({
+                "action": "auto_valide",
+                "timestamp": datetime.now().isoformat(),
+            })
 
         # Re-sauvegarder le plan valide (peut avoir ete modifie ou regenere)
         planificateur.sauvegarder(plan, chemin_json)

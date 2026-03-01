@@ -48,6 +48,7 @@ def _run_cli(cmd_args, timeout=300):
         with _process_lock:
             _current_process = subprocess.Popen(
                 cmd,
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -122,6 +123,29 @@ def api_checkpoints():
 def api_publications():
     """API JSON — Statut des publications (RSS, Buzzsprout)."""
     return jsonify(charger_publications())
+
+
+@app.route("/api/plan-saison/<int:numero>")
+def api_plan_saison(numero):
+    """API JSON — Detail d'un plan de saison."""
+    plan = config.charger_saison(numero)
+    if not plan:
+        return jsonify({"error": f"Aucun plan pour la saison {numero}"}), 404
+    return jsonify(plan)
+
+
+@app.route("/api/saison-existe/<int:numero>")
+def api_saison_existe(numero):
+    """API JSON — Verifie si une saison existe deja."""
+    plan = config.charger_saison(numero)
+    if plan:
+        saison_data = plan.get("saison", {})
+        return jsonify({
+            "existe": True,
+            "theme": saison_data.get("theme", ""),
+            "nb_episodes": len(saison_data.get("episodes", [])),
+        })
+    return jsonify({"existe": False})
 
 
 @app.route("/api/config")
@@ -220,6 +244,7 @@ def api_planifier_saison():
     theme = body.get("theme", "").strip()
     description = body.get("description", "").strip()
     personnages = body.get("personnages", "").strip()
+    nb_episodes = body.get("nb_episodes", 10)
 
     if not theme:
         return jsonify({"error": "Theme requis"}), 400
@@ -228,13 +253,15 @@ def api_planifier_saison():
         "planifier-saison",
         "-s", str(saison),
         "-t", theme,
+        "-n", str(nb_episodes),
+        "--auto",
     ]
     if description:
         cmd.extend(["-d", description])
     if personnages:
         cmd.extend(["-p", personnages])
 
-    return jsonify(_run_cli(cmd, timeout=180))
+    return jsonify(_run_cli(cmd, timeout=300))
 
 
 @app.route("/api/produire-saison", methods=["POST"])
