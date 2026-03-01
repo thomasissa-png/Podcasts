@@ -880,22 +880,25 @@
 
 <!-- ═══ NAVIGATION ═════════════════════════════════════════════════════════ -->
 <nav class="nav-bar">
-    <button class="nav-tab active" onclick="showPage('dashboard')">
+    <button class="nav-tab active" onclick="showPage('dashboard', this)">
         <span class="tab-icon">&#127968;</span> Dashboard
     </button>
-    <button class="nav-tab" onclick="showPage('produire')">
+    <button class="nav-tab" onclick="showPage('produire', this)">
         <span class="tab-icon">&#127908;</span> Produire
     </button>
-    <button class="nav-tab" onclick="showPage('planifier')">
+    <button class="nav-tab" onclick="showPage('batch', this)">
+        <span class="tab-icon">&#128230;</span> Batch
+    </button>
+    <button class="nav-tab" onclick="showPage('planifier', this)">
         <span class="tab-icon">&#128197;</span> Planifier saison
     </button>
-    <button class="nav-tab" onclick="showPage('produire-saison')">
+    <button class="nav-tab" onclick="showPage('produire-saison', this)">
         <span class="tab-icon">&#127916;</span> Produire saison
     </button>
-    <button class="nav-tab" onclick="showPage('reprendre')">
+    <button class="nav-tab" onclick="showPage('reprendre', this)">
         <span class="tab-icon">&#9654;</span> Reprendre
     </button>
-    <button class="nav-tab" onclick="showPage('config')">
+    <button class="nav-tab" onclick="showPage('config', this)">
         <span class="tab-icon">&#9881;</span> Configuration
     </button>
 </nav>
@@ -1231,6 +1234,53 @@
 </div>
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  PAGE : BATCH                                                          ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-batch">
+    <div class="page-header">
+        <h2>&#128230; Production batch</h2>
+        <p>Produisez plusieurs episodes d'un coup en remplissant la liste ci-dessous.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div id="alert-batch" class="alert"></div>
+
+            <div class="section-title">Liste des episodes</div>
+            <div id="batch-episodes">
+                <!-- Episode rows will be added here -->
+            </div>
+            <div style="margin-top: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="addBatchRow()">+ Ajouter un episode</button>
+            </div>
+
+            <div class="form-row" style="margin-top: 1.25rem;">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" id="batch-dryrun">
+                        <label for="batch-dryrun">Mode test (dry-run)</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" id="batch-auto">
+                        <label for="batch-auto">Mode automatique</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="btn-batch" onclick="submitBatch()">
+                    &#128230; Lancer le batch
+                </button>
+            </div>
+
+            <div class="console-output" id="console-batch"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
      ║  PAGE : PLANIFIER UNE SAISON                                          ║
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-planifier">
@@ -1353,34 +1403,43 @@
         <p>Si une production a ete interrompue, reprenez-la depuis son dernier checkpoint.</p>
     </div>
 
-    <div id="alert-reprendre" class="alert"></div>
+    <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-body">
+            <div id="alert-reprendre" class="alert"></div>
 
-    {% if checkpoints %}
-    {% for cp in checkpoints %}
-    <div class="checkpoint-card">
-        <div class="checkpoint-info">
-            <span class="ep-id">{{ cp.episode_id }}</span>
-            <span class="etape">{{ cp.etape }}</span>
-            <span class="date">{{ cp.timestamp }}</span>
-        </div>
-        <button class="btn btn-turquoise" onclick="submitReprendre('{{ cp.fichier }}')">
-            &#9654; Reprendre
-        </button>
-    </div>
-    {% endfor %}
-    {% else %}
-    <div class="card">
-        <div class="card-body empty">
-            <div class="icon">&#9654;</div>
-            <p>Aucun checkpoint en attente.</p>
-            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">
-                Les checkpoints apparaissent lorsqu'une production est interrompue.
-            </p>
-        </div>
-    </div>
-    {% endif %}
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <div class="form-check">
+                    <input type="checkbox" id="reprendre-auto" checked>
+                    <label for="reprendre-auto">Mode automatique (sans validation humaine)</label>
+                </div>
+            </div>
 
-    <div class="console-output" id="console-reprendre"></div>
+            {% if checkpoints %}
+            {% for cp in checkpoints %}
+            <div class="checkpoint-card">
+                <div class="checkpoint-info">
+                    <span class="ep-id">{{ cp.episode_id }}</span>
+                    <span class="etape">{{ cp.etape }}</span>
+                    <span class="date">{{ cp.timestamp }}</span>
+                </div>
+                <button class="btn btn-turquoise" onclick="submitReprendre('{{ cp.fichier }}')">
+                    &#9654; Reprendre
+                </button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty">
+                <div class="icon">&#9654;</div>
+                <p>Aucun checkpoint en attente.</p>
+                <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">
+                    Les checkpoints apparaissent lorsqu'une production est interrompue.
+                </p>
+            </div>
+            {% endif %}
+
+            <div class="console-output" id="console-reprendre"></div>
+        </div>
+    </div>
 </div>
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
@@ -1450,31 +1509,43 @@
 
 <!-- ═══ JAVASCRIPT ═════════════════════════════════════════════════════════ -->
 <script>
+/* ── Etat global ────────────────────────────────────────────────────────── */
+let _dashboardDirty = false;  /* true apres une action qui modifie les donnees */
+let _configLoaded = false;
+
 /* ── Navigation par onglets ─────────────────────────────────────────────── */
-function showPage(pageId) {
+function showPage(pageId, tabEl) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('page-' + pageId).classList.add('active');
-    event.currentTarget.classList.add('active');
-    if (pageId === 'config') loadConfig();
+    if (tabEl) tabEl.classList.add('active');
+    if (pageId === 'config' && !_configLoaded) loadConfig();
+    /* Si on revient au dashboard apres une production, recharger la page */
+    if (pageId === 'dashboard' && _dashboardDirty) {
+        window.location.href = window.location.pathname + window.location.search;
+    }
 }
 
 /* ── Helper : afficher une alerte ───────────────────────────────────────── */
 function showAlert(containerId, type, message) {
     const el = document.getElementById(containerId);
+    if (!el) return;
     el.className = 'alert alert-' + type + ' show';
     el.innerHTML = message;
+    el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
 }
 
 function hideAlert(containerId) {
     const el = document.getElementById(containerId);
+    if (!el) return;
     el.className = 'alert';
 }
 
 /* ── Helper : afficher la console ───────────────────────────────────────── */
 function showConsole(consoleId, text) {
     const el = document.getElementById(consoleId);
-    el.textContent = text;
+    if (!el) return;
+    el.textContent = text.trim();
     el.classList.add('show');
 }
 
@@ -1488,14 +1559,34 @@ function hideLoading() {
     document.getElementById('loadingOverlay').classList.remove('show');
 }
 
-/* ── Helper : appel API ─────────────────────────────────────────────────── */
+/* ── Helper : appel API (POST) ──────────────────────────────────────────── */
 async function apiCall(url, body) {
     const resp = await fetch(url, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(body)
     });
+    if (!resp.ok && resp.status >= 500) {
+        throw new Error('Erreur serveur (HTTP ' + resp.status + ')');
+    }
     return await resp.json();
+}
+
+/* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */
+function handleCliResponse(data, alertId, consoleId, successMsg) {
+    if (data.error) {
+        showAlert(alertId, 'error', 'Erreur : ' + data.error);
+    } else if (data.status === 'ok') {
+        showAlert(alertId, 'success', successMsg);
+        _dashboardDirty = true;
+    } else {
+        showAlert(alertId, 'error', 'L\'operation a rencontre une erreur.');
+        if (data.stderr) {
+            showAlert(alertId, 'error', 'Erreur : ' + data.stderr.substring(0, 300));
+        }
+    }
+    const output = ((data.stdout || '') + '\n' + (data.stderr || '')).trim();
+    if (output) showConsole(consoleId, output);
 }
 
 /* ── Produire un episode ────────────────────────────────────────────────── */
@@ -1526,20 +1617,8 @@ async function submitProduire(e) {
             titre, saison, numero, resume, morale,
             dry_run: dryRun, auto: auto
         });
-
         hideLoading();
-
-        if (data.error) {
-            showAlert('alert-produire', 'error', 'Erreur : ' + data.error);
-        } else if (data.status === 'ok') {
-            showAlert('alert-produire', 'success', 'Episode produit avec succes !');
-        } else {
-            showAlert('alert-produire', 'error', 'La production a rencontre une erreur.');
-        }
-
-        if (data.stdout || data.stderr) {
-            showConsole('console-produire', (data.stdout || '') + '\n' + (data.stderr || ''));
-        }
+        handleCliResponse(data, 'alert-produire', 'console-produire', 'Episode produit avec succes !');
     } catch (err) {
         hideLoading();
         showAlert('alert-produire', 'error', 'Erreur reseau : ' + err.message);
@@ -1574,21 +1653,9 @@ async function submitPlanifier(e) {
         const data = await apiCall('/api/planifier-saison', {
             saison, theme, description, personnages
         });
-
         hideLoading();
-
-        if (data.error) {
-            showAlert('alert-planifier', 'error', 'Erreur : ' + data.error);
-        } else if (data.status === 'ok') {
-            showAlert('alert-planifier', 'success',
-                'Saison ' + saison + ' planifiee avec succes ! <a href="/?saison=' + saison + '" style="color: inherit; text-decoration: underline;">Voir le dashboard</a>');
-        } else {
-            showAlert('alert-planifier', 'error', 'La planification a rencontre une erreur.');
-        }
-
-        if (data.stdout || data.stderr) {
-            showConsole('console-planifier', (data.stdout || '') + '\n' + (data.stderr || ''));
-        }
+        handleCliResponse(data, 'alert-planifier', 'console-planifier',
+            'Saison ' + saison + ' planifiee ! <a href="/?saison=' + saison + '" style="color: inherit; text-decoration: underline;">Voir le dashboard</a>');
     } catch (err) {
         hideLoading();
         showAlert('alert-planifier', 'error', 'Erreur reseau : ' + err.message);
@@ -1618,21 +1685,9 @@ async function submitProduireSaison(e) {
         const data = await apiCall('/api/produire-saison', {
             saison, episodes, dry_run: dryRun, auto: auto
         });
-
         hideLoading();
-
-        if (data.error) {
-            showAlert('alert-produire-saison', 'error', 'Erreur : ' + data.error);
-        } else if (data.status === 'ok') {
-            showAlert('alert-produire-saison', 'success',
-                'Production de la saison ' + saison + ' terminee ! <a href="/?saison=' + saison + '" style="color: inherit; text-decoration: underline;">Voir le dashboard</a>');
-        } else {
-            showAlert('alert-produire-saison', 'error', 'La production a rencontre une erreur.');
-        }
-
-        if (data.stdout || data.stderr) {
-            showConsole('console-produire-saison', (data.stdout || '') + '\n' + (data.stderr || ''));
-        }
+        handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
+            'Saison ' + saison + ' terminee ! <a href="/?saison=' + saison + '" style="color: inherit; text-decoration: underline;">Voir le dashboard</a>');
     } catch (err) {
         hideLoading();
         showAlert('alert-produire-saison', 'error', 'Erreur reseau : ' + err.message);
@@ -1646,34 +1701,114 @@ async function submitProduireSaison(e) {
 /* ── Reprendre un checkpoint ────────────────────────────────────────────── */
 async function submitReprendre(fichier) {
     hideAlert('alert-reprendre');
+    const auto = document.getElementById('reprendre-auto').checked;
     showLoading('Reprise de la production...');
 
     try {
-        const data = await apiCall('/api/reprendre', { fichier });
+        const data = await apiCall('/api/reprendre', { fichier, auto });
         hideLoading();
-
-        if (data.error) {
-            showAlert('alert-reprendre', 'error', 'Erreur : ' + data.error);
-        } else if (data.status === 'ok') {
-            showAlert('alert-reprendre', 'success', 'Production reprise avec succes !');
-        } else {
-            showAlert('alert-reprendre', 'error', 'La reprise a rencontre une erreur.');
-        }
-
-        if (data.stdout || data.stderr) {
-            showConsole('console-reprendre', (data.stdout || '') + '\n' + (data.stderr || ''));
-        }
+        handleCliResponse(data, 'alert-reprendre', 'console-reprendre', 'Production reprise avec succes !');
     } catch (err) {
         hideLoading();
         showAlert('alert-reprendre', 'error', 'Erreur reseau : ' + err.message);
     }
 }
 
+/* ── Batch : gestion des lignes ─────────────────────────────────────────── */
+let _batchCounter = 0;
+
+function addBatchRow() {
+    _batchCounter++;
+    const id = _batchCounter;
+    const container = document.getElementById('batch-episodes');
+    const row = document.createElement('div');
+    row.id = 'batch-row-' + id;
+    row.style.cssText = 'background: var(--sable); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 0.75rem;';
+    row.innerHTML = ''
+        + '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">'
+        + '  <strong style="color: var(--orange-chaud);">Episode ' + id + '</strong>'
+        + '  <button type="button" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="removeBatchRow(' + id + ')">Supprimer</button>'
+        + '</div>'
+        + '<div class="form-row" style="margin-bottom: 0.5rem;">'
+        + '  <div class="form-group" style="margin-bottom: 0.5rem;"><input type="text" class="form-input" placeholder="Titre *" data-batch="titre-' + id + '"></div>'
+        + '  <div class="form-group" style="margin-bottom: 0.5rem;"><input type="number" class="form-input" placeholder="Saison" value="1" min="1" data-batch="saison-' + id + '"></div>'
+        + '  <div class="form-group" style="margin-bottom: 0.5rem;"><input type="number" class="form-input" placeholder="Numero" value="' + id + '" min="1" data-batch="numero-' + id + '"></div>'
+        + '</div>'
+        + '<div class="form-group" style="margin-bottom: 0.5rem;"><textarea class="form-textarea" rows="2" placeholder="Resume de l\'histoire *" data-batch="resume-' + id + '"></textarea></div>'
+        + '<div class="form-group" style="margin-bottom: 0;"><input type="text" class="form-input" placeholder="Morale (optionnel)" data-batch="morale-' + id + '"></div>';
+    container.appendChild(row);
+}
+
+function removeBatchRow(id) {
+    const row = document.getElementById('batch-row-' + id);
+    if (row) row.remove();
+}
+
+/* Pre-remplir avec 2 lignes */
+addBatchRow();
+addBatchRow();
+
+async function submitBatch() {
+    hideAlert('alert-batch');
+    const container = document.getElementById('batch-episodes');
+    const rows = container.querySelectorAll('[id^="batch-row-"]');
+
+    if (rows.length === 0) {
+        showAlert('alert-batch', 'error', 'Ajoutez au moins un episode.');
+        return;
+    }
+
+    const episodes = [];
+    for (const row of rows) {
+        const id = row.id.replace('batch-row-', '');
+        const val = (attr) => {
+            const el = row.querySelector('[data-batch="' + attr + '-' + id + '"]');
+            return el ? el.value.trim() : '';
+        };
+        const titre = val('titre');
+        const resume = val('resume');
+        if (!titre) { showAlert('alert-batch', 'error', 'Episode ' + id + ' : titre requis.'); return; }
+        if (!resume) { showAlert('alert-batch', 'error', 'Episode ' + id + ' : resume requis.'); return; }
+        episodes.push({
+            titre: titre,
+            resume: resume,
+            saison: parseInt(val('saison')) || 1,
+            numero: parseInt(val('numero')) || 1,
+            morale: val('morale')
+        });
+    }
+
+    const dryRun = document.getElementById('batch-dryrun').checked;
+    const auto = document.getElementById('batch-auto').checked;
+
+    const btn = document.getElementById('btn-batch');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Batch en cours...';
+    showLoading('Production batch de ' + episodes.length + ' episode(s)...');
+
+    try {
+        const data = await apiCall('/api/batch', { episodes, dry_run: dryRun, auto: auto });
+        hideLoading();
+        handleCliResponse(data, 'alert-batch', 'console-batch',
+            'Batch termine : ' + episodes.length + ' episode(s) traite(s) !');
+    } catch (err) {
+        hideLoading();
+        showAlert('alert-batch', 'error', 'Erreur reseau : ' + err.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '&#128230; Lancer le batch';
+}
+
 /* ── Charger la configuration ───────────────────────────────────────────── */
 async function loadConfig() {
     try {
         const resp = await fetch('/api/config');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const cfg = await resp.json();
+        if (cfg.error) throw new Error(cfg.error);
+
+        _configLoaded = true;
 
         // Production
         let prodHTML = '';
@@ -1688,7 +1823,7 @@ async function loadConfig() {
         let voixHTML = '';
         if (cfg.voix) {
             for (const [nom, id] of Object.entries(cfg.voix)) {
-                const displayId = id ? (id.substring(0, 12) + '...') : 'Non configure';
+                const displayId = id ? (id.substring(0, 16) + '...') : 'Non configure';
                 voixHTML += '<div class="cout-row"><span class="service" style="font-weight: 700; color: var(--orange-chaud);">' + nom.replace(/_/g, ' ') + '</span><span class="montant" style="color: var(--texte-dim); font-size: 0.8rem;">' + displayId + '</span></div>';
             }
         }
@@ -1707,9 +1842,10 @@ async function loadConfig() {
         let apiHTML = '';
         if (cfg.api_keys) {
             for (const [k, v] of Object.entries(cfg.api_keys)) {
-                const statusClass = v ? 'vert-prairie' : 'corail';
+                const statusColor = v ? 'var(--vert-prairie)' : 'var(--corail)';
                 const statusIcon = v ? '&#10003;' : '&#10007;';
-                apiHTML += '<div class="cout-row"><span class="service">' + k + '</span><span class="montant" style="color: var(--' + statusClass + ');">' + statusIcon + ' ' + (v ? 'Configure' : 'Manquant') + '</span></div>';
+                const statusText = v ? 'Configure' : 'Manquant';
+                apiHTML += '<div class="cout-row"><span class="service">' + k + '</span><span class="montant" style="color: ' + statusColor + ';">' + statusIcon + ' ' + statusText + '</span></div>';
             }
         }
         document.getElementById('config-api').innerHTML = apiHTML || '<div class="empty"><p>Non disponible</p></div>';
@@ -1725,7 +1861,10 @@ async function loadConfig() {
         document.getElementById('config-formats').innerHTML = fmtHTML;
 
     } catch (err) {
-        document.getElementById('config-production').innerHTML = '<div class="empty"><p>Erreur de chargement</p></div>';
+        const errMsg = '<div class="empty"><p>Erreur : ' + err.message + '</p></div>';
+        ['config-production', 'config-voix', 'config-couts', 'config-api', 'config-formats'].forEach(id => {
+            document.getElementById(id).innerHTML = errMsg;
+        });
     }
 }
 </script>

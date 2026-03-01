@@ -79,10 +79,12 @@ def calculer_couts(saison: int = 0) -> dict:
                 total_chars += sum(chars.values())
             couts_ep = rapport.get("couts", {})
             for service, detail in couts_ep.items():
-                if service == "total_estime":
+                if service == "total_estime" and isinstance(detail, (int, float)):
                     cout_total += detail
                 elif isinstance(detail, dict):
-                    cout_par_service[service] = cout_par_service.get(service, 0) + detail.get("cout", 0)
+                    cout_val = detail.get("cout", 0)
+                    if isinstance(cout_val, (int, float)):
+                        cout_par_service[service] = cout_par_service.get(service, 0) + cout_val
         except (json.JSONDecodeError, FileNotFoundError):
             pass
 

@@ -7,7 +7,6 @@ Usage :
     python web.py                     # Demarre sur le port 5000
 """
 
-import json
 import logging
 import os
 import subprocess
@@ -225,6 +224,7 @@ def api_reprendre():
     """Reprend une production depuis un checkpoint."""
     body = request.get_json(force=True)
     fichier = body.get("fichier", "").strip()
+    auto = body.get("auto", True)
 
     if not fichier:
         return jsonify({"error": "Fichier checkpoint requis"}), 400
@@ -240,10 +240,55 @@ def api_reprendre():
     cmd = [
         "reprendre",
         "-c", str(checkpoint_path),
-        "--auto",
     ]
+    if auto:
+        cmd.append("--auto")
 
     return jsonify(_run_cli(cmd, timeout=300))
+
+
+@app.route("/api/batch", methods=["POST"])
+def api_batch():
+    """Lance une production batch depuis un JSON envoye par le client."""
+    import json as _json
+    import tempfile
+
+    body = request.get_json(force=True)
+    episodes_list = body.get("episodes", [])
+    dry_run = body.get("dry_run", False)
+    auto = body.get("auto", False)
+
+    if not episodes_list or not isinstance(episodes_list, list):
+        return jsonify({"error": "Liste d'episodes requise (tableau JSON)"}), 400
+
+    # Validate each episode has required fields
+    for i, ep in enumerate(episodes_list):
+        if not isinstance(ep, dict):
+            return jsonify({"error": f"Episode {i+1} : doit etre un objet JSON"}), 400
+        if not ep.get("titre"):
+            return jsonify({"error": f"Episode {i+1} : titre requis"}), 400
+        if not ep.get("resume"):
+            return jsonify({"error": f"Episode {i+1} : resume requis"}), 400
+
+    # Write to temp file, pass to CLI
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", dir=str(_THIS_DIR), delete=False
+    ) as tmp:
+        _json.dump(episodes_list, tmp, ensure_ascii=False)
+        tmp_path = tmp.name
+
+    try:
+        cmd = ["batch", "-f", tmp_path]
+        if dry_run:
+            cmd.append("--dry-run")
+        if auto:
+            cmd.append("--auto")
+        return jsonify(_run_cli(cmd, timeout=600))
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
 
 
 # ── Lancement ────────────────────────────────────────────────────────────────
