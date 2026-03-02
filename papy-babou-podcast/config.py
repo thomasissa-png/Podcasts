@@ -172,6 +172,10 @@ VOICE_SETTINGS = {
     },
 }
 
+# Ordre de fallback quand un personnage n'a pas de voice_id configuré.
+# Le premier voice_id valide trouvé dans cette liste sera utilisé.
+VOICE_FALLBACK_CHAIN = ["narrateur", "papy_babou", "antoine", "noemie"]
+
 # ── Panoramique stéréo par personnage ────────────────────────────────────────
 # Valeurs de -1.0 (gauche) à 1.0 (droite), 0.0 = centre
 
@@ -356,6 +360,75 @@ def ajouter_personnage(
             "style": 0.2,
         }
     STEREO_PAN[personnage_id] = pan
+
+
+def configurer_voix(
+    personnage_id: str,
+    voice_id: str = "",
+    pan: float | None = None,
+    stability: float | None = None,
+    similarity_boost: float | None = None,
+    style: float | None = None,
+) -> None:
+    """Configure la voix et le panoramique d'un personnage existant.
+
+    Persiste les changements en JSON (personnages.json) et met à jour
+    les dictionnaires runtime (VOICE_IDS, STEREO_PAN, VOICE_SETTINGS).
+
+    Args:
+        personnage_id: Identifiant du personnage.
+        voice_id: ElevenLabs voice ID à assigner.
+        pan: Panoramique stéréo (-1.0 à 1.0).
+        stability: Paramètre TTS stability (0.0–1.0).
+        similarity_boost: Paramètre TTS similarity_boost (0.0–1.0).
+        style: Paramètre TTS style (0.0–1.0).
+    """
+    if voice_id:
+        VOICE_IDS[personnage_id] = voice_id
+    if pan is not None:
+        STEREO_PAN[personnage_id] = pan
+
+    # Mettre à jour les VOICE_SETTINGS si des paramètres TTS sont fournis
+    if any(v is not None for v in (stability, similarity_boost, style)):
+        settings = VOICE_SETTINGS.setdefault(personnage_id, {
+            "stability": 0.70,
+            "similarity_boost": 0.80,
+            "style": 0.2,
+        })
+        if stability is not None:
+            settings["stability"] = stability
+        if similarity_boost is not None:
+            settings["similarity_boost"] = similarity_boost
+        if style is not None:
+            settings["style"] = style
+
+    # Persister dans le JSON de la bible des personnages
+    bible = {}
+    if PERSONNAGES_JSON_PATH.exists():
+        with open(PERSONNAGES_JSON_PATH, "r", encoding="utf-8") as f:
+            bible = json.load(f)
+
+    perso_data = bible.setdefault("personnages", {}).setdefault(personnage_id, {})
+    if voice_id:
+        perso_data["voice_id"] = voice_id
+    if pan is not None:
+        perso_data["pan"] = pan
+    if stability is not None or similarity_boost is not None or style is not None:
+        voice_settings = perso_data.setdefault("voice_settings", {})
+        if stability is not None:
+            voice_settings["stability"] = stability
+        if similarity_boost is not None:
+            voice_settings["similarity_boost"] = similarity_boost
+        if style is not None:
+            voice_settings["style"] = style
+
+    with open(PERSONNAGES_JSON_PATH, "w", encoding="utf-8") as f:
+        json.dump(bible, f, ensure_ascii=False, indent=2)
+
+    _config_logger.info(
+        "Voix configurée pour '%s' : voice_id=%s, pan=%s",
+        personnage_id, voice_id or "(inchangé)", pan,
+    )
 
 
 def personnages_valides() -> set[str]:

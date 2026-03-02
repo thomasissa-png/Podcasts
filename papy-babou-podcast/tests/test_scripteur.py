@@ -425,3 +425,85 @@ class TestSystemPromptSeriel:
         prompt = _construire_system_prompt()
         assert "mamie_rose" in prompt
         assert "PERSONNAGES SECONDAIRES" in prompt
+
+
+class TestValidationPreTTS:
+    """Tests de la validation pre-TTS des voice_id dans le scripteur."""
+
+    def test_warning_voice_id_manquant(self, monkeypatch, caplog):
+        """Un personnage sans voice_id doit générer un warning lors de la validation."""
+        import config
+        import logging
+
+        monkeypatch.setattr(
+            config, "personnages_valides",
+            lambda: {"papy_babou", "antoine", "noemie", "narrateur", "sfx", "mamie_rose"},
+        )
+        monkeypatch.setattr(config, "VOICE_IDS", {
+            "papy_babou": "voice_papy",
+            "antoine": "voice_antoine",
+            "noemie": "voice_noemie",
+            "narrateur": "voice_narrateur",
+        })
+
+        script = {
+            "episode": {
+                "titre": "Test",
+                "numero": 1,
+                "saison": 1,
+                "ambiance": "calme",
+                "morale": "Courage",
+                "segments": [
+                    {
+                        "id": "seg_001",
+                        "personnage": "mamie_rose",
+                        "texte": "Bonjour",
+                        "ton": "doux",
+                        "pause_apres_ms": 500,
+                    },
+                ],
+            }
+        }
+
+        with caplog.at_level(logging.WARNING, logger="agents.scripteur"):
+            Scripteur._valider_structure(script)
+
+        assert any("Voice ID manquant" in r.message and "mamie_rose" in r.message for r in caplog.records)
+
+    def test_pas_de_warning_voice_id_present(self, monkeypatch, caplog):
+        """Un personnage avec voice_id ne doit PAS générer de warning."""
+        import config
+        import logging
+
+        monkeypatch.setattr(
+            config, "personnages_valides",
+            lambda: {"papy_babou", "narrateur", "sfx"},
+        )
+        monkeypatch.setattr(config, "VOICE_IDS", {
+            "papy_babou": "voice_papy",
+            "narrateur": "voice_narrateur",
+        })
+
+        script = {
+            "episode": {
+                "titre": "Test",
+                "numero": 1,
+                "saison": 1,
+                "ambiance": "calme",
+                "morale": "Courage",
+                "segments": [
+                    {
+                        "id": "seg_001",
+                        "personnage": "papy_babou",
+                        "texte": "Bonjour",
+                        "ton": "chaleureux",
+                        "pause_apres_ms": 500,
+                    },
+                ],
+            }
+        }
+
+        with caplog.at_level(logging.WARNING, logger="agents.scripteur"):
+            Scripteur._valider_structure(script)
+
+        assert not any("Voice ID manquant" in r.message for r in caplog.records)

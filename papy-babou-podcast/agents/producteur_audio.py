@@ -111,20 +111,25 @@ class ProducteurAudio:
             RuntimeError: Si la génération échoue après toutes les tentatives.
         """
         personnage = segment["personnage"]
+        placeholder = "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"
         voice_id = config.VOICE_IDS.get(personnage)
-        if not voice_id or voice_id == "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID":
-            # Fallback vers le narrateur pour les personnages secondaires
-            fallback_id = config.VOICE_IDS.get("narrateur")
-            if fallback_id and fallback_id != "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID":
-                logger.warning(
-                    "Voice ID non configuré pour '%s' — fallback vers la voix narrateur.",
-                    personnage,
-                )
-                voice_id = fallback_id
-            else:
+        if not voice_id or voice_id == placeholder:
+            # Chaîne de fallback : essayer plusieurs voix configurées
+            voice_id = None
+            for fallback_char in config.VOICE_FALLBACK_CHAIN:
+                fallback_id = config.VOICE_IDS.get(fallback_char)
+                if fallback_id and fallback_id != placeholder:
+                    logger.warning(
+                        "Voice ID non configuré pour '%s' — fallback vers la voix '%s'.",
+                        personnage, fallback_char,
+                    )
+                    voice_id = fallback_id
+                    break
+            if not voice_id:
                 raise ValueError(
-                    f"Voice ID non configuré pour '{personnage}'. "
-                    "Configurez VOICE_IDS dans config.py ou les variables d'environnement."
+                    f"Voice ID non configuré pour '{personnage}' et aucune voix "
+                    "de fallback disponible. Configurez VOICE_IDS dans config.py, "
+                    "les variables d'environnement, ou via la commande configure-voix."
                 )
 
         settings = config.VOICE_SETTINGS.get(personnage, {})

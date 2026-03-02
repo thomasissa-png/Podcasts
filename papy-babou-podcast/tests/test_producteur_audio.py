@@ -144,3 +144,83 @@ class TestProducteurAudioProduction:
 
         assert len(fichiers) == 2
         assert mock_post.call_count == 2
+
+
+class TestFallbackChainVoix:
+    """Tests de la chaîne de fallback multi-voix."""
+
+    @patch("agents.producteur_audio.requests.post")
+    @patch("agents.producteur_audio.config.VOICE_FALLBACK_CHAIN", ["narrateur", "papy_babou"])
+    @patch("agents.producteur_audio.config.VOICE_IDS", {
+        "narrateur": "voice_narrateur_123",
+        "papy_babou": "voice_papy_456",
+    })
+    def test_fallback_vers_narrateur(self, mock_post, tmp_path):
+        """Un personnage sans voice_id doit utiliser la voix narrateur."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = b"fake mp3 data"
+        mock_response.raise_for_status = MagicMock()
+        mock_post.return_value = mock_response
+
+        producteur = ProducteurAudio()
+        segment = {
+            "id": "seg_001",
+            "personnage": "mamie_rose",
+            "texte": "Bonjour les enfants",
+            "ton": "doux",
+            "pause_apres_ms": 0,
+        }
+        chemin = tmp_path / "seg_001.mp3"
+        producteur._generer_segment(segment, chemin)
+
+        assert chemin.exists()
+        # Vérifier que l'URL contient le voice_id du narrateur
+        call_url = mock_post.call_args[0][0]
+        assert "voice_narrateur_123" in call_url
+
+    @patch("agents.producteur_audio.requests.post")
+    @patch("agents.producteur_audio.config.VOICE_FALLBACK_CHAIN", ["narrateur", "papy_babou"])
+    @patch("agents.producteur_audio.config.VOICE_IDS", {
+        "narrateur": "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID",
+        "papy_babou": "voice_papy_456",
+    })
+    def test_fallback_saute_narrateur_placeholder(self, mock_post, tmp_path):
+        """Si narrateur est placeholder, le fallback doit passer à papy_babou."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = b"fake mp3 data"
+        mock_response.raise_for_status = MagicMock()
+        mock_post.return_value = mock_response
+
+        producteur = ProducteurAudio()
+        segment = {
+            "id": "seg_001",
+            "personnage": "mamie_rose",
+            "texte": "Bonjour",
+            "ton": "doux",
+            "pause_apres_ms": 0,
+        }
+        chemin = tmp_path / "seg_001.mp3"
+        producteur._generer_segment(segment, chemin)
+
+        call_url = mock_post.call_args[0][0]
+        assert "voice_papy_456" in call_url
+
+    @patch("agents.producteur_audio.config.VOICE_FALLBACK_CHAIN", ["narrateur", "papy_babou"])
+    @patch("agents.producteur_audio.config.VOICE_IDS", {
+        "narrateur": "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID",
+        "papy_babou": "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID",
+    })
+    def test_fallback_aucune_voix_disponible(self, tmp_path):
+        """Si aucune voix n'est configurée, une ValueError doit être levée."""
+        producteur = ProducteurAudio()
+        segment = {
+            "id": "seg_001",
+            "personnage": "mamie_rose",
+            "texte": "Bonjour",
+            "ton": "doux",
+            "pause_apres_ms": 0,
+        }
+        with pytest.raises(ValueError, match="aucune voix de fallback"):
+            producteur._generer_segment(segment, tmp_path / "test.mp3")

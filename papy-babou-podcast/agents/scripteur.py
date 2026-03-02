@@ -680,6 +680,7 @@ class Scripteur:
             ids_vus.add(seg_id)
 
         personnages_ok = config.personnages_valides()
+        placeholder = "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"
         sfx_count = 0
         for seg in ep["segments"]:
             for champ in ("id", "personnage", "texte", "ton", "pause_apres_ms"):
@@ -692,6 +693,15 @@ class Scripteur:
                     f"Personnage inconnu '{seg['personnage']}' dans segment {seg['id']}. "
                     f"Valides : {personnages_ok}"
                 )
+            # Avertir si le personnage n'a pas de voice_id configuré
+            if seg["personnage"] != "sfx":
+                vid = config.VOICE_IDS.get(seg["personnage"])
+                if not vid or vid == placeholder:
+                    logger.warning(
+                        "Voice ID manquant pour '%s' (segment %s) "
+                        "— fallback voix appliqué au moment du TTS.",
+                        seg["personnage"], seg["id"],
+                    )
             # Validation spécifique aux segments SFX
             if seg["personnage"] == "sfx":
                 sfx_count += 1

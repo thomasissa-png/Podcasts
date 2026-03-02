@@ -323,3 +323,86 @@ class TestPersonnagesValides:
 
         persos = config.personnages_valides()
         assert "mamie_rose" in persos
+
+    def test_ajouter_personnage_avec_voice_id_et_pan(self, tmp_path, monkeypatch):
+        """Un personnage ajouté avec voice_id et pan doit être configuré."""
+        chemin = tmp_path / "personnages.json"
+        chemin.write_text('{"personnages": {}}', encoding="utf-8")
+        monkeypatch.setattr(config, "PERSONNAGES_JSON_PATH", chemin)
+
+        config.ajouter_personnage(
+            "cousin_paul",
+            {"nom_complet": "Cousin Paul", "description": "Cousin espiègle"},
+            voice_id="voice_paul_123",
+            pan=-0.4,
+        )
+
+        assert config.VOICE_IDS["cousin_paul"] == "voice_paul_123"
+        assert config.STEREO_PAN["cousin_paul"] == -0.4
+        assert "cousin_paul" in config.VOICE_SETTINGS
+
+
+class TestConfigurerVoix:
+    """Tests de la configuration dynamique des voix."""
+
+    def test_configurer_voice_id(self, tmp_path, monkeypatch):
+        """configurer_voix doit mettre à jour VOICE_IDS."""
+        chemin = tmp_path / "personnages.json"
+        chemin.write_text('{"personnages": {"moise": {}}}', encoding="utf-8")
+        monkeypatch.setattr(config, "PERSONNAGES_JSON_PATH", chemin)
+
+        config.configurer_voix("moise", voice_id="voice_moise_456")
+
+        assert config.VOICE_IDS["moise"] == "voice_moise_456"
+        # Vérifier la persistance JSON
+        with open(chemin, encoding="utf-8") as f:
+            bible = json.load(f)
+        assert bible["personnages"]["moise"]["voice_id"] == "voice_moise_456"
+
+    def test_configurer_pan(self, tmp_path, monkeypatch):
+        """configurer_voix doit mettre à jour STEREO_PAN."""
+        chemin = tmp_path / "personnages.json"
+        chemin.write_text('{"personnages": {"moise": {}}}', encoding="utf-8")
+        monkeypatch.setattr(config, "PERSONNAGES_JSON_PATH", chemin)
+
+        config.configurer_voix("moise", pan=0.5)
+
+        assert config.STEREO_PAN["moise"] == 0.5
+
+    def test_configurer_voice_settings(self, tmp_path, monkeypatch):
+        """configurer_voix doit mettre à jour VOICE_SETTINGS."""
+        chemin = tmp_path / "personnages.json"
+        chemin.write_text('{"personnages": {"david": {}}}', encoding="utf-8")
+        monkeypatch.setattr(config, "PERSONNAGES_JSON_PATH", chemin)
+
+        config.configurer_voix("david", stability=0.9, similarity_boost=0.6)
+
+        settings = config.VOICE_SETTINGS["david"]
+        assert settings["stability"] == 0.9
+        assert settings["similarity_boost"] == 0.6
+
+    def test_configurer_personnage_nouveau(self, tmp_path, monkeypatch):
+        """configurer_voix sur un personnage inconnu doit le créer dans la bible."""
+        chemin = tmp_path / "personnages.json"
+        chemin.write_text('{"personnages": {}}', encoding="utf-8")
+        monkeypatch.setattr(config, "PERSONNAGES_JSON_PATH", chemin)
+
+        config.configurer_voix("abraham", voice_id="voice_abraham")
+
+        with open(chemin, encoding="utf-8") as f:
+            bible = json.load(f)
+        assert "abraham" in bible["personnages"]
+        assert bible["personnages"]["abraham"]["voice_id"] == "voice_abraham"
+
+
+class TestVoiceFallbackChain:
+    """Tests de la chaîne de fallback vocale."""
+
+    def test_fallback_chain_existe(self):
+        """La chaîne de fallback doit être définie."""
+        assert hasattr(config, "VOICE_FALLBACK_CHAIN")
+        assert len(config.VOICE_FALLBACK_CHAIN) >= 1
+
+    def test_fallback_chain_contient_narrateur(self):
+        """Le narrateur doit être en première position du fallback."""
+        assert config.VOICE_FALLBACK_CHAIN[0] == "narrateur"

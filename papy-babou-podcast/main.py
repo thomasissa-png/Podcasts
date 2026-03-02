@@ -1497,6 +1497,8 @@ def _pipeline_inner(
                             "ton": perso_sec.get("ton", "neutre"),
                             "tics_de_langage": perso_sec.get("tics_de_langage", []),
                         },
+                        voice_id=perso_sec.get("voice_id", ""),
+                        pan=perso_sec.get("pan", 0.0),
                     )
 
     # Validation des clés API au démarrage
@@ -2903,6 +2905,53 @@ def migrer_json_vers_db():
     from migrate_json_to_db import migrer_tout
     migrer_tout()
     console.print(f"[{Palette.SUCCES}]Migration terminée ![/]")
+
+
+@cli.command("configurer-voix")
+@click.option("--personnage", "-c", required=True, help="Identifiant du personnage (ex: mamie_rose)")
+@click.option("--voice-id", "-v", default="", help="ElevenLabs voice ID a assigner")
+@click.option("--pan", "-p", type=float, default=None, help="Panoramique stereo (-1.0 gauche a 1.0 droite)")
+@click.option("--stability", type=float, default=None, help="TTS stability (0.0-1.0)")
+@click.option("--similarity-boost", type=float, default=None, help="TTS similarity boost (0.0-1.0)")
+@click.option("--style", type=float, default=None, help="TTS style (0.0-1.0)")
+def configurer_voix(personnage: str, voice_id: str, pan: float | None,
+                    stability: float | None, similarity_boost: float | None,
+                    style: float | None):
+    """Configure la voix ElevenLabs et le panoramique stereo d'un personnage."""
+    if not voice_id and pan is None and stability is None and similarity_boost is None and style is None:
+        console.print("[red]Erreur : specifiez au moins --voice-id, --pan, ou un parametre TTS.[/red]")
+        sys.exit(1)
+
+    persos = config.personnages_valides()
+    if personnage not in persos:
+        console.print(
+            f"[yellow]Personnage '{personnage}' inconnu — il sera cree dans la bible.[/yellow]"
+        )
+
+    config.configurer_voix(
+        personnage_id=personnage,
+        voice_id=voice_id,
+        pan=pan,
+        stability=stability,
+        similarity_boost=similarity_boost,
+        style=style,
+    )
+
+    # Afficher le résultat
+    table = Table(title=f"Configuration voix — {personnage}", border_style="blue")
+    table.add_column("Parametre", style="bold")
+    table.add_column("Valeur")
+
+    vid = config.VOICE_IDS.get(personnage, "")
+    table.add_row("voice_id", vid if vid else "[dim]non configure[/dim]")
+    table.add_row("pan", str(config.STEREO_PAN.get(personnage, 0.0)))
+    settings = config.VOICE_SETTINGS.get(personnage, {})
+    table.add_row("stability", str(settings.get("stability", "-")))
+    table.add_row("similarity_boost", str(settings.get("similarity_boost", "-")))
+    table.add_row("style", str(settings.get("style", "-")))
+
+    console.print(table)
+    console.print(f"[{Palette.SUCCES}]Configuration sauvegardee dans {config.PERSONNAGES_JSON_PATH}[/]")
 
 
 if __name__ == "__main__":
