@@ -186,13 +186,16 @@ class Metadonnees:
 
     @staticmethod
     def _generer_transcript(episode: dict) -> str:
-        """Génère un transcript texte à partir du script JSON.
+        """Génère un transcript texte avec timecodes estimés.
+
+        Les timecodes sont calculés à partir du débit de parole
+        (100 mots/min enfants, 120 mots/min adultes) et de la durée SFX.
 
         Args:
             episode: Données de l'épisode.
 
         Returns:
-            Transcript formaté.
+            Transcript formaté avec timecodes.
         """
         noms_base = {
             "papy_babou": "Papy Babou",
@@ -209,13 +212,32 @@ class Metadonnees:
                 )
 
         lignes = [f"TRANSCRIPT — {episode['titre']}\n"]
+        temps_sec = 0.0
+
         for seg in episode["segments"]:
+            # Formater le timecode
+            minutes = int(temps_sec // 60)
+            secondes = int(temps_sec % 60)
+            timecode = f"{minutes:02d}:{secondes:02d}"
+
             if seg["personnage"] == "sfx":
-                lignes.append(f"[Son : {seg['texte']}]")
-                continue
-            nom = noms_base.get(
-                seg["personnage"],
-                seg["personnage"].replace("_", " ").title(),
-            )
-            lignes.append(f"[{nom}] {seg['texte']}")
+                lignes.append(f"[{timecode}] [Son : {seg['texte']}]")
+                temps_sec += seg.get("duree_sfx_secondes", 5.0)
+            else:
+                nom = noms_base.get(
+                    seg["personnage"],
+                    seg["personnage"].replace("_", " ").title(),
+                )
+                lignes.append(f"[{timecode}] [{nom}] {seg['texte']}")
+
+                # Estimer la durée du segment
+                nb_mots = len(seg["texte"].split())
+                if seg["personnage"] in ("antoine", "noemie"):
+                    mots_par_min = config.PRODUCTION["mots_par_minute_enfant"]
+                else:
+                    mots_par_min = config.PRODUCTION["mots_par_minute_adulte"]
+                temps_sec += (nb_mots / mots_par_min) * 60
+
+            temps_sec += seg.get("pause_apres_ms", 0) / 1000.0
+
         return "\n\n".join(lignes)

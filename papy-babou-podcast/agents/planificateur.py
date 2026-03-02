@@ -151,6 +151,19 @@ class Planificateur:
                     f"  - Saison {s.get('numero', '?')} : {s.get('theme', '?')} "
                     f"({s.get('description', '')})\n"
                 )
+                # Continuité inter-saisons : passer les arcs finaux des personnages
+                arcs = s.get("saison", {}).get("arcs_personnages", {})
+                if arcs:
+                    prompt += "    Arcs de personnages (fin de saison) :\n"
+                    for perso, arc in arcs.items():
+                        nom = perso.replace("_", " ").title()
+                        prompt += (
+                            f"      - {nom} : terminé à \"{arc.get('arrivee', '?')}\"\n"
+                        )
+                    prompt += (
+                        "    → La nouvelle saison DOIT continuer ces arcs "
+                        "(l'état d'arrivée devient le nouveau départ).\n"
+                    )
 
         # Charger la bible des personnages pour contexte
         personnages = config.charger_personnages()
@@ -232,13 +245,30 @@ class Planificateur:
                     types[-1],
                 )
 
-        # Vérifier la variété des ambiances
+        # Vérifier la variété des ambiances (strict si ≥ 5 épisodes)
         ambiances = [ep.get("ambiance", "") for ep in episodes if ep.get("ambiance")]
-        if ambiances and len(set(ambiances)) < min(3, len(ambiances)):
+        if ambiances:
+            nb_uniques = len(set(ambiances))
+            if len(episodes) >= 5 and nb_uniques < 3:
+                raise ValueError(
+                    f"Variété d'ambiances insuffisante : seulement {nb_uniques} "
+                    f"ambiance(s) distincte(s) ({set(ambiances)}) pour "
+                    f"{len(episodes)} épisodes. Minimum requis : 3."
+                )
+            elif nb_uniques < min(3, len(ambiances)):
+                logger.warning(
+                    "Faible variété d'ambiances dans la saison : %s. "
+                    "Pensez à varier pour maintenir l'intérêt.",
+                    set(ambiances),
+                )
+
+        # Vérifier la variété des histoires bibliques
+        histoires = [ep.get("histoire_biblique", "") for ep in episodes if ep.get("histoire_biblique")]
+        if histoires and len(set(histoires)) < len(histoires):
+            doublons = [h for h in set(histoires) if histoires.count(h) > 1]
             logger.warning(
-                "Faible variété d'ambiances dans la saison : %s. "
-                "Pensez à varier pour maintenir l'intérêt.",
-                set(ambiances),
+                "Histoires bibliques en doublon dans la saison : %s",
+                doublons,
             )
 
     def exporter_csv(self, plan: dict, chemin: Path) -> Path:

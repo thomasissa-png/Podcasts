@@ -233,6 +233,24 @@ def get_dashboard_data(saison: int = 0) -> dict:
                     }
                     for ep in episodes_plan
                 ],
+                "arcs_personnages": saison_data.get("arcs_personnages", {}),
+                "plan_vs_prod": [
+                    {
+                        "episode_id": f"S{saison:02d}E{ep.get('numero', 0):02d}",
+                        "titre": ep.get("titre", "?"),
+                        "type": ep.get("type", "standard"),
+                        "produit": f"S{saison:02d}E{ep.get('numero', 0):02d}" in episodes_produits,
+                        "score": next(
+                            (
+                                e.get("score", 0)
+                                for e in episodes
+                                if e["episode_id"] == f"S{saison:02d}E{ep.get('numero', 0):02d}"
+                            ),
+                            None,
+                        ),
+                    }
+                    for ep in episodes_plan
+                ],
             }
 
     # Retours humains récents

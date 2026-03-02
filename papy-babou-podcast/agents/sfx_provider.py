@@ -15,6 +15,43 @@ logger = logging.getLogger(__name__)
 ELEVENLABS_SFX_URL = "https://api.elevenlabs.io/v1/sound-generation"
 FREESOUND_SEARCH_URL = "https://freesound.org/apiv2/search/text/"
 
+# Suggestions SFX thématiques par ambiance — aide le scripteur et le reviewer
+# à vérifier la cohérence des bruitages avec l'ambiance choisie.
+SFX_PAR_AMBIANCE = {
+    "joyeux": [
+        "rires d'enfants", "oiseaux qui chantent", "clochettes",
+        "musique festive au loin", "applaudissements",
+    ],
+    "dramatique": [
+        "tonnerre au loin", "vent violent", "tambours graves",
+        "craquement sinistre", "souffle de tempête",
+    ],
+    "calme": [
+        "ruisseau qui coule", "vent doux dans les feuilles",
+        "feu de cheminée", "grillons la nuit", "ronronnement de chat",
+    ],
+    "mystere": [
+        "pas dans un couloir", "porte qui grince", "murmures lointains",
+        "chouette dans la nuit", "écho dans une grotte",
+    ],
+    "epique": [
+        "fanfare de trompettes", "galop de chevaux", "vagues sur la côte",
+        "vent du désert", "pierres qui s'effondrent",
+    ],
+    "tendre": [
+        "berceuse lointaine", "feu de cheminée doux", "pluie légère",
+        "chat qui ronronne", "pages d'un livre qu'on tourne",
+    ],
+    "humoristique": [
+        "boing comique", "glissade", "éternuement exagéré",
+        "poule qui caquette", "ressort qui bondit",
+    ],
+    "solennel": [
+        "cloches d'église", "chœur lointain", "vent sacré",
+        "écho dans un temple", "tonnerre majestueux",
+    ],
+}
+
 
 class SfxProvider:
     """Fournit les bruitages : ElevenLabs SFX en priorité, Freesound en fallback."""
@@ -264,6 +301,18 @@ class SfxProvider:
         duree_ms = int(segment.get("duree_sfx_secondes", 2.0) * 1000)
         silence = AudioSegment.silent(duration=duree_ms)
         silence.export(str(chemin_sortie), format="mp3")
+
+    @staticmethod
+    def suggerer_sfx(ambiance: str) -> list[str]:
+        """Retourne les suggestions SFX adaptées à une ambiance.
+
+        Args:
+            ambiance: L'ambiance de l'épisode (joyeux, dramatique, etc.).
+
+        Returns:
+            Liste de descriptions SFX suggérées.
+        """
+        return SFX_PAR_AMBIANCE.get(ambiance, SFX_PAR_AMBIANCE.get("calme", []))
 
     def _logger_stats(self, episode_id: str) -> None:
         """Affiche un résumé des sources SFX utilisées."""

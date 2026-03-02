@@ -88,6 +88,68 @@ def _appliquer_pan(audio: AudioSegment, pan: float) -> AudioSegment:
     return audio.pan(pan)
 
 
+def _titre_chapitre_semantique(
+    num: int,
+    segment: dict,
+    segments_suivants: list[dict],
+    nb_total: int,
+) -> str:
+    """Génère un titre de chapitre sémantique basé sur le contenu narratif.
+
+    Au lieu de tronquer le texte du segment, analyse le contexte pour
+    produire un titre court et évocateur.
+
+    Args:
+        num: Numéro du chapitre (1-based).
+        segment: Segment qui ouvre le chapitre.
+        segments_suivants: Les 5 prochains segments pour contexte.
+        nb_total: Nombre total de segments dans l'épisode.
+    """
+    # Premier chapitre = ouverture
+    if num == 1:
+        if segment["personnage"] == "papy_babou":
+            # Extraire un thème de l'accroche de Papy
+            texte = segment["texte"]
+            if len(texte) > 60:
+                # Chercher une phrase courte au début
+                for sep in (".", "!", "?", "..."):
+                    idx = texte.find(sep)
+                    if 10 < idx < 60:
+                        return texte[:idx + 1]
+            return texte[:60].rstrip(" ,;")
+        return "Bienvenue chez Papy Babou"
+
+    # Analyser le contenu des segments suivants pour deviner le thème
+    textes = [
+        s["texte"] for s in segments_suivants
+        if s["personnage"] != "sfx" and s.get("texte")
+    ]
+    contexte = " ".join(textes)[:200].lower()
+
+    # Détecter des patterns narratifs
+    if any(mot in contexte for mot in ("peur", "effray", "trembl", "inquiet", "danger")):
+        return "L'épreuve"
+    if any(mot in contexte for mot in ("miracle", "incroyable", "prodige", "merveill")):
+        return "Le miracle"
+    if any(mot in contexte for mot in ("pardon", "désolé", "regrette", "réconcili")):
+        return "Le pardon"
+    if any(mot in contexte for mot in ("voyage", "chemin", "marche", "traversé", "désert")):
+        return "Le voyage"
+    if any(mot in contexte for mot in ("promesse", "alliance", "serment")):
+        return "La promesse"
+    if any(mot in contexte for mot in ("leçon", "morale", "compris", "retenir")):
+        return "La leçon de Papy"
+
+    # Fallback : extraire le début de la première phrase pertinente
+    texte = segment["texte"]
+    for sep in (".", "!", "?"):
+        idx = texte.find(sep)
+        if 10 < idx < 60:
+            return texte[:idx + 1]
+
+    return texte[:60].rstrip(" ,;")
+
+
 class Monteur:
     """Assemble les segments audio en un épisode final avec musique et jingles."""
 
@@ -364,8 +426,8 @@ class Monteur:
     ) -> list[dict]:
         """Génère la liste de chapitres à partir des segments du script.
 
-        Crée des chapitres pour les sections narratives principales
-        plutôt que pour chaque intervention du narrateur.
+        Utilise des titres sémantiques basés sur la structure narrative
+        plutôt que du texte tronqué.
         """
         chapitres = []
         # Offset initial : intro jingle + silence transition
@@ -373,10 +435,8 @@ class Monteur:
         temps_courant_ms = intro_ms + SILENCE_TRANSITION_MS
 
         # Identifier les chapitres logiques (max 5-7 chapitres)
-        # Un chapitre commence au 1er segment, puis à chaque segment
-        # narrateur précédé d'un SFX ou après un gap de 3+ segments voix
-        dernier_chapitre_idx = -10
         nb_segments_depuis_chapitre = 0
+        chapitre_num = 0
 
         for i, seg in enumerate(segments):
             chemin = dossier / f"{seg['id']}.mp3"
@@ -406,12 +466,14 @@ class Monteur:
                 creer_chapitre = True
 
             if creer_chapitre and seg["personnage"] != "sfx":
-                titre_chapitre = seg["texte"][:80].rstrip(".")
+                chapitre_num += 1
+                titre_chapitre = _titre_chapitre_semantique(
+                    chapitre_num, seg, segments[i:i + 5], len(segments),
+                )
                 chapitres.append({
                     "startTime": temps_courant_ms / 1000.0,
                     "title": titre_chapitre,
                 })
-                dernier_chapitre_idx = i
                 nb_segments_depuis_chapitre = 0
             else:
                 nb_segments_depuis_chapitre += 1

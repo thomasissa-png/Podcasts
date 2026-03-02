@@ -47,7 +47,20 @@ RÈGLES STRICTES :
       transitions de scène, et pour illustrer les éléments de l'histoire.
     - Utilise 3 à 8 bruitages par épisode, pas plus (ne pas surcharger).
 11. AMBIANCE MUSICALE : choisis l'ambiance générale de l'épisode parmi :
-    "joyeux", "dramatique", "calme", "mystere". Indique-la dans le champ "ambiance" de l'épisode.
+    "joyeux", "dramatique", "calme", "mystere", "epique", "tendre", "humoristique", "solennel".
+    Indique-la dans le champ "ambiance" de l'épisode.
+    Guide : "epique" pour les batailles et exodes, "tendre" pour les moments familiaux,
+    "humoristique" pour les épisodes légers, "solennel" pour les scènes sacrées.
+12. ARC ÉMOTIONNEL : chaque épisode doit suivre une courbe émotionnelle claire :
+    curiosité → montée en tension → climax → résolution → morale apaisante.
+    Varie l'intensité des émotions. Place au moins un moment de SURPRISE ou RÉVÉLATION.
+13. DIALOGUES NATURELS : les répliques des enfants doivent être courtes (1-2 phrases max),
+    spontanées, avec parfois des hésitations ("Euh...", "Attends..."). Antoine et Noémie
+    interagissent aussi ENTRE EUX, pas seulement avec Papy. Utilise au moins 3 tics de
+    langage différents par personnage par épisode.
+14. BACKSTORY DE PAPY : Papy Babou est un ancien instituteur de Provence, veuf depuis 5 ans.
+    Il a voyagé en Terre Sainte dans sa jeunesse. Il peut faire référence à son vécu personnel
+    pour enrichir le récit ("Quand j'étais en Terre Sainte...", "Votre grand-mère disait...").
 {regles_personnages_dynamiques}
 
 MOTS INTERDITS (ne jamais utiliser ces mots, préférer des alternatives douces) :
@@ -60,7 +73,7 @@ FORMAT DE SORTIE — JSON STRICT :
     "numero": N,
     "saison": N,
     "duree_cible_minutes": {duree_cible},
-    "ambiance": "joyeux|dramatique|calme|mystere",
+    "ambiance": "joyeux|dramatique|calme|mystere|epique|tendre|humoristique|solennel",
     "morale": "La leçon de vie de cet épisode",
     "personnages_presents": ["papy_babou", "antoine", "noemie"],
     "moments_cles": ["Moment important 1", "Moment important 2"],
@@ -102,6 +115,7 @@ STRUCTURES_NARRATIVES = {
    - Première histoire biblique de la saison, qui pose les bases du thème.
    - Présentation des enjeux de la saison.
    - Les enfants posent des questions qui ouvrent sur les épisodes suivants.
+{running_gag}
 
 3. CONCLUSION + TEASING (3-4 min) :
    - Résolution de la première histoire.
@@ -122,6 +136,7 @@ STRUCTURES_NARRATIVES = {
    - Les enfants réagissent régulièrement : Antoine sur l'action, Noémie sur l'émotion.
    - Papy explique les mots difficiles avec des analogies adaptées.
    - {segment_recurrent}
+{running_gag}
 
 3. CONCLUSION + TEASING (2-3 min) :
    - Résolution de l'histoire.
@@ -141,6 +156,7 @@ STRUCTURES_NARRATIVES = {
    - Moment de surprise ou de révélation pour les enfants.
    - Approfondissement du thème central.
    - {segment_recurrent}
+{running_gag}
 
 3. CONCLUSION + OUVERTURE (3-4 min) :
    - La résolution ouvre de nouvelles questions.
@@ -160,6 +176,7 @@ STRUCTURES_NARRATIVES = {
    - Moment émotionnel fort : les personnages montrent leur évolution.
    - Résolution de toutes les questions ouvertes de la saison.
    - {segment_recurrent}
+{running_gag}
 
 3. CONCLUSION DE SAISON (3-4 min) :
    - Grande leçon de vie qui résume toute la saison.
@@ -175,6 +192,7 @@ STRUCTURES_NARRATIVES = {
 2. CONTENU SPÉCIAL (6-7 min) :
    - Questions-réponses des enfants, coulisses, ou récapitulatif.
    - Ton plus léger et interactif.
+{running_gag}
 
 3. CONCLUSION (2 min) :
    - Au revoir décontracté.
@@ -314,6 +332,13 @@ def _construire_structure_narrative(
         if rituels.get("segment_recurrent")
         else ""
     )
+    # Running gag de la saison
+    running_gag = ""
+    if rituels.get("running_gag"):
+        running_gag = (
+            f"   - RUNNING GAG : intègre naturellement le gag récurrent "
+            f"de la saison : \"{rituels['running_gag']}\""
+        )
 
     # Previously On
     previously_on = ""
@@ -347,6 +372,7 @@ def _construire_structure_narrative(
         ritual_accroche=ritual_accroche,
         ritual_au_revoir=ritual_au_revoir,
         segment_recurrent=segment_recurrent,
+        running_gag=running_gag,
         previously_on=previously_on,
         teasing=teasing,
     )
@@ -632,14 +658,13 @@ class Scripteur:
             raise ValueError("Le script ne contient aucun segment.")
 
         # Valider les champs optionnels avec avertissement
-        ambiances_valides = ("joyeux", "dramatique", "calme", "mystere")
         if "ambiance" not in ep:
             ep["ambiance"] = "calme"
             logger.warning("Champ 'ambiance' manquant — défaut 'calme'.")
-        elif ep["ambiance"] not in ambiances_valides:
+        elif ep["ambiance"] not in config.AMBIANCES_VALIDES:
             logger.warning(
                 "Ambiance '%s' non reconnue (valides : %s) — défaut 'calme'.",
-                ep["ambiance"], ", ".join(ambiances_valides),
+                ep["ambiance"], ", ".join(config.AMBIANCES_VALIDES),
             )
             ep["ambiance"] = "calme"
 

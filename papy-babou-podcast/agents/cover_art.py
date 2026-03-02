@@ -41,11 +41,31 @@ class CoverArt:
         personnages = config.charger_personnages()
         style_config = personnages.get("style_cover_art", {})
         interdictions = style_config.get("interdictions_visuelles", [])
+        elements = style_config.get("elements_recurrents", [])
+        regles = style_config.get("regles_visuelles", [])
+        palette = style_config.get("palette", {})
 
-        # Construire le prompt complet
+        # Construire le prompt complet avec le style de la bible
         prompt_complet = self.config["style_prefix"] + prompt
+
+        # Injecter la palette de couleurs depuis la bible
+        if palette:
+            couleurs_str = ", ".join(
+                f"{nom.replace('_', ' ')} ({code})"
+                for nom, code in palette.items()
+            )
+            prompt_complet += f". Color palette: {couleurs_str}"
+
+        # Injecter les éléments récurrents
+        if elements:
+            prompt_complet += ". Include: " + "; ".join(elements[:3])
+
+        # Injecter les règles visuelles
+        if regles:
+            prompt_complet += ". Style rules: " + "; ".join(regles[:4])
+
         if interdictions:
-            prompt_complet += ". NE PAS inclure : " + ", ".join(interdictions)
+            prompt_complet += ". DO NOT include: " + ", ".join(interdictions)
 
         logger.info("Génération cover art pour %s : %s", episode_id, prompt[:80])
 

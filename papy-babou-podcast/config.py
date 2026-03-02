@@ -230,8 +230,15 @@ AMBIANCES_MUSICALES = {
     "dramatique": ASSETS_DIR / "music" / "ambiance_dramatique.mp3",
     "calme": ASSETS_DIR / "music" / "ambiance_calme.mp3",
     "mystere": ASSETS_DIR / "music" / "ambiance_mystere.mp3",
+    "epique": ASSETS_DIR / "music" / "ambiance_epique.mp3",
+    "tendre": ASSETS_DIR / "music" / "ambiance_tendre.mp3",
+    "humoristique": ASSETS_DIR / "music" / "ambiance_humoristique.mp3",
+    "solennel": ASSETS_DIR / "music" / "ambiance_solennel.mp3",
     "fond_doux": ASSETS_DIR / "music" / "fond_doux.mp3",
 }
+
+# Ambiances valides (utilisées par le scripteur et la validation)
+AMBIANCES_VALIDES = tuple(k for k in AMBIANCES_MUSICALES if k != "fond_doux")
 
 # ── Configuration SFX (bruitages) ────────────────────────────────────────────
 
@@ -258,6 +265,10 @@ MOTS_INTERDITS = [
     "esclave", "esclavage",
     "torturer", "torture", "supplicier", "supplice",
     "décapiter", "mutiler", "amputer",
+    # Variantes et mots bibliques violents
+    "crever", "lapider", "brûler vif", "abomination",
+    "exterminer", "anéantir", "fléau", "peste",
+    "concubine", "fornication",
 ]
 
 # ── Bible des personnages ────────────────────────────────────────────────────

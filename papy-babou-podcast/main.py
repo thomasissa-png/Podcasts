@@ -1651,6 +1651,21 @@ def _pipeline_inner(
 
         scripteur.sauvegarder(script, chemin_valide)
 
+        # ── Vérifications post-génération (indépendantes du LLM) ─────────
+        violations_mots = Reviewer.verifier_mots_interdits(script)
+        if violations_mots:
+            console.print(f"[red]  Mots interdits détectés ({len(violations_mots)}) :[/red]")
+            for v in violations_mots:
+                console.print(f"    ! {v}")
+            rapport.setdefault("alertes_post_generation", []).extend(violations_mots)
+
+        alertes_questions = Reviewer.verifier_questions_ouvertes(script, historique)
+        if alertes_questions:
+            console.print("[yellow]  Alertes continuité :[/yellow]")
+            for a in alertes_questions:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_questions)
+
         # Marquer comme validé en DB
         if _use_db():
             try:
@@ -2649,6 +2664,53 @@ def dashboard(saison: int):
             episodes_plan = saison_data.get("episodes", [])
             episodes_produits = {ep.get("episode_id") for ep in historique}
             progression_saison(console, saison, episodes_plan, episodes_produits)
+
+            # ── Arcs de personnages (A13) ─────────────────────────────────
+            arcs = saison_data.get("arcs_personnages", {})
+            if arcs:
+                arc_lines = []
+                for perso, arc in arcs.items():
+                    nom = perso.replace("_", " ").title()
+                    arc_lines.append(
+                        f"  [{Palette.MIEL}]{nom}[/] : "
+                        f"[{Palette.ARDOISE}]{arc.get('depart', '?')}[/] "
+                        f"[bold]→[/bold] "
+                        f"[{Palette.SUCCES}]{arc.get('arrivee', '?')}[/]"
+                    )
+                console.print(panel_info(
+                    "\n".join(arc_lines),
+                    titre=f"{Icons.PAPY} Arcs de personnages — Saison {saison}",
+                ))
+
+            # ── Plan vs Production (A14) ──────────────────────────────────
+            plan_vs_prod = []
+            for ep_plan in episodes_plan:
+                ep_id = f"S{saison:02d}E{ep_plan['numero']:02d}"
+                ep_hist = next(
+                    (e for e in historique if e.get("episode_id") == ep_id),
+                    None,
+                )
+                if ep_hist:
+                    score_val = ep_hist.get("score_review", 0)
+                    if not isinstance(score_val, (int, float)):
+                        score_val = 0
+                    plan_vs_prod.append(
+                        f"  [{Palette.SUCCES}]{ep_id}[/] "
+                        f"[{Palette.IVOIRE}]{ep_plan.get('titre', '?')[:30]}[/] "
+                        f"— Score: [{Palette.MIEL}]{score_val}/10[/] "
+                        f"— Type: {ep_plan.get('type', 'standard')}"
+                    )
+                else:
+                    plan_vs_prod.append(
+                        f"  [{Palette.ARDOISE}]{ep_id}[/] "
+                        f"[{Palette.ARDOISE}]{ep_plan.get('titre', '?')[:30]}[/] "
+                        f"— [dim]Non produit[/dim]"
+                    )
+            if plan_vs_prod:
+                console.print(panel_info(
+                    "\n".join(plan_vs_prod),
+                    titre=f"{Icons.EPISODE} Plan vs Production — Saison {saison}",
+                ))
 
     # ── Retours humains récents ───────────────────────────────────────────
     episodes_avec_retours = [

@@ -1431,6 +1431,23 @@
                 </span>
                 {% endfor %}
             </div>
+
+            <!-- Arcs de personnages (A13) -->
+            {% if progression.arcs_personnages %}
+            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--texte-dim); margin-bottom: 0.5rem;">
+                    &#128214; Arcs de personnages
+                </div>
+                {% for perso, arc in progression.arcs_personnages.items() %}
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; font-size: 0.85rem;">
+                    <span style="font-weight: 700; color: var(--soleil); min-width: 100px;">{{ perso.replace('_', ' ').title() }}</span>
+                    <span style="color: var(--texte-dim);">{{ arc.depart }}</span>
+                    <span style="font-weight: 800; color: var(--turquoise);">&rarr;</span>
+                    <span style="color: var(--vert-prairie); font-weight: 600;">{{ arc.arrivee }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
     </div>
     {% endif %}

@@ -14,17 +14,17 @@ SYSTEM_PROMPT = """\
 Tu es un relecteur-correcteur spécialisé dans les contenus pour enfants (6-10 ans).
 Tu révises les scripts du podcast "Les Histoires de Papy Babou".
 
-CRITÈRES D'ÉVALUATION (note sur 10) :
+CRITÈRES D'ÉVALUATION (note sur 12, ramenée à 10) :
 
 1. COHÉRENCE DU PERSONNAGE PAPY BABOU (2 pts)
    - Utilise-t-il ses tics de langage ? ("Ah mes petits loups...", "Figurez-vous que...",
-     "Et devinez quoi ?", "Comme disait ma grand-mère...")
+     "Et devinez quoi ?", "Comme disait ma grand-mère...") — au moins 3 différents
    - Ton chaleureux et pédagogue ?
    - Pas d'argot moderne ni de références technologiques ?
 
 2. ADÉQUATION ÂGE 6-10 ANS (2 pts)
    - Les concepts sont-ils expliqués simplement ?
-   - Les analogies sont-elles adaptées ?
+   - Les analogies sont-elles adaptées au quotidien d'un enfant ?
    - Pas de violence ou de peur excessive ?
 
 3. FIDÉLITÉ BIBLIQUE (2 pts)
@@ -48,12 +48,25 @@ CRITÈRES D'ÉVALUATION (note sur 10) :
      ou "insert" (inséré séquentiellement entre les segments voix).
    - Chaque segment SFX doit avoir un champ "duree_sfx_secondes" (durée en secondes).
 
+6. CRÉATIVITÉ NARRATIVE (2 pts)
+   - L'épisode suit-il un arc émotionnel clair (curiosité → tension → climax → résolution) ?
+   - Y a-t-il au moins un moment de SURPRISE ou RÉVÉLATION inattendue ?
+   - Les questions des enfants font-elles avancer l'histoire (pas juste décoratives) ?
+   - Les dialogues sont-ils naturels et spontanés (répliques courtes, hésitations) ?
+   - Si un fil rouge de saison est indiqué, progresse-t-il visiblement ?
+   - Le SFX enrichit-il l'émotion (pas juste l'ambiance) ?
+
+Le score final = somme des 6 critères, ramenée sur 10 (diviser par 1.2).
+
 FORMAT DE RÉPONSE — JSON STRICT :
 {{
   "review": {{
     "score": 8,
     "corrections": [
-      "Description de chaque correction effectuée"
+      {{
+        "priorite": "critique|majeur|mineur",
+        "texte": "Description de la correction effectuée"
+      }}
     ],
     "alertes": [
       "Points d'attention qui n'ont pas été corrigés automatiquement"
@@ -63,7 +76,8 @@ FORMAT DE RÉPONSE — JSON STRICT :
       "adequation_age": 1.5,
       "fidelite_biblique": 2,
       "rythme_structure": 1.5,
-      "duree_format": 1
+      "duree_format": 1,
+      "creativite_narrative": 1.5
     }}
   }},
   "episode": {{
@@ -158,16 +172,31 @@ class Reviewer:
 
         return resultat
 
-    def est_valide(self, resultat_review: dict, seuil: int = 7) -> bool:
+    # Seuils adaptatifs par type d'épisode — les épisodes pivots exigent plus
+    SEUILS_PAR_TYPE = {
+        "ouverture": 8,
+        "standard": 7,
+        "mi-saison": 8,
+        "final": 8,
+        "bonus": 6,
+    }
+
+    def est_valide(self, resultat_review: dict, seuil: int | None = None) -> bool:
         """Vérifie si le script a obtenu un score suffisant.
+
+        Le seuil est adaptatif par type d'épisode : ouverture/mi-saison/final
+        exigent un score ≥ 8, standard ≥ 7, bonus ≥ 6.
 
         Args:
             resultat_review: Résultat de la review.
-            seuil: Score minimum requis (défaut : 7/10).
+            seuil: Score minimum requis (None = adaptatif par type d'épisode).
 
         Returns:
             True si le score est >= seuil.
         """
+        if seuil is None:
+            type_ep = resultat_review.get("episode", {}).get("type", "standard")
+            seuil = self.SEUILS_PAR_TYPE.get(type_ep, 7)
         return resultat_review["review"]["score"] >= seuil
 
     def extraire_corrections(self, resultat_review: dict) -> list[str]:
@@ -175,6 +204,7 @@ class Reviewer:
 
         Retourne uniquement les corrections actionnables, pas les alertes
         informatives (qui risquent de créer des boucles infinies).
+        Les corrections critiques et majeures sont placées en premier.
 
         Args:
             resultat_review: Résultat de la review.
@@ -182,7 +212,85 @@ class Reviewer:
         Returns:
             Liste de corrections textuelles.
         """
-        return list(resultat_review["review"]["corrections"])
+        corrections = resultat_review["review"]["corrections"]
+        # Support ancien format (liste de strings) et nouveau (liste de dicts)
+        if corrections and isinstance(corrections[0], dict):
+            # Trier par priorité : critique > majeur > mineur
+            ordre = {"critique": 0, "majeur": 1, "mineur": 2}
+            corrections = sorted(corrections, key=lambda c: ordre.get(c.get("priorite", "mineur"), 2))
+            return [c["texte"] for c in corrections]
+        return list(corrections)
+
+    @staticmethod
+    def verifier_mots_interdits(script: dict) -> list[str]:
+        """Vérifie que le script ne contient aucun mot interdit.
+
+        Vérification post-génération indépendante du LLM.
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Liste des violations trouvées (vide si OK).
+        """
+        violations = []
+        for seg in script["episode"]["segments"]:
+            if seg["personnage"] == "sfx":
+                continue
+            texte_lower = seg["texte"].lower()
+            for mot in config.MOTS_INTERDITS:
+                # Chercher le mot comme mot complet (pas en sous-chaîne)
+                import re
+                if re.search(r"\b" + re.escape(mot) + r"\b", texte_lower):
+                    violations.append(
+                        f"Mot interdit '{mot}' dans segment {seg['id']} "
+                        f"({seg['personnage']})"
+                    )
+        return violations
+
+    @staticmethod
+    def verifier_questions_ouvertes(
+        script: dict, historique: list[dict] | None = None
+    ) -> list[str]:
+        """Vérifie si les questions ouvertes de l'épisode précédent sont reprises.
+
+        Args:
+            script: Script JSON structuré.
+            historique: Historique des épisodes précédents.
+
+        Returns:
+            Liste d'alertes (vide si OK ou pas d'historique).
+        """
+        alertes = []
+        if not historique:
+            return alertes
+
+        dernier = historique[-1]
+        questions = dernier.get("questions_ouvertes", [])
+        if not questions:
+            return alertes
+
+        # Vérifier qu'au moins une question est mentionnée dans les segments
+        texte_complet = " ".join(
+            seg["texte"].lower()
+            for seg in script["episode"]["segments"]
+            if seg["personnage"] != "sfx"
+        )
+        question_reprise = False
+        for q in (questions if isinstance(questions, list) else [questions]):
+            # Chercher des mots-clés de la question dans le texte
+            mots_cles = [m for m in q.lower().split() if len(m) > 4]
+            if mots_cles and sum(1 for m in mots_cles if m in texte_complet) >= len(mots_cles) // 2:
+                question_reprise = True
+                break
+
+        if not question_reprise and questions:
+            q_str = questions[0] if isinstance(questions, list) else questions
+            alertes.append(
+                f"La question ouverte de l'épisode précédent n'est pas reprise : "
+                f"'{q_str[:80]}...'"
+            )
+        return alertes
 
     @staticmethod
     def estimer_duree(script: dict) -> float:
@@ -262,6 +370,11 @@ class Reviewer:
                 raise ValueError(f"Champ manquant dans review: '{champ}'")
         if not isinstance(review["score"], (int, float)):
             raise ValueError("Le score doit être un nombre.")
+        # Normaliser les corrections en format structuré si nécessaire
+        if review["corrections"] and isinstance(review["corrections"][0], str):
+            review["corrections"] = [
+                {"priorite": "majeur", "texte": c} for c in review["corrections"]
+            ]
         if "episode" not in resultat:
             raise ValueError("Le résultat doit contenir le script corrigé sous 'episode'.")
 
