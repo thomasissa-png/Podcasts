@@ -1792,10 +1792,14 @@ async function apiCall(url, body) {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(body)
     });
-    if (!resp.ok && resp.status >= 500) {
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok) {
+        if (data && data.error) {
+            throw new Error(data.error);
+        }
         throw new Error('Erreur serveur (HTTP ' + resp.status + ')');
     }
-    return await resp.json();
+    return data;
 }
 
 /* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */

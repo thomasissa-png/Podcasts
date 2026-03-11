@@ -31,6 +31,31 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "papy-babou-dev-key")
 logger = logging.getLogger(__name__)
 
 
+@app.errorhandler(500)
+def handle_500(e):
+    """Retourne JSON au lieu d'une page HTML sur erreur 500."""
+    logger.exception("Erreur serveur 500")
+    return jsonify({"error": f"Erreur interne du serveur : {e}", "status": "error"}), 500
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Attrape les exceptions non gerees pour eviter les pages 500 HTML."""
+    logger.exception("Exception non geree")
+    return jsonify({"error": str(e), "status": "error"}), 500
+
+
+def _check_api_key(key_name="ANTHROPIC_API_KEY"):
+    """Verifie qu'une cle API est configuree. Retourne une reponse d'erreur ou None."""
+    if not os.getenv(key_name):
+        return jsonify({
+            "error": f"Cle API manquante : {key_name}. "
+                     f"Ajoutez-la dans les Secrets Replit (onglet cadenas).",
+            "status": "error",
+        }), 400
+    return None
+
+
 # ── Helper : lancer une commande CLI (avec support annulation) ───────────────
 
 _current_process = None
@@ -230,6 +255,9 @@ def api_cancel():
 @app.route("/api/produire", methods=["POST"])
 def api_produire():
     """Lance la production d'un episode."""
+    err = _check_api_key("ANTHROPIC_API_KEY")
+    if err:
+        return err
     body = request.get_json(force=True)
     titre = body.get("titre", "").strip()
     saison = body.get("saison", 1)
@@ -268,6 +296,9 @@ def api_produire():
 @app.route("/api/planifier-saison", methods=["POST"])
 def api_planifier_saison():
     """Planifie une saison complete."""
+    err = _check_api_key("ANTHROPIC_API_KEY")
+    if err:
+        return err
     body = request.get_json(force=True)
     saison = body.get("saison", 1)
     theme = body.get("theme", "").strip()
@@ -296,6 +327,9 @@ def api_planifier_saison():
 @app.route("/api/produire-saison", methods=["POST"])
 def api_produire_saison():
     """Produit les episodes d'une saison planifiee."""
+    err = _check_api_key("ANTHROPIC_API_KEY")
+    if err:
+        return err
     body = request.get_json(force=True)
     saison = body.get("saison", 1)
     episodes = body.get("episodes", "").strip()
