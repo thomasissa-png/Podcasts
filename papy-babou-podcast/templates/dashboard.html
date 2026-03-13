@@ -1808,6 +1808,11 @@ function hideLoading() {
 
 /* ── Helper : annuler la production en cours ───────────────────────────── */
 async function cancelProduction() {
+    /* Arreter le polling côté client */
+    if (_activePollTimer) {
+        clearInterval(_activePollTimer);
+        _activePollTimer = null;
+    }
     try {
         await fetch('/api/cancel', { method: 'POST' });
     } catch (e) { /* ignore network errors on cancel */ }
@@ -1832,15 +1837,30 @@ async function apiCall(url, body) {
 }
 
 /* ── Helper : polling d'un job asynchrone ──────────────────────────────── */
+var _activePollTimer = null; /* timer courant pour permettre l'annulation */
+
 function pollJob(jobId, interval) {
     interval = interval || 3000;
+    var maxAttempts = 200; /* 200 × 3s = 10 minutes max */
+    var transientRetries = 3; /* tentatives sur erreurs reseau transitoires */
     return new Promise(function(resolve, reject) {
+        var attempts = 0;
+        var consecutiveErrors = 0;
         var timer = setInterval(async function() {
+            attempts++;
+            if (attempts > maxAttempts) {
+                clearInterval(timer);
+                _activePollTimer = null;
+                reject(new Error('Timeout : le job n\u2019a pas termin\u00e9 apr\u00e8s ' + Math.round(maxAttempts * interval / 1000) + 's'));
+                return;
+            }
             try {
                 const resp = await fetch('/api/job-status/' + jobId);
                 const data = await resp.json().catch(() => null);
+                consecutiveErrors = 0; /* reset sur succes reseau */
                 if (!resp.ok) {
                     clearInterval(timer);
+                    _activePollTimer = null;
                     reject(new Error(data && data.error ? data.error : 'Job introuvable'));
                     return;
                 }
@@ -1849,12 +1869,19 @@ function pollJob(jobId, interval) {
                 }
                 /* Job termine */
                 clearInterval(timer);
+                _activePollTimer = null;
                 resolve(data);
             } catch (err) {
-                clearInterval(timer);
-                reject(err);
+                consecutiveErrors++;
+                if (consecutiveErrors >= transientRetries) {
+                    clearInterval(timer);
+                    _activePollTimer = null;
+                    reject(new Error('Erreur r\u00e9seau persistante apr\u00e8s ' + transientRetries + ' tentatives : ' + err.message));
+                }
+                /* sinon on laisse le polling continuer (erreur transitoire) */
             }
         }, interval);
+        _activePollTimer = timer;
     });
 }
 

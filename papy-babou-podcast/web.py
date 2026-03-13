@@ -13,6 +13,7 @@ import re
 import subprocess
 import sys
 import threading
+import time
 import uuid
 from pathlib import Path
 
@@ -66,10 +67,24 @@ def _check_api_key(key_name="ANTHROPIC_API_KEY"):
 
 # ── Systeme de jobs asynchrones ──────────────────────────────────────────────
 
-_jobs = {}
+_jobs = {}          # {job_id: {"status": ..., "result": ..., "created_at": ...}}
 _jobs_lock = threading.Lock()
-_current_process = None
+_job_processes = {} # {job_id: subprocess.Popen} — per-job process tracking
 _process_lock = threading.Lock()
+
+_JOB_TTL_SECONDS = 600  # Supprimer les jobs termines apres 10 minutes
+_JOB_ID_RE = re.compile(r'^[0-9a-f]{12}$')
+
+
+def _gc_expired_jobs():
+    """Supprime les jobs termines dont le TTL est depasse (appele sous _jobs_lock)."""
+    now = time.monotonic()
+    expired = [
+        jid for jid, job in _jobs.items()
+        if job["status"] == "done" and now - job.get("created_at", now) > _JOB_TTL_SECONDS
+    ]
+    for jid in expired:
+        _jobs.pop(jid, None)
 
 
 def _extract_error_from_stderr(stderr):
@@ -86,24 +101,24 @@ def _extract_error_from_stderr(stderr):
     return clean if clean else None
 
 
-def _run_cli(cmd_args, timeout=300):
+def _run_cli(cmd_args, timeout=300, job_id=None):
     """Lance une commande main.py et retourne le resultat.
 
     Utilise Popen pour permettre l'annulation via /api/cancel.
     """
-    global _current_process
     cmd = [sys.executable, "main.py"] + cmd_args
     try:
-        with _process_lock:
-            _current_process = subprocess.Popen(
-                cmd,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                cwd=str(_THIS_DIR),
-            )
-        proc = _current_process
+        proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=str(_THIS_DIR),
+        )
+        if job_id:
+            with _process_lock:
+                _job_processes[job_id] = proc
         try:
             stdout, stderr = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -129,8 +144,9 @@ def _run_cli(cmd_args, timeout=300):
     except Exception as e:
         return {"error": str(e), "status": "error"}
     finally:
-        with _process_lock:
-            _current_process = None
+        if job_id:
+            with _process_lock:
+                _job_processes.pop(job_id, None)
 
 
 def _start_job(cmd_args, timeout=300, cleanup_fn=None):
@@ -146,25 +162,31 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None):
     """
     job_id = uuid.uuid4().hex[:12]
     with _jobs_lock:
-        _jobs[job_id] = {"status": "running", "result": None}
+        _gc_expired_jobs()
+        _jobs[job_id] = {"status": "running", "result": None, "created_at": time.monotonic()}
 
     def _worker():
         try:
-            result = _run_cli(cmd_args, timeout=timeout)
+            result = _run_cli(cmd_args, timeout=timeout, job_id=job_id)
             with _jobs_lock:
-                _jobs[job_id] = {"status": "done", "result": result}
+                _jobs[job_id] = {
+                    "status": "done",
+                    "result": result,
+                    "created_at": time.monotonic(),
+                }
         except Exception as e:
             with _jobs_lock:
                 _jobs[job_id] = {
                     "status": "done",
                     "result": {"error": str(e), "status": "error"},
+                    "created_at": time.monotonic(),
                 }
         finally:
             if cleanup_fn:
                 try:
                     cleanup_fn()
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.warning("Echec du cleanup pour le job %s : %s", job_id, exc)
 
     t = threading.Thread(target=_worker, daemon=True)
     t.start()
@@ -174,15 +196,16 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None):
 @app.route("/api/job-status/<job_id>")
 def api_job_status(job_id):
     """Retourne le statut d'un job asynchrone."""
+    if not _JOB_ID_RE.match(job_id):
+        return jsonify({"error": "Format de job_id invalide"}), 400
     with _jobs_lock:
         job = _jobs.get(job_id)
-    if not job:
-        return jsonify({"error": f"Job introuvable : {job_id}"}), 404
-    if job["status"] == "running":
-        return jsonify({"status": "running"})
-    # Job termine — retourner le resultat et nettoyer
-    result = job["result"]
-    with _jobs_lock:
+        if not job:
+            return jsonify({"error": f"Job introuvable : {job_id}"}), 404
+        if job["status"] == "running":
+            return jsonify({"status": "running"})
+        # Job termine — copier le resultat et nettoyer atomiquement
+        result = job["result"]
         _jobs.pop(job_id, None)
     return jsonify(result)
 
@@ -325,12 +348,15 @@ def api_config():
 
 @app.route("/api/cancel", methods=["POST"])
 def api_cancel():
-    """Annule la production en cours."""
+    """Annule la production en cours (termine tous les processus actifs)."""
+    terminated = 0
     with _process_lock:
-        proc = _current_process
-    if proc and proc.poll() is None:
-        proc.terminate()
-        return jsonify({"status": "ok", "message": "Production annulee."})
+        for jid, proc in list(_job_processes.items()):
+            if proc and proc.poll() is None:
+                proc.terminate()
+                terminated += 1
+    if terminated:
+        return jsonify({"status": "ok", "message": f"{terminated} production(s) annulee(s)."})
     return jsonify({"status": "ok", "message": "Aucune production en cours."})
 
 
