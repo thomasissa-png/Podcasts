@@ -23,11 +23,14 @@ from theme import (
     get_rich_theme,
     banner,
     panel_episode,
+    panel_episode_saison,
     panel_validation,
     panel_erreur,
     panel_succes,
     panel_info,
     panel_rapport_final,
+    panel_roadmap,
+    panel_separateur_episode,
     table_review,
     table_episodes_dashboard,
     ajouter_episode_dashboard,
@@ -303,6 +306,70 @@ class TestComposantsUI:
         result = panel_rapport_final(
             "S01E01", "Test", 7.0, "Morale", "$0",
             "/logs/rapport.json", dry_run=True,
+        )
+        assert isinstance(result, Panel)
+
+    def test_panel_episode_saison_retourne_panel(self):
+        """panel_episode_saison affiche le contexte sériel."""
+        from rich.panel import Panel
+        result = panel_episode_saison(
+            "S01E03", "L'arche de Noé",
+            saison_theme="Les grands voyages",
+            episode_courant=3,
+            total_episodes=10,
+        )
+        assert isinstance(result, Panel)
+
+    def test_panel_episode_saison_avec_toutes_options(self):
+        from rich.panel import Panel
+        result = panel_episode_saison(
+            "S01E01", "Le départ",
+            mode="DRY RUN",
+            type_episode="ouverture",
+            morale="Le courage",
+            ambiance="aventure",
+            saison_theme="Les grands voyages",
+            episode_courant=1,
+            total_episodes=10,
+        )
+        assert isinstance(result, Panel)
+
+    def test_panel_roadmap_retourne_panel(self):
+        """panel_roadmap affiche les 8 étapes avec la position courante."""
+        from rich.panel import Panel
+        result = panel_roadmap(0)
+        assert isinstance(result, Panel)
+
+    def test_panel_roadmap_dry_run(self):
+        from rich.panel import Panel
+        result = panel_roadmap(2, dry_run=True)
+        assert isinstance(result, Panel)
+
+    def test_panel_roadmap_derniere_etape(self):
+        from rich.panel import Panel
+        result = panel_roadmap(7)
+        assert isinstance(result, Panel)
+
+    def test_panel_separateur_episode(self):
+        """panel_separateur_episode affiche le séparateur de production sérielle."""
+        from rich.panel import Panel
+        result = panel_separateur_episode(
+            episode_courant=3,
+            total_episodes=10,
+            episode_id="S01E03",
+            titre="L'arche de Noé",
+            type_episode="standard",
+        )
+        assert isinstance(result, Panel)
+
+    def test_panel_separateur_episode_avec_type(self):
+        from rich.panel import Panel
+        result = panel_separateur_episode(
+            episode_courant=1,
+            total_episodes=10,
+            episode_id="S01E01",
+            titre="Le départ",
+            type_episode="ouverture",
         )
         assert isinstance(result, Panel)
 

@@ -36,8 +36,9 @@ from agents import (
 from theme import (
     Palette, Icons, Typo, NOMS_PERSONNAGES_STYLED,
     creer_console, banner, get_rich_theme,
-    panel_episode, panel_validation, panel_erreur, panel_succes,
-    panel_info, panel_rapport_final,
+    panel_episode, panel_episode_saison, panel_validation, panel_erreur,
+    panel_succes, panel_info, panel_rapport_final,
+    panel_roadmap, panel_separateur_episode,
     table_review, table_episodes_dashboard, ajouter_episode_dashboard,
     table_saison_plan, table_couts, table_db_status,
     progression_saison, stats_block, personnages_block,
@@ -1411,6 +1412,10 @@ def pipeline(
     type_episode: str = "standard",
     pubdate_offset_seconds: int = 0,
     no_publish: bool = False,
+    # Contexte d'affichage pour production sérielle
+    episode_courant: int = 0,
+    total_episodes: int = 0,
+    saison_theme: str = "",
 ) -> dict:
     """Execute le pipeline complet de production d'un episode.
 
@@ -1476,6 +1481,9 @@ def pipeline(
             contexte_saison=contexte_saison, type_episode=type_episode,
             episode_id=episode_id, rapport=rapport,
             pubdate_offset_seconds=pubdate_offset_seconds,
+            episode_courant=episode_courant,
+            total_episodes=total_episodes,
+            saison_theme=saison_theme,
         )
     except ProductionAbandonnee:
         raise
@@ -1506,6 +1514,7 @@ def _pipeline_inner(
     max_iterations_review, etape_depart, checkpoint_data,
     contexte_saison, type_episode, episode_id, rapport,
     pubdate_offset_seconds=0,
+    episode_courant=0, total_episodes=0, saison_theme="",
 ):
     """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
     global _production_id_courante
@@ -1550,16 +1559,33 @@ def _pipeline_inner(
         raise RuntimeError("Configuration API invalide : " + "; ".join(erreurs_api))
 
     mode_str = "DRY RUN" if dry_run else "PRODUCTION"
-    console.print(panel_episode(
-        episode_id=episode_id,
-        titre=titre,
-        mode=mode_str,
-        type_episode=type_episode,
-        morale=morale or "non définie",
-    ))
+    est_mode_saison = total_episodes > 0
+
+    if est_mode_saison:
+        console.print(panel_episode_saison(
+            episode_id=episode_id,
+            titre=titre,
+            mode=mode_str,
+            type_episode=type_episode,
+            morale=morale or "non définie",
+            saison_theme=saison_theme,
+            episode_courant=episode_courant,
+            total_episodes=total_episodes,
+        ))
+    else:
+        console.print(panel_episode(
+            episode_id=episode_id,
+            titre=titre,
+            mode=mode_str,
+            type_episode=type_episode,
+            morale=morale or "non définie",
+        ))
 
     etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
     etape_idx = etapes.index(etape_depart) if etape_depart in etapes else 0
+
+    # Roadmap visuel des étapes
+    console.print(panel_roadmap(etape_idx, dry_run=dry_run))
 
     # Initialiser les variables qui pourraient ne pas être définies lors d'une reprise
     chemin_hq = None
@@ -2264,19 +2290,198 @@ def produire(episode: str, saison: int, numero: int, resume: str, morale: str, t
 @cli.command()
 def interactif():
     """Mode interactif — saisie guidee des parametres avec validation humaine."""
-    banner(console, "Vous serez invité à valider le script et le montage avant publication.")
+    banner(console, "Vous serez invité à valider chaque étape avant publication.")
 
-    titre = console.input("[cyan]Titre de l'épisode :[/cyan] ")
+    # ── Détecter les saisons existantes et proposer le choix ─────────
+    saisons_existantes = config.liste_saisons()
+
+    if saisons_existantes:
+        console.print(panel_info(
+            f"[{Palette.ARDOISE}]Saisons planifiées :[/] "
+            + ", ".join(f"[bold]S{s:02d}[/bold]" for s in saisons_existantes)
+            + "\n\n"
+            f"[bold {Palette.BLEU_CIEL}]s[/] — Produire un épisode d'une saison existante\n"
+            f"[bold {Palette.OCRE}]e[/] — Produire un épisode unique (hors saison)",
+            titre=f"{Icons.PAPY} Que souhaitez-vous produire ?",
+        ))
+        choix_mode = console.input(
+            f"  [{Palette.MIEL}]Votre choix (s/e) :[/] "
+        ).strip().lower()
+    else:
+        choix_mode = "e"
+
+    if choix_mode in ("s", "saison"):
+        _interactif_saison(saisons_existantes)
+    else:
+        _interactif_episode_unique()
+
+
+def _interactif_saison(saisons_existantes: list[int]):
+    """Mode interactif — production d'un épisode depuis un plan de saison."""
+    # Choisir la saison
+    if len(saisons_existantes) == 1:
+        saison_num = saisons_existantes[0]
+        console.print(f"  [{Palette.SUCCES}]Saison {saison_num} sélectionnée automatiquement.[/]")
+    else:
+        try:
+            saison_num = int(console.input(
+                f"  [{Palette.MIEL}]Numéro de saison ({', '.join(str(s) for s in saisons_existantes)}) :[/] "
+            ).strip())
+        except ValueError:
+            console.print("[red]Numéro de saison invalide.[/red]")
+            sys.exit(1)
+
+    plan = config.charger_saison(saison_num)
+    if not plan:
+        console.print(f"[red]Plan de saison {saison_num} introuvable.[/red]")
+        sys.exit(1)
+
+    saison_data = plan["saison"]
+    episodes_plan = saison_data["episodes"]
+
+    # Détecter les épisodes déjà produits
+    historique = charger_historique()
+    deja_produits = {
+        h["episode_id"] for h in historique
+        if h.get("episode_id", "").startswith(f"S{saison_num:02d}")
+    }
+
+    # Afficher les épisodes disponibles
+    console.print(f"\n  [{Palette.BLEU_CIEL}]Saison {saison_num} — {saison_data.get('theme', '')}[/]")
+    episodes_restants = []
+    for ep in episodes_plan:
+        ep_id = f"S{saison_num:02d}E{ep['numero']:02d}"
+        deja = ep_id in deja_produits
+        status_icon = f"[{Palette.SUCCES}]{Icons.OK}[/]" if deja else f"[{Palette.ARDOISE}]{Icons.A_FAIRE}[/]"
+        type_str = f" [{ep.get('type', 'standard')}]" if ep.get('type', 'standard') != 'standard' else ''
+        deja_str = f" [{Palette.ARDOISE}](déjà produit)[/]" if deja else ""
+        console.print(
+            f"  {status_icon} [bold]{ep_id}[/bold] — {ep['titre']}{type_str}{deja_str}"
+        )
+        if not deja:
+            episodes_restants.append(ep)
+
+    if not episodes_restants:
+        console.print(f"\n[{Palette.SUCCES}]Tous les épisodes de cette saison sont déjà produits.[/]")
+        return
+
+    console.print(
+        f"\n  [{Palette.ARDOISE}]{len(episodes_restants)} épisode(s) restant(s) à produire.[/]"
+    )
+    console.print(panel_validation([
+        ("t", "Produire tous les épisodes restants"),
+        ("n", "Choisir un épisode spécifique"),
+    ], titre="Production de saison"))
+
+    choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+
+    dry_run_str = console.input(f"  [{Palette.MIEL}]Mode dry-run ? (o/n) :[/] ").strip().lower()
+    dry_run = dry_run_str in ("o", "oui", "y", "yes")
+
+    if choix in ("n", "numero"):
+        # Produire un seul épisode de la saison
+        try:
+            num_ep = int(console.input(
+                f"  [{Palette.MIEL}]Numéro d'épisode :[/] "
+            ).strip())
+        except ValueError:
+            console.print("[red]Numéro invalide.[/red]")
+            sys.exit(1)
+
+        ep = next((e for e in episodes_restants if e["numero"] == num_ep), None)
+        if not ep:
+            console.print(f"[red]Épisode {num_ep} introuvable ou déjà produit.[/red]")
+            sys.exit(1)
+
+        console.print()
+        try:
+            pipeline(
+                titre=ep["titre"],
+                resume=ep.get("resume", ep.get("histoire_biblique", "")),
+                saison=saison_num,
+                numero=ep["numero"],
+                morale=ep.get("morale", ""),
+                dry_run=dry_run,
+                auto=False,
+                contexte_saison=plan,
+                type_episode=ep.get("type", "standard"),
+                episode_courant=1,
+                total_episodes=1,
+                saison_theme=saison_data.get("theme", ""),
+            )
+        except ProductionAbandonnee as e:
+            console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
+        except Exception as e:
+            console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
+            logger.exception("Erreur dans le pipeline de production")
+            sys.exit(1)
+    else:
+        # Produire tous les épisodes restants
+        nb_restants = len(episodes_restants)
+        console.print(
+            f"\n  [{Palette.BLEU_CIEL}]Lancement de la production de "
+            f"{nb_restants} épisode(s)...[/]"
+        )
+
+        resultats = []
+        for i, ep in enumerate(episodes_restants, 1):
+            ep_id = f"S{saison_num:02d}E{ep['numero']:02d}"
+            console.print()
+            console.print(panel_separateur_episode(
+                episode_courant=i,
+                total_episodes=nb_restants,
+                episode_id=ep_id,
+                titre=ep["titre"],
+                type_episode=ep.get("type", "standard"),
+            ))
+
+            try:
+                rapport = pipeline(
+                    titre=ep["titre"],
+                    resume=ep.get("resume", ep.get("histoire_biblique", "")),
+                    saison=saison_num,
+                    numero=ep["numero"],
+                    morale=ep.get("morale", ""),
+                    dry_run=dry_run,
+                    auto=False,
+                    contexte_saison=plan,
+                    type_episode=ep.get("type", "standard"),
+                    pubdate_offset_seconds=i * 3600,
+                    episode_courant=i,
+                    total_episodes=nb_restants,
+                    saison_theme=saison_data.get("theme", ""),
+                )
+                resultats.append({"status": "ok", "episode": ep["titre"]})
+            except ProductionAbandonnee as e:
+                console.print(f"\n[bold yellow]Production abandonnée : {e}[/bold yellow]")
+                resultats.append({"status": "skipped", "episode": ep["titre"], "raison": str(e)})
+            except Exception as e:
+                logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
+                resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+
+        # Rapport de série
+        ok = sum(1 for r in resultats if r["status"] == "ok")
+        console.print(f"\n[{Palette.SUCCES}]Production terminée : {ok}/{nb_restants} réussis.[/]")
+
+
+def _interactif_episode_unique():
+    """Mode interactif — production d'un épisode unique hors saison."""
+    console.print(panel_info(
+        Typo.dim("Saisissez les paramètres de votre épisode unique."),
+        titre=f"{Icons.EPISODE} Épisode unique",
+    ))
+
+    titre = console.input(f"  [{Palette.MIEL}]Titre de l'épisode :[/] ")
     try:
-        saison = int(console.input("[cyan]Numéro de saison :[/cyan] "))
-        numero = int(console.input("[cyan]Numéro d'épisode :[/cyan] "))
+        saison = int(console.input(f"  [{Palette.MIEL}]Numéro de saison :[/] "))
+        numero = int(console.input(f"  [{Palette.MIEL}]Numéro d'épisode :[/] "))
     except ValueError:
         console.print("[red]Les numéros de saison et d'épisode doivent être des entiers.[/red]")
         sys.exit(1)
-    resume = console.input("[cyan]Résumé de l'histoire biblique :[/cyan] ")
-    morale = console.input("[cyan]Leçon de vie / morale (optionnel) :[/cyan] ")
+    resume = console.input(f"  [{Palette.MIEL}]Résumé de l'histoire biblique :[/] ")
+    morale = console.input(f"  [{Palette.MIEL}]Leçon de vie / morale (optionnel) :[/] ")
 
-    dry_run_str = console.input("[cyan]Mode dry-run ? (o/n) :[/cyan] ").strip().lower()
+    dry_run_str = console.input(f"  [{Palette.MIEL}]Mode dry-run ? (o/n) :[/] ").strip().lower()
     dry_run = dry_run_str in ("o", "oui", "y", "yes")
 
     console.print()
@@ -2329,17 +2534,25 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
     ))
 
     resultats = []
+    nb_planning = len(planning)
     for i, ep in enumerate(planning, 1):
-        console.print(f"\n[bold]{'='*60}[/bold]")
-        console.print(f"[bold cyan]Épisode {i}/{len(planning)} — {ep.get('titre', '?')}[/bold cyan]")
-        console.print(f"[bold]{'='*60}[/bold]")
+        ep_saison = ep.get("saison", 1)
+        ep_numero = ep.get("numero", i)
+        ep_id = f"S{ep_saison:02d}E{ep_numero:02d}"
+        console.print()
+        console.print(panel_separateur_episode(
+            episode_courant=i,
+            total_episodes=nb_planning,
+            episode_id=ep_id,
+            titre=ep.get("titre", "?"),
+        ))
 
         try:
             rapport = pipeline(
                 titre=ep["titre"],
                 resume=ep.get("resume", ""),
-                saison=ep.get("saison", 1),
-                numero=ep.get("numero", i),
+                saison=ep_saison,
+                numero=ep_numero,
                 morale=ep.get("morale", ""),
                 dry_run=dry_run,
                 auto=auto,
@@ -2622,14 +2835,17 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
     for ep in episodes_skipped:
         resultats.append({"status": "skipped", "episode": ep["titre"], "raison": "deja produit"})
 
+    nb_a_produire = len(episodes_a_produire)
     for i, ep in enumerate(episodes_a_produire, 1):
-        console.print(f"\n[bold]{'='*60}[/bold]")
-        console.print(
-            f"[bold cyan]Épisode {i}/{len(episodes_a_produire)} — "
-            f"S{saison:02d}E{ep['numero']:02d} {ep['titre']} "
-            f"[{ep.get('type', 'standard')}][/bold cyan]"
-        )
-        console.print(f"[bold]{'='*60}[/bold]")
+        ep_id = f"S{saison:02d}E{ep['numero']:02d}"
+        console.print()
+        console.print(panel_separateur_episode(
+            episode_courant=i,
+            total_episodes=nb_a_produire,
+            episode_id=ep_id,
+            titre=ep["titre"],
+            type_episode=ep.get("type", "standard"),
+        ))
 
         try:
             rapport = pipeline(
@@ -2646,6 +2862,10 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
                 # pour garantir un tri correct dans les apps podcast
                 pubdate_offset_seconds=i * 3600,
                 no_publish=no_publish,
+                # Contexte d'affichage sériel
+                episode_courant=i,
+                total_episodes=nb_a_produire,
+                saison_theme=saison_data.get("theme", ""),
             )
             resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
         except ProductionAbandonnee as e:

@@ -336,6 +336,106 @@ def panel_episode(
     )
 
 
+def panel_episode_saison(
+    episode_id: str,
+    titre: str,
+    mode: str = "PRODUCTION",
+    type_episode: str = "standard",
+    morale: str = "",
+    ambiance: str = "",
+    saison_theme: str = "",
+    episode_courant: int = 1,
+    total_episodes: int = 1,
+) -> Panel:
+    """Panel d'en-tête d'épisode dans le contexte d'une saison.
+
+    Se distingue visuellement de panel_episode() pour signaler
+    clairement que l'on est dans un workflow de production sérielle.
+    """
+    type_str = f" [{type_episode}]" if type_episode != "standard" else ""
+    progression = Icons.barre_progression(episode_courant - 1, total_episodes, largeur=15)
+
+    lignes = [
+        f"[bold {Palette.BLEU_CIEL}]{Icons.SAISON} Saison — {saison_theme}[/]",
+        f"[{Palette.ARDOISE}]Progression[/] {progression}",
+        "",
+        f"[bold {Palette.OCRE}]{episode_id} — {titre}{type_str}[/]",
+        f"[{Palette.ARDOISE}]Episode[/]    [{Palette.MIEL}]{episode_courant}/{total_episodes}[/]",
+        f"[{Palette.ARDOISE}]Mode[/]       [bold]{mode}[/]",
+    ]
+    if morale:
+        lignes.append(f"[{Palette.ARDOISE}]Morale[/]     [{Palette.IVOIRE}]{morale}[/]")
+    if ambiance:
+        lignes.append(f"[{Palette.ARDOISE}]Ambiance[/]   [{Palette.LAVANDE}]{ambiance}[/]")
+
+    return Panel(
+        "\n".join(lignes),
+        title=f"{Icons.PAPY} [bold {Palette.OCRE}]Papy Babou[/] {Typo.dim('— production sérielle')}",
+        subtitle=Typo.dim("studio de production"),
+        border_style=Style(color=Palette.BLEU_CIEL),
+        padding=(1, 2),
+    )
+
+
+def panel_roadmap(etape_courante: int, dry_run: bool = False) -> Panel:
+    """Affiche le roadmap des 8 étapes du pipeline avec la position courante.
+
+    Args:
+        etape_courante: Index 0-based de l'étape en cours.
+        dry_run: Si True, marque les étapes sautées en dry-run.
+    """
+    etapes_info = [
+        ("script",      "Script",       Icons.SCRIPT),
+        ("review",      "Relecture",    Icons.REVIEW),
+        ("audio",       "Audio",        Icons.AUDIO),
+        ("sfx",         "Bruitages",    Icons.SFX_STEP),
+        ("montage",     "Montage",      Icons.MONTAGE),
+        ("metadonnees", "Métadonnées",  Icons.METADONNEES),
+        ("publication", "Publication",  Icons.PUBLICATION),
+        ("rapport",     "Rapport",      Icons.RAPPORT),
+    ]
+
+    # Étapes sautées en dry-run
+    skip_dry = {2, 3, 4, 6}  # audio, sfx, montage, publication
+
+    parties = []
+    for i, (_, nom, icon) in enumerate(etapes_info):
+        if i < etape_courante:
+            parties.append(f"[{Palette.SUCCES}]{Icons.OK} {icon} {nom}[/]")
+        elif i == etape_courante:
+            parties.append(f"[bold {Palette.MIEL}]{Icons.EN_COURS} {icon} {nom}[/]")
+        elif dry_run and i in skip_dry:
+            parties.append(f"[{Palette.ARDOISE}]{Icons.PAUSE} {icon} {nom} (skip)[/]")
+        else:
+            parties.append(f"[{Palette.ARDOISE}]{Icons.A_FAIRE} {icon} {nom}[/]")
+
+    return Panel(
+        "  ".join(parties),
+        border_style=Style(color=Palette.ARDOISE),
+        padding=(0, 1),
+    )
+
+
+def panel_separateur_episode(
+    episode_courant: int,
+    total_episodes: int,
+    episode_id: str,
+    titre: str,
+    type_episode: str = "standard",
+) -> Panel:
+    """Séparateur visuel entre épisodes dans une production sérielle."""
+    type_str = f" [{type_episode}]" if type_episode != "standard" else ""
+    progression = Icons.barre_progression(episode_courant - 1, total_episodes, largeur=20)
+
+    return Panel(
+        f"[bold {Palette.BLEU_CIEL}]Épisode {episode_courant}/{total_episodes}[/]"
+        f" — {episode_id} {titre}{type_str}\n"
+        f"{progression}",
+        border_style=Style(color=Palette.BLEU_CIEL),
+        padding=(0, 2),
+    )
+
+
 def panel_validation(options: list[tuple[str, str]], titre: str = "Validation") -> Panel:
     """Panel de choix interactif avec style flat.
 

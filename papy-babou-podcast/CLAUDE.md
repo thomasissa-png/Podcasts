@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 368 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 375 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -304,6 +304,36 @@ Comprehensive UX/flat design audit of all 5 validation workflows and the dashboa
 - Manual edit prompt: `[yellow]  Modifiez le fichier...` → `[bold]{path}[/bold]` → `[cyan]  Appuyez sur Entree...[/cyan]`
 - All `panel_info` titles include relevant Icon
 - All validation menus use `panel_validation()` with consistent key patterns
+
+## Workflow UX Separation (Session 5)
+Clear visual separation between single-episode and season production workflows:
+
+### Two distinct visual identities
+- **Épisode unique**: `panel_episode()` — Ocre border, "studio de production" subtitle
+- **Production sérielle**: `panel_episode_saison()` — Bleu Ciel border, "production sérielle" subtitle, shows season theme + progress bar
+
+### New theme components
+- `panel_episode_saison()`: Season-aware episode header with progress bar and theme display
+- `panel_roadmap(etape_courante, dry_run)`: Visual roadmap of 8 pipeline steps with current position
+- `panel_separateur_episode(episode_courant, total_episodes, ...)`: Styled separator between episodes in serial production
+
+### Pipeline changes
+- `pipeline()` accepts `episode_courant`, `total_episodes`, `saison_theme` for season display context
+- `_pipeline_inner()` shows `panel_episode_saison` when `total_episodes > 0`, else `panel_episode`
+- Roadmap displayed after header in all modes (shows dry-run skips)
+- `produire-saison` and `batch` use `panel_separateur_episode` instead of raw `====` separators
+
+### Interactif mode redesign
+- Detects existing season plans via `config.liste_saisons()`
+- If seasons exist: offers choice between "Saison" (s) and "Épisode unique" (e) workflows
+- Season mode: shows episode list with produced/remaining status, offers "all remaining" or "pick one"
+- Episode unique mode: classic parameter input with styled prompts
+- Split into `_interactif_saison()` and `_interactif_episode_unique()` helpers
+
+### Publication safety invariant (Session 5 fix)
+- `_validation_publication()` checks `validation_humaine` flags on script AND montage before allowing publish
+- Hard guard-rail in pipeline re-checks prerequisites before calling `publisher.publier()`
+- Checkpoint resume restores `validation_humaine` flags from saved rapport
 
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`
