@@ -1838,8 +1838,8 @@ async function apiCall(url, body) {
     return data;
 }
 
-/* ── Helper : polling d’un job asynchrone ──────────────────────────────── */
-var _activePollTimer = null; /* timer courant pour permettre l’annulation */
+/* ── Helper : polling d'un job asynchrone ──────────────────────────────── */
+var _activePollTimer = null; /* timer courant pour permettre l'annulation */
 
 function pollJob(jobId, maxTimeoutSec) {
     maxTimeoutSec = maxTimeoutSec || 1920; /* 32 min par defaut (> backend 1800s) */
@@ -1849,7 +1849,7 @@ function pollJob(jobId, maxTimeoutSec) {
         var consecutiveErrors = 0;
 
         function getInterval() {
-            /* Polling adaptatif : 3s les 60 premieres sec, 5s jusqu’a 5min, 10s apres */
+            /* Polling adaptatif : 3s les 60 premieres sec, 5s jusqu'a 5min, 10s apres */
             if (elapsedMs < 60000) return 3000;
             if (elapsedMs < 300000) return 5000;
             return 10000;
@@ -1865,19 +1865,19 @@ function pollJob(jobId, maxTimeoutSec) {
             elapsedMs += interval;
             if (elapsedMs > maxTimeoutSec * 1000) {
                 _activePollTimer = null;
-                reject(new Error(‘Timeout : le job n\u0027a pas terminé après ‘ + maxTimeoutSec + ‘s’));
+                reject(new Error('Timeout : le job n\u0027a pas terminé après ' + maxTimeoutSec + 's'));
                 return;
             }
             try {
-                const resp = await fetch(‘/api/job-status/’ + jobId);
+                const resp = await fetch('/api/job-status/' + jobId);
                 const data = await resp.json().catch(() => null);
                 consecutiveErrors = 0; /* reset sur succes reseau */
                 if (!resp.ok) {
                     _activePollTimer = null;
-                    reject(new Error(data && data.error ? data.error : ‘Job introuvable’));
+                    reject(new Error(data && data.error ? data.error : 'Job introuvable'));
                     return;
                 }
-                if (data.status === ‘running’) {
+                if (data.status === 'running') {
                     schedule(); /* continuer le polling */
                     return;
                 }
@@ -1888,7 +1888,7 @@ function pollJob(jobId, maxTimeoutSec) {
                 consecutiveErrors++;
                 if (consecutiveErrors >= transientRetries) {
                     _activePollTimer = null;
-                    reject(new Error(‘Erreur réseau persistante après ‘ + transientRetries + ‘ tentatives : ‘ + err.message));
+                    reject(new Error('Erreur réseau persistante après ' + transientRetries + ' tentatives : ' + err.message));
                     return;
                 }
                 /* erreur transitoire : continuer le polling */
