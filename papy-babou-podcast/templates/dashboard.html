@@ -1785,7 +1785,7 @@ async function cancelProduction() {
     hideLoading();
 }
 
-/* ── Helper : appel API (POST) ──────────────────────────────────────────── */
+/* ── Helper : appel API (POST) — retourne immediatement un job_id ─────── */
 async function apiCall(url, body) {
     const resp = await fetch(url, {
         method: 'POST',
@@ -1802,10 +1802,47 @@ async function apiCall(url, body) {
     return data;
 }
 
+/* ── Helper : polling d'un job asynchrone ──────────────────────────────── */
+function pollJob(jobId, interval) {
+    interval = interval || 3000;
+    return new Promise(function(resolve, reject) {
+        var timer = setInterval(async function() {
+            try {
+                const resp = await fetch('/api/job-status/' + jobId);
+                const data = await resp.json().catch(() => null);
+                if (!resp.ok) {
+                    clearInterval(timer);
+                    reject(new Error(data && data.error ? data.error : 'Job introuvable'));
+                    return;
+                }
+                if (data.status === 'running') {
+                    return; /* continuer le polling */
+                }
+                /* Job termine */
+                clearInterval(timer);
+                resolve(data);
+            } catch (err) {
+                clearInterval(timer);
+                reject(err);
+            }
+        }, interval);
+    });
+}
+
+/* ── Helper : lancer un job async et poller le resultat ────────────────── */
+async function apiCallAsync(url, body) {
+    const launch = await apiCall(url, body);
+    if (!launch.job_id) {
+        /* Pas un job async (erreur de validation par ex) */
+        return launch;
+    }
+    return await pollJob(launch.job_id);
+}
+
 /* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */
 function handleCliResponse(data, alertId, consoleId, successMsg) {
     if (data.status === 'cancelled') {
-        showAlert(alertId, 'info', 'Production annulée.');
+        showAlert(alertId, 'info', 'Production annul\u00e9e.');
     } else if (data.error) {
         showAlert(alertId, 'error', escapeHtml('Erreur : ' + data.error));
     } else if (data.status === 'ok') {
@@ -1813,7 +1850,7 @@ function handleCliResponse(data, alertId, consoleId, successMsg) {
         _dashboardDirty = true;
     } else {
         /* Combiner le message principal et le stderr en un seul appel */
-        let errMsg = 'L\'opération a rencontré une erreur.';
+        let errMsg = 'L\'op\u00e9ration a rencontr\u00e9 une erreur.';
         if (data.stderr) {
             errMsg += '<br><small>' + escapeHtml(data.stderr.substring(0, 300)) + '</small>';
         }
@@ -1884,7 +1921,7 @@ async function submitProduire(e) {
     showLoading('Production de ' + epId + ' \u2014 ' + escapeHtml(titre) + '...');
 
     try {
-        const data = await apiCall('/api/produire', {
+        const data = await apiCallAsync('/api/produire', {
             titre, saison, numero, resume, morale,
             type_episode: typeEpisode, dry_run: dryRun
         });
@@ -1915,7 +1952,7 @@ async function submitProduire(e) {
         if (output) showConsole('console-produire', output);
     } catch (err) {
         hideLoading();
-        showAlert('alert-produire', 'error', 'Erreur r\u00e9seau : ' + err.message);
+        showAlert('alert-produire', 'error', 'Erreur : ' + err.message);
     }
 
     btn.disabled = false;
@@ -2024,7 +2061,7 @@ async function submitPlanifier(e) {
     showLoading('Planification de la saison ' + saison + '...');
 
     try {
-        const data = await apiCall('/api/planifier-saison', {
+        const data = await apiCallAsync('/api/planifier-saison', {
             saison, theme, description, personnages, nb_episodes
         });
         hideLoading();
@@ -2036,7 +2073,7 @@ async function submitPlanifier(e) {
         }
     } catch (err) {
         hideLoading();
-        showAlert('alert-planifier', 'error', 'Erreur r\u00e9seau : ' + err.message);
+        showAlert('alert-planifier', 'error', 'Erreur : ' + err.message);
     }
 
     btn.disabled = false;
@@ -2059,15 +2096,15 @@ async function submitProduireSaison(e) {
     showLoading('Production de la saison ' + saison + '...');
 
     try {
-        const data = await apiCall('/api/produire-saison', {
+        const data = await apiCallAsync('/api/produire-saison', {
             saison, episodes, dry_run: dryRun
         });
         hideLoading();
         handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
-            'Saison ' + saison + ' terminée ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
+            'Saison ' + saison + ' termin\u00e9e ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
     } catch (err) {
         hideLoading();
-        showAlert('alert-produire-saison', 'error', 'Erreur réseau : ' + err.message);
+        showAlert('alert-produire-saison', 'error', 'Erreur : ' + err.message);
     }
 
     btn.disabled = false;
@@ -2081,12 +2118,12 @@ async function submitReprendre(fichier) {
     showLoading('Reprise de la production...');
 
     try {
-        const data = await apiCall('/api/reprendre', { fichier });
+        const data = await apiCallAsync('/api/reprendre', { fichier });
         hideLoading();
-        handleCliResponse(data, 'alert-reprendre', 'console-reprendre', 'Production reprise avec succès !');
+        handleCliResponse(data, 'alert-reprendre', 'console-reprendre', 'Production reprise avec succ\u00e8s !');
     } catch (err) {
         hideLoading();
-        showAlert('alert-reprendre', 'error', 'Erreur réseau : ' + err.message);
+        showAlert('alert-reprendre', 'error', 'Erreur : ' + err.message);
     }
 }
 
@@ -2163,13 +2200,13 @@ async function submitBatch() {
     showLoading('Production batch de ' + episodes.length + ' \u00e9pisode(s)...');
 
     try {
-        const data = await apiCall('/api/batch', { episodes, dry_run: dryRun });
+        const data = await apiCallAsync('/api/batch', { episodes, dry_run: dryRun });
         hideLoading();
         handleCliResponse(data, 'alert-batch', 'console-batch',
-            'Batch terminé : ' + episodes.length + ' épisode(s) traité(s) !');
+            'Batch termin\u00e9 : ' + episodes.length + ' \u00e9pisode(s) trait\u00e9(s) !');
     } catch (err) {
         hideLoading();
-        showAlert('alert-batch', 'error', 'Erreur réseau : ' + err.message);
+        showAlert('alert-batch', 'error', 'Erreur : ' + err.message);
     }
 
     btn.disabled = false;

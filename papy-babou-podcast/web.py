@@ -13,6 +13,7 @@ import re
 import subprocess
 import sys
 import threading
+import uuid
 from pathlib import Path
 
 # Ensure imports work when launched from repo root (Replit)
@@ -21,7 +22,7 @@ if str(_THIS_DIR) not in sys.path:
     sys.path.insert(0, str(_THIS_DIR))
 os.chdir(_THIS_DIR)
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 
 import config
 from dashboard_data import get_dashboard_data, charger_preferences, charger_checkpoints, charger_publications
@@ -46,6 +47,12 @@ def handle_exception(e):
     return jsonify({"error": str(e), "status": "error"}), 500
 
 
+@app.route("/favicon.ico")
+def favicon():
+    """Retourne 204 No Content pour eviter les erreurs 500 sur /favicon.ico."""
+    return "", 204
+
+
 def _check_api_key(key_name="ANTHROPIC_API_KEY"):
     """Verifie qu'une cle API est configuree. Retourne une reponse d'erreur ou None."""
     if not os.getenv(key_name):
@@ -57,10 +64,26 @@ def _check_api_key(key_name="ANTHROPIC_API_KEY"):
     return None
 
 
-# ── Helper : lancer une commande CLI (avec support annulation) ───────────────
+# ── Systeme de jobs asynchrones ──────────────────────────────────────────────
 
+_jobs = {}
+_jobs_lock = threading.Lock()
 _current_process = None
 _process_lock = threading.Lock()
+
+
+def _extract_error_from_stderr(stderr):
+    """Extrait un message d'erreur lisible du stderr d'un subprocess."""
+    if not stderr:
+        return None
+    for line in reversed(stderr.strip().splitlines()):
+        clean = re.sub(r'\x1b\[[0-9;]*m', '', line).strip()
+        if clean.startswith("Erreur") or "API" in clean or "cle" in clean.lower():
+            return clean
+    # Derniere ligne nettoyee comme fallback
+    last = stderr.strip().splitlines()[-1]
+    clean = re.sub(r'\x1b\[[0-9;]*m', '', last).strip()
+    return clean if clean else None
 
 
 def _run_cli(cmd_args, timeout=300):
@@ -97,22 +120,10 @@ def _run_cli(cmd_args, timeout=300):
             "stderr": stderr[-1000:] if stderr else "",
         }
 
-        # Extraire un message d'erreur lisible du stderr quand le process echoue
         if proc.returncode != 0 and stderr:
-            # Chercher les lignes "Erreur : ..." produites par main.py
-            for line in reversed(stderr.strip().splitlines()):
-                # Nettoyer les codes ANSI
-                clean = line
-                clean = re.sub(r'\x1b\[[0-9;]*m', '', clean).strip()
-                if clean.startswith("Erreur") or "API" in clean or "cle" in clean.lower():
-                    result["error"] = clean
-                    break
-            if "error" not in result:
-                # Derniere ligne nettoyee comme fallback
-                last = stderr.strip().splitlines()[-1]
-                clean = re.sub(r'\x1b\[[0-9;]*m', '', last).strip()
-                if clean:
-                    result["error"] = clean
+            err_msg = _extract_error_from_stderr(stderr)
+            if err_msg:
+                result["error"] = err_msg
 
         return result
     except Exception as e:
@@ -120,6 +131,60 @@ def _run_cli(cmd_args, timeout=300):
     finally:
         with _process_lock:
             _current_process = None
+
+
+def _start_job(cmd_args, timeout=300, cleanup_fn=None):
+    """Lance un job en arriere-plan et retourne son ID immediatement.
+
+    Args:
+        cmd_args: Arguments pour main.py.
+        timeout: Timeout en secondes.
+        cleanup_fn: Fonction optionnelle appelee apres le job (ex: supprimer fichier temp).
+
+    Returns:
+        job_id (str): Identifiant unique du job.
+    """
+    job_id = uuid.uuid4().hex[:12]
+    with _jobs_lock:
+        _jobs[job_id] = {"status": "running", "result": None}
+
+    def _worker():
+        try:
+            result = _run_cli(cmd_args, timeout=timeout)
+            with _jobs_lock:
+                _jobs[job_id] = {"status": "done", "result": result}
+        except Exception as e:
+            with _jobs_lock:
+                _jobs[job_id] = {
+                    "status": "done",
+                    "result": {"error": str(e), "status": "error"},
+                }
+        finally:
+            if cleanup_fn:
+                try:
+                    cleanup_fn()
+                except Exception:
+                    pass
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    return job_id
+
+
+@app.route("/api/job-status/<job_id>")
+def api_job_status(job_id):
+    """Retourne le statut d'un job asynchrone."""
+    with _jobs_lock:
+        job = _jobs.get(job_id)
+    if not job:
+        return jsonify({"error": f"Job introuvable : {job_id}"}), 404
+    if job["status"] == "running":
+        return jsonify({"status": "running"})
+    # Job termine — retourner le resultat et nettoyer
+    result = job["result"]
+    with _jobs_lock:
+        _jobs.pop(job_id, None)
+    return jsonify(result)
 
 
 # ── Routes pages ─────────────────────────────────────────────────────────────
@@ -269,12 +334,12 @@ def api_cancel():
     return jsonify({"status": "ok", "message": "Aucune production en cours."})
 
 
-# ── Routes API (JSON) — Actions ─────────────────────────────────────────────
+# ── Routes API (JSON) — Actions (asynchrones) ─────────────────────────────
 
 
 @app.route("/api/produire", methods=["POST"])
 def api_produire():
-    """Lance la production d'un episode."""
+    """Lance la production d'un episode (asynchrone)."""
     err = _check_api_key("ANTHROPIC_API_KEY")
     if err:
         return err
@@ -310,12 +375,13 @@ def api_produire():
     if dry_run:
         cmd.append("--dry-run")
 
-    return jsonify(_run_cli(cmd, timeout=600))
+    job_id = _start_job(cmd, timeout=600)
+    return jsonify({"status": "accepted", "job_id": job_id})
 
 
 @app.route("/api/planifier-saison", methods=["POST"])
 def api_planifier_saison():
-    """Planifie une saison complete."""
+    """Planifie une saison complete (asynchrone)."""
     err = _check_api_key("ANTHROPIC_API_KEY")
     if err:
         return err
@@ -341,12 +407,13 @@ def api_planifier_saison():
     if personnages:
         cmd.extend(["-p", personnages])
 
-    return jsonify(_run_cli(cmd, timeout=300))
+    job_id = _start_job(cmd, timeout=300)
+    return jsonify({"status": "accepted", "job_id": job_id})
 
 
 @app.route("/api/produire-saison", methods=["POST"])
 def api_produire_saison():
-    """Produit les episodes d'une saison planifiee."""
+    """Produit les episodes d'une saison planifiee (asynchrone)."""
     err = _check_api_key("ANTHROPIC_API_KEY")
     if err:
         return err
@@ -365,12 +432,13 @@ def api_produire_saison():
     if dry_run:
         cmd.append("--dry-run")
 
-    return jsonify(_run_cli(cmd, timeout=600))
+    job_id = _start_job(cmd, timeout=600)
+    return jsonify({"status": "accepted", "job_id": job_id})
 
 
 @app.route("/api/reprendre", methods=["POST"])
 def api_reprendre():
-    """Reprend une production depuis un checkpoint."""
+    """Reprend une production depuis un checkpoint (asynchrone)."""
     body = request.get_json(force=True)
     fichier = body.get("fichier", "").strip()
 
@@ -391,12 +459,13 @@ def api_reprendre():
         "--auto",
     ]
 
-    return jsonify(_run_cli(cmd, timeout=600))
+    job_id = _start_job(cmd, timeout=600)
+    return jsonify({"status": "accepted", "job_id": job_id})
 
 
 @app.route("/api/batch", methods=["POST"])
 def api_batch():
-    """Lance une production batch depuis un JSON envoye par le client."""
+    """Lance une production batch depuis un JSON envoye par le client (asynchrone)."""
     import json as _json
     import tempfile
 
@@ -423,16 +492,18 @@ def api_batch():
         _json.dump(episodes_list, tmp, ensure_ascii=False)
         tmp_path = tmp.name
 
-    try:
-        cmd = ["batch", "-f", tmp_path, "--auto"]
-        if dry_run:
-            cmd.append("--dry-run")
-        return jsonify(_run_cli(cmd, timeout=600))
-    finally:
+    def _cleanup():
         try:
             os.unlink(tmp_path)
         except OSError:
             pass
+
+    cmd = ["batch", "-f", tmp_path, "--auto"]
+    if dry_run:
+        cmd.append("--dry-run")
+
+    job_id = _start_job(cmd, timeout=600, cleanup_fn=_cleanup)
+    return jsonify({"status": "accepted", "job_id": job_id})
 
 
 # ── Lancement ────────────────────────────────────────────────────────────────
