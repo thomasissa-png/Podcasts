@@ -1712,10 +1712,9 @@ def _pipeline_inner(
             score = checkpoint_data.get("etapes", {}).get("script", {}).get("score_review", 0)
         logger.info("Script chargé depuis le checkpoint : %s", chemin_valide)
     elif etape_idx > 0:
-        logger.warning(
-            "Reprise à l'étape %s mais le script validé %s est introuvable. "
-            "Les étapes suivantes risquent d'échouer.",
-            etape_depart, chemin_valide,
+        raise FileNotFoundError(
+            f"Reprise à l'étape {etape_depart} impossible : "
+            f"le script validé {chemin_valide} est introuvable."
         )
 
     # ── Étape 1-2 : Scripteur + Reviewer ─────────────────────────────────────
@@ -1849,6 +1848,7 @@ def _pipeline_inner(
             "type_episode": type_episode,
             "dry_run": dry_run, "rapport": rapport,
             "chemin_script_valide": str(chemin_valide),
+            "pubdate_offset_seconds": pubdate_offset_seconds,
         })
 
         # ── Validation humaine : script ──────────────────────────────────────
@@ -1938,6 +1938,7 @@ def _pipeline_inner(
                 "saison": saison, "numero": numero, "morale": morale,
                 "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
+                "pubdate_offset_seconds": pubdate_offset_seconds,
             })
 
     # ── Étape 4 : Bruitages (SFX) ─────────────────────────────────────────────
@@ -2047,6 +2048,7 @@ def _pipeline_inner(
                 "saison": saison, "numero": numero, "morale": morale,
                 "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
+                "pubdate_offset_seconds": pubdate_offset_seconds,
             })
 
     # ── Validation humaine : montage ─────────────────────────────────────────
@@ -2482,6 +2484,7 @@ def _interactif_saison(saisons_existantes: list[int]):
                 auto=False,
                 contexte_saison=plan,
                 type_episode=ep.get("type", "standard"),
+                pubdate_offset_seconds=ep["numero"] * 3600,
                 episode_courant=1,
                 total_episodes=1,
                 saison_theme=saison_data.get("theme", ""),
@@ -2642,6 +2645,10 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
                 dry_run=dry_run,
                 auto=auto,
                 no_publish=no_publish,
+                type_episode=ep.get("type", ep.get("type_episode", "standard")),
+                pubdate_offset_seconds=ep_numero * 3600,
+                episode_courant=i,
+                total_episodes=nb_planning,
             )
             resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
         except ProductionAbandonnee as e:
@@ -2715,6 +2722,7 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool):
             checkpoint_data=data.get("rapport"),
             type_episode=data.get("type_episode", "standard"),
             no_publish=no_publish,
+            pubdate_offset_seconds=data.get("pubdate_offset_seconds", 0),
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
