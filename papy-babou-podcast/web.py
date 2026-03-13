@@ -82,7 +82,14 @@ _jobs_lock = threading.Lock()
 _job_processes = {} # {job_id: subprocess.Popen} — per-job process tracking
 _process_lock = threading.Lock()
 
-_JOB_TTL_SECONDS = 600  # Supprimer les jobs termines apres 10 minutes
+_JOB_TTL_SECONDS = 3600  # Supprimer les jobs termines apres 1 heure
+
+# Timeouts par type de job (configurables via env)
+_TIMEOUT_PRODUIRE = int(os.getenv("TIMEOUT_PRODUIRE", "1800"))          # 30 min
+_TIMEOUT_PLANIFIER = int(os.getenv("TIMEOUT_PLANIFIER", "600"))         # 10 min
+_TIMEOUT_PRODUIRE_SAISON = int(os.getenv("TIMEOUT_PRODUIRE_SAISON", "7200"))  # 2h
+_TIMEOUT_REPRENDRE = int(os.getenv("TIMEOUT_REPRENDRE", "1800"))        # 30 min
+_TIMEOUT_BATCH = int(os.getenv("TIMEOUT_BATCH", "7200"))                # 2h
 _JOB_ID_RE = re.compile(r'^[0-9a-f]{12}$')
 
 
@@ -419,7 +426,7 @@ def api_produire():
     if dry_run:
         cmd.append("--dry-run")
 
-    job_id = _start_job(cmd, timeout=600)
+    job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
     return jsonify({"status": "accepted", "job_id": job_id})
 
 
@@ -451,7 +458,7 @@ def api_planifier_saison():
     if personnages:
         cmd.extend(["-p", personnages])
 
-    job_id = _start_job(cmd, timeout=300)
+    job_id = _start_job(cmd, timeout=_TIMEOUT_PLANIFIER)
     return jsonify({"status": "accepted", "job_id": job_id})
 
 
@@ -476,7 +483,7 @@ def api_produire_saison():
     if dry_run:
         cmd.append("--dry-run")
 
-    job_id = _start_job(cmd, timeout=600)
+    job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE_SAISON)
     return jsonify({"status": "accepted", "job_id": job_id})
 
 
@@ -503,7 +510,7 @@ def api_reprendre():
         "--auto",
     ]
 
-    job_id = _start_job(cmd, timeout=600)
+    job_id = _start_job(cmd, timeout=_TIMEOUT_REPRENDRE)
     return jsonify({"status": "accepted", "job_id": job_id})
 
 
@@ -553,7 +560,7 @@ def api_batch():
     if dry_run:
         cmd.append("--dry-run")
 
-    job_id = _start_job(cmd, timeout=600, cleanup_fn=_cleanup)
+    job_id = _start_job(cmd, timeout=_TIMEOUT_BATCH, cleanup_fn=_cleanup)
     return jsonify({"status": "accepted", "job_id": job_id})
 
 
