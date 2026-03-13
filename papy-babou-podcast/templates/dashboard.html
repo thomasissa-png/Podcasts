@@ -953,7 +953,7 @@
                 {% for s in saisons_dispo %}
                 <div class="perso-chip" style="cursor: pointer;" onclick="loadPlanDetail({{ s }})">
                     <span class="name" style="color: var(--orange-chaud);">Saison {{ s }}</span>
-                    <span class="count" style="font-size: 0.7rem;">Voir le plan</span>
+                    <span class="count" style="font-size: 0.7rem;">{% if s in saisons_info %}{{ saisons_info[s].theme[:30] }} ({{ saisons_info[s].nb_episodes }} \u00e9p.){% else %}Voir le plan{% endif %}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -1029,37 +1029,56 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-produire-saison">
     <div class="page-header">
-        <h2>&#127916; Étape 2 — Lancer la production d'une saison</h2>
+        <h2>&#127916; \u00c9tape 2 \u2014 Lancer la production d'une saison</h2>
+        {% if saisons_dispo %}
         <p>
-            Vous avez planifié une saison à l'étape précédente ? Parfait !
-            Ici, vous lancez la <strong>production automatique</strong> de tous ses épisodes
-            (ou seulement ceux de votre choix). L'IA va écrire les scripts, générer les voix
-            et assembler chaque épisode.
+            S\u00e9lectionnez une saison planifi\u00e9e ci-dessous pour voir son contenu,
+            puis lancez la <strong>production automatique</strong> de tous ses \u00e9pisodes
+            (ou seulement ceux de votre choix).
         </p>
-        <p style="margin-top: 0.4rem; font-size: 0.82rem; color: var(--texte-light);">
-            Vous n'avez pas encore de saison planifiée ?
-            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Retour à l'étape 1</a>.
+        {% else %}
+        <p>
+            Aucune saison planifi\u00e9e pour le moment.
+            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Commencez par planifier une saison \u2192</a>
         </p>
+        {% endif %}
     </div>
 
+    {% if saisons_dispo %}
     <div class="card">
         <div class="card-header">
-            <span class="icon">&#127916;</span> Lancer la production
+            <span class="icon">&#127916;</span> Choisir et lancer une saison
         </div>
         <div class="card-body">
             <div id="alert-produire-saison" class="alert"></div>
 
             <form id="form-produire-saison" onsubmit="return submitProduireSaison(event)">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="ps-saison">Saison \u00e0 produire *</label>
+                    <select id="ps-saison" class="form-input" required style="max-width: 500px;">
+                        {% for num in saisons_dispo %}
+                        <option value="{{ num }}" {% if num == saisons_dispo[-1] %}selected{% endif %}>
+                            Saison {{ num }}{% if num in saisons_info %} \u2014 {{ saisons_info[num].theme }} ({{ saisons_info[num].nb_episodes }} \u00e9p.){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Apercu du plan de saison -->
+                <div id="ps-plan-preview" class="card" style="margin-bottom: 1rem; border: 1px solid var(--border); box-shadow: none;">
+                    <div class="card-header" style="padding: 0.6rem 1rem; font-size: 0.85rem;">
+                        <span class="icon">&#128214;</span> <span id="ps-plan-titre">Aper\u00e7u du plan</span>
+                    </div>
+                    <div class="card-body" id="ps-plan-body" style="padding: 0.8rem 1rem; font-size: 0.85rem;">
+                        <em style="color: var(--texte-light);">Chargement...</em>
+                    </div>
+                </div>
+
                 <div class="form-row-3">
                     <div class="form-group">
-                        <label for="ps-saison">Quelle saison produire ? *</label>
-                        <input type="number" id="ps-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
-                        <div class="hint">Numéro de la saison planifiée à l'étape 1</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="ps-episodes">Quels épisodes ?</label>
-                        <input type="text" id="ps-episodes" class="form-input" placeholder="Vide = tous les épisodes">
-                        <div class="hint">Laissez vide pour tout produire, ou indiquez les numéros : 1,3,5</div>
+                        <label for="ps-episodes">Quels \u00e9pisodes ?</label>
+                        <input type="text" id="ps-episodes" class="form-input" placeholder="Vide = tous les \u00e9pisodes">
+                        <div class="hint">Laissez vide pour tout produire, ou indiquez les num\u00e9ros : 1,3,5</div>
                     </div>
                     <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; padding-top: 1.2rem;">
                         <div class="form-check">
@@ -1079,6 +1098,16 @@
             <div class="console-output" id="console-produire-saison"></div>
         </div>
     </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body" style="text-align: center; padding: 2rem;">
+            <p style="font-size: 1.1rem; color: var(--texte-light);">Aucune saison planifi\u00e9e</p>
+            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" class="btn btn-primary" style="margin-top: 1rem;">
+                &#128197; Planifier une saison
+            </a>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
@@ -2080,6 +2109,86 @@ async function submitPlanifier(e) {
     btn.innerHTML = '&#128197; G\u00e9n\u00e9rer le plan de saison';
     return false;
 }
+
+/* ── Apercu du plan dans la page "Produire une saison" ─────────────────── */
+async function loadPsPreview(numero) {
+    const body = document.getElementById('ps-plan-body');
+    const titre = document.getElementById('ps-plan-titre');
+    if (!numero) { body.innerHTML = '<em style="color: var(--texte-light);">S\u00e9lectionnez une saison.</em>'; return; }
+    body.innerHTML = '<em style="color: var(--texte-light);">Chargement...</em>';
+    try {
+        const resp = await fetch('/api/plan-saison/' + numero);
+        if (!resp.ok) {
+            body.innerHTML = '<em style="color: var(--texte-light);">Aucun plan trouv\u00e9 pour la saison ' + numero + '.</em>';
+            titre.textContent = 'Aper\u00e7u du plan';
+            return;
+        }
+        const plan = await resp.json();
+        const s = plan.saison || {};
+        titre.textContent = 'Saison ' + (s.numero || numero) + ' \u2014 ' + (s.theme || '');
+
+        let html = '';
+        if (s.description) {
+            html += '<p style="margin: 0 0 0.6rem 0; color: var(--texte-light);">' + escapeHtml(s.description) + '</p>';
+        }
+        if (s.fil_rouge) {
+            html += '<p style="margin: 0 0 0.6rem 0;"><strong>Fil rouge :</strong> ' + escapeHtml(s.fil_rouge) + '</p>';
+        }
+
+        /* Tableau des episodes */
+        const eps = s.episodes || [];
+        if (eps.length > 0) {
+            /* Charger les episodes deja produits */
+            let produits = [];
+            try {
+                const respEp = await fetch('/api/episodes-saison/' + numero);
+                const infoEp = await respEp.json();
+                produits = infoEp.episodes_produits || [];
+            } catch (e) { /* ignore */ }
+
+            html += '<table class="episode-table" style="font-size: 0.82rem;"><thead><tr>'
+                + '<th>N\u00b0</th><th>Titre</th><th>Type</th><th>Ambiance</th><th>Dur\u00e9e</th><th>Statut</th>'
+                + '</tr></thead><tbody>';
+            for (const ep of eps) {
+                const num = ep.numero || 0;
+                const dejaProduit = produits.includes(num);
+                const statusBadge = dejaProduit
+                    ? '<span class="badge" style="background: var(--turquoise); color: white; font-size: 0.7rem;">Produit</span>'
+                    : '<span class="badge" style="background: var(--sable); color: var(--texte-light); font-size: 0.7rem;">\u00c0 faire</span>';
+                html += '<tr' + (dejaProduit ? ' style="opacity: 0.6;"' : '') + '>'
+                    + '<td><span class="badge badge-turquoise">E' + num + '</span></td>'
+                    + '<td>' + escapeHtml(ep.titre || '') + '</td>'
+                    + '<td>' + escapeHtml(ep.type || 'standard') + '</td>'
+                    + '<td>' + escapeHtml(ep.ambiance || '') + '</td>'
+                    + '<td>' + (ep.duree_cible_minutes || '?') + ' min</td>'
+                    + '<td>' + statusBadge + '</td>'
+                    + '</tr>';
+            }
+            html += '</tbody></table>';
+
+            /* Resume : X produits / Y total */
+            const nbProduits = produits.length;
+            const nbTotal = eps.length;
+            if (nbProduits > 0) {
+                html += '<p style="margin: 0.5rem 0 0 0; font-size: 0.82rem; color: var(--texte-light);">'
+                    + nbProduits + ' / ' + nbTotal + ' \u00e9pisode(s) d\u00e9j\u00e0 produit(s).</p>';
+            }
+        }
+        body.innerHTML = html || '<em style="color: var(--texte-light);">Plan vide.</em>';
+    } catch (e) {
+        body.innerHTML = '<em style="color: var(--texte-light);">Erreur lors du chargement du plan.</em>';
+    }
+}
+
+/* Charger l apercu au changement de saison et au chargement initial */
+document.getElementById('ps-saison').addEventListener('change', function() {
+    loadPsPreview(parseInt(this.value));
+});
+/* Chargement initial */
+(function() {
+    const sel = document.getElementById('ps-saison');
+    if (sel && sel.value) loadPsPreview(parseInt(sel.value));
+})();
 
 /* ── Produire une saison ────────────────────────────────────────────────── */
 async function submitProduireSaison(e) {

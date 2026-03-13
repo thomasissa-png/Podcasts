@@ -262,8 +262,18 @@ def get_dashboard_data(saison: int = 0) -> dict:
     # Préférences
     preferences = charger_preferences()
 
-    # Saisons disponibles
+    # Saisons disponibles (avec info theme/nb_episodes pour le formulaire)
     saisons_dispo = config.liste_saisons()
+    saisons_info = {}
+    for num in saisons_dispo:
+        plan = config.charger_saison(num)
+        if plan:
+            sd = plan.get("saison", {})
+            saisons_info[num] = {
+                "theme": sd.get("theme", ""),
+                "nb_episodes": len(sd.get("episodes", [])),
+                "description": sd.get("description", ""),
+            }
 
     # Coûts
     couts = calculer_couts(saison)
@@ -283,6 +293,7 @@ def get_dashboard_data(saison: int = 0) -> dict:
         "retours_humains": retours,
         "preferences": preferences,
         "saisons_dispo": saisons_dispo,
+        "saisons_info": saisons_info,
         "couts": couts,
         "checkpoints": checkpoints,
         "publications": publications,
