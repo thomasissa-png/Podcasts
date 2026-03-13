@@ -1040,7 +1040,9 @@ def _validation_montage(
         chapitres = resultat_montage.get("chapitres", [])
         if chapitres:
             info_lines.append(f"{Typo.label_valeur('Chapitres', str(len(chapitres)))}")
-        taille_mb = resultat_montage.get("taille_mb", 0)
+        taille_mb = resultat_montage.get("taille_mb") or round(
+            resultat_montage.get("taille_bytes", 0) / 1024 / 1024, 1
+        )
         if taille_mb:
             info_lines.append(f"{Typo.label_valeur('Taille', f'{taille_mb:.1f} MB')}")
 
@@ -1696,6 +1698,11 @@ def _pipeline_inner(
         with open(chemin_meta, "r", encoding="utf-8") as f:
             meta = json.load(f)
         logger.info("Métadonnées chargées depuis : %s", chemin_meta)
+    elif etape_idx > 5:
+        raise FileNotFoundError(
+            f"Reprise à l'étape {etape_depart} impossible : "
+            f"le fichier de métadonnées {chemin_meta} est introuvable."
+        )
 
     # Charger l'historique pour la continuité
     historique = charger_historique()
@@ -2278,7 +2285,10 @@ def _pipeline_inner(
                 rapport=rapport,
                 couts=rapport.get("couts", {}),
             )
-            EpisodeRepo.maj_status(episode_id, "produced" if dry_run else "published")
+            pub_status = rapport.get("etapes", {}).get("publication", {}).get("status", "")
+            est_publie = "url_audio" in rapport.get("etapes", {}).get("publication", {})
+            db_status = "published" if est_publie else ("dry_run" if dry_run else "produced")
+            EpisodeRepo.maj_status(episode_id, db_status)
         except Exception as e:
             logger.warning("DB indisponible pour finalisation production : %s", e)
 
