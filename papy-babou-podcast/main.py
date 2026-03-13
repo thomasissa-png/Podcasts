@@ -1557,6 +1557,7 @@ def pipeline(
             contexte_saison=contexte_saison, type_episode=type_episode,
             episode_id=episode_id, rapport=rapport,
             pubdate_offset_seconds=pubdate_offset_seconds,
+            no_publish=no_publish,
             episode_courant=episode_courant,
             total_episodes=total_episodes,
             saison_theme=saison_theme,
@@ -1589,7 +1590,7 @@ def _pipeline_inner(
     titre, resume, saison, numero, morale, dry_run, auto,
     max_iterations_review, etape_depart, checkpoint_data,
     contexte_saison, type_episode, episode_id, rapport,
-    pubdate_offset_seconds=0,
+    pubdate_offset_seconds=0, no_publish=False,
     episode_courant=0, total_episodes=0, saison_theme="",
 ):
     """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
