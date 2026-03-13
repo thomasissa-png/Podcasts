@@ -164,7 +164,27 @@ class Reviewer:
             )
 
         texte_brut = response.content[0].text.strip()
-        resultat = parser_json_llm(texte_brut)
+        try:
+            resultat = parser_json_llm(texte_brut)
+        except json.JSONDecodeError as e:
+            logger.warning(
+                "JSON malformé dans la review LLM (%s). "
+                "Retry avec une nouvelle génération...", e,
+            )
+            response = config.appel_claude_avec_retry(
+                self.client,
+                model=config.CLAUDE_MODEL,
+                max_tokens=max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            if response.stop_reason == "max_tokens":
+                raise ValueError(
+                    f"La review a été tronquée (max_tokens={max_tokens} atteint). "
+                    f"Le JSON est incomplet."
+                )
+            texte_brut = response.content[0].text.strip()
+            resultat = parser_json_llm(texte_brut)
         self._valider_review(resultat)
 
         # Vérifier la cohérence structurelle du script corrigé vs original (BUG 6)

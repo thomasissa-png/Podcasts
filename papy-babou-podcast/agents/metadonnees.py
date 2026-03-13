@@ -94,7 +94,27 @@ class Metadonnees:
             )
 
         texte_brut = response.content[0].text.strip()
-        meta = parser_json_llm(texte_brut)
+        try:
+            meta = parser_json_llm(texte_brut)
+        except json.JSONDecodeError as e:
+            logger.warning(
+                "JSON malformé dans les métadonnées LLM (%s). "
+                "Retry avec une nouvelle génération...", e,
+            )
+            response = config.appel_claude_avec_retry(
+                self.client,
+                model=config.CLAUDE_MODEL,
+                max_tokens=2048,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            if response.stop_reason == "max_tokens":
+                raise ValueError(
+                    "Les métadonnées ont été tronquées (max_tokens=2048 atteint). "
+                    "Le JSON est incomplet."
+                )
+            texte_brut = response.content[0].text.strip()
+            meta = parser_json_llm(texte_brut)
 
         # Enrichir avec les données techniques
         meta["saison"] = episode["saison"]
