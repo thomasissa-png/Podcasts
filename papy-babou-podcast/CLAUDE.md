@@ -124,7 +124,7 @@ python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 - `SYSTEM_PROMPT_BASE` has `{preferences_producteur}` placeholder for producer rules injection
 - `_valider_structure()` uses `config.personnages_valides()` (dynamic set), not a hardcoded set
 - `STRUCTURES_NARRATIVES` dict has templates for all 5 episode types
-- Adaptive `max_tokens` by episode type: final=8192, ouverture/mi-saison=7168, standard=6144, bonus=4096
+- Adaptive `max_tokens` by episode type: final=16384, ouverture/mi-saison=12288, standard=10240, bonus=8192
 - Post-generation word count validation with warnings against `FORMATS_EPISODES`
 - Full season history for final/mi-saison episodes (not just last 5)
 - Ambiance fallback from 'fond_doux' to 'calme' (mutates script in place)

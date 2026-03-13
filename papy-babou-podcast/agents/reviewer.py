@@ -141,11 +141,11 @@ class Reviewer:
         # max_tokens adaptatif selon le type d'épisode du script
         type_episode = script.get("episode", {}).get("type", "standard")
         max_tokens_map = {
-            "ouverture": 7168,
-            "standard": 6144,
-            "mi-saison": 7168,
-            "final": 8192,
-            "bonus": 4096,
+            "ouverture": 12288,
+            "standard": 10240,
+            "mi-saison": 12288,
+            "final": 16384,
+            "bonus": 8192,
         }
         max_tokens = max_tokens_map.get(type_episode, 6144)
 
