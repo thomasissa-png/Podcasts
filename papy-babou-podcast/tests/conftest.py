@@ -9,6 +9,13 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
+@pytest.fixture(autouse=True)
+def _fake_api_key(monkeypatch):
+    """Injecte une fausse cle API pour eviter les erreurs dans les constructeurs d'agents."""
+    import config
+    monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "sk-test-fake-key")
+
+
 @pytest.fixture
 def script_exemple():
     """Script JSON minimal valide pour les tests."""

@@ -9,6 +9,7 @@ Usage :
 
 import logging
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -90,11 +91,30 @@ def _run_cli(cmd_args, timeout=300):
         if proc.returncode == -9 or proc.returncode == -15:
             return {"error": "Production annulee par l'utilisateur.", "status": "cancelled"}
 
-        return {
+        result = {
             "status": "ok" if proc.returncode == 0 else "error",
             "stdout": stdout[-4000:] if stdout else "",
             "stderr": stderr[-1000:] if stderr else "",
         }
+
+        # Extraire un message d'erreur lisible du stderr quand le process echoue
+        if proc.returncode != 0 and stderr:
+            # Chercher les lignes "Erreur : ..." produites par main.py
+            for line in reversed(stderr.strip().splitlines()):
+                # Nettoyer les codes ANSI
+                clean = line
+                clean = re.sub(r'\x1b\[[0-9;]*m', '', clean).strip()
+                if clean.startswith("Erreur") or "API" in clean or "cle" in clean.lower():
+                    result["error"] = clean
+                    break
+            if "error" not in result:
+                # Derniere ligne nettoyee comme fallback
+                last = stderr.strip().splitlines()[-1]
+                clean = re.sub(r'\x1b\[[0-9;]*m', '', last).strip()
+                if clean:
+                    result["error"] = clean
+
+        return result
     except Exception as e:
         return {"error": str(e), "status": "error"}
     finally:

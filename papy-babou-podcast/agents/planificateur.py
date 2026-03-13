@@ -104,6 +104,11 @@ class Planificateur:
     """Planifie une saison complète avec arcs narratifs."""
 
     def __init__(self):
+        if not config.ANTHROPIC_API_KEY:
+            raise ValueError(
+                "Cle API Anthropic (ANTHROPIC_API_KEY) non configuree. "
+                "Ajoutez-la dans votre fichier .env ou dans les Secrets Replit."
+            )
         self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
     def planifier_saison(
