@@ -203,7 +203,7 @@ def _construire_bloc_preferences() -> str:
 
     lignes = ["\nPRÉFÉRENCES DU PRODUCTEUR (à respecter impérativement) :"]
     for i, pref in enumerate(preferences, 1):
-        lignes.append(f"  {i}. {pref['regle']}")
+        lignes.append(f"  {i}. {pref.get('regle', '(règle manquante)')}")
     return "\n".join(lignes)
 
 
@@ -568,7 +568,7 @@ def _validation_script(
             # Proposer de memoriser les corrections comme preferences (A6)
             if nb_corrections_humaines > 0:
                 all_corrections = []
-                for d in rapport.get("decisions_humaines", []) if rapport else []:
+                for d in rapport.get("decisions_humaines", []) if rapport is not None else []:
                     if d.get("action") == "correction_humaine" and d.get("corrections"):
                         all_corrections.extend(d["corrections"])
                 if all_corrections:
@@ -912,14 +912,14 @@ def _afficher_plan_saison(plan: dict) -> None:
         console.print(f"\n  [bold]Description :[/bold] {desc}")
 
     # Table des episodes avec resume complet (P4)
-    table = table_saison_plan(saison_num, saison_data["theme"])
-    for ep in saison_data["episodes"]:
+    table = table_saison_plan(saison_num, saison_data.get("theme", "Sans thème"))
+    for ep in saison_data.get("episodes", []):
         table.add_row(
-            str(ep["numero"]),
-            ep["titre"],
+            str(ep.get("numero", "?")),
+            ep.get("titre", "(sans titre)"),
             ep.get("type", "standard"),
             ep.get("ambiance", "?"),
-            ep["morale"][:40],
+            ep.get("morale", "")[:40],
         )
     console.print(table)
 
@@ -938,7 +938,7 @@ def _afficher_plan_saison(plan: dict) -> None:
         resume_ep = ep.get("resume", "")
         if resume_ep:
             console.print(f"      Résumé : {resume_ep[:120]}")
-        console.print(f"      Morale : {ep['morale']}")
+        console.print(f"      Morale : {ep.get('morale', 'N/A')}")
 
     # Fil rouge
     fil_rouge = saison_data.get("fil_rouge", "")
@@ -2428,6 +2428,10 @@ def _interactif_saison(saisons_existantes: list[int]):
         console.print(f"[red]Plan de saison {saison_num} introuvable.[/red]")
         sys.exit(1)
 
+    if "saison" not in plan or "episodes" not in plan.get("saison", {}):
+        console.print("[red]Plan de saison invalide : clés 'saison' ou 'episodes' manquantes.[/red]")
+        sys.exit(1)
+
     saison_data = plan["saison"]
     episodes_plan = saison_data["episodes"]
 
@@ -2637,6 +2641,10 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
     resultats = []
     nb_planning = len(planning)
     for i, ep in enumerate(planning, 1):
+        if "titre" not in ep:
+            console.print(f"[red]Episode {i} : clé 'titre' manquante dans le JSON. Ignoré.[/red]")
+            resultats.append({"status": "error", "episode": f"(episode {i})", "erreur": "titre manquant"})
+            continue
         ep_saison = ep.get("saison", 1)
         ep_numero = ep.get("numero", i)
         ep_id = f"S{ep_saison:02d}E{ep_numero:02d}"
@@ -2892,6 +2900,10 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
         console.print(f"[red]Plan de saison {saison} introuvable. Lancez planifier-saison d'abord.[/red]")
         sys.exit(1)
 
+    if "saison" not in plan or "episodes" not in plan.get("saison", {}):
+        console.print("[red]Plan de saison invalide : clés 'saison' ou 'episodes' manquantes.[/red]")
+        sys.exit(1)
+
     saison_data = plan["saison"]
     episodes_plan = saison_data["episodes"]
 
@@ -2939,7 +2951,7 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
 
     console.print(Panel(
         f"[bold]Production sérielle — Saison {saison}[/bold]\n"
-        f"Theme : {saison_data['theme']}\n"
+        f"Theme : {saison_data.get('theme', 'N/A')}\n"
         f"A produire : {len(episodes_a_produire)}/{len(episodes_plan)} episodes\n"
         f"Mode : {'DRY RUN' if dry_run else 'PRODUCTION'}",
         title="Production de saison",
