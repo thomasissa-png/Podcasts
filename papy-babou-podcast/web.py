@@ -50,8 +50,18 @@ def handle_exception(e):
 
 @app.route("/favicon.ico")
 def favicon():
-    """Retourne 204 No Content pour eviter les erreurs 500 sur /favicon.ico."""
+    """Sert le favicon SVG ou retourne 204 si absent."""
+    favicon_path = _THIS_DIR / "assets" / "artwork" / "favicon.svg"
+    if favicon_path.exists():
+        return send_from_directory(str(favicon_path.parent), favicon_path.name, mimetype="image/svg+xml")
     return "", 204
+
+
+@app.route("/assets/artwork/<path:filename>")
+def serve_artwork(filename):
+    """Sert les fichiers artwork (favicon, images)."""
+    artwork_dir = _THIS_DIR / "assets" / "artwork"
+    return send_from_directory(str(artwork_dir), filename)
 
 
 def _check_api_key(key_name="ANTHROPIC_API_KEY"):

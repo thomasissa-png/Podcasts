@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Les Histoires de Papy Babou</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/artwork/favicon.svg">
+    <link rel="icon" type="image/svg+xml" sizes="16x16" href="/assets/artwork/favicon_16.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -953,7 +955,7 @@
                 {% for s in saisons_dispo %}
                 <div class="perso-chip" style="cursor: pointer;" onclick="loadPlanDetail({{ s }})">
                     <span class="name" style="color: var(--orange-chaud);">Saison {{ s }}</span>
-                    <span class="count" style="font-size: 0.7rem;">{% if s in saisons_info %}{{ saisons_info[s].theme[:30] }} ({{ saisons_info[s].nb_episodes }} \u00e9p.){% else %}Voir le plan{% endif %}</span>
+                    <span class="count" style="font-size: 0.7rem;">{% if s in saisons_info %}{{ saisons_info[s].theme[:30] }} ({{ saisons_info[s].nb_episodes }} ép.){% else %}Voir le plan{% endif %}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -1029,17 +1031,17 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-produire-saison">
     <div class="page-header">
-        <h2>&#127916; \u00c9tape 2 \u2014 Lancer la production d'une saison</h2>
+        <h2>&#127916; Étape 2 — Lancer la production d'une saison</h2>
         {% if saisons_dispo %}
         <p>
-            S\u00e9lectionnez une saison planifi\u00e9e ci-dessous pour voir son contenu,
-            puis lancez la <strong>production automatique</strong> de tous ses \u00e9pisodes
+            Sélectionnez une saison planifiée ci-dessous pour voir son contenu,
+            puis lancez la <strong>production automatique</strong> de tous ses épisodes
             (ou seulement ceux de votre choix).
         </p>
         {% else %}
         <p>
-            Aucune saison planifi\u00e9e pour le moment.
-            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Commencez par planifier une saison \u2192</a>
+            Aucune saison planifiée pour le moment.
+            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Commencez par planifier une saison →</a>
         </p>
         {% endif %}
     </div>
@@ -1054,11 +1056,11 @@
 
             <form id="form-produire-saison" onsubmit="return submitProduireSaison(event)">
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="ps-saison">Saison \u00e0 produire *</label>
+                    <label for="ps-saison">Saison à produire *</label>
                     <select id="ps-saison" class="form-input" required style="max-width: 500px;">
                         {% for num in saisons_dispo %}
                         <option value="{{ num }}" {% if num == saisons_dispo[-1] %}selected{% endif %}>
-                            Saison {{ num }}{% if num in saisons_info %} \u2014 {{ saisons_info[num].theme }} ({{ saisons_info[num].nb_episodes }} \u00e9p.){% endif %}
+                            Saison {{ num }}{% if num in saisons_info %} — {{ saisons_info[num].theme }} ({{ saisons_info[num].nb_episodes }} ép.){% endif %}
                         </option>
                         {% endfor %}
                     </select>
@@ -1067,7 +1069,7 @@
                 <!-- Apercu du plan de saison -->
                 <div id="ps-plan-preview" class="card" style="margin-bottom: 1rem; border: 1px solid var(--border); box-shadow: none;">
                     <div class="card-header" style="padding: 0.6rem 1rem; font-size: 0.85rem;">
-                        <span class="icon">&#128214;</span> <span id="ps-plan-titre">Aper\u00e7u du plan</span>
+                        <span class="icon">&#128214;</span> <span id="ps-plan-titre">Aperçu du plan</span>
                     </div>
                     <div class="card-body" id="ps-plan-body" style="padding: 0.8rem 1rem; font-size: 0.85rem;">
                         <em style="color: var(--texte-light);">Chargement...</em>
@@ -1076,9 +1078,9 @@
 
                 <div class="form-row-3">
                     <div class="form-group">
-                        <label for="ps-episodes">Quels \u00e9pisodes ?</label>
-                        <input type="text" id="ps-episodes" class="form-input" placeholder="Vide = tous les \u00e9pisodes">
-                        <div class="hint">Laissez vide pour tout produire, ou indiquez les num\u00e9ros : 1,3,5</div>
+                        <label for="ps-episodes">Quels épisodes ?</label>
+                        <input type="text" id="ps-episodes" class="form-input" placeholder="Vide = tous les épisodes">
+                        <div class="hint">Laissez vide pour tout produire, ou indiquez les numéros : 1,3,5</div>
                     </div>
                     <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; padding-top: 1.2rem;">
                         <div class="form-check">
@@ -1101,7 +1103,7 @@
     {% else %}
     <div class="card">
         <div class="card-body" style="text-align: center; padding: 2rem;">
-            <p style="font-size: 1.1rem; color: var(--texte-light);">Aucune saison planifi\u00e9e</p>
+            <p style="font-size: 1.1rem; color: var(--texte-light);">Aucune saison planifiée</p>
             <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" class="btn btn-primary" style="margin-top: 1rem;">
                 &#128197; Planifier une saison
             </a>
@@ -1148,12 +1150,12 @@
                         <input type="number" id="prod-saison" class="form-input" min="1" value="{{ saisons_dispo[-1] if saisons_dispo else 1 }}" required>
                     </div>
                     <div class="form-group">
-                        <label for="prod-numero">Num\u00e9ro de l'\u00e9pisode *</label>
+                        <label for="prod-numero">Numéro de l'épisode *</label>
                         <input type="number" id="prod-numero" class="form-input" min="1" value="1" required>
-                        <div class="hint" id="hint-prod-numero">Num\u00e9ro s\u00e9quentiel dans la saison</div>
+                        <div class="hint" id="hint-prod-numero">Numéro séquentiel dans la saison</div>
                     </div>
                     <div class="form-group">
-                        <label for="prod-type">Type d'\u00e9pisode</label>
+                        <label for="prod-type">Type d'épisode</label>
                         <select id="prod-type" class="form-select">
                             <option value="standard">Standard (13 min)</option>
                             <option value="ouverture">Ouverture de saison (15 min)</option>
@@ -1161,30 +1163,30 @@
                             <option value="final">Final de saison (18 min)</option>
                             <option value="bonus">Bonus (10 min)</option>
                         </select>
-                        <div class="hint">Adapte la structure narrative et la dur\u00e9e cible</div>
+                        <div class="hint">Adapte la structure narrative et la durée cible</div>
                     </div>
                 </div>
 
                 <div id="warning-episode-existe" class="alert alert-warning" style="display: none;"></div>
 
                 <div class="form-group">
-                    <label for="prod-resume">L'histoire biblique \u00e0 raconter *</label>
-                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Racontez l'histoire biblique en quelques phrases. Ex : Mo\u00efse d\u00e9couvre un buisson en feu qui ne se consume pas. Dieu lui parle et lui confie la mission de lib\u00e9rer les H\u00e9breux..." required></textarea>
-                    <div class="hint">Plus le r\u00e9sum\u00e9 est d\u00e9taill\u00e9, plus l'\u00e9pisode sera riche</div>
+                    <label for="prod-resume">L'histoire biblique à raconter *</label>
+                    <textarea id="prod-resume" class="form-textarea" rows="4" placeholder="Racontez l'histoire biblique en quelques phrases. Ex : Moïse découvre un buisson en feu qui ne se consume pas. Dieu lui parle et lui confie la mission de libérer les Hébreux..." required></textarea>
+                    <div class="hint">Plus le résumé est détaillé, plus l'épisode sera riche</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="prod-morale">Le\u00e7on de vie pour les enfants</label>
-                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Ex: Le courage de faire confiance m\u00eame quand on a peur (optionnel)"></textarea>
-                    <div class="hint">La morale que Papy Babou transmettra \u00e0 la fin de l'\u00e9pisode</div>
+                    <label for="prod-morale">Leçon de vie pour les enfants</label>
+                    <textarea id="prod-morale" class="form-textarea" rows="2" placeholder="Ex: Le courage de faire confiance même quand on a peur (optionnel)"></textarea>
+                    <div class="hint">La morale que Papy Babou transmettra à la fin de l'épisode</div>
                 </div>
 
                 <div class="form-group">
                     <div class="form-check">
                         <input type="checkbox" id="prod-dryrun">
-                        <label for="prod-dryrun">Mode test — g\u00e9n\u00e8re le script sans cr\u00e9er l'audio</label>
+                        <label for="prod-dryrun">Mode test — génère le script sans créer l'audio</label>
                     </div>
-                    <div class="hint" style="margin-top: 0.3rem; margin-left: 1.6rem;">La production compl\u00e8te est enti\u00e8rement automatique (script, voix, montage, publication)</div>
+                    <div class="hint" style="margin-top: 0.3rem; margin-left: 1.6rem;">La production complète est entièrement automatique (script, voix, montage, publication)</div>
                 </div>
 
                 <div class="form-actions">
@@ -1851,7 +1853,7 @@ function pollJob(jobId, interval) {
             if (attempts > maxAttempts) {
                 clearInterval(timer);
                 _activePollTimer = null;
-                reject(new Error('Timeout : le job n\u2019a pas termin\u00e9 apr\u00e8s ' + Math.round(maxAttempts * interval / 1000) + 's'));
+                reject(new Error('Timeout : le job n’a pas terminé après ' + Math.round(maxAttempts * interval / 1000) + 's'));
                 return;
             }
             try {
@@ -1876,7 +1878,7 @@ function pollJob(jobId, interval) {
                 if (consecutiveErrors >= transientRetries) {
                     clearInterval(timer);
                     _activePollTimer = null;
-                    reject(new Error('Erreur r\u00e9seau persistante apr\u00e8s ' + transientRetries + ' tentatives : ' + err.message));
+                    reject(new Error('Erreur réseau persistante après ' + transientRetries + ' tentatives : ' + err.message));
                 }
                 /* sinon on laisse le polling continuer (erreur transitoire) */
             }
@@ -1898,7 +1900,7 @@ async function apiCallAsync(url, body) {
 /* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */
 function handleCliResponse(data, alertId, consoleId, successMsg) {
     if (data.status === 'cancelled') {
-        showAlert(alertId, 'info', 'Production annul\u00e9e.');
+        showAlert(alertId, 'info', 'Production annulée.');
     } else if (data.error) {
         showAlert(alertId, 'error', escapeHtml('Erreur : ' + data.error));
     } else if (data.status === 'ok') {
@@ -1906,7 +1908,7 @@ function handleCliResponse(data, alertId, consoleId, successMsg) {
         _dashboardDirty = true;
     } else {
         /* Combiner le message principal et le stderr en un seul appel */
-        let errMsg = 'L\'op\u00e9ration a rencontr\u00e9 une erreur.';
+        let errMsg = 'L\'opération a rencontré une erreur.';
         if (data.stderr) {
             errMsg += '<br><small>' + escapeHtml(data.stderr.substring(0, 300)) + '</small>';
         }
@@ -1916,7 +1918,7 @@ function handleCliResponse(data, alertId, consoleId, successMsg) {
     if (output) showConsole(consoleId, output);
 }
 
-/* ── Auto-incr\u00e9ment du num\u00e9ro d'\u00e9pisode quand la saison change ──────────── */
+/* ── Auto-incrément du numéro d'épisode quand la saison change ──────────── */
 document.getElementById('prod-saison').addEventListener('change', async function() {
     const num = parseInt(this.value);
     if (!num || num < 1) return;
@@ -1926,14 +1928,14 @@ document.getElementById('prod-saison').addEventListener('change', async function
         document.getElementById('prod-numero').value = info.prochain_numero;
         const hint = document.getElementById('hint-prod-numero');
         if (info.episodes_produits.length > 0) {
-            hint.textContent = '\u00c9pisodes d\u00e9j\u00e0 produits : ' + info.episodes_produits.join(', ') + ' \u2014 prochain : ' + info.prochain_numero;
+            hint.textContent = 'Épisodes déjà produits : ' + info.episodes_produits.join(', ') + ' — prochain : ' + info.prochain_numero;
         } else {
-            hint.textContent = 'Aucun \u00e9pisode produit pour cette saison';
+            hint.textContent = 'Aucun épisode produit pour cette saison';
         }
     } catch (e) { /* ignore */ }
 });
 
-/* ── V\u00e9rification doublon \u00e9pisode ──────────────────────────────────────── */
+/* ── Vérification doublon épisode ──────────────────────────────────────── */
 document.getElementById('prod-numero').addEventListener('change', async function() {
     const saison = parseInt(document.getElementById('prod-saison').value);
     const numero = parseInt(this.value);
@@ -1943,8 +1945,8 @@ document.getElementById('prod-numero').addEventListener('change', async function
         const resp = await fetch('/api/episodes-saison/' + saison);
         const info = await resp.json();
         if (info.episodes_produits.includes(numero)) {
-            warning.innerHTML = '&#9888; L\'\u00e9pisode S' + String(saison).padStart(2, '0') + 'E' + String(numero).padStart(2, '0')
-                + ' existe d\u00e9j\u00e0. Lancer la production <strong>\u00e9crasera</strong> les fichiers existants.';
+            warning.innerHTML = '&#9888; L\'épisode S' + String(saison).padStart(2, '0') + 'E' + String(numero).padStart(2, '0')
+                + ' existe déjà. Lancer la production <strong>écrasera</strong> les fichiers existants.';
             warning.style.display = 'block';
         } else {
             warning.style.display = 'none';
@@ -1952,7 +1954,7 @@ document.getElementById('prod-numero').addEventListener('change', async function
     } catch (e) { warning.style.display = 'none'; }
 });
 
-/* ── Produire un \u00e9pisode ───────────────────────────────────────────────── */
+/* ── Produire un épisode ───────────────────────────────────────────────── */
 async function submitProduire(e) {
     e.preventDefault();
     hideAlert('alert-produire');
@@ -1966,7 +1968,7 @@ async function submitProduire(e) {
     const dryRun = document.getElementById('prod-dryrun').checked;
 
     if (!titre || !resume) {
-        showAlert('alert-produire', 'error', 'Veuillez remplir le titre et le r\u00e9sum\u00e9.');
+        showAlert('alert-produire', 'error', 'Veuillez remplir le titre et le résumé.');
         return false;
     }
 
@@ -1974,7 +1976,7 @@ async function submitProduire(e) {
     const btn = document.getElementById('btn-produire');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Production en cours...';
-    showLoading('Production de ' + epId + ' \u2014 ' + escapeHtml(titre) + '...');
+    showLoading('Production de ' + epId + ' — ' + escapeHtml(titre) + '...');
 
     try {
         const data = await apiCallAsync('/api/produire', {
@@ -1983,7 +1985,7 @@ async function submitProduire(e) {
         });
 
         if (data.status === 'ok') {
-            let msg = epId + ' \u2014 <strong>' + escapeHtml(titre) + '</strong> produit avec succ\u00e8s !';
+            let msg = epId + ' — <strong>' + escapeHtml(titre) + '</strong> produit avec succès !';
             /* Extraire les infos du stdout si disponible */
             const stdout = data.stdout || '';
             const scoreMatch = stdout.match(/score\s+(\d+)\/10/i);
@@ -1992,8 +1994,8 @@ async function submitProduire(e) {
             if (scoreMatch || dureeMatch || coutMatch) {
                 msg += '<br><small style="font-weight: 400;">';
                 if (scoreMatch) msg += 'Score : ' + scoreMatch[1] + '/10';
-                if (dureeMatch) msg += (scoreMatch ? ' \u2022 ' : '') + 'Dur\u00e9e : ' + dureeMatch[1] + 's (' + dureeMatch[2] + ' MB)';
-                if (coutMatch) msg += ' \u2022 Co\u00fbt : ' + coutMatch[0];
+                if (dureeMatch) msg += (scoreMatch ? ' • ' : '') + 'Durée : ' + dureeMatch[1] + 's (' + dureeMatch[2] + ' MB)';
+                if (coutMatch) msg += ' • Coût : ' + coutMatch[0];
                 msg += '</small>';
             }
             msg += '<br><a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>';
@@ -2025,8 +2027,8 @@ document.getElementById('plan-saison').addEventListener('change', async function
         const resp = await fetch('/api/saison-existe/' + num);
         const info = await resp.json();
         if (info.existe) {
-            warning.innerHTML = '&#9888; La saison ' + num + ' existe d\u00e9j\u00e0 (th\u00e8me : <strong>' + escapeHtml(info.theme) + '</strong>, '
-                + info.nb_episodes + ' \u00e9pisodes). G\u00e9n\u00e9rer un nouveau plan <strong>remplacera</strong> le plan actuel.';
+            warning.innerHTML = '&#9888; La saison ' + num + ' existe déjà (thème : <strong>' + escapeHtml(info.theme) + '</strong>, '
+                + info.nb_episodes + ' épisodes). Générer un nouveau plan <strong>remplacera</strong> le plan actuel.';
             warning.style.display = 'block';
         } else {
             warning.style.display = 'none';
@@ -2044,10 +2046,10 @@ async function loadPlanDetail(numero) {
         if (!resp.ok) { card.style.display = 'none'; return; }
         const plan = await resp.json();
         const s = plan.saison || {};
-        titre.textContent = 'Saison ' + (s.numero || numero) + ' \u2014 ' + (s.theme || '');
+        titre.textContent = 'Saison ' + (s.numero || numero) + ' — ' + (s.theme || '');
 
         let html = '<div style="margin-bottom: 1rem;">'
-            + '<strong>Th\u00e8me :</strong> ' + escapeHtml(s.theme || '') + '<br>'
+            + '<strong>Thème :</strong> ' + escapeHtml(s.theme || '') + '<br>'
             + '<strong>Fil rouge :</strong> ' + escapeHtml(s.fil_rouge || '') + '<br>';
         if (s.description) html += '<strong>Description :</strong> ' + escapeHtml(s.description) + '<br>';
         html += '</div>';
@@ -2057,7 +2059,7 @@ async function loadPlanDetail(numero) {
             html += '<div style="margin-bottom: 1rem;"><strong>Arcs de personnages :</strong><div class="perso-grid" style="margin-top: 0.5rem;">';
             for (const [id, arc] of Object.entries(s.arcs_personnages)) {
                 html += '<div class="perso-chip"><span class="name">' + escapeHtml(id) + '</span>'
-                    + '<span class="count" style="font-size: 0.7rem;">' + escapeHtml(arc.depart || '') + ' \u2192 ' + escapeHtml(arc.arrivee || '') + '</span></div>';
+                    + '<span class="count" style="font-size: 0.7rem;">' + escapeHtml(arc.depart || '') + ' → ' + escapeHtml(arc.arrivee || '') + '</span></div>';
             }
             html += '</div></div>';
         }
@@ -2074,7 +2076,7 @@ async function loadPlanDetail(numero) {
         /* Épisodes */
         const eps = s.episodes || [];
         html += '<table class="episode-table"><thead><tr>'
-            + '<th>N\u00b0</th><th>Titre</th><th>Type</th><th>Morale</th><th>Dur\u00e9e</th>'
+            + '<th>N°</th><th>Titre</th><th>Type</th><th>Morale</th><th>Durée</th>'
             + '</tr></thead><tbody>';
         for (const ep of eps) {
             html += '<tr>'
@@ -2107,13 +2109,13 @@ async function submitPlanifier(e) {
     const nb_episodes = parseInt(document.getElementById('plan-nb-episodes').value) || 10;
 
     if (!theme) {
-        showAlert('alert-planifier', 'error', 'Veuillez saisir un th\u00e8me.');
+        showAlert('alert-planifier', 'error', 'Veuillez saisir un thème.');
         return false;
     }
 
     const btn = document.getElementById('btn-planifier');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> G\u00e9n\u00e9ration en cours...';
+    btn.innerHTML = '<span class="spinner"></span> Génération en cours...';
     showLoading('Planification de la saison ' + saison + '...');
 
     try {
@@ -2121,7 +2123,7 @@ async function submitPlanifier(e) {
             saison, theme, description, personnages, nb_episodes
         });
         handleCliResponse(data, 'alert-planifier', 'console-planifier',
-            'Saison ' + saison + ' planifi\u00e9e ! <a href="javascript:void(0)" onclick="loadPlanDetail(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le plan d\u00e9taill\u00e9 &rarr;</a>'
+            'Saison ' + saison + ' planifiée ! <a href="javascript:void(0)" onclick="loadPlanDetail(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le plan détaillé &rarr;</a>'
             + ' &bull; <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Suivi &rarr;</a>');
         if (data.status === 'ok') {
             loadPlanDetail(saison);
@@ -2133,7 +2135,7 @@ async function submitPlanifier(e) {
     }
 
     btn.disabled = false;
-    btn.innerHTML = '&#128197; G\u00e9n\u00e9rer le plan de saison';
+    btn.innerHTML = '&#128197; Générer le plan de saison';
     return false;
 }
 
@@ -2141,18 +2143,18 @@ async function submitPlanifier(e) {
 async function loadPsPreview(numero) {
     const body = document.getElementById('ps-plan-body');
     const titre = document.getElementById('ps-plan-titre');
-    if (!numero) { body.innerHTML = '<em style="color: var(--texte-light);">S\u00e9lectionnez une saison.</em>'; return; }
+    if (!numero) { body.innerHTML = '<em style="color: var(--texte-light);">Sélectionnez une saison.</em>'; return; }
     body.innerHTML = '<em style="color: var(--texte-light);">Chargement...</em>';
     try {
         const resp = await fetch('/api/plan-saison/' + numero);
         if (!resp.ok) {
-            body.innerHTML = '<em style="color: var(--texte-light);">Aucun plan trouv\u00e9 pour la saison ' + numero + '.</em>';
-            titre.textContent = 'Aper\u00e7u du plan';
+            body.innerHTML = '<em style="color: var(--texte-light);">Aucun plan trouvé pour la saison ' + numero + '.</em>';
+            titre.textContent = 'Aperçu du plan';
             return;
         }
         const plan = await resp.json();
         const s = plan.saison || {};
-        titre.textContent = 'Saison ' + (s.numero || numero) + ' \u2014 ' + (s.theme || '');
+        titre.textContent = 'Saison ' + (s.numero || numero) + ' — ' + (s.theme || '');
 
         let html = '';
         if (s.description) {
@@ -2174,14 +2176,14 @@ async function loadPsPreview(numero) {
             } catch (e) { /* ignore */ }
 
             html += '<table class="episode-table" style="font-size: 0.82rem;"><thead><tr>'
-                + '<th>N\u00b0</th><th>Titre</th><th>Type</th><th>Ambiance</th><th>Dur\u00e9e</th><th>Statut</th>'
+                + '<th>N°</th><th>Titre</th><th>Type</th><th>Ambiance</th><th>Durée</th><th>Statut</th>'
                 + '</tr></thead><tbody>';
             for (const ep of eps) {
                 const num = ep.numero || 0;
                 const dejaProduit = produits.includes(num);
                 const statusBadge = dejaProduit
                     ? '<span class="badge" style="background: var(--turquoise); color: white; font-size: 0.7rem;">Produit</span>'
-                    : '<span class="badge" style="background: var(--sable); color: var(--texte-light); font-size: 0.7rem;">\u00c0 faire</span>';
+                    : '<span class="badge" style="background: var(--sable); color: var(--texte-light); font-size: 0.7rem;">À faire</span>';
                 html += '<tr' + (dejaProduit ? ' style="opacity: 0.6;"' : '') + '>'
                     + '<td><span class="badge badge-turquoise">E' + num + '</span></td>'
                     + '<td>' + escapeHtml(ep.titre || '') + '</td>'
@@ -2198,7 +2200,7 @@ async function loadPsPreview(numero) {
             const nbTotal = eps.length;
             if (nbProduits > 0) {
                 html += '<p style="margin: 0.5rem 0 0 0; font-size: 0.82rem; color: var(--texte-light);">'
-                    + nbProduits + ' / ' + nbTotal + ' \u00e9pisode(s) d\u00e9j\u00e0 produit(s).</p>';
+                    + nbProduits + ' / ' + nbTotal + ' épisode(s) déjà produit(s).</p>';
             }
         }
         body.innerHTML = html || '<em style="color: var(--texte-light);">Plan vide.</em>';
@@ -2236,7 +2238,7 @@ async function submitProduireSaison(e) {
             saison, episodes, dry_run: dryRun
         });
         handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
-            'Saison ' + saison + ' termin\u00e9e ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
+            'Saison ' + saison + ' terminée ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
     } catch (err) {
         showAlert('alert-produire-saison', 'error', 'Erreur : ' + err.message);
     } finally {
@@ -2255,7 +2257,7 @@ async function submitReprendre(fichier) {
 
     try {
         const data = await apiCallAsync('/api/reprendre', { fichier });
-        handleCliResponse(data, 'alert-reprendre', 'console-reprendre', 'Production reprise avec succ\u00e8s !');
+        handleCliResponse(data, 'alert-reprendre', 'console-reprendre', 'Production reprise avec succès !');
     } catch (err) {
         showAlert('alert-reprendre', 'error', 'Erreur : ' + err.message);
     } finally {
@@ -2333,12 +2335,12 @@ async function submitBatch() {
     const btn = document.getElementById('btn-batch');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Batch en cours...';
-    showLoading('Production batch de ' + episodes.length + ' \u00e9pisode(s)...');
+    showLoading('Production batch de ' + episodes.length + ' épisode(s)...');
 
     try {
         const data = await apiCallAsync('/api/batch', { episodes, dry_run: dryRun });
         handleCliResponse(data, 'alert-batch', 'console-batch',
-            'Batch termin\u00e9 : ' + episodes.length + ' \u00e9pisode(s) trait\u00e9(s) !');
+            'Batch terminé : ' + episodes.length + ' épisode(s) traité(s) !');
     } catch (err) {
         showAlert('alert-batch', 'error', 'Erreur : ' + err.message);
     } finally {
@@ -2512,13 +2514,13 @@ async function loadConfig() {
         showPage('planifier', fallback);
     }
 
-    /* V\u00e9rifier si la saison pr\u00e9-remplie existe d\u00e9j\u00e0 */
+    /* Vérifier si la saison pré-remplie existe déjà */
     const planSaisonInput = document.getElementById('plan-saison');
     if (planSaisonInput && planSaisonInput.value) {
         planSaisonInput.dispatchEvent(new Event('change'));
     }
 
-    /* Auto-incr\u00e9menter le num\u00e9ro d'\u00e9pisode pour la saison s\u00e9lectionn\u00e9e */
+    /* Auto-incrémenter le numéro d'épisode pour la saison sélectionnée */
     const prodSaisonInput = document.getElementById('prod-saison');
     if (prodSaisonInput && prodSaisonInput.value) {
         prodSaisonInput.dispatchEvent(new Event('change'));
