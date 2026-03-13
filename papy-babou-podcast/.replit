@@ -8,5 +8,9 @@ channel = "stable-23_11"
 [env]
 PYTHONPATH = "${REPL_HOME}/papy-babou-podcast"
 
+[[ports]]
+localPort = 5000
+externalPort = 80
+
 [deployment]
 run = ["sh", "-c", "python web.py"]
