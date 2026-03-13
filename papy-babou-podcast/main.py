@@ -1294,12 +1294,48 @@ def _validation_publication(
 ) -> bool:
     """Point de confirmation avant publication RSS.
 
+    Vérifie que le script a été relu et le montage écouté avant
+    d'autoriser la publication. Bloque si ces prérequis ne sont pas remplis.
+
     Returns:
         True si l'utilisateur confirme la publication, False pour annuler.
     """
+    # ── Vérification des prérequis : relecture + écoute ──────────────
+    etapes = rapport.get("etapes", {}) if rapport else {}
+    script_valide = etapes.get("script", {}).get("validation_humaine", False)
+    montage_valide = etapes.get("montage", {}).get("validation_humaine", False)
+
+    prerequis_manquants = []
+    if not script_valide:
+        prerequis_manquants.append("Relecture du script")
+    if not montage_valide:
+        prerequis_manquants.append("Écoute du montage audio")
+
+    if prerequis_manquants:
+        console.print(
+            f"\n[bold red]  PUBLICATION BLOQUÉE — prérequis manquants :[/bold red]"
+        )
+        for p in prerequis_manquants:
+            console.print(f"[red]    • {p}[/red]")
+        console.print(
+            "[yellow]  Pas de publication sans relecture et sans écoute. "
+            "Relancez la production sans --auto pour valider ces étapes.[/yellow]"
+        )
+        if rapport is not None:
+            rapport.setdefault("decisions_humaines", []).append({
+                "etape": "publication",
+                "action": "bloque_prerequis_manquants",
+                "prerequis_manquants": prerequis_manquants,
+                "timestamp": datetime.now().isoformat(),
+            })
+        return False
+
     info_lines = [
         f"{Typo.label_valeur('Épisode', episode_id)}",
         f"{Typo.label_valeur('Titre', meta.get('titre', 'N/A'))}",
+        Typo.dim("✓ Script relu et validé par le producteur."),
+        Typo.dim("✓ Montage écouté et validé par le producteur."),
+        "",
         Typo.dim("La publication ajoutera l'épisode au flux RSS public."),
         Typo.dim("Cette action est irréversible sans intervention manuelle."),
     ]
@@ -1542,6 +1578,15 @@ def _pipeline_inner(
         duree_secondes = montage_data.get("duree_secondes", 0.0)
         taille_bytes = int(montage_data.get("taille_mb", 0) * 1024 * 1024) if montage_data.get("taille_mb") else 0
         resultat_montage = montage_data
+
+    # Restaurer les flags validation_humaine depuis le checkpoint
+    # pour que les prérequis de publication soient correctement vérifiés
+    if checkpoint_data:
+        cp_etapes = checkpoint_data.get("etapes", {})
+        if cp_etapes.get("script", {}).get("validation_humaine"):
+            rapport["etapes"].setdefault("script", {})["validation_humaine"] = True
+        if cp_etapes.get("montage", {}).get("validation_humaine"):
+            rapport["etapes"].setdefault("montage", {})["validation_humaine"] = True
 
     # Restaurer les métadonnées depuis le fichier si on reprend après l'étape metadonnees
     if etape_idx > 5 and chemin_meta.exists():
@@ -1955,8 +2000,13 @@ def _pipeline_inner(
                 )
         else:
             logger.warning(
-                "Pas de fichier preview disponible — validation du montage impossible. "
-                "Le montage sera publié sans écoute préalable."
+                "Pas de fichier preview disponible — validation du montage impossible."
+            )
+            console.print(
+                "[bold red]  Aucun fichier preview disponible — "
+                "impossible de valider le montage sans écoute.[/bold red]\n"
+                "[yellow]  La publication sera bloquée tant que le montage "
+                "n'aura pas été écouté et validé.[/yellow]"
             )
 
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
@@ -2048,28 +2098,46 @@ def _pipeline_inner(
                 publier = _validation_publication(meta, episode_id, rapport=rapport)
 
             if publier:
-                console.print(f"\n{Typo.etape(7, 8, 'Publication')}")
-                publisher = Publisher()
-                rapport_pub = publisher.publier(
-                    meta, chemin_hq, taille_bytes,
-                    pubdate_offset_seconds=pubdate_offset_seconds,
-                )
-                console.print(f"  URL audio : {rapport_pub['url_audio']}")
-                if rapport_pub.get("transcript_url"):
-                    console.print(f"  Transcript : {rapport_pub['transcript_url']}")
-                rapport["etapes"]["publication"] = rapport_pub
+                # Garde-fou ultime : jamais de publication sans relecture ET écoute
+                script_valide = rapport.get("etapes", {}).get("script", {}).get("validation_humaine", False)
+                montage_valide = rapport.get("etapes", {}).get("montage", {}).get("validation_humaine", False)
+                if not script_valide or not montage_valide:
+                    manquants = []
+                    if not script_valide:
+                        manquants.append("relecture du script")
+                    if not montage_valide:
+                        manquants.append("écoute du montage")
+                    console.print(
+                        f"\n{Typo.etape(7, 8, 'Publication')}  "
+                        f"[bold red]BLOQUÉ — prérequis : {', '.join(manquants)}[/bold red]"
+                    )
+                    rapport["etapes"]["publication"] = {
+                        "status": "blocked (prerequis manquants)",
+                        "prerequis_manquants": manquants,
+                    }
+                else:
+                    console.print(f"\n{Typo.etape(7, 8, 'Publication')}")
+                    publisher = Publisher()
+                    rapport_pub = publisher.publier(
+                        meta, chemin_hq, taille_bytes,
+                        pubdate_offset_seconds=pubdate_offset_seconds,
+                    )
+                    console.print(f"  URL audio : {rapport_pub['url_audio']}")
+                    if rapport_pub.get("transcript_url"):
+                        console.print(f"  Transcript : {rapport_pub['transcript_url']}")
+                    rapport["etapes"]["publication"] = rapport_pub
 
-                # Enregistrer publication en DB
-                if _use_db():
-                    try:
-                        PublicationRepo.enregistrer(
-                            episode_id=episode_id,
-                            rapport_pub=rapport_pub,
-                            production_id=_production_id_courante,
-                        )
-                        EpisodeRepo.maj_status(episode_id, "published")
-                    except Exception as e:
-                        logger.warning("DB indisponible pour publication : %s", e)
+                    # Enregistrer publication en DB
+                    if _use_db():
+                        try:
+                            PublicationRepo.enregistrer(
+                                episode_id=episode_id,
+                                rapport_pub=rapport_pub,
+                                production_id=_production_id_courante,
+                            )
+                            EpisodeRepo.maj_status(episode_id, "published")
+                        except Exception as e:
+                            logger.warning("DB indisponible pour publication : %s", e)
             else:
                 raison_skip = "mode auto" if auto else "choix utilisateur"
                 console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention(f'SAUTÉ — {raison_skip}')}")

@@ -319,11 +319,21 @@ class TestValidationMetadonnees:
 class TestValidationPublication:
     """Tests du point de confirmation de publication (T4)."""
 
+    @staticmethod
+    def _rapport_avec_prerequis():
+        """Rapport avec les prérequis relecture + écoute validés."""
+        return {
+            "etapes": {
+                "script": {"validation_humaine": True},
+                "montage": {"validation_humaine": True},
+            }
+        }
+
     def test_publier(self, monkeypatch):
         """L'option 'p' confirme la publication."""
         import main
         meta = {"titre": "Test"}
-        rapport = {}
+        rapport = self._rapport_avec_prerequis()
 
         inputs = iter(["p"])
         monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
@@ -337,7 +347,7 @@ class TestValidationPublication:
         """L'option 's' saute la publication sans erreur."""
         import main
         meta = {"titre": "Test"}
-        rapport = {}
+        rapport = self._rapport_avec_prerequis()
 
         inputs = iter(["s"])
         monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
@@ -351,13 +361,52 @@ class TestValidationPublication:
         """L'option 'a' leve ProductionAbandonnee."""
         import main
         meta = {"titre": "Test"}
+        rapport = self._rapport_avec_prerequis()
 
         inputs = iter(["a"])
         monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
         monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
 
         with pytest.raises(ProductionAbandonnee):
-            _validation_publication(meta, "S01E01")
+            _validation_publication(meta, "S01E01", rapport=rapport)
+
+    def test_publication_bloquee_sans_relecture(self, monkeypatch):
+        """Publication bloquée si le script n'a pas été relu."""
+        import main
+        meta = {"titre": "Test"}
+        rapport = {"etapes": {"montage": {"validation_humaine": True}}}
+
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_publication(meta, "S01E01", rapport=rapport)
+        assert result is False
+        assert rapport["decisions_humaines"][0]["action"] == "bloque_prerequis_manquants"
+        assert "Relecture du script" in rapport["decisions_humaines"][0]["prerequis_manquants"]
+
+    def test_publication_bloquee_sans_ecoute(self, monkeypatch):
+        """Publication bloquée si le montage n'a pas été écouté."""
+        import main
+        meta = {"titre": "Test"}
+        rapport = {"etapes": {"script": {"validation_humaine": True}}}
+
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_publication(meta, "S01E01", rapport=rapport)
+        assert result is False
+        assert rapport["decisions_humaines"][0]["action"] == "bloque_prerequis_manquants"
+        assert "Écoute du montage audio" in rapport["decisions_humaines"][0]["prerequis_manquants"]
+
+    def test_publication_bloquee_sans_aucun_prerequis(self, monkeypatch):
+        """Publication bloquée si ni relecture ni écoute n'ont eu lieu."""
+        import main
+        meta = {"titre": "Test"}
+        rapport = {"etapes": {}}
+
+        monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
+
+        result = _validation_publication(meta, "S01E01", rapport=rapport)
+        assert result is False
+        assert len(rapport["decisions_humaines"][0]["prerequis_manquants"]) == 2
 
 
 class TestValidationMontageEnrichie:

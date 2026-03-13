@@ -56,7 +56,13 @@ The pipeline has **5 human validation points** (skipped in `--auto` mode):
 2. **Script** (`_validation_script`): Returns `tuple[dict, float]`. Options: validate, modify JSON (triggers Reviewer re-evaluation), corrections (re-runs scripteur + reviewer), abandon. After validation with corrections, proposes memorizing corrections as permanent preferences (A6). Score recap with duration/word targets.
 3. **Montage** (`_validation_montage`): Returns `bool`. Options: validate, edit script then remontage (e), relaunch montage (r), abandon. Edit option reloads and validates modified script before re-assembling.
 4. **Métadonnées** (`_validation_metadonnees`): Options: validate, regenerate with instructions (c), modify JSON manually, abandon. Regeneration calls `Metadonnees.generer()` with user instructions.
-5. **Publication** (`_validation_publication`): Options: publish, skip (audio conserved), abandon.
+5. **Publication** (`_validation_publication`): **Prerequisite check**: blocks publication unless both `rapport["etapes"]["script"]["validation_humaine"]` AND `rapport["etapes"]["montage"]["validation_humaine"]` are True. Options (if prerequisites met): publish, skip (audio conserved), abandon. Double safety: `_validation_publication()` checks prerequisites, AND a hard guard-rail before `publisher.publier()` re-checks them.
+
+**Publication safety invariant**: No episode can be published without script review (relecture) AND montage listening (écoute). This is enforced at 3 levels:
+- `_validation_publication()` checks prerequisite flags and returns False if missing
+- Hard guard-rail in pipeline before `publisher.publier()` blocks even if validation was bypassed
+- When no preview file exists, montage validation is impossible → `validation_humaine` stays False → publication blocked
+- Checkpoint resume (`reprendre`) restores `validation_humaine` flags from saved rapport data
 
 All pipeline validation functions log decisions to `rapport["decisions_humaines"]`. Plan validation logs to `plan["saison"]["decisions_humaines"]`. Uses `if rapport is not None:` (not `if rapport:`) since empty dicts are falsy.
 
@@ -113,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 276 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 368 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -148,6 +154,9 @@ python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 - All `planificateur.planifier_saison()` calls must pass `preferences_producteur=_construire_bloc_preferences()`
 - `_validation_metadonnees()` accepts `script` and `duree_secondes` for regeneration option
 - Pipeline variables (`chemin_hq`, `resultat_montage`, `duree_secondes`, `taille_bytes`, `score`) must be initialized before the step loop for checkpoint resume safety
+- `_validation_publication()` checks `rapport["etapes"]["script"]["validation_humaine"]` and `rapport["etapes"]["montage"]["validation_humaine"]` — returns False if either missing
+- Checkpoint resume restores `validation_humaine` flags from `checkpoint_data["etapes"]` so publication prerequisites are preserved across resumes
+- Hard guard-rail before `publisher.publier()` re-checks prerequisites even if `_validation_publication` was somehow bypassed
 - `_production_id_courante` reset to None at pipeline start
 
 ### When modifying producteur_audio.py
