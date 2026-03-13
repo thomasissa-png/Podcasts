@@ -1374,6 +1374,7 @@ def pipeline(
     contexte_saison: dict | None = None,
     type_episode: str = "standard",
     pubdate_offset_seconds: int = 0,
+    no_publish: bool = False,
 ) -> dict:
     """Execute le pipeline complet de production d'un episode.
 
@@ -1390,6 +1391,7 @@ def pipeline(
         checkpoint_data: Données du checkpoint (pour la reprise).
         contexte_saison: Plan de saison complet pour le contexte sériel.
         type_episode: Type d'épisode (ouverture, standard, mi-saison, final, bonus).
+        no_publish: Si True, saute l'étape de publication (upload + RSS).
 
     Returns:
         Rapport de production complet.
@@ -2033,12 +2035,15 @@ def _pipeline_inner(
     # ── Étape 7 : Publication ─────────────────────────────────────────────────
 
     if etape_idx <= 6:
-        if dry_run:
-            console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention('SAUTÉ — dry-run')}")
-            rapport["etapes"]["publication"] = {"status": "skipped (dry-run)"}
+        if dry_run or no_publish:
+            raison = "dry-run" if dry_run else "no-publish"
+            console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention(f'SAUTÉ — {raison}')}")
+            rapport["etapes"]["publication"] = {"status": f"skipped ({raison})"}
         else:
             # Confirmation avant publication (T4)
-            publier = True
+            # En mode auto, la publication est sautée par défaut
+            # (action irréversible qui nécessite une demande explicite via --publish)
+            publier = False
             if not auto:
                 publier = _validation_publication(meta, episode_id, rapport=rapport)
 
@@ -2066,8 +2071,9 @@ def _pipeline_inner(
                     except Exception as e:
                         logger.warning("DB indisponible pour publication : %s", e)
             else:
-                console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention('SAUTÉ — choix utilisateur')}")
-                rapport["etapes"]["publication"] = {"status": "skipped (user choice)"}
+                raison_skip = "mode auto" if auto else "choix utilisateur"
+                console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention(f'SAUTÉ — {raison_skip}')}")
+                rapport["etapes"]["publication"] = {"status": f"skipped ({raison_skip})"}
 
     # ── Étape 8 : Rapport final ───────────────────────────────────────────────
 
@@ -2163,7 +2169,8 @@ def cli(ctx):
 @click.option("--type-episode", "-t", type=click.Choice(["standard", "ouverture", "mi-saison", "final", "bonus"]), default="standard", help="Type d'episode (structure narrative)")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
-def produire(episode: str, saison: int, numero: int, resume: str, morale: str, type_episode: str, dry_run: bool, auto: bool):
+@click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
+def produire(episode: str, saison: int, numero: int, resume: str, morale: str, type_episode: str, dry_run: bool, auto: bool, no_publish: bool):
     """Produit un episode complet du podcast."""
     try:
         pipeline(
@@ -2175,6 +2182,7 @@ def produire(episode: str, saison: int, numero: int, resume: str, morale: str, t
             dry_run=dry_run,
             auto=auto,
             type_episode=type_episode,
+            no_publish=no_publish,
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
@@ -2227,7 +2235,8 @@ def interactif():
               help="Fichier JSON de planning (liste d'episodes)")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
-def batch(fichier: str, dry_run: bool, auto: bool):
+@click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
+def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
     """Mode batch — produit plusieurs episodes depuis un fichier de planning.
 
     Le fichier JSON doit contenir une liste d'episodes :
@@ -2266,6 +2275,7 @@ def batch(fichier: str, dry_run: bool, auto: bool):
                 morale=ep.get("morale", ""),
                 dry_run=dry_run,
                 auto=auto,
+                no_publish=no_publish,
             )
             resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
         except ProductionAbandonnee as e:
@@ -2311,7 +2321,8 @@ def batch(fichier: str, dry_run: bool, auto: bool):
 @click.option("--checkpoint", "-c", required=True, type=click.Path(exists=True),
               help="Chemin du fichier checkpoint")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
-def reprendre(checkpoint: str, auto: bool):
+@click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
+def reprendre(checkpoint: str, auto: bool, no_publish: bool):
     """Reprend une production depuis un checkpoint."""
     cp = charger_checkpoint(Path(checkpoint))
     data = cp["data"]
@@ -2337,6 +2348,7 @@ def reprendre(checkpoint: str, auto: bool):
             etape_depart=etape,
             checkpoint_data=data.get("rapport"),
             type_episode=data.get("type_episode", "standard"),
+            no_publish=no_publish,
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
@@ -2457,7 +2469,8 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
 @click.option("--episodes", "-e", default="", help="Episodes specifiques (ex: '1,3,5' — vide = tous)")
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
-def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
+@click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
+def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_publish: bool):
     """Produit les episodes d'une saison a partir du plan de saison."""
     plan = config.charger_saison(saison)
     if not plan:
@@ -2564,6 +2577,7 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
                 # Espacer les pubDate RSS d'1h entre chaque épisode
                 # pour garantir un tri correct dans les apps podcast
                 pubdate_offset_seconds=i * 3600,
+                no_publish=no_publish,
             )
             resultats.append({"status": "ok", "episode": ep["titre"], "rapport": rapport})
         except ProductionAbandonnee as e:
