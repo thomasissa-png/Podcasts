@@ -490,3 +490,36 @@ class TestRateLimiterOpenAI:
         """rate_limiter_openai doit être défini dans config."""
         assert hasattr(config, "rate_limiter_openai")
         assert isinstance(config.rate_limiter_openai, config.RateLimiter)
+
+
+# ── ouvrir_fichier utility ────────────────────────────────────────────────────
+
+
+class TestOuvrirFichier:
+    """Tests pour ouvrir_fichier() dans utils.py."""
+
+    def test_fichier_inexistant_retourne_false(self):
+        """ouvrir_fichier retourne False si le fichier n'existe pas."""
+        from utils import ouvrir_fichier
+        assert ouvrir_fichier(Path("/tmp/ce_fichier_nexiste_pas_12345.mp3")) is False
+
+    def test_fichier_existant_lance_commande(self, tmp_path):
+        """ouvrir_fichier lance la commande système et retourne True."""
+        from utils import ouvrir_fichier
+        fichier = tmp_path / "test.mp3"
+        fichier.write_bytes(b"fake")
+
+        with patch("utils.subprocess.Popen") as mock_popen:
+            result = ouvrir_fichier(fichier)
+            assert result is True
+            mock_popen.assert_called_once()
+
+    def test_erreur_os_retourne_false(self, tmp_path):
+        """ouvrir_fichier retourne False en cas d'erreur OS."""
+        from utils import ouvrir_fichier
+        fichier = tmp_path / "test.mp3"
+        fichier.write_bytes(b"fake")
+
+        with patch("utils.subprocess.Popen", side_effect=OSError("no player")):
+            result = ouvrir_fichier(fichier)
+            assert result is False

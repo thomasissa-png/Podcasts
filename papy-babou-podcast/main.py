@@ -28,7 +28,7 @@ from rich.table import Table
 from rich.style import Style
 
 import config
-from utils import fichier_lock
+from utils import fichier_lock, ouvrir_fichier
 from agents import (
     Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur,
     Metadonnees, Publisher, CoverArt, Planificateur,
@@ -532,6 +532,17 @@ def _validation_script(
 
     _afficher_script(script)
     _afficher_recap_script(script, score, type_episode, rapport)
+
+    console.print(panel_info(
+        f"[bold {Palette.MIEL}]Checklist avant validation :[/]\n"
+        + Typo.dim("  1. Lire le script en entier (dialogues, narration, SFX)\n")
+        + Typo.dim("  2. Vérifier la cohérence des personnages (ton, tics)\n")
+        + Typo.dim("  3. Vérifier la morale et la fidélité biblique\n")
+        + Typo.dim("  4. Vérifier la durée estimée (dans la cible ?)\n")
+        + Typo.dim("  5. Vérifier le score du Reviewer (≥ 7/10 ?)\n")
+        + Typo.dim(f"\n  Fichier : {chemin_script}"),
+        titre=f"{Icons.REVIEW} Relecture du script",
+    ))
 
     while True:
         console.print(panel_validation([
@@ -1039,13 +1050,31 @@ def _validation_montage(
         info_lines.append(f"{Typo.label_valeur('Segments', f'{nb_voix} voix + {nb_sfx} SFX')}")
 
     info_lines.append("")
-    info_lines.append(Typo.dim("Écoutez le fichier preview avant de valider la publication."))
-    info_lines.append(Typo.dim(f"  Fichier : {chemin_preview}"))
+    info_lines.append(f"[bold {Palette.MIEL}]Checklist avant validation :[/]")
+    info_lines.append(Typo.dim("  1. Écouter le fichier preview en entier"))
+    info_lines.append(Typo.dim("  2. Vérifier les voix (prononciation, rythme, volume)"))
+    info_lines.append(Typo.dim("  3. Vérifier les bruitages (timing, volume)"))
+    info_lines.append(Typo.dim("  4. Vérifier la durée (dans la cible ?)"))
+    info_lines.append("")
+    info_lines.append(Typo.dim(f"  Preview : {chemin_preview}"))
 
     console.print(panel_info(
         "\n".join(info_lines),
         titre=f"{Icons.MONTAGE} Écoute du montage",
     ))
+
+    # Tenter d'ouvrir le fichier preview automatiquement
+    preview_path = Path(chemin_preview) if chemin_preview else None
+    if preview_path and preview_path.exists():
+        if ouvrir_fichier(preview_path):
+            console.print(
+                f"  [{Palette.SUCCES}]{Icons.OK} Fichier preview ouvert dans le lecteur par défaut.[/]"
+            )
+        else:
+            console.print(
+                f"  [{Palette.ATTENTION}]{Icons.ATTENTION_IC} Impossible d'ouvrir le fichier automatiquement.[/]\n"
+                f"  [{Palette.ARDOISE}]Ouvrez manuellement : {chemin_preview}[/]"
+            )
 
     # Trouver le chemin du script pour l'edition (A3)
     script_path = None
@@ -1058,7 +1087,8 @@ def _validation_montage(
 
     while True:
         options = [
-            ("v", "Valider et publier"),
+            ("v", "Valider et continuer vers les métadonnées"),
+            ("l", "Réécouter le preview (ouvrir le fichier)"),
             ("e", "Éditer le script (pauses, SFX) puis relancer le montage"),
             ("r", "Relancer le montage tel quel"),
             ("a", "Abandonner (l'audio est conservé, pas de publication)"),
@@ -1067,7 +1097,20 @@ def _validation_montage(
 
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
-        if choix in ("v", "valider"):
+        if choix in ("l", "listen", "ecouter"):
+            if preview_path and preview_path.exists():
+                if ouvrir_fichier(preview_path):
+                    console.print(f"  [{Palette.SUCCES}]{Icons.OK} Fichier preview rouvert.[/]")
+                else:
+                    console.print(
+                        f"  [{Palette.ATTENTION}]{Icons.ATTENTION_IC} Ouverture impossible.[/]\n"
+                        f"  [{Palette.ARDOISE}]Chemin : {chemin_preview}[/]"
+                    )
+            else:
+                console.print(f"  [{Palette.ATTENTION}]Fichier preview introuvable.[/]")
+            continue
+
+        elif choix in ("v", "valider"):
             console.print(
                 f"[{Palette.SUCCES}]  Montage validé par le producteur.[/]"
             )
@@ -1141,7 +1184,7 @@ def _validation_montage(
             )
 
         else:
-            console.print("[red]  Choix non reconnu. Tapez v, e, r ou a.[/red]")
+            console.print("[red]  Choix non reconnu. Tapez v, l, e, r ou a.[/red]")
 
 
 def _afficher_recap_metadonnees(meta: dict) -> None:
@@ -1170,6 +1213,13 @@ def _afficher_recap_metadonnees(meta: dict) -> None:
         nb_lignes = len(transcript.strip().split("\n"))
         info_lines.append(f"{Typo.label_valeur('Transcript', f'{nb_lignes} lignes')}")
 
+    info_lines.append("")
+    info_lines.append(f"[bold {Palette.MIEL}]Checklist avant validation :[/]")
+    info_lines.append(Typo.dim("  1. Vérifier le titre (accrocheur, fidèle à l'épisode)"))
+    info_lines.append(Typo.dim("  2. Vérifier la description (claire, sans spoiler)"))
+    info_lines.append(Typo.dim("  3. Vérifier les mots-clés (pertinents pour le référencement)"))
+    info_lines.append(Typo.dim("  4. Vérifier le cover art (adapté, pas de contenu interdit)"))
+
     console.print(panel_info(
         "\n".join(info_lines),
         titre=f"{Icons.METADONNEES} Métadonnées générées",
@@ -1190,9 +1240,22 @@ def _validation_metadonnees(
     """
     _afficher_recap_metadonnees(meta)
 
+    # Ouvrir le cover art automatiquement s'il existe
+    cover_path = meta.get("cover_art_path", "")
+    if cover_path and Path(cover_path).exists():
+        if ouvrir_fichier(Path(cover_path)):
+            console.print(
+                f"  [{Palette.SUCCES}]{Icons.OK} Cover art ouvert pour visualisation.[/]"
+            )
+        else:
+            console.print(
+                f"  [{Palette.ARDOISE}]Cover art : {cover_path}[/]"
+            )
+
     while True:
         options = [
             ("v", "Valider les métadonnées"),
+            ("o", "Ouvrir le cover art"),
             ("c", "Régénérer avec instructions"),
             ("m", "Modifier le JSON manuellement"),
             ("a", "Abandonner"),
@@ -1201,7 +1264,18 @@ def _validation_metadonnees(
 
         choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
 
-        if choix in ("v", "valider"):
+        if choix in ("o", "ouvrir"):
+            cp = meta.get("cover_art_path", "")
+            if cp and Path(cp).exists():
+                if ouvrir_fichier(Path(cp)):
+                    console.print(f"  [{Palette.SUCCES}]{Icons.OK} Cover art ouvert.[/]")
+                else:
+                    console.print(f"  [{Palette.ATTENTION}]Ouverture impossible. Chemin : {cp}[/]")
+            else:
+                console.print(f"  [{Palette.ARDOISE}]Pas de cover art disponible.[/]")
+            continue
+
+        elif choix in ("v", "valider"):
             console.print(f"[{Palette.SUCCES}]  Métadonnées validées par le producteur.[/]")
             if rapport is not None:
                 rapport.setdefault("decisions_humaines", []).append({
@@ -1285,7 +1359,7 @@ def _validation_metadonnees(
             )
 
         else:
-            console.print("[red]  Choix non reconnu. Tapez v, c, m ou a.[/red]")
+            console.print("[red]  Choix non reconnu. Tapez v, o, c, m ou a.[/red]")
 
 
 def _validation_publication(
@@ -1334,10 +1408,12 @@ def _validation_publication(
     info_lines = [
         f"{Typo.label_valeur('Épisode', episode_id)}",
         f"{Typo.label_valeur('Titre', meta.get('titre', 'N/A'))}",
-        Typo.dim("✓ Script relu et validé par le producteur."),
-        Typo.dim("✓ Montage écouté et validé par le producteur."),
         "",
-        Typo.dim("La publication ajoutera l'épisode au flux RSS public."),
+        f"[{Palette.SUCCES}]{Icons.OK} Script relu et validé par le producteur.[/]",
+        f"[{Palette.SUCCES}]{Icons.OK} Montage écouté et validé par le producteur.[/]",
+        f"[{Palette.SUCCES}]{Icons.OK} Métadonnées vérifiées.[/]",
+        "",
+        f"[bold {Palette.ATTENTION}]{Icons.ATTENTION_IC} La publication ajoutera l'épisode au flux RSS public.[/]",
         Typo.dim("Cette action est irréversible sans intervention manuelle."),
     ]
 

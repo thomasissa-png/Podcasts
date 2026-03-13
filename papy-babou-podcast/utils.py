@@ -3,7 +3,9 @@
 import fcntl
 import json
 import logging
+import platform
 import re
+import subprocess
 import unicodedata
 from contextlib import contextmanager
 from pathlib import Path
@@ -153,6 +155,35 @@ def masquer_secret(valeur: str, visible: int = 4) -> str:
     if not valeur or len(valeur) <= visible:
         return "****"
     return "*" * (len(valeur) - visible) + valeur[-visible:]
+
+
+def ouvrir_fichier(chemin: Path) -> bool:
+    """Ouvre un fichier avec l'application par défaut du système.
+
+    Args:
+        chemin: Chemin du fichier à ouvrir.
+
+    Returns:
+        True si la commande a été lancée avec succès, False sinon.
+    """
+    chemin = Path(chemin)
+    if not chemin.exists():
+        logger.warning("Fichier introuvable pour ouverture : %s", chemin)
+        return False
+
+    try:
+        systeme = platform.system()
+        if systeme == "Darwin":
+            subprocess.Popen(["open", str(chemin)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif systeme == "Windows":
+            subprocess.Popen(["start", "", str(chemin)], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            # Linux / autres
+            subprocess.Popen(["xdg-open", str(chemin)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except (OSError, FileNotFoundError) as e:
+        logger.warning("Impossible d'ouvrir %s : %s", chemin, e)
+        return False
 
 
 def slug(texte: str) -> str:
