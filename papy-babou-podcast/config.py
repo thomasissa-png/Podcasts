@@ -123,7 +123,7 @@ PODCAST_CONFIG = {
     "sous_categorie": "Stories for Kids",
     "explicit": False,
     "site_web": os.getenv("PODCAST_SITE_WEB", "https://papybabou.fr"),
-    "cover_url": os.getenv("PODCAST_COVER_URL", "https://papybabou.fr/cover.jpg"),
+    "cover_url": os.getenv("PODCAST_COVER_URL", "/assets/artwork/cover.svg"),
 }
 
 # Avertir si des valeurs placeholder restent
