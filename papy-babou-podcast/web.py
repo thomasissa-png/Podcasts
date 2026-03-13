@@ -86,7 +86,7 @@ _JOB_TTL_SECONDS = 3600  # Supprimer les jobs termines apres 1 heure
 
 # Timeouts par type de job (configurables via env)
 _TIMEOUT_PRODUIRE = int(os.getenv("TIMEOUT_PRODUIRE", "1800"))          # 30 min
-_TIMEOUT_PLANIFIER = int(os.getenv("TIMEOUT_PLANIFIER", "600"))         # 10 min
+_TIMEOUT_PLANIFIER = int(os.getenv("TIMEOUT_PLANIFIER", "1800"))        # 30 min
 _TIMEOUT_PRODUIRE_SAISON = int(os.getenv("TIMEOUT_PRODUIRE_SAISON", "7200"))  # 2h
 _TIMEOUT_REPRENDRE = int(os.getenv("TIMEOUT_REPRENDRE", "1800"))        # 30 min
 _TIMEOUT_BATCH = int(os.getenv("TIMEOUT_BATCH", "7200"))                # 2h
