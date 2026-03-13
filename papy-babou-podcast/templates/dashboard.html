@@ -1812,7 +1812,7 @@ function hideLoading() {
 async function cancelProduction() {
     /* Arreter le polling côté client */
     if (_activePollTimer) {
-        clearInterval(_activePollTimer);
+        clearTimeout(_activePollTimer);
         _activePollTimer = null;
     }
     try {
@@ -1838,54 +1838,76 @@ async function apiCall(url, body) {
     return data;
 }
 
-/* ── Helper : polling d'un job asynchrone ──────────────────────────────── */
-var _activePollTimer = null; /* timer courant pour permettre l'annulation */
+/* ── Helper : polling d’un job asynchrone ──────────────────────────────── */
+var _activePollTimer = null; /* timer courant pour permettre l’annulation */
 
-function pollJob(jobId, interval) {
-    interval = interval || 3000;
-    var maxAttempts = 200; /* 200 × 3s = 10 minutes max */
+function pollJob(jobId, maxTimeoutSec) {
+    maxTimeoutSec = maxTimeoutSec || 1920; /* 32 min par defaut (> backend 1800s) */
     var transientRetries = 3; /* tentatives sur erreurs reseau transitoires */
     return new Promise(function(resolve, reject) {
-        var attempts = 0;
+        var elapsedMs = 0;
         var consecutiveErrors = 0;
-        var timer = setInterval(async function() {
-            attempts++;
-            if (attempts > maxAttempts) {
-                clearInterval(timer);
+
+        function getInterval() {
+            /* Polling adaptatif : 3s les 60 premieres sec, 5s jusqu’a 5min, 10s apres */
+            if (elapsedMs < 60000) return 3000;
+            if (elapsedMs < 300000) return 5000;
+            return 10000;
+        }
+
+        function schedule() {
+            var interval = getInterval();
+            _activePollTimer = setTimeout(tick, interval);
+        }
+
+        async function tick() {
+            var interval = getInterval();
+            elapsedMs += interval;
+            if (elapsedMs > maxTimeoutSec * 1000) {
                 _activePollTimer = null;
-                reject(new Error('Timeout : le job n’a pas terminé après ' + Math.round(maxAttempts * interval / 1000) + 's'));
+                reject(new Error(‘Timeout : le job n\u0027a pas terminé après ‘ + maxTimeoutSec + ‘s’));
                 return;
             }
             try {
-                const resp = await fetch('/api/job-status/' + jobId);
+                const resp = await fetch(‘/api/job-status/’ + jobId);
                 const data = await resp.json().catch(() => null);
                 consecutiveErrors = 0; /* reset sur succes reseau */
                 if (!resp.ok) {
-                    clearInterval(timer);
                     _activePollTimer = null;
-                    reject(new Error(data && data.error ? data.error : 'Job introuvable'));
+                    reject(new Error(data && data.error ? data.error : ‘Job introuvable’));
                     return;
                 }
-                if (data.status === 'running') {
-                    return; /* continuer le polling */
+                if (data.status === ‘running’) {
+                    schedule(); /* continuer le polling */
+                    return;
                 }
                 /* Job termine */
-                clearInterval(timer);
                 _activePollTimer = null;
                 resolve(data);
             } catch (err) {
                 consecutiveErrors++;
                 if (consecutiveErrors >= transientRetries) {
-                    clearInterval(timer);
                     _activePollTimer = null;
-                    reject(new Error('Erreur réseau persistante après ' + transientRetries + ' tentatives : ' + err.message));
+                    reject(new Error(‘Erreur réseau persistante après ‘ + transientRetries + ‘ tentatives : ‘ + err.message));
+                    return;
                 }
-                /* sinon on laisse le polling continuer (erreur transitoire) */
+                /* erreur transitoire : continuer le polling */
+                schedule();
             }
-        }, interval);
-        _activePollTimer = timer;
+        }
+
+        schedule();
     });
 }
+
+/* Timeouts de polling par endpoint (alignes sur les timeouts backend + marge) */
+var _POLL_TIMEOUTS = {
+    '/api/produire': 1920,          /* backend 1800s + 2min marge */
+    '/api/planifier-saison': 1920,  /* backend 1800s + 2min marge */
+    '/api/produire-saison': 7320,   /* backend 7200s + 2min marge */
+    '/api/reprendre': 1920,         /* backend 1800s + 2min marge */
+    '/api/batch': 7320              /* backend 7200s + 2min marge */
+};
 
 /* ── Helper : lancer un job async et poller le resultat ────────────────── */
 async function apiCallAsync(url, body) {
@@ -1894,7 +1916,8 @@ async function apiCallAsync(url, body) {
         /* Pas un job async (erreur de validation par ex) */
         return launch;
     }
-    return await pollJob(launch.job_id);
+    var timeout = _POLL_TIMEOUTS[url] || 1920;
+    return await pollJob(launch.job_id, timeout);
 }
 
 /* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */
