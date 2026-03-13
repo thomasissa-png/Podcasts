@@ -502,7 +502,7 @@ def api_batch():
     if not episodes_list or not isinstance(episodes_list, list):
         return jsonify({"error": "Liste d'episodes requise (tableau JSON)"}), 400
 
-    # Validate each episode has required fields
+    # Validate each episode has required fields and correct types
     for i, ep in enumerate(episodes_list):
         if not isinstance(ep, dict):
             return jsonify({"error": f"Episode {i+1} : doit etre un objet JSON"}), 400
@@ -510,6 +510,13 @@ def api_batch():
             return jsonify({"error": f"Episode {i+1} : titre requis"}), 400
         if not ep.get("resume"):
             return jsonify({"error": f"Episode {i+1} : resume requis"}), 400
+        # Normaliser saison/numero en entiers
+        for field in ("saison", "numero"):
+            if field in ep:
+                try:
+                    ep[field] = int(ep[field])
+                except (ValueError, TypeError):
+                    return jsonify({"error": f"Episode {i+1} : {field} doit etre un entier"}), 400
 
     # Write to temp file, pass to CLI
     with tempfile.NamedTemporaryFile(

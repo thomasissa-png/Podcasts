@@ -1981,7 +1981,6 @@ async function submitProduire(e) {
             titre, saison, numero, resume, morale,
             type_episode: typeEpisode, dry_run: dryRun
         });
-        hideLoading();
 
         if (data.status === 'ok') {
             let msg = epId + ' \u2014 <strong>' + escapeHtml(titre) + '</strong> produit avec succ\u00e8s !';
@@ -2007,8 +2006,9 @@ async function submitProduire(e) {
         const output = ((data.stdout || '') + '\n' + (data.stderr || '')).trim();
         if (output) showConsole('console-produire', output);
     } catch (err) {
-        hideLoading();
         showAlert('alert-produire', 'error', 'Erreur : ' + err.message);
+    } finally {
+        hideLoading();
     }
 
     btn.disabled = false;
@@ -2120,7 +2120,6 @@ async function submitPlanifier(e) {
         const data = await apiCallAsync('/api/planifier-saison', {
             saison, theme, description, personnages, nb_episodes
         });
-        hideLoading();
         handleCliResponse(data, 'alert-planifier', 'console-planifier',
             'Saison ' + saison + ' planifi\u00e9e ! <a href="javascript:void(0)" onclick="loadPlanDetail(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le plan d\u00e9taill\u00e9 &rarr;</a>'
             + ' &bull; <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Suivi &rarr;</a>');
@@ -2128,8 +2127,9 @@ async function submitPlanifier(e) {
             loadPlanDetail(saison);
         }
     } catch (err) {
-        hideLoading();
         showAlert('alert-planifier', 'error', 'Erreur : ' + err.message);
+    } finally {
+        hideLoading();
     }
 
     btn.disabled = false;
@@ -2235,12 +2235,12 @@ async function submitProduireSaison(e) {
         const data = await apiCallAsync('/api/produire-saison', {
             saison, episodes, dry_run: dryRun
         });
-        hideLoading();
         handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
             'Saison ' + saison + ' termin\u00e9e ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
     } catch (err) {
-        hideLoading();
         showAlert('alert-produire-saison', 'error', 'Erreur : ' + err.message);
+    } finally {
+        hideLoading();
     }
 
     btn.disabled = false;
@@ -2255,11 +2255,11 @@ async function submitReprendre(fichier) {
 
     try {
         const data = await apiCallAsync('/api/reprendre', { fichier });
-        hideLoading();
         handleCliResponse(data, 'alert-reprendre', 'console-reprendre', 'Production reprise avec succ\u00e8s !');
     } catch (err) {
-        hideLoading();
         showAlert('alert-reprendre', 'error', 'Erreur : ' + err.message);
+    } finally {
+        hideLoading();
     }
 }
 
@@ -2337,12 +2337,12 @@ async function submitBatch() {
 
     try {
         const data = await apiCallAsync('/api/batch', { episodes, dry_run: dryRun });
-        hideLoading();
         handleCliResponse(data, 'alert-batch', 'console-batch',
             'Batch termin\u00e9 : ' + episodes.length + ' \u00e9pisode(s) trait\u00e9(s) !');
     } catch (err) {
-        hideLoading();
         showAlert('alert-batch', 'error', 'Erreur : ' + err.message);
+    } finally {
+        hideLoading();
     }
 
     btn.disabled = false;
