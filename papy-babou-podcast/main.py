@@ -2303,6 +2303,9 @@ def batch(fichier: str, dry_run: bool, auto: bool):
         json.dump(resultats, f, ensure_ascii=False, indent=2, default=str)
     console.print(f"\n  Rapport batch : {chemin_batch}")
 
+    if erreurs > 0:
+        sys.exit(1)
+
 
 @cli.command()
 @click.option("--checkpoint", "-c", required=True, type=click.Path(exists=True),
@@ -2597,6 +2600,9 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool):
     with open(chemin_batch, "w", encoding="utf-8") as f:
         json.dump(resultats, f, ensure_ascii=False, indent=2, default=str)
     console.print(f"\n  Rapport saison : {chemin_batch}")
+
+    if erreurs > 0:
+        sys.exit(1)
 
 
 @cli.command()
