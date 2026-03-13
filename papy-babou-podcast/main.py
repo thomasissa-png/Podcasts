@@ -1724,6 +1724,9 @@ def _pipeline_inner(
         scripteur = Scripteur()
         corrections = None
 
+        if max_iterations_review < 1:
+            raise ValueError(f"max_iterations_review doit être >= 1, reçu {max_iterations_review}")
+
         for iteration in range(1, max_iterations_review + 1):
             console.print(f"  Iteration {iteration}/{max_iterations_review}...")
 
