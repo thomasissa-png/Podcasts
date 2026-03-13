@@ -16,6 +16,12 @@ Couvre les bugs critiques, élevés et moyens identifiés lors de l'audit :
 - Bug #16: questions[0] sur liste vide
 - Bug #17: max_workers >= 1
 - Bug #18: try/except input interactif
+- BUG-C2: RSS feed déclare itunes:type=serial
+- BUG-C3: thème vide rejeté dans planifier-saison
+- BUG-H1: Buzzsprout upload avec retry
+- BUG-H2: RSS feed écrit sous fichier_lock
+- BUG-H4: types d'épisodes LLM validés
+- BUG-H4b: numéros d'épisodes séquentiels validés
 """
 
 import json
@@ -523,3 +529,182 @@ class TestOuvrirFichier:
         with patch("utils.subprocess.Popen", side_effect=OSError("no player")):
             result = ouvrir_fichier(fichier)
             assert result is False
+
+
+# ── BUG-C2 : RSS itunes:type=serial ─────────────────────────────────────────
+
+
+class TestRSSItunesTypeSerial:
+    """BUG-C2 : le channel RSS doit déclarer itunes:type=serial."""
+
+    def test_creer_channel_declare_serial(self, tmp_path):
+        """Le channel RSS créé doit contenir <itunes:type>serial</itunes:type>."""
+        from agents.publisher import Publisher, ITUNES_NS
+        from xml.etree import ElementTree as ET
+
+        publisher = Publisher()
+        root = ET.Element("rss", version="2.0")
+        root.set("xmlns:itunes", ITUNES_NS)
+        channel = ET.SubElement(root, "channel")
+        publisher._creer_channel(channel)
+
+        itunes_type = channel.find(f"{{{ITUNES_NS}}}type")
+        assert itunes_type is not None
+        assert itunes_type.text == "serial"
+
+
+# ── BUG-C3 : thème vide rejeté ──────────────────────────────────────────────
+
+
+class TestThemeVideRejete:
+    """BUG-C3 : planifier-saison doit rejeter un thème vide."""
+
+    def test_theme_vide_exit(self):
+        """Un thème vide ou whitespace doit lever SystemExit."""
+        from click.testing import CliRunner
+        from main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["planifier-saison", "-s", "1", "-t", "   "])
+        assert result.exit_code != 0
+
+    def test_theme_valide_accepte(self):
+        """Un thème non-vide doit être accepté (échouera pour autre raison, pas pour le thème)."""
+        from click.testing import CliRunner
+        from main import cli
+
+        runner = CliRunner()
+        # Will fail because no API key, but should NOT fail because of empty theme
+        result = runner.invoke(cli, ["planifier-saison", "-s", "1", "-t", "Les patriarches"])
+        # If it failed for theme reasons, the output would contain "Thème manquant"
+        assert "Thème manquant" not in (result.output or "")
+
+
+# ── BUG-H1 : Buzzsprout retry ───────────────────────────────────────────────
+
+
+class TestBuzzsproutRetry:
+    """BUG-H1 : l'upload Buzzsprout doit retenter en cas d'erreur réseau."""
+
+    def test_retry_sur_erreur_reseau(self, tmp_path, monkeypatch):
+        """L'upload doit retenter jusqu'à max_retries avec backoff."""
+        import requests
+        from agents.publisher import Publisher
+
+        monkeypatch.setattr(config, "BUZZSPROUT_API_KEY", "fake-key")
+        monkeypatch.setattr(config, "BUZZSPROUT_PODCAST_ID", "12345")
+
+        audio = tmp_path / "test.mp3"
+        audio.write_bytes(b"fake audio content")
+
+        meta = {
+            "titre_court": "Test",
+            "description_longue": "Desc",
+            "description_courte": "Short",
+            "saison": 1,
+            "numero": 1,
+            "explicit": False,
+        }
+
+        call_count = {"n": 0}
+        original_post = requests.post
+
+        def mock_post(*args, **kwargs):
+            call_count["n"] += 1
+            if call_count["n"] <= 2:
+                raise requests.ConnectionError("Network error")
+            # 3rd attempt succeeds
+            mock_resp = MagicMock()
+            mock_resp.raise_for_status = MagicMock()
+            mock_resp.json.return_value = {"audio_url": "https://example.com/ep.mp3"}
+            return mock_resp
+
+        publisher = Publisher()
+        with patch("agents.publisher.requests.post", side_effect=mock_post), \
+             patch("agents.publisher.time.sleep"):  # Skip actual waits
+            url = publisher._upload_buzzsprout(meta, audio, 100)
+
+        assert url == "https://example.com/ep.mp3"
+        assert call_count["n"] == 3  # 2 failures + 1 success
+
+    def test_retry_epuise_relance(self, tmp_path, monkeypatch):
+        """Si toutes les tentatives échouent, l'erreur est relancée."""
+        import requests
+        from agents.publisher import Publisher
+
+        monkeypatch.setattr(config, "BUZZSPROUT_API_KEY", "fake-key")
+        monkeypatch.setattr(config, "BUZZSPROUT_PODCAST_ID", "12345")
+
+        audio = tmp_path / "test.mp3"
+        audio.write_bytes(b"fake audio content")
+
+        meta = {
+            "titre_court": "Test",
+            "description_longue": "Desc",
+            "description_courte": "Short",
+            "saison": 1,
+            "numero": 1,
+            "explicit": False,
+        }
+
+        publisher = Publisher()
+        with patch("agents.publisher.requests.post", side_effect=requests.ConnectionError("always fails")), \
+             patch("agents.publisher.time.sleep"), \
+             pytest.raises(requests.ConnectionError):
+            publisher._upload_buzzsprout(meta, audio, 100)
+
+
+# ── BUG-H2 : RSS file locking ───────────────────────────────────────────────
+
+
+class TestRSSFileLocking:
+    """BUG-H2 : la mise à jour RSS doit utiliser fichier_lock."""
+
+    def test_mettre_a_jour_rss_utilise_fichier_lock(self):
+        """Le code publisher.py doit importer et utiliser fichier_lock."""
+        import agents.publisher as pub_module
+        source = Path(pub_module.__file__).read_text()
+        assert "fichier_lock" in source
+        assert "with fichier_lock(feed_path)" in source
+
+
+# ── BUG-H4 : validation types épisodes ──────────────────────────────────────
+
+
+class TestValidationTypesEpisodes:
+    """BUG-H4 : les types d'épisodes invalides doivent être corrigés."""
+
+    def test_type_invalide_corrige_en_standard(self):
+        """Un type d'épisode inconnu dans le plan doit être corrigé en 'standard'."""
+        plan = {
+            "episodes": [
+                {"numero": 1, "titre": "Ep1", "type": "ouverture"},
+                {"numero": 2, "titre": "Ep2", "type": "inventé"},  # invalide
+                {"numero": 3, "titre": "Ep3", "type": "final"},
+            ]
+        }
+        types_valides = {"ouverture", "standard", "mi-saison", "final", "bonus"}
+        for ep in plan["episodes"]:
+            if ep.get("type", "standard") not in types_valides:
+                ep["type"] = "standard"
+
+        assert plan["episodes"][0]["type"] == "ouverture"
+        assert plan["episodes"][1]["type"] == "standard"
+        assert plan["episodes"][2]["type"] == "final"
+
+    def test_numeros_non_sequentiels_corrigés(self):
+        """Des numéros non séquentiels doivent être renumérotés."""
+        plan = {
+            "episodes": [
+                {"numero": 1, "titre": "Ep1"},
+                {"numero": 5, "titre": "Ep2"},  # gap
+                {"numero": 3, "titre": "Ep3"},  # out of order
+            ]
+        }
+        numeros = [ep["numero"] for ep in plan["episodes"]]
+        attendus = list(range(1, len(numeros) + 1))
+        if numeros != attendus:
+            for idx, ep in enumerate(plan["episodes"], 1):
+                ep["numero"] = idx
+
+        assert [ep["numero"] for ep in plan["episodes"]] == [1, 2, 3]

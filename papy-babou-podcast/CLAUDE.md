@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 276 tests (pytest)
+├── tests/                   # 386 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -31,7 +31,7 @@ papy-babou-podcast/
 │   ├── test_config.py       # API keys, rate limiter, formats, seasons, characters
 │   ├── test_sfx_provider.py # Local/cache/API fallback chain
 │   ├── test_planificateur.py# Validation, export CSV/MD, generation
-│   └── test_corrections.py  # Bug regression tests (19 tests)
+│   └── test_corrections.py  # Bug regression tests (30 tests)
 ├── assets/                  # Audio assets (jingles, music)
 ├── data/
 │   ├── personnages.json     # Character bible
@@ -349,6 +349,28 @@ Clear visual separation between single-episode and season production workflows:
 - `_validation_montage()` uses `preview_path` variable (Path) initialized before the while loop
 - `ouvrir_fichier()` returns bool — always check return value and show fallback message with file path
 - Checklists are displayed once before the validation loop (not inside the loop)
+
+## Season Audit Fixes (Session 6)
+
+### Critical fixes
+- **pubdate_offset**: Uses `ep["numero"] * 3600` (not loop counter `i`) for stable RSS ordering regardless of production order
+- **itunes:type=serial**: RSS channel declares `<itunes:type>serial</itunes:type>` so apps display episodes in chronological order
+- **Empty theme validation**: `planifier-saison` rejects empty/whitespace themes with SystemExit(1)
+
+### High-priority fixes
+- **Buzzsprout retry**: Upload retries up to 4 times with exponential backoff (2s, 4s, 8s, 16s) on network failures
+- **RSS file locking**: `_mettre_a_jour_rss()` uses `fichier_lock(feed_path)` to prevent concurrent RSS corruption
+- **Episode skip on error**: Both production loops (interactif + CLI) offer (c)ontinue/(a)rrêter when an episode fails mid-season
+- **Episode type validation**: LLM-generated types validated against `{"ouverture", "standard", "mi-saison", "final", "bonus"}`, invalid types auto-corrected to "standard"
+- **Episode numbering validation**: Auto-renumbers episodes if LLM returns non-sequential numbers
+
+### UX improvements
+- **Season completion table**: Rich Table with per-episode status (OK/Ignoré/Échec), details, and summary counts
+
+### Publisher patterns
+- `publisher.py` now imports `time` (for retry sleep) and `fichier_lock` from utils
+- `_mettre_a_jour_rss()` delegates to `_ecrire_rss()` under lock
+- `_upload_buzzsprout()` has retry loop — mock `time.sleep` in tests
 
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`

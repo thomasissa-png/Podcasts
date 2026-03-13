@@ -2,6 +2,7 @@
 
 import json
 import logging
+import time
 import uuid
 from datetime import datetime, timezone
 from email.utils import formatdate
@@ -9,6 +10,8 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import requests
+
+from utils import fichier_lock
 
 import config
 
@@ -98,29 +101,44 @@ class Publisher:
             "Authorization": f"Token token={config.BUZZSPROUT_API_KEY}",
         }
 
-        with open(chemin_audio, "rb") as audio_file:
-            data = {
-                "title": meta["titre_court"],
-                "description": meta["description_longue"],
-                "summary": meta["description_courte"],
-                "season_number": str(meta["saison"]),
-                "episode_number": str(meta["numero"]),
-                "explicit": str(meta["explicit"]).lower(),
-                "private": "false",
-            }
-            files = {
-                "audio_file": (chemin_audio.name, audio_file, "audio/mpeg"),
-            }
+        data = {
+            "title": meta["titre_court"],
+            "description": meta["description_longue"],
+            "summary": meta["description_courte"],
+            "season_number": str(meta["saison"]),
+            "episode_number": str(meta["numero"]),
+            "explicit": str(meta["explicit"]).lower(),
+            "private": "false",
+        }
 
-            response = requests.post(
-                url, headers=headers, data=data, files=files, timeout=300
-            )
-            response.raise_for_status()
+        # Retry avec backoff exponentiel (2s, 4s, 8s, 16s)
+        max_retries = 4
+        for attempt in range(max_retries + 1):
+            try:
+                with open(chemin_audio, "rb") as audio_file:
+                    files = {
+                        "audio_file": (chemin_audio.name, audio_file, "audio/mpeg"),
+                    }
+                    response = requests.post(
+                        url, headers=headers, data=data, files=files, timeout=300
+                    )
+                    response.raise_for_status()
 
-        episode_data = response.json()
-        url_audio = episode_data.get("audio_url", "")
-        logger.info("Upload Buzzsprout réussi : %s", url_audio)
-        return url_audio
+                episode_data = response.json()
+                url_audio = episode_data.get("audio_url", "")
+                logger.info("Upload Buzzsprout réussi : %s", url_audio)
+                return url_audio
+            except requests.RequestException as e:
+                if attempt < max_retries:
+                    wait = 2 ** (attempt + 1)
+                    logger.warning(
+                        "Upload Buzzsprout échoué (tentative %d/%d), retry dans %ds : %s",
+                        attempt + 1, max_retries + 1, wait, e,
+                    )
+                    time.sleep(wait)
+                else:
+                    logger.error("Upload Buzzsprout échoué après %d tentatives", max_retries + 1)
+                    raise
 
     def _sauvegarder_transcript(self, meta: dict) -> str:
         """Sauvegarde le transcript en fichier texte et retourne l'URL relative.
@@ -163,6 +181,18 @@ class Publisher:
         """
         feed_path = config.RSS_DIR / "feed.xml"
 
+        with fichier_lock(feed_path):
+            self._ecrire_rss(
+                feed_path, meta, url_audio, taille_bytes,
+                transcript_url, pubdate_offset_seconds,
+            )
+
+    def _ecrire_rss(
+        self, feed_path: Path, meta: dict, url_audio: str,
+        taille_bytes: int, transcript_url: str,
+        pubdate_offset_seconds: int,
+    ) -> None:
+        """Écrit le flux RSS sous verrou (appelé par _mettre_a_jour_rss)."""
         if feed_path.exists():
             tree = ET.parse(str(feed_path))
             root = tree.getroot()
@@ -308,6 +338,12 @@ class Publisher:
         ET.SubElement(
             channel, f"{{{ITUNES_NS}}}explicit"
         ).text = "no" if not pc["explicit"] else "yes"
+
+        # Type "serial" pour que les apps affichent les épisodes
+        # dans l'ordre chronologique (épisode 1 en premier)
+        ET.SubElement(
+            channel, f"{{{ITUNES_NS}}}type"
+        ).text = "serial"
 
     def _pinger_plateformes(self) -> list[str]:
         """Notifie les plateformes de distribution.

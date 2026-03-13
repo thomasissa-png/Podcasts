@@ -2522,7 +2522,7 @@ def _interactif_saison(saisons_existantes: list[int]):
                     auto=False,
                     contexte_saison=plan,
                     type_episode=ep.get("type", "standard"),
-                    pubdate_offset_seconds=i * 3600,
+                    pubdate_offset_seconds=ep["numero"] * 3600,
                     episode_courant=i,
                     total_episodes=nb_restants,
                     saison_theme=saison_data.get("theme", ""),
@@ -2534,6 +2534,14 @@ def _interactif_saison(saisons_existantes: list[int]):
             except Exception as e:
                 logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
                 resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+                # Proposer de continuer ou d'arrêter la production
+                if nb_restants - i > 0:
+                    choix = console.input(
+                        f"[bold yellow]Épisode échoué. (c) Continuer avec les suivants / (a) Arrêter la saison ? [/] "
+                    ).strip().lower()
+                    if choix == "a":
+                        console.print("[bold red]Production de saison interrompue.[/bold red]")
+                        break
 
         # Rapport de série
         ok = sum(1 for r in resultats if r["status"] == "ok")
@@ -2724,6 +2732,12 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool):
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 def planifier_saison(saison: int, theme: str, description: str, personnages: str, nb_episodes: int, auto: bool):
     """Planifie une saison complete de 10 episodes avec arcs narratifs."""
+    # Valider que le thème n'est pas vide
+    if not theme or not theme.strip():
+        console.print(panel_erreur("Le thème de la saison ne peut pas être vide.", titre="Thème manquant"))
+        raise SystemExit(1)
+    theme = theme.strip()
+
     console.print(Panel(
         f"[bold]Planification — Saison {saison}[/bold]\n"
         f"Theme : {theme}\n"
@@ -2758,6 +2772,28 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
             preferences_producteur=_construire_bloc_preferences(),
             nb_episodes=nb_episodes,
         )
+
+        # Valider les types d'épisodes retournés par le LLM
+        types_valides = {"ouverture", "standard", "mi-saison", "final", "bonus"}
+        for ep in plan.get("episodes", []):
+            t = ep.get("type", "standard")
+            if t not in types_valides:
+                logger.warning(
+                    "Type d'épisode invalide '%s' pour '%s' — corrigé en 'standard'",
+                    t, ep.get("titre", "?"),
+                )
+                ep["type"] = "standard"
+
+        # Valider la séquence des numéros d'épisodes
+        numeros = [ep.get("numero") for ep in plan.get("episodes", [])]
+        attendus = list(range(1, len(numeros) + 1))
+        if numeros != attendus:
+            logger.warning(
+                "Numéros d'épisodes non séquentiels (%s) — renumérotation automatique",
+                numeros,
+            )
+            for idx, ep in enumerate(plan.get("episodes", []), 1):
+                ep["numero"] = idx
 
         # Sauvegarder le plan (brouillon)
         chemin_json = config.SAISONS_DIR / f"saison_{saison:02d}.json"
@@ -2936,7 +2972,8 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
                 type_episode=ep.get("type", "standard"),
                 # Espacer les pubDate RSS d'1h entre chaque épisode
                 # pour garantir un tri correct dans les apps podcast
-                pubdate_offset_seconds=i * 3600,
+                # Utilise ep["numero"] (pas le compteur de boucle) pour un offset stable
+                pubdate_offset_seconds=ep["numero"] * 3600,
                 no_publish=no_publish,
                 # Contexte d'affichage sériel
                 episode_courant=i,
@@ -2950,29 +2987,50 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
         except Exception as e:
             logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
             resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+            # Proposer de continuer ou d'arrêter la production
+            if not auto and nb_a_produire - i > 0:
+                choix = console.input(
+                    f"[bold yellow]Épisode échoué. (c) Continuer avec les suivants / (a) Arrêter la saison ? [/] "
+                ).strip().lower()
+                if choix == "a":
+                    console.print("[bold red]Production de saison interrompue.[/bold red]")
+                    break
 
-    # Rapport de saison
+    # Rapport de saison — tableau récapitulatif
     nb_total = len(episodes_plan)
-    console.print(f"\n[bold]{'='*60}[/bold]")
-    console.print(f"[bold {Palette.SUCCES}]Rapport de saison[/]")
     ok = sum(1 for r in resultats if r["status"] == "ok")
     skipped = sum(1 for r in resultats if r["status"] == "skipped")
     erreurs = sum(1 for r in resultats if r["status"] == "error")
-    console.print(f"  Réussis    : {ok}/{nb_total}")
-    if skipped:
-        console.print(f"  Skippés    : {skipped}/{nb_total}")
-    console.print(f"  Échecs     : {erreurs}/{nb_total}")
 
-    for r in resultats:
+    table = Table(
+        title=f"Rapport de saison {saison:02d}",
+        border_style=Palette.SUCCES if erreurs == 0 else "red",
+        show_lines=True,
+    )
+    table.add_column("#", style="bold", width=4)
+    table.add_column("Épisode", min_width=30)
+    table.add_column("Statut", justify="center", width=12)
+    table.add_column("Détails", min_width=20)
+
+    for idx, r in enumerate(resultats, 1):
         if r["status"] == "ok":
-            status = f"[{Palette.SUCCES}]OK[/]"
+            statut = f"[{Palette.SUCCES}]{Icons.OK} OK[/]"
+            details = ""
         elif r["status"] == "skipped":
-            status = "[yellow]ABANDONNÉ[/yellow]"
+            statut = f"[yellow]{Icons.PAUSE} Ignoré[/yellow]"
+            details = r.get("raison", "")
         else:
-            status = "[red]ERREUR[/red]"
-        console.print(f"  {status} — {r['episode']}")
-        if r["status"] == "error":
-            console.print(f"    [red]{r['erreur']}[/red]")
+            statut = f"[red]{Icons.FAIL} Échec[/red]"
+            details = f"[red]{r.get('erreur', '')}[/red]"
+        table.add_row(str(idx), r["episode"], statut, details)
+
+    console.print()
+    console.print(table)
+    console.print(
+        f"\n  {Icons.OK} Réussis : {ok}/{nb_total}  |  "
+        f"{Icons.PAUSE} Ignorés : {skipped}/{nb_total}  |  "
+        f"{Icons.FAIL} Échecs : {erreurs}/{nb_total}"
+    )
 
     chemin_batch = config.LOGS_DIR / f"saison_{saison:02d}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     with open(chemin_batch, "w", encoding="utf-8") as f:
