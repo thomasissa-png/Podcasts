@@ -112,8 +112,8 @@ def valider_cles_api(dry_run: bool = False) -> list[str]:
 
 PODCAST_CONFIG = {
     "titre": "Les Histoires de Papy Babou",
-    "auteur": os.getenv("PODCAST_AUTEUR", "À compléter"),
-    "email_contact": os.getenv("PODCAST_EMAIL", "À compléter"),
+    "auteur": os.getenv("PODCAST_AUTEUR", "Les Histoires de Papy Babou"),
+    "email_contact": os.getenv("PODCAST_EMAIL", "contact@papybabou.fr"),
     "description": (
         "Des histoires bibliques racontées avec amour par Papy Babou "
         "à ses petits-enfants Antoine et Noémie."
@@ -122,8 +122,8 @@ PODCAST_CONFIG = {
     "categorie_itunes": "Kids & Family",
     "sous_categorie": "Stories for Kids",
     "explicit": False,
-    "site_web": os.getenv("PODCAST_SITE_WEB", "À compléter"),
-    "cover_url": os.getenv("PODCAST_COVER_URL", "À compléter"),
+    "site_web": os.getenv("PODCAST_SITE_WEB", "https://papybabou.fr"),
+    "cover_url": os.getenv("PODCAST_COVER_URL", "https://papybabou.fr/cover.jpg"),
 }
 
 # Avertir si des valeurs placeholder restent

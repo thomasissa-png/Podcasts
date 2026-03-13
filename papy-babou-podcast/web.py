@@ -101,14 +101,22 @@ def _extract_error_from_stderr(stderr):
     """Extrait un message d'erreur lisible du stderr d'un subprocess."""
     if not stderr:
         return None
+    # Lignes a ignorer (warnings de configuration, pas des erreurs)
+    _IGNORE_PATTERNS = ("PODCAST_CONFIG", "champs non configurés", "WARNING")
     for line in reversed(stderr.strip().splitlines()):
         clean = re.sub(r'\x1b\[[0-9;]*m', '', line).strip()
+        if not clean:
+            continue
+        if any(pat in clean for pat in _IGNORE_PATTERNS):
+            continue
         if clean.startswith("Erreur") or "API" in clean or "cle" in clean.lower():
             return clean
-    # Derniere ligne nettoyee comme fallback
-    last = stderr.strip().splitlines()[-1]
-    clean = re.sub(r'\x1b\[[0-9;]*m', '', last).strip()
-    return clean if clean else None
+    # Derniere ligne nettoyee comme fallback (en ignorant les warnings)
+    for line in reversed(stderr.strip().splitlines()):
+        clean = re.sub(r'\x1b\[[0-9;]*m', '', line).strip()
+        if clean and not any(pat in clean for pat in _IGNORE_PATTERNS):
+            return clean
+    return None
 
 
 def _run_cli(cmd_args, timeout=300, job_id=None):
