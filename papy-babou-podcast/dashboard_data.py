@@ -25,7 +25,7 @@ def charger_historique_complet() -> list[dict]:
     except Exception:
         pass
 
-    historique_path = config.HISTORIQUE_DIR / "historique.json"
+    historique_path = config.HISTORIQUE_DIR / "historique_episodes.json"
     if historique_path.exists():
         with open(historique_path, "r", encoding="utf-8") as f:
             return json.load(f)
