@@ -335,6 +335,21 @@ Clear visual separation between single-episode and season production workflows:
 - Hard guard-rail in pipeline re-checks prerequisites before calling `publisher.publier()`
 - Checkpoint resume restores `validation_humaine` flags from saved rapport
 
+### Validation UX improvements (Session 5 continued)
+- **Audio preview auto-open**: `ouvrir_fichier()` opens preview in system player at montage validation
+- **Cover art auto-open**: Opens PNG in system viewer at metadata validation
+- **Re-listen/re-view options**: (l) to re-listen audio, (o) to reopen cover art without leaving validation
+- **Checklists**: Each validation step shows explicit checklist of what to verify before validating
+- **Publication recap**: Shows green checkmarks for completed prerequisites (script ✓, montage ✓, metadata ✓)
+- `ouvrir_fichier()` in `utils.py`: cross-platform (macOS `open`, Linux `xdg-open`, Windows `start`)
+
+### When modifying validation functions (Session 5 patterns)
+- `_validation_montage()` options: v, l, e, r, a (l=réécouter is new)
+- `_validation_metadonnees()` options: v, o, c, m, a (o=ouvrir cover art is new)
+- `_validation_montage()` uses `preview_path` variable (Path) initialized before the while loop
+- `ouvrir_fichier()` returns bool — always check return value and show fallback message with file path
+- Checklists are displayed once before the validation loop (not inside the loop)
+
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`
 - Push: `git push -u origin claude/podcast-production-system-YkngW`
