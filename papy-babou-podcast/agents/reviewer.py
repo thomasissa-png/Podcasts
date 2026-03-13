@@ -157,6 +157,12 @@ class Reviewer:
             messages=[{"role": "user", "content": prompt}],
         )
 
+        if response.stop_reason == "max_tokens":
+            raise ValueError(
+                f"La review a été tronquée (max_tokens={max_tokens} atteint). "
+                f"Le JSON est incomplet."
+            )
+
         texte_brut = response.content[0].text.strip()
         resultat = parser_json_llm(texte_brut)
         self._valider_review(resultat)

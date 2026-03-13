@@ -580,21 +580,41 @@ class Scripteur:
 
         # max_tokens adaptatif selon le type d'épisode
         max_tokens_map = {
-            "ouverture": 7168,
-            "standard": 6144,
-            "mi-saison": 7168,
-            "final": 8192,
-            "bonus": 4096,
+            "ouverture": 10000,
+            "standard": 8192,
+            "mi-saison": 10000,
+            "final": 12000,
+            "bonus": 6144,
         }
-        max_tokens = max_tokens_map.get(type_episode, 6144)
+        max_tokens = max_tokens_map.get(type_episode, 8192)
 
-        response = config.appel_claude_avec_retry(
-            self.client,
-            model=config.CLAUDE_MODEL,
-            max_tokens=max_tokens,
-            system=system_prompt,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        # Tentative avec retry automatique si la réponse est tronquée
+        max_retry_truncated = 2
+        for attempt in range(1, max_retry_truncated + 1):
+            response = config.appel_claude_avec_retry(
+                self.client,
+                model=config.CLAUDE_MODEL,
+                max_tokens=max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            if response.stop_reason == "max_tokens":
+                if attempt < max_retry_truncated:
+                    max_tokens = min(int(max_tokens * 1.5), 16384)
+                    logger.warning(
+                        "Réponse tronquée (max_tokens atteint). "
+                        "Retry %d/%d avec max_tokens=%d",
+                        attempt, max_retry_truncated, max_tokens,
+                    )
+                    continue
+                else:
+                    raise ValueError(
+                        f"Le script généré dépasse la limite de tokens "
+                        f"({max_tokens} tokens) même après {max_retry_truncated} "
+                        f"tentatives. Le JSON est tronqué et inutilisable."
+                    )
+            break
 
         texte_brut = response.content[0].text.strip()
         script = parser_json_llm(texte_brut)

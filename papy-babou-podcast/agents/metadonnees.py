@@ -87,6 +87,12 @@ class Metadonnees:
             messages=[{"role": "user", "content": prompt}],
         )
 
+        if response.stop_reason == "max_tokens":
+            raise ValueError(
+                "Les métadonnées ont été tronquées (max_tokens=2048 atteint). "
+                "Le JSON est incomplet."
+            )
+
         texte_brut = response.content[0].text.strip()
         meta = parser_json_llm(texte_brut)
 

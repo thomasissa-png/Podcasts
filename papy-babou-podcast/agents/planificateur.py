@@ -182,13 +182,33 @@ class Planificateur:
 
         logger.info("Planification de la saison %d : %s", numero_saison, theme)
 
-        response = config.appel_claude_avec_retry(
-            self.client,
-            model=config.CLAUDE_MODEL,
-            max_tokens=8192,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        max_tokens = 12000
+        max_retry_truncated = 2
+        for attempt in range(1, max_retry_truncated + 1):
+            response = config.appel_claude_avec_retry(
+                self.client,
+                model=config.CLAUDE_MODEL,
+                max_tokens=max_tokens,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            if response.stop_reason == "max_tokens":
+                if attempt < max_retry_truncated:
+                    max_tokens = min(int(max_tokens * 1.5), 16384)
+                    logger.warning(
+                        "Plan tronqué (max_tokens atteint). "
+                        "Retry %d/%d avec max_tokens=%d",
+                        attempt, max_retry_truncated, max_tokens,
+                    )
+                    continue
+                else:
+                    raise ValueError(
+                        f"Le plan de saison dépasse la limite de tokens "
+                        f"({max_tokens}) même après {max_retry_truncated} "
+                        f"tentatives. Essayez avec moins d'épisodes."
+                    )
+            break
 
         texte_brut = response.content[0].text.strip()
         plan = parser_json_llm(texte_brut)
