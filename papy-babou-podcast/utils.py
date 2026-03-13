@@ -57,8 +57,31 @@ def extraire_json_llm(texte_brut: str) -> str:
     return texte
 
 
+def reparer_json_llm(json_str: str) -> str:
+    """Répare les erreurs JSON courantes générées par les LLM.
+
+    Gère :
+    - Virgules finales avant } ou ] (trailing commas)
+    - Virgules multiples consécutives
+
+    Args:
+        json_str: Chaîne JSON potentiellement malformée.
+
+    Returns:
+        Chaîne JSON réparée.
+    """
+    # Supprimer les trailing commas avant } ou ] (avec espaces/newlines entre)
+    repare = re.sub(r",(\s*[}\]])", r"\1", json_str)
+    # Supprimer les virgules multiples consécutives (ex: ,,)
+    repare = re.sub(r",(\s*,)+", ",", repare)
+    return repare
+
+
 def parser_json_llm(texte_brut: str) -> dict:
-    """Parse une réponse LLM en JSON, avec nettoyage automatique.
+    """Parse une réponse LLM en JSON, avec nettoyage et réparation automatique.
+
+    Tente d'abord un parsing direct, puis applique des réparations
+    pour les erreurs JSON courantes des LLM (trailing commas, etc.).
 
     Args:
         texte_brut: Réponse brute du LLM.
@@ -67,9 +90,26 @@ def parser_json_llm(texte_brut: str) -> dict:
         Dictionnaire JSON parsé.
 
     Raises:
-        json.JSONDecodeError: Si le JSON est invalide après nettoyage.
+        json.JSONDecodeError: Si le JSON est invalide après nettoyage et réparation.
     """
     json_str = extraire_json_llm(texte_brut)
+
+    # Tentative 1 : parsing direct
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError:
+        pass
+
+    # Tentative 2 : réparation des erreurs courantes
+    json_repare = reparer_json_llm(json_str)
+    try:
+        resultat = json.loads(json_repare)
+        logger.warning("JSON LLM réparé automatiquement (trailing commas ou erreurs mineures)")
+        return resultat
+    except json.JSONDecodeError:
+        pass
+
+    # Tentative 3 : échec — relancer l'erreur originale pour diagnostic
     return json.loads(json_str)
 
 

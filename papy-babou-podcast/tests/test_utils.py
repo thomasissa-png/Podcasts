@@ -16,7 +16,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from utils import extraire_json_llm, fichier_lock, masquer_secret, parser_json_llm
+from utils import extraire_json_llm, fichier_lock, masquer_secret, parser_json_llm, reparer_json_llm
 
 
 # ── extraire_json_llm ────────────────────────────────────────────────────────
@@ -306,6 +306,97 @@ class TestParserJsonLlm:
         """Le resultat doit etre une list pour un tableau JSON."""
         result = parser_json_llm("[1, 2, 3]")
         assert isinstance(result, list)
+
+
+# ── reparer_json_llm ────────────────────────────────────────────────────────
+
+
+class TestReparerJsonLlm:
+    """Tests pour reparer_json_llm — reparation JSON malformes par LLM."""
+
+    def test_trailing_comma_objet(self):
+        """Une virgule finale avant } doit etre supprimee."""
+        texte = '{"titre": "Test", "score": 8,}'
+        result = reparer_json_llm(texte)
+        parsed = json.loads(result)
+        assert parsed == {"titre": "Test", "score": 8}
+
+    def test_trailing_comma_tableau(self):
+        """Une virgule finale avant ] doit etre supprimee."""
+        texte = '[1, 2, 3,]'
+        result = reparer_json_llm(texte)
+        parsed = json.loads(result)
+        assert parsed == [1, 2, 3]
+
+    def test_trailing_comma_imbrique(self):
+        """Trailing commas imbriquees doivent etre supprimees."""
+        texte = '{"episode": {"segments": [{"id": 1,}, {"id": 2,},],},}'
+        result = reparer_json_llm(texte)
+        parsed = json.loads(result)
+        assert parsed == {"episode": {"segments": [{"id": 1}, {"id": 2}]}}
+
+    def test_trailing_comma_avec_espaces(self):
+        """Trailing comma avec espaces/newlines avant } doit etre geree."""
+        texte = '{"titre": "Test",\n  }'
+        result = reparer_json_llm(texte)
+        parsed = json.loads(result)
+        assert parsed == {"titre": "Test"}
+
+    def test_virgules_multiples(self):
+        """Des virgules multiples consecutives doivent etre reduites a une."""
+        texte = '{"a": 1,, "b": 2}'
+        result = reparer_json_llm(texte)
+        parsed = json.loads(result)
+        assert parsed == {"a": 1, "b": 2}
+
+    def test_json_valide_inchange(self):
+        """Un JSON valide ne doit pas etre modifie."""
+        texte = '{"titre": "Test", "score": 8}'
+        assert reparer_json_llm(texte) == texte
+
+    def test_json_vide_objet(self):
+        """Un objet vide ne doit pas etre casse."""
+        assert json.loads(reparer_json_llm("{}")) == {}
+
+    def test_json_vide_tableau(self):
+        """Un tableau vide ne doit pas etre casse."""
+        assert json.loads(reparer_json_llm("[]")) == []
+
+
+class TestParserJsonLlmReparation:
+    """Tests pour parser_json_llm avec reparation automatique."""
+
+    def test_trailing_comma_reparee(self):
+        """parser_json_llm doit reparer les trailing commas."""
+        texte = '{"titre": "Test", "score": 8,}'
+        result = parser_json_llm(texte)
+        assert result == {"titre": "Test", "score": 8}
+
+    def test_trailing_comma_dans_bloc_markdown(self):
+        """Trailing comma dans un bloc markdown doit etre reparee."""
+        texte = '```json\n{"titre": "Test",}\n```'
+        result = parser_json_llm(texte)
+        assert result == {"titre": "Test"}
+
+    def test_trailing_comma_multiligne_complexe(self):
+        """Un script LLM typique avec trailing comma doit etre repare."""
+        texte = '''{
+  "episode": {
+    "titre": "Le buisson ardent",
+    "segments": [
+      {"id": "seg_001", "texte": "Bonjour"},
+      {"id": "seg_002", "texte": "Au revoir"},
+    ]
+  }
+}'''
+        result = parser_json_llm(texte)
+        assert result["episode"]["titre"] == "Le buisson ardent"
+        assert len(result["episode"]["segments"]) == 2
+
+    def test_json_vraiment_invalide_leve_erreur(self):
+        """Un JSON irreparable doit toujours lever JSONDecodeError."""
+        with pytest.raises(json.JSONDecodeError):
+            parser_json_llm('{"titre": incomplet')
 
 
 # ── fichier_lock ─────────────────────────────────────────────────────────────

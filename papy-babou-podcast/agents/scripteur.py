@@ -617,7 +617,27 @@ class Scripteur:
             break
 
         texte_brut = response.content[0].text.strip()
-        script = parser_json_llm(texte_brut)
+        try:
+            script = parser_json_llm(texte_brut)
+        except json.JSONDecodeError as e:
+            logger.warning(
+                "JSON malformé dans la réponse LLM (%s). "
+                "Retry avec une nouvelle génération...", e,
+            )
+            response = config.appel_claude_avec_retry(
+                self.client,
+                model=config.CLAUDE_MODEL,
+                max_tokens=max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            if response.stop_reason == "max_tokens":
+                raise ValueError(
+                    f"Le script généré dépasse la limite de tokens "
+                    f"({max_tokens} tokens). Le JSON est tronqué et inutilisable."
+                )
+            texte_brut = response.content[0].text.strip()
+            script = parser_json_llm(texte_brut)
         self._valider_structure(script)
 
         nb_mots = self.compter_mots(script)
