@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 _client = None
 _available: bool | None = None  # None = pas encore testé
-_lock = threading.Lock()
+_lock = threading.RLock()
 
 
 def _get_client():
@@ -120,9 +120,20 @@ def download_file(storage_key: str, dest_path: Path) -> bool:
     try:
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         client.download_to_filename(storage_key, str(dest_path))
+        # W12: Vérifier que le fichier n'est pas vide (téléchargement partiel)
+        if dest_path.exists() and dest_path.stat().st_size == 0:
+            dest_path.unlink(missing_ok=True)
+            logger.warning("Download Object Storage %s : fichier vide supprimé", storage_key)
+            return False
         logger.info("Download Object Storage : %s → %s", storage_key, dest_path)
         return True
     except Exception as e:
+        # W12: Nettoyer le fichier partiel en cas d'erreur
+        if dest_path.exists():
+            try:
+                dest_path.unlink()
+            except OSError:
+                pass
         logger.debug("Fichier absent dans Object Storage %s : %s", storage_key, e)
         return False
 

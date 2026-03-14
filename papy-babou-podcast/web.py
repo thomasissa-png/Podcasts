@@ -1016,12 +1016,6 @@ def api_regenerate_episode(episode_id):
         corrections_path.parent.mkdir(parents=True, exist_ok=True)
         corrections_path.write_text(instructions, encoding="utf-8")
 
-        # Charger les paramètres originaux depuis le rapport ou checkpoint
-        params = _load_episode_params(episode_id)
-        if not params:
-            corrections_path.unlink(missing_ok=True)
-            return jsonify({"error": f"Paramètres introuvables pour {episode_id}. Relancez la production manuellement."}), 404
-
         # Réinitialiser le flag de validation script dans le rapport
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
         if rapport_path.exists():
@@ -1038,6 +1032,35 @@ def api_regenerate_episode(episode_id):
                     _json.dump(rapport, f, ensure_ascii=False, indent=2)
             except Exception:
                 pass
+
+        # W3: Utiliser reprendre depuis le checkpoint pour éviter de créer
+        # une nouvelle entrée production en DB (produire en crée une à chaque appel)
+        checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        if checkpoint_path.exists():
+            try:
+                with open(checkpoint_path, "r", encoding="utf-8") as f:
+                    cp = _json.load(f)
+                cp["etape"] = "script"
+                with open(checkpoint_path, "w", encoding="utf-8") as f:
+                    _json.dump(cp, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                corrections_path.unlink(missing_ok=True)
+                return jsonify({"error": f"Erreur lecture checkpoint : {e}"}), 500
+
+            cmd = [
+                "reprendre",
+                "-c", str(checkpoint_path),
+                "--auto",
+                "--stop-after", "script",
+            ]
+            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+            return jsonify({"status": "accepted", "job_id": job_id, "phase": "script"})
+
+        # Fallback: pas de checkpoint, utiliser produire (première production)
+        params = _load_episode_params(episode_id)
+        if not params:
+            corrections_path.unlink(missing_ok=True)
+            return jsonify({"error": f"Paramètres introuvables pour {episode_id}. Relancez la production manuellement."}), 404
 
         cmd = [
             "produire",
@@ -1067,7 +1090,13 @@ def api_regenerate_episode(episode_id):
             try:
                 with open(rapport_path, "r", encoding="utf-8") as f:
                     rapport = _json.load(f)
-                rapport.get("etapes", {}).get("montage", {}).pop("validation_humaine", None)
+                montage_etape = rapport.get("etapes", {}).get("montage", {})
+                montage_etape.pop("validation_humaine", None)
+                # W7: Nettoyer les données de montage obsolètes pour éviter
+                # d'afficher d'anciennes valeurs après la régénération
+                for stale_key in ("chemin_hq", "chemin_preview", "duree_secondes",
+                                  "taille_bytes", "chapitres", "object_storage"):
+                    montage_etape.pop(stale_key, None)
                 rapport.setdefault("decisions_humaines", []).append({
                     "timestamp": datetime.now().isoformat(),
                     "type": "regeneration_montage_web",
@@ -1114,30 +1143,7 @@ def _load_episode_params(episode_id):
         except Exception:
             pass
 
-    # 2. Essayer le rapport
-    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
-    if rapport_path.exists():
-        try:
-            with open(rapport_path, "r", encoding="utf-8") as f:
-                rapport = _json.load(f)
-            if rapport.get("titre"):
-                # Extraire saison/numero depuis episode_id
-                import re as _re
-                m = _re.match(r'S(\d+)E(\d+)', episode_id)
-                saison = int(m.group(1)) if m else 1
-                numero = int(m.group(2)) if m else 1
-                return {
-                    "titre": rapport["titre"],
-                    "resume": rapport.get("resume", ""),
-                    "saison": saison,
-                    "numero": numero,
-                    "morale": rapport.get("morale", ""),
-                    "type_episode": rapport.get("type_episode", "standard"),
-                }
-        except Exception:
-            pass
-
-    # 3. Essayer la DB
+    # 2. Essayer la DB (source fiable pour titre/resume)
     if _DB_AVAILABLE:
         try:
             from database import get_cursor
@@ -1149,8 +1155,7 @@ def _load_episode_params(episode_id):
                 )
                 row = cur.fetchone()
             if row:
-                import re as _re
-                m = _re.match(r'S(\d+)E(\d+)', episode_id)
+                m = re.match(r'S(\d+)E(\d+)', episode_id)
                 return {
                     "titre": row["titre"],
                     "resume": row.get("resume", ""),

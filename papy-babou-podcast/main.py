@@ -1586,6 +1586,14 @@ def pipeline(
             f"Pipeline échoué pour {episode_id} : {e}\n"
             f"Rapport partiel sauvé : {chemin_rapport}"
         ))
+        # W13: Nettoyer le fichier de corrections web en cas de crash
+        # pour éviter qu'il ne soit réutilisé lors d'une prochaine production
+        try:
+            corrections_stale = config.SCRIPTS_DIR / f"{episode_id}_web_corrections.txt"
+            if corrections_stale.exists():
+                corrections_stale.unlink()
+        except OSError:
+            pass
         raise
 
 
@@ -1917,6 +1925,15 @@ def _pipeline_inner(
         chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
         with open(chemin_rapport, "w", encoding="utf-8") as f_out:
             json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        # Marquer la production DB comme en attente (pas "in_progress" indéfiniment)
+        if _use_db() and _production_id_courante:
+            try:
+                ProductionRepo.maj_etape(
+                    _production_id_courante, etape="waiting_script",
+                    rapport=rapport,
+                )
+            except Exception:
+                pass
         return rapport
 
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
@@ -2231,6 +2248,14 @@ def _pipeline_inner(
         chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
         with open(chemin_rapport, "w", encoding="utf-8") as f_out:
             json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        if _use_db() and _production_id_courante:
+            try:
+                ProductionRepo.maj_etape(
+                    _production_id_courante, etape="waiting_montage",
+                    rapport=rapport,
+                )
+            except Exception:
+                pass
         return rapport
 
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────

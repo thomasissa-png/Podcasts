@@ -3239,11 +3239,17 @@ function showContinueProduction(episodeId, phase, message, btnLabel) {
     zone.style.display = 'block';
 }
 
+var _productionRunning = false;  /* W5: empêcher les doubles-clics */
+
 async function continueProduction(episodeId, phase) {
+    if (_productionRunning) return;
+    _productionRunning = true;
+
     var zone = document.getElementById('continue-production-zone');
     if (zone) {
         zone.innerHTML = '<div class="alert alert-info"><span class="spinner"></span> Production en cours...</div>';
     }
+    var phaseLabel = (phase === 'audio') ? 'Audio + montage' : 'Métadonnées + publication';
 
     try {
         const launch = await apiCall('/api/episode/' + episodeId + '/continue-production', { phase: phase });
@@ -3255,7 +3261,6 @@ async function continueProduction(episodeId, phase) {
         const result = await pollJob(launch.job_id, 1920);
 
         if (result.status === 'ok') {
-            var phaseLabel = (phase === 'audio') ? 'Audio + montage' : 'Métadonnées + publication';
             showAlert('alert-validation', 'success', phaseLabel + ' terminé avec succès pour ' + episodeId + '.');
         } else {
             var errMsg = result.error || result.stderr || 'Erreur inconnue';
@@ -3269,6 +3274,8 @@ async function continueProduction(episodeId, phase) {
     } catch (err) {
         showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
         if (zone) zone.style.display = 'none';
+    } finally {
+        _productionRunning = false;
     }
 }
 
