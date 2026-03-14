@@ -253,12 +253,27 @@ def api_job_status(job_id):
 # ── Routes pages ─────────────────────────────────────────────────────────────
 
 
+@app.route("/healthz")
+def healthz():
+    """Endpoint de health check leger — repond 200 immediatement."""
+    return "ok", 200
+
+
 @app.route("/")
 def index():
     """Page principale — Dashboard complet avec navigation."""
-    saison = request.args.get("saison", 0, type=int)
-    data = get_dashboard_data(saison)
-    return render_template("dashboard.html", **data)
+    try:
+        saison = request.args.get("saison", 0, type=int)
+        data = get_dashboard_data(saison)
+        return render_template("dashboard.html", **data)
+    except Exception as e:
+        logger.exception("Erreur rendu dashboard")
+        return (
+            f"<html><body><h1>Les Histoires de Papy Babou</h1>"
+            f"<p>Erreur au chargement du dashboard : {e}</p>"
+            f"<p><a href='/api/dashboard'>Voir les donnees JSON</a></p>"
+            f"</body></html>"
+        ), 200
 
 
 # ── Routes API (JSON) — Lecture ──────────────────────────────────────────────
