@@ -1500,8 +1500,9 @@
                         <th>Titre</th>
                         <th>Type</th>
                         <th>Score</th>
-                        <th>Ambiance</th>
-                        <th>Morale</th>
+                        <th>Écouter</th>
+                        <th>Durée</th>
+                        <th>Validation</th>
                         <th>Date</th>
                     </tr>
                 </thead>
@@ -1521,9 +1522,51 @@
                                 <span class="score-num {{ score_class }}">{{ ep.score }}</span>
                             </div>
                         </td>
-                        <td style="color: var(--texte-dim); font-weight: 600;">{{ ep.ambiance }}</td>
-                        <td style="color: var(--texte-dim); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;" title="{{ ep.morale }}">
-                            {{ ep.morale[:30] }}{% if ep.morale|length > 30 %}&hellip;{% endif %}
+                        <td>
+                            {% if ep.audio_preview or ep.audio_hq %}
+                            <div style="min-width: 220px;">
+                                <audio controls preload="none" style="width: 100%; height: 32px;">
+                                    <source src="/audio/episodes/{{ ep.audio_preview or ep.audio_hq }}" type="audio/mpeg">
+                                </audio>
+                                {% if ep.audio_hq and ep.audio_preview %}
+                                <div style="margin-top: 0.3rem; font-size: 0.75rem;">
+                                    <a href="/audio/episodes/{{ ep.audio_hq }}" download style="color: var(--turquoise); text-decoration: none; font-weight: 600;">&#11015; HQ</a>
+                                    <span style="color: var(--texte-light); margin: 0 0.3rem;">|</span>
+                                    <a href="/audio/episodes/{{ ep.audio_preview }}" download style="color: var(--texte-dim); text-decoration: none;">&#11015; Preview</a>
+                                </div>
+                                {% elif ep.audio_hq %}
+                                <div style="margin-top: 0.3rem; font-size: 0.75rem;">
+                                    <a href="/audio/episodes/{{ ep.audio_hq }}" download style="color: var(--turquoise); text-decoration: none; font-weight: 600;">&#11015; Télécharger HQ</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span style="color: var(--texte-light); font-size: 0.8rem;">Pas d'audio</span>
+                            {% endif %}
+                        </td>
+                        <td style="color: var(--texte-dim); white-space: nowrap; font-size: 0.82rem;">
+                            {% if ep.duree_secondes %}
+                                {{ "%d"|format(ep.duree_secondes // 60) }}:{{ "%02d"|format(ep.duree_secondes|int % 60) }}
+                                {% if ep.taille_mb %}<br><span style="font-size: 0.75rem;">{{ ep.taille_mb }} MB</span>{% endif %}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td style="white-space: nowrap; font-size: 0.8rem;">
+                            <div title="Script relu et validé">
+                                {% if ep.validation_script %}
+                                <span style="color: var(--vert-prairie);">&#10003; Script</span>
+                                {% else %}
+                                <span style="color: var(--texte-light);">&#9675; Script</span>
+                                {% endif %}
+                            </div>
+                            <div title="Montage écouté et validé">
+                                {% if ep.validation_montage %}
+                                <span style="color: var(--vert-prairie);">&#10003; Montage</span>
+                                {% else %}
+                                <span style="color: var(--texte-light);">&#9675; Montage</span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td style="color: var(--texte-dim); white-space: nowrap; font-size: 0.8rem;">
                             {{ ep.date[:10] if ep.date else '' }}

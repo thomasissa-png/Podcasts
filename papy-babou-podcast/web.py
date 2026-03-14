@@ -64,6 +64,21 @@ def serve_artwork(filename):
     return send_from_directory(str(artwork_dir), filename)
 
 
+@app.route("/audio/episodes/<path:filename>")
+def serve_episode_audio(filename):
+    """Sert les fichiers audio des épisodes produits (MP3)."""
+    # Security: only allow .mp3 files, no path traversal
+    if ".." in filename or "/" in filename or "\\" in filename:
+        return jsonify({"error": "Nom de fichier invalide"}), 400
+    if not filename.endswith(".mp3"):
+        return jsonify({"error": "Format non supporté"}), 400
+    episodes_dir = _THIS_DIR / "output" / "episodes"
+    audio_path = episodes_dir / filename
+    if not audio_path.exists():
+        return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
+    return send_from_directory(str(episodes_dir), filename, mimetype="audio/mpeg")
+
+
 def _check_api_key(key_name="ANTHROPIC_API_KEY"):
     """Verifie qu'une cle API est configuree. Retourne une reponse d'erreur ou None."""
     if not os.getenv(key_name):

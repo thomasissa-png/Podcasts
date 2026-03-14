@@ -32,6 +32,59 @@ def charger_historique_complet() -> list[dict]:
     return []
 
 
+def charger_rapport(episode_id: str) -> dict | None:
+    """Charge le rapport de production d'un épisode."""
+    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+    if rapport_path.exists():
+        try:
+            with open(rapport_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            pass
+    return None
+
+
+def trouver_fichier_audio(episode_id: str) -> dict:
+    """Trouve les fichiers audio d'un épisode (preview et HQ).
+
+    Cherche d'abord dans le rapport de production, puis par convention de nommage.
+    """
+    result = {"preview": None, "hq": None, "duree_secondes": None, "taille_mb": None}
+
+    # 1. Chercher dans le rapport de production
+    rapport = charger_rapport(episode_id)
+    if rapport:
+        montage = rapport.get("etapes", {}).get("montage", {})
+        if montage:
+            result["duree_secondes"] = montage.get("duree_secondes")
+            result["taille_mb"] = montage.get("taille_mb")
+
+            # Vérifier que les fichiers existent encore
+            for key, rapport_key in [("preview", "chemin_preview"), ("hq", "chemin_hq")]:
+                chemin = montage.get(rapport_key)
+                if chemin:
+                    p = Path(chemin)
+                    if p.exists():
+                        result[key] = p.name
+
+        # Validation info
+        etapes = rapport.get("etapes", {})
+        result["validation_script"] = etapes.get("script", {}).get("validation_humaine", False)
+        result["validation_montage"] = etapes.get("montage", {}).get("validation_humaine", False)
+        result["publication"] = etapes.get("publication", {})
+
+    # 2. Fallback: chercher par convention de nommage dans output/episodes/
+    if not result["preview"] and not result["hq"]:
+        episodes_dir = config.OUTPUT_DIR
+        if episodes_dir.exists():
+            for suffix, key in [("_128k.mp3", "preview"), ("_192k.mp3", "hq")]:
+                candidates = list(episodes_dir.glob(f"{episode_id}*{suffix}"))
+                if candidates:
+                    result[key] = candidates[0].name
+
+    return result
+
+
 def charger_preferences() -> list[dict]:
     """Charge les préférences producteur."""
     if config.PREFERENCES_PATH.exists():
@@ -178,8 +231,10 @@ def get_dashboard_data(saison: int = 0) -> dict:
         score_val = ep.get("score_review", 0)
         if not isinstance(score_val, (int, float)):
             score_val = 0
+        episode_id = ep.get("episode_id", "?")
+        audio_info = trouver_fichier_audio(episode_id)
         episodes.append({
-            "episode_id": ep.get("episode_id", "?"),
+            "episode_id": episode_id,
             "titre": ep.get("titre", "?"),
             "type_episode": ep.get("type_episode", "standard"),
             "score": round(score_val, 1),
@@ -188,6 +243,12 @@ def get_dashboard_data(saison: int = 0) -> dict:
             "morale": ep.get("morale", ""),
             "personnages": ep.get("personnages_presents", []),
             "retours_humains": ep.get("retours_humains", ""),
+            "audio_preview": audio_info.get("preview"),
+            "audio_hq": audio_info.get("hq"),
+            "duree_secondes": audio_info.get("duree_secondes"),
+            "taille_mb": audio_info.get("taille_mb"),
+            "validation_script": audio_info.get("validation_script", False),
+            "validation_montage": audio_info.get("validation_montage", False),
         })
 
     # Statistiques
