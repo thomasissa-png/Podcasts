@@ -20,7 +20,7 @@ def script_avec_sfx():
             "titre": "Le buisson ardent",
             "numero": 1,
             "saison": 1,
-            "duree_cible_minutes": 13,
+            "duree_cible_minutes": 25,
             "ambiance": "mystere",
             "morale": "La confiance en Dieu",
             "segments": [

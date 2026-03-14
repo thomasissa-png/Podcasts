@@ -197,8 +197,8 @@ STEREO_PAN = {
 # ── Paramètres de production ──────────────────────────────────────────────────
 
 PRODUCTION = {
-    "duree_cible_minutes": 13,
-    "mots_cible": 1400,
+    "duree_cible_minutes": 25,
+    "mots_cible": 3000,
     "mots_par_minute_enfant": 100,
     "mots_par_minute_adulte": 120,
     "intro_jingle_duree_ms": 10_000,
@@ -549,28 +549,28 @@ def liste_saisons() -> list[int]:
 
 FORMATS_EPISODES = {
     "ouverture": {
-        "duree_cible_minutes": 15,
-        "mots_cible": 1600,
+        "duree_cible_minutes": 30,
+        "mots_cible": 3200,
         "description": "Premier épisode de saison — présentation du thème et des enjeux",
     },
     "standard": {
-        "duree_cible_minutes": 13,
-        "mots_cible": 1400,
+        "duree_cible_minutes": 25,
+        "mots_cible": 3000,
         "description": "Épisode classique de la saison",
     },
     "mi-saison": {
-        "duree_cible_minutes": 15,
-        "mots_cible": 1600,
+        "duree_cible_minutes": 30,
+        "mots_cible": 3200,
         "description": "Épisode pivot — tournant dramatique ou récapitulatif",
     },
     "final": {
-        "duree_cible_minutes": 18,
-        "mots_cible": 1900,
+        "duree_cible_minutes": 35,
+        "mots_cible": 3800,
         "description": "Dernier épisode — conclusion de l'arc de saison",
     },
     "bonus": {
-        "duree_cible_minutes": 10,
-        "mots_cible": 1000,
+        "duree_cible_minutes": 20,
+        "mots_cible": 2000,
         "description": "Épisode bonus — Q&R, coulisses, ou récap",
     },
 }

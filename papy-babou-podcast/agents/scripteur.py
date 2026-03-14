@@ -27,13 +27,29 @@ Ce podcast fonctionne par SAISONS de 10 épisodes avec un arc narratif continu.
 STRUCTURE NARRATIVE :
 {structure_narrative}
 
+RÈGLE FONDAMENTALE — CONTENU ÉDUCATIF :
+Ce podcast est AVANT TOUT éducatif. L'objectif principal est que les enfants APPRENNENT
+l'histoire biblique en détail. Le script doit consacrer AU MINIMUM 60% de son contenu
+au récit biblique lui-même : les événements, les personnages bibliques, les lieux, les dialogues,
+les péripéties, les anecdotes, le contexte historique et géographique.
+- Papy Babou RACONTE l'histoire en détail, avec des descriptions vivantes et des dialogues reconstitués.
+- Il inclut des ANECDOTES concrètes et des détails marquants (nombres, lieux, noms, objets, coutumes).
+- Les interventions des enfants doivent FAIRE AVANCER le récit (poser des questions sur la suite,
+  réagir à un événement, demander une précision) et NON le ralentir avec du bavardage hors-sujet.
+- Chaque épisode doit couvrir l'INTÉGRALITÉ de l'histoire annoncée, pas juste une introduction.
+- À la fin de l'épisode, l'auditeur doit pouvoir résumer les événements clés de l'histoire biblique.
+
 RÈGLES STRICTES :
 1. Le script doit faire environ {mots_cible} mots pour {duree_cible} minutes (rythme adapté aux enfants).
+   C'est un MINIMUM — ne pas faire plus court. Développe le récit biblique en profondeur.
 2. Les enfants doivent intervenir au moins toutes les 90 secondes de narration (~150-180 mots).
+   Leurs interventions doivent être PERTINENTES à l'histoire (questions, réactions, demandes de précision).
 3. Alterner entre Antoine (questions logiques/action) et Noémie (questions émotionnelles).
 4. Utiliser les tics de langage de chaque personnage régulièrement.
 5. Expliquer les mots ou concepts difficiles avec des analogies simples.
 6. L'histoire biblique doit être fidèle au texte original, adaptée aux enfants.
+   Inclure un MAXIMUM de détails narratifs : dialogues des personnages bibliques, descriptions
+   des lieux, contexte historique, péripéties secondaires, conséquences des événements.
 7. PAUSES NATURELLES : les transitions entre personnages doivent être fluides.
     - Réplique conversationnelle rapide (enchaînement naturel) : pause_apres_ms = 150-300
     - Pause normale (changement de sujet, respiration) : pause_apres_ms = 400-600
@@ -125,96 +141,109 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 
 STRUCTURES_NARRATIVES = {
     "ouverture": """\
-1. ACCROCHE DE SAISON (3-4 min) :
+1. ACCROCHE DE SAISON (4-5 min) :
    - Scène d'ouverture : Papy Babou présente le THÈME de la nouvelle saison.
    - Il crée l'excitation : "Cette saison, on va découvrir ensemble..."
    - Les enfants réagissent au thème avec enthousiasme et curiosité.
    - {ritual_accroche}
 
-2. DÉVELOPPEMENT (8-9 min) :
-   - Première histoire biblique de la saison, qui pose les bases du thème.
-   - Présentation des enjeux de la saison.
+2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (20-22 min) :
+   - Première histoire biblique de la saison, racontée EN PROFONDEUR.
+   - Papy raconte avec des détails vivants : lieux, personnages, dialogues reconstitués.
+   - Il inclut des anecdotes historiques et géographiques (ex: "À cette époque, en Mésopotamie...").
+   - Les péripéties sont développées une par une, pas résumées.
+   - Les enfants réagissent aux moments clés et posent des questions qui approfondissent le récit.
+   - Présentation des enjeux de la saison à travers l'histoire.
    - Les enfants posent des questions qui ouvrent sur les épisodes suivants.
 {running_gag}
 
-3. CONCLUSION + TEASING (3-4 min) :
+3. CONCLUSION + TEASING (4-5 min) :
    - Résolution de la première histoire.
    - Leçon de vie inaugurale.
    - Papy tease la prochaine histoire avec mystère.
    - {ritual_au_revoir}""",
 
     "standard": """\
-1. ACCROCHE (2-3 min) :
+1. ACCROCHE (3-4 min) :
    - {previously_on}
    - Scène d'ouverture : Papy Babou accueille les enfants chaleureusement.
    - {ritual_accroche}
    - Il plante le décor de l'histoire avec un élément d'intrigue.
 
-2. DÉVELOPPEMENT (7-8 min) :
-   - Récit principal de l'histoire biblique avec les péripéties.
+2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (17-19 min) :
+   - Récit principal de l'histoire biblique raconté EN PROFONDEUR et en détail.
+   - Papy raconte les événements un par un, avec des descriptions vivantes des lieux et personnages.
+   - Il reconstitue les DIALOGUES des personnages bibliques (ex: "Et Dieu dit à Abraham...").
+   - Il ajoute des détails historiques et géographiques qui enrichissent le récit.
+   - Les péripéties sont développées, pas résumées en une phrase.
    - Moments de tension dramatique (bruitages d'ambiance, silences).
-   - Les enfants réagissent régulièrement : Antoine sur l'action, Noémie sur l'émotion.
+   - Les enfants réagissent aux moments clés : Antoine sur l'action, Noémie sur l'émotion.
+   - Leurs questions font AVANCER l'histoire ("Et après, qu'est-ce qui s'est passé ?").
    - Papy explique les mots difficiles avec des analogies adaptées.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION + TEASING (2-3 min) :
+3. CONCLUSION + TEASING (3-4 min) :
    - Résolution de l'histoire.
    - Leçon de vie claire et mémorable pour les enfants.
    - {teasing}
    - {ritual_au_revoir}""",
 
     "mi-saison": """\
-1. RÉCAPITULATIF + ACCROCHE (3-4 min) :
+1. RÉCAPITULATIF + ACCROCHE (4-5 min) :
    - {previously_on}
    - Papy rappelle le fil rouge de la saison : ce qu'on a appris jusqu'ici.
    - {ritual_accroche}
    - Les enfants font le point sur ce qu'ils ont retenu.
 
-2. DÉVELOPPEMENT — TOURNANT (8-9 min) :
+2. DÉVELOPPEMENT — TOURNANT BIBLIQUE DÉTAILLÉ (20-22 min) :
    - Histoire biblique qui représente un TOURNANT dans le thème de la saison.
+   - Le récit est raconté EN PROFONDEUR avec tous les détails narratifs.
+   - Dialogues reconstitués, descriptions des lieux, contexte historique.
    - Moment de surprise ou de révélation pour les enfants.
-   - Approfondissement du thème central.
+   - Approfondissement du thème central à travers les détails de l'histoire.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION + OUVERTURE (3-4 min) :
+3. CONCLUSION + OUVERTURE (4-5 min) :
    - La résolution ouvre de nouvelles questions.
    - Leçon de vie qui fait évoluer la compréhension du thème.
    - {teasing}
    - {ritual_au_revoir}""",
 
     "final": """\
-1. GRAND RÉCAPITULATIF (3-4 min) :
+1. GRAND RÉCAPITULATIF (4-5 min) :
    - {previously_on}
    - Papy rappelle toutes les histoires de la saison et leurs leçons.
    - {ritual_accroche}
    - Les enfants montrent combien ils ont grandi au fil de la saison.
 
-2. DÉVELOPPEMENT — CLIMAX (10-11 min) :
-   - Dernière histoire biblique qui conclut le thème de la saison.
+2. DÉVELOPPEMENT — CLIMAX BIBLIQUE DÉTAILLÉ (24-26 min) :
+   - Dernière histoire biblique qui conclut le thème de la saison, racontée EN PROFONDEUR.
+   - Le récit est le plus développé de la saison : détails, dialogues, péripéties secondaires.
    - Moment émotionnel fort : les personnages montrent leur évolution.
    - Résolution de toutes les questions ouvertes de la saison.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION DE SAISON (3-4 min) :
+3. CONCLUSION DE SAISON (4-5 min) :
    - Grande leçon de vie qui résume toute la saison.
    - Moment d'émotion entre Papy et les enfants.
    - Au revoir spécial de fin de saison.
    - Éventuel teasing de la prochaine saison (si applicable).""",
 
     "bonus": """\
-1. ACCROCHE SPÉCIALE (2 min) :
+1. ACCROCHE SPÉCIALE (3 min) :
    - Papy annonce un épisode spécial / bonus.
    - {ritual_accroche}
 
-2. CONTENU SPÉCIAL (6-7 min) :
+2. CONTENU SPÉCIAL (14-15 min) :
    - Questions-réponses des enfants, coulisses, ou récapitulatif.
+   - Si récapitulatif : revenir sur les histoires avec des détails supplémentaires.
    - Ton plus léger et interactif.
 {running_gag}
 
-3. CONCLUSION (2 min) :
+3. CONCLUSION (3 min) :
    - Au revoir décontracté.
    - {ritual_au_revoir}""",
 }
@@ -700,15 +729,15 @@ class Scripteur:
             numero_saison=saison,
         )
 
-        # max_tokens adaptatif selon le type d'épisode
+        # max_tokens adaptatif selon le type d'épisode (doublé pour scripts longs)
         max_tokens_map = {
-            "ouverture": 10000,
-            "standard": 8192,
-            "mi-saison": 10000,
-            "final": 12000,
-            "bonus": 6144,
+            "ouverture": 16384,
+            "standard": 16384,
+            "mi-saison": 16384,
+            "final": 16384,
+            "bonus": 12000,
         }
-        max_tokens = max_tokens_map.get(type_episode, 8192)
+        max_tokens = max_tokens_map.get(type_episode, 16384)
 
         # Tentative avec retry automatique si la réponse est tronquée
         max_retry_truncated = 2
@@ -723,7 +752,7 @@ class Scripteur:
 
             if response.stop_reason == "max_tokens":
                 if attempt < max_retry_truncated:
-                    max_tokens = min(int(max_tokens * 1.5), 16384)
+                    max_tokens = min(int(max_tokens * 1.5), 32768)
                     logger.warning(
                         "Réponse tronquée (max_tokens atteint). "
                         "Retry %d/%d avec max_tokens=%d",

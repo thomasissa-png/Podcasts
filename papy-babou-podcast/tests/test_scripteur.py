@@ -396,8 +396,8 @@ class TestSystemPromptSeriel:
     def test_system_prompt_contient_type_episode(self):
         """Le system prompt doit adapter la durée au type d'épisode."""
         prompt = _construire_system_prompt(type_episode="ouverture")
-        assert "15" in prompt  # durée ouverture = 15 min
-        assert "1600" in prompt  # mots cible ouverture = 1600
+        assert "30" in prompt  # durée ouverture = 30 min
+        assert "3200" in prompt  # mots cible ouverture = 3200
 
     def test_system_prompt_contient_contexte_saison(self):
         """Le system prompt doit inclure le contexte sériel."""

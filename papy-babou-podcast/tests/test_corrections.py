@@ -73,9 +73,9 @@ class TestTypeEpisodeDepuisPlan:
 
         call_args = mock_client.messages.create.call_args
         system_msg = call_args[1]["system"]
-        # Le prompt doit contenir 15 min (ouverture) pas 13 min (standard)
-        assert "15" in system_msg
-        assert "1600" in system_msg
+        # Le prompt doit contenir 30 min (ouverture) pas 25 min (standard)
+        assert "30" in system_msg
+        assert "3200" in system_msg
 
     @patch("agents.scripteur.anthropic.Anthropic")
     def test_type_final_depuis_plan(self, mock_anthropic, script_exemple):
@@ -100,8 +100,8 @@ class TestTypeEpisodeDepuisPlan:
 
         call_args = mock_client.messages.create.call_args
         system_msg = call_args[1]["system"]
-        assert "18" in system_msg
-        assert "1900" in system_msg
+        assert "35" in system_msg
+        assert "3800" in system_msg
 
     @patch("agents.scripteur.anthropic.Anthropic")
     def test_type_explicite_non_ecrase(self, mock_anthropic, script_exemple):
@@ -127,7 +127,7 @@ class TestTypeEpisodeDepuisPlan:
 
         call_args = mock_client.messages.create.call_args
         system_msg = call_args[1]["system"]
-        assert "15" in system_msg  # mi-saison = 15 min
+        assert "30" in system_msg  # mi-saison = 30 min
 
 
 # ── Bug #2 : personnages secondaires sans voice_id ───────────────────────────
@@ -1030,7 +1030,7 @@ class TestScripteurTypeValidation:
                 "titre": "Test",
                 "numero": 1,
                 "saison": 1,
-                "duree_cible_minutes": 13,
+                "duree_cible_minutes": 25,
                 "ambiance": "calme",
                 "morale": "Test",
                 "type": "inventé",  # Type invalide

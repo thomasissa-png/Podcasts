@@ -24,7 +24,7 @@ def script_exemple():
             "titre": "Le buisson ardent",
             "numero": 1,
             "saison": 1,
-            "duree_cible_minutes": 13,
+            "duree_cible_minutes": 25,
             "ambiance": "mystere",
             "morale": "Dieu peut accomplir de grandes choses a travers nous",
             "segments": [
@@ -136,7 +136,7 @@ def review_exemple():
             "titre": "Le buisson ardent",
             "numero": 1,
             "saison": 1,
-            "duree_cible_minutes": 13,
+            "duree_cible_minutes": 25,
             "ambiance": "mystere",
             "morale": "La confiance en Dieu",
             "segments": [

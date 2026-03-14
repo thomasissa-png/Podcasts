@@ -44,7 +44,7 @@ papy-babou-podcast/
 
 ### Serial Production System
 - **Season Plans**: Generated via `planifier-saison`, stored as `saisons/saison_XX.json`
-- **Episode Types**: `ouverture` (15min/1600 words), `standard` (13min/1400), `mi-saison` (15/1600), `final` (18/1900), `bonus` (10/1000)
+- **Episode Types**: `ouverture` (30min/3200 words), `standard` (25min/3000), `mi-saison` (30/3200), `final` (35/3800), `bonus` (20/2000)
 - **STRUCTURES_NARRATIVES**: Template dict in scripteur.py with previously-on, teasing, rituals per type
 - **Character Evolution**: arcs_personnages in season bible, tracked across episodes
 - **Dynamic Characters**: `config.ajouter_personnage()` + `config.personnages_valides()` (set-based)
