@@ -53,13 +53,29 @@ AMBIANCE_PROMPTS = {
     "fond_doux": "Soft gentle ambient background music for children's podcast, very quiet warm pads and light harp, barely noticeable",
 }
 
+# Prompt pour la transition sonore entre actes narratifs
+TRANSITION_PROMPT = (
+    "Short magical transition sound for children's storytelling podcast, "
+    "soft chime and gentle harp glissando, page turning feeling, 2 seconds"
+)
+
+# Prompt pour le générique signature récurrent (identique à chaque épisode)
+SIGNATURE_JINGLE_PROMPT = (
+    "Very short 5-second signature jingle for children's podcast, "
+    "distinctive warm melody with music box and soft bells, "
+    "recognizable and catchy, French fairy tale atmosphere"
+)
+
 # Constantes audio (en ms sauf mention contraire)
 FADE_JINGLE_MS = 1500          # Durée du fade in/out pour les jingles
 SILENCE_TRANSITION_MS = 300     # Silence entre jingle et contenu (réduit de 500)
 FADE_AMBIANCE_MS = 3000         # Durée du fade in/out pour la musique de fond
 FALLBACK_ASSET_DUREE_MS = 5000  # Durée du silence de remplacement d'un asset manquant
-CROSSFADE_VOIX_MS = 50          # Léger crossfade entre segments voix pour transitions douces
+CROSSFADE_VOIX_MS = 100         # Crossfade entre segments voix pour transitions naturelles
 MAX_PAUSE_MS = 2500             # Plafond de pause pour éviter les silences excessifs
+RESPIRATION_DUREE_MS = 80       # Durée micro-respiration entre certaines répliques
+RESPIRATION_PROBABILITE = 0.35  # 35% des transitions voix incluent une micro-respiration
+NARRATEUR_REVERB_DB = -3        # Léger gain négatif pour simuler distance du narrateur
 
 
 def _normaliser_lufs(audio: AudioSegment, cible_lufs: float = -16.0) -> AudioSegment:
@@ -220,8 +236,9 @@ class Monteur:
 
         logger.info("Assemblage de l'épisode %s — %s", episode_id, episode["titre"])
 
-        # 1. Charger et assembler les segments voix avec overlay SFX
-        voix = self._assembler_segments(episode["segments"], segments_dir)
+        # 1. Charger et assembler les segments voix avec overlay SFX et transitions
+        transition = self._charger_transition()
+        voix = self._assembler_segments(episode["segments"], segments_dir, transition)
         logger.info("Segments voix assemblés : %.1f secondes", len(voix) / 1000.0)
 
         # 2. Charger les assets audio (jingles dynamiques par type d'épisode)
@@ -229,15 +246,22 @@ class Monteur:
         intro = self._charger_jingle("intro", type_episode)
         outro = self._charger_jingle("outro", type_episode)
 
-        # 3. Charger la musique de fond selon l'ambiance
-        ambiance = episode.get("ambiance", "fond_doux")
-        fond = self._charger_ambiance(ambiance)
+        # 3. Charger la musique de fond selon l'ambiance (dynamique par acte si dispo)
+        ambiance_par_acte = episode.get("ambiance_par_acte")
+        ambiance_principale = episode.get("ambiance", "fond_doux")
 
-        # 4. Préparer la musique de fond
-        fond_ajuste = self._preparer_fond(fond, len(voix))
-
-        # 5. Mixer voix + fond
-        voix_avec_fond = voix.overlay(fond_ajuste)
+        if ambiance_par_acte and isinstance(ambiance_par_acte, list) and len(ambiance_par_acte) > 1:
+            voix_avec_fond = self._mixer_ambiance_dynamique(
+                voix, ambiance_par_acte, episode["segments"],
+            )
+            logger.info(
+                "Ambiance dynamique par acte : %s",
+                " → ".join(ambiance_par_acte),
+            )
+        else:
+            fond = self._charger_ambiance(ambiance_principale)
+            fond_ajuste = self._preparer_fond(fond, len(voix))
+            voix_avec_fond = voix.overlay(fond_ajuste)
 
         # 6. Assembler : intro → voix+fond → outro
         episode_complet = self._assembler_final(intro, voix_avec_fond, outro)
@@ -284,18 +308,36 @@ class Monteur:
         }
 
     def _assembler_segments(
-        self, segments: list[dict], dossier: Path
+        self, segments: list[dict], dossier: Path,
+        transition: AudioSegment | None = None,
     ) -> AudioSegment:
         """Charge et concatène les segments audio (voix + SFX) avec les pauses.
 
         Gère les modes SFX :
         - "insert" : le SFX est inséré séquentiellement (ancien comportement).
         - "overlay" : le SFX est superposé aux segments voix suivants.
+
+        Insère des transitions sonores entre actes (quand un narrateur suit
+        un bloc de 8+ segments ou un SFX marqueur).
         """
         resultat = AudioSegment.empty()
         overlays_pending: list[AudioSegment] = []
+        prev_personnage: str = ""
+        segments_depuis_transition: int = 0
 
-        for seg in segments:
+        for i, seg in enumerate(segments):
+            # Transition sonore entre actes narratifs
+            if (transition is not None
+                    and seg["personnage"] == "narrateur"
+                    and segments_depuis_transition >= 8
+                    and len(resultat) > 0):
+                trans = transition.apply_gain(-8)  # Très discret
+                if trans.channels == 1:
+                    trans = trans.set_channels(2)
+                resultat += trans
+                segments_depuis_transition = 0
+                logger.debug("Transition entre actes insérée à %.1fs", len(resultat) / 1000.0)
+
             chemin = dossier / f"{seg['id']}.mp3"
             if not chemin.exists():
                 # Remplacement par du silence au lieu de crash (BUG 11)
@@ -328,6 +370,10 @@ class Monteur:
                     audio = _appliquer_pan(audio, pan)
                     resultat += audio
             else:
+                # Effet audio distinctif pour le narrateur
+                if seg["personnage"] == "narrateur":
+                    audio = self._appliquer_effet_narrateur(audio)
+
                 pan = config.STEREO_PAN.get(seg["personnage"], 0.0)
                 audio = _appliquer_pan(audio, pan)
 
@@ -349,6 +395,12 @@ class Monteur:
                         audio = audio.overlay(sfx_overlay)
                     overlays_pending.clear()
 
+                # Micro-respiration naturelle entre certaines répliques
+                if (len(resultat) > 0
+                        and random.random() < RESPIRATION_PROBABILITE
+                        and seg["personnage"] != prev_personnage):
+                    resultat += self._generer_micro_respiration()
+
                 # Crossfade entre segments voix pour transitions plus naturelles
                 if (len(resultat) > CROSSFADE_VOIX_MS
                         and len(audio) > CROSSFADE_VOIX_MS):
@@ -356,13 +408,24 @@ class Monteur:
                 else:
                     resultat += audio
 
+                prev_personnage = seg["personnage"]
+
+            # Ajuster la pause selon l'indication de rythme du segment
+            rythme = seg.get("rythme", "normal")
             pause_ms = seg.get("pause_apres_ms", 0)
+            if rythme == "rapide":
+                pause_ms = int(pause_ms * 0.6)
+            elif rythme == "lent":
+                pause_ms = int(pause_ms * 1.5)
+
             # Plafonner les pauses excessives
             if pause_ms > MAX_PAUSE_MS:
                 logger.debug("Pause plafonnée de %dms à %dms", pause_ms, MAX_PAUSE_MS)
                 pause_ms = MAX_PAUSE_MS
             if pause_ms > 0:
                 resultat += AudioSegment.silent(duration=pause_ms)
+
+            segments_depuis_transition += 1
 
         # Appliquer les overlays restants sur la fin du résultat
         if overlays_pending:
@@ -550,6 +613,94 @@ class Monteur:
         logger.warning("Aucune musique de fond disponible — silence.")
         return AudioSegment.silent(duration=60_000)
 
+    def _mixer_ambiance_dynamique(
+        self,
+        voix: AudioSegment,
+        ambiances: list[str],
+        segments: list[dict],
+    ) -> AudioSegment:
+        """Mixe le fond sonore en changeant d'ambiance selon les actes.
+
+        Divise la piste voix en N sections égales (une par ambiance) et
+        charge un fond différent pour chaque section avec un crossfade
+        de 2 secondes entre les ambiances.
+        """
+        nb_actes = len(ambiances)
+        duree_totale = len(voix)
+        duree_par_acte = duree_totale // nb_actes
+        crossfade_amb = 2000  # 2 secondes de crossfade entre ambiances
+
+        resultat = AudioSegment.empty()
+        for i, ambiance in enumerate(ambiances):
+            debut = i * duree_par_acte
+            fin = (i + 1) * duree_par_acte if i < nb_actes - 1 else duree_totale
+            section_voix = voix[debut:fin]
+
+            fond = self._charger_ambiance(ambiance)
+            fond_ajuste = self._preparer_fond(fond, len(section_voix))
+            section_mixee = section_voix.overlay(fond_ajuste)
+
+            # Crossfade entre sections pour transition douce
+            if len(resultat) > crossfade_amb and len(section_mixee) > crossfade_amb:
+                resultat = resultat.append(section_mixee, crossfade=crossfade_amb)
+            else:
+                resultat += section_mixee
+
+        return resultat
+
+    def _charger_transition(self) -> AudioSegment:
+        """Charge ou génère un son de transition entre actes narratifs."""
+        chemin = config.ASSETS_DIR / "music" / "transition_acte.mp3"
+        if chemin.exists():
+            return AudioSegment.from_mp3(str(chemin))
+
+        if self._generer_asset_elevenlabs(TRANSITION_PROMPT, 2.0, chemin):
+            return AudioSegment.from_mp3(str(chemin))
+
+        # Fallback : court silence
+        logger.debug("Transition entre actes : silence de remplacement.")
+        return AudioSegment.silent(duration=500)
+
+    def _charger_signature(self) -> AudioSegment:
+        """Charge ou génère le générique signature récurrent.
+
+        Ce jingle est toujours identique d'un épisode à l'autre pour
+        créer une marque sonore reconnaissable par les enfants.
+        """
+        chemin = config.ASSETS_DIR / "music" / "signature_jingle.mp3"
+        if chemin.exists():
+            return AudioSegment.from_mp3(str(chemin))
+
+        if self._generer_asset_elevenlabs(SIGNATURE_JINGLE_PROMPT, 5.0, chemin):
+            return AudioSegment.from_mp3(str(chemin))
+
+        logger.warning("Signature jingle non disponible — silence.")
+        return AudioSegment.silent(duration=3000)
+
+    @staticmethod
+    def _appliquer_effet_narrateur(audio: AudioSegment) -> AudioSegment:
+        """Applique un léger effet audio au narrateur pour le distinguer.
+
+        Simule une distance légère via un gain négatif subtil et
+        un très léger fade in/out pour créer une impression de voix
+        « extérieure » à la scène.
+        """
+        audio = audio.apply_gain(NARRATEUR_REVERB_DB)
+        fade = min(30, len(audio) // 4)
+        if fade > 0:
+            audio = audio.fade_in(fade).fade_out(fade)
+        return audio
+
+    @staticmethod
+    def _generer_micro_respiration() -> AudioSegment:
+        """Génère un micro-silence simulant une respiration entre répliques.
+
+        Utilise un silence très court avec un léger volume aléatoire
+        pour un effet naturel de respiration.
+        """
+        duree = RESPIRATION_DUREE_MS + random.randint(-20, 20)
+        return AudioSegment.silent(duration=max(40, duree))
+
     def _preparer_fond(self, fond: AudioSegment, duree_voix_ms: int) -> AudioSegment:
         """Ajuste la musique de fond à la durée des voix avec le bon volume."""
         if len(fond) == 0:
@@ -574,7 +725,7 @@ class Monteur:
         voix_avec_fond: AudioSegment,
         outro: AudioSegment,
     ) -> AudioSegment:
-        """Assemble intro + contenu + outro avec les transitions."""
+        """Assemble signature + intro + contenu + outro + signature avec transitions."""
         intro_duree = config.PRODUCTION["intro_jingle_duree_ms"]
         outro_duree = config.PRODUCTION["outro_jingle_duree_ms"]
 
@@ -591,7 +742,19 @@ class Monteur:
 
         silence_transition = AudioSegment.silent(duration=SILENCE_TRANSITION_MS)
 
-        return intro + silence_transition + voix_avec_fond + silence_transition + outro
+        # Générique signature récurrent (identique à chaque épisode)
+        signature = self._charger_signature()
+        if signature.channels == 1:
+            signature = signature.set_channels(2)
+        signature = signature.fade_in(200).fade_out(300)
+
+        return (
+            signature + silence_transition
+            + intro + silence_transition
+            + voix_avec_fond
+            + silence_transition + outro
+            + silence_transition + signature
+        )
 
     def _generer_chapitres(
         self, segments: list[dict], dossier: Path

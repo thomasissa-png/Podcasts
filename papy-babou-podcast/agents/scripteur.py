@@ -43,19 +43,31 @@ RÈGLES STRICTES :
 8. Commencer par une scène où Papy Babou accueille les enfants.
 9. Terminer par la leçon de vie spécifiée et un au revoir chaleureux.
 10. BRUITAGES : insère des segments avec personnage "sfx" pour enrichir l'ambiance.
-    - Le champ "texte" contient une description courte du son en français.
+    - Le champ "texte" contient une description courte du son EN ANGLAIS (pour l'API de génération).
+      Exemples : "door creaking open slowly", "birds singing in morning sun", "thunder rumbling".
     - Le champ "duree_sfx_secondes" indique la durée souhaitée (2 à 10 secondes).
     - Le champ "mode" indique "overlay" (superposé aux voix suivantes) ou "insert" (séquentiel).
       Utilise "overlay" pour les ambiances de fond (vent, pluie, nature) et "insert" pour les
       effets ponctuels (tonnerre, porte qui claque, cri d'animal).
     - Place les bruitages aux moments clés : entrée des enfants, moments dramatiques,
       transitions de scène, et pour illustrer les éléments de l'histoire.
-    - Utilise 3 à 8 bruitages par épisode, pas plus (ne pas surcharger).
+    - OBLIGATOIRE : au minimum 5 bruitages par épisode, maximum 8. Chaque acte doit avoir
+      au moins 1 bruitage. Privilégie les bruitages "insert" pour les moments d'action, et
+      "overlay" pour les ambiances de fond.
+    - Exemples de bruitages contextuels :
+      * Entrée des enfants : "children's footsteps running, door opening"
+      * Scène en extérieur : "gentle wind blowing through trees, birds chirping"
+      * Moment dramatique : "deep thunder in the distance"
+      * Transition de scène : "soft magical chime, page turning"
+      * Scène de repas : "gentle clinking of dishes, pouring water"
 11. AMBIANCE MUSICALE : choisis l'ambiance générale de l'épisode parmi :
     "joyeux", "dramatique", "calme", "mystere", "epique", "tendre", "humoristique", "solennel".
     Indique-la dans le champ "ambiance" de l'épisode.
     Guide : "epique" pour les batailles et exodes, "tendre" pour les moments familiaux,
     "humoristique" pour les épisodes légers, "solennel" pour les scènes sacrées.
+    AMBIANCE DYNAMIQUE : tu peux aussi fournir un champ optionnel "ambiance_par_acte" (liste)
+    pour varier la musique de fond selon l'acte. Ex : ["calme", "dramatique", "tendre"].
+    Si absent, l'ambiance principale s'applique à tout l'épisode.
 12. ARC ÉMOTIONNEL : chaque épisode doit suivre une courbe émotionnelle claire :
     curiosité → montée en tension → climax → résolution → morale apaisante.
     Varie l'intensité des émotions. Place au moins un moment de SURPRISE ou RÉVÉLATION.
@@ -79,6 +91,7 @@ FORMAT DE SORTIE — JSON STRICT :
     "saison": N,
     "duree_cible_minutes": {duree_cible},
     "ambiance": "joyeux|dramatique|calme|mystere|epique|tendre|humoristique|solennel",
+    "ambiance_par_acte": ["calme", "dramatique", "tendre"],
     "morale": "La leçon de vie de cet épisode",
     "personnages_presents": ["papy_babou", "antoine", "noemie"],
     "moments_cles": ["Moment important 1", "Moment important 2"],
@@ -88,12 +101,13 @@ FORMAT DE SORTIE — JSON STRICT :
         "personnage": "{personnages_format}",
         "texte": "...",
         "ton": "chaleureux|curieux|inquiet|neutre|enthousiaste|dramatique|joyeux|rassurant",
+        "rythme": "normal|rapide|lent",
         "pause_apres_ms": 250
       }},
       {{
         "id": "sfx_001",
         "personnage": "sfx",
-        "texte": "description courte du bruitage",
+        "texte": "gentle wind blowing through olive trees",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -697,6 +711,9 @@ class Scripteur:
                                ep_type, type_episode)
             script.setdefault("episode", {})["type"] = type_episode
 
+        # Vérifier l'utilisation des tics de langage par personnage
+        self._verifier_tics_de_langage(script)
+
         nb_mots = self.compter_mots(script)
         mots_cible = format_ep["mots_cible"]
         logger.info(
@@ -737,6 +754,48 @@ class Scripteur:
             json.dump(script, f, ensure_ascii=False, indent=2)
         logger.info("Script sauvegardé dans %s", chemin)
         return chemin
+
+    @staticmethod
+    def _verifier_tics_de_langage(script: dict) -> None:
+        """Vérifie que chaque personnage principal utilise ses tics de langage.
+
+        Émet un warning si un personnage a moins de 2 tics utilisés dans l'épisode.
+        Cela aide le reviewer à demander une réécriture si le script manque
+        de caractérisation.
+        """
+        data = config.charger_personnages()
+        if not data:
+            return
+
+        personnages = data.get("personnages", {})
+        textes_par_perso: dict[str, str] = {}
+
+        for seg in script.get("episode", {}).get("segments", []):
+            perso = seg.get("personnage", "")
+            if perso in personnages:
+                textes_par_perso.setdefault(perso, "")
+                textes_par_perso[perso] += " " + seg.get("texte", "")
+
+        for perso_id, texte_complet in textes_par_perso.items():
+            tics = personnages.get(perso_id, {}).get("tics_de_langage", [])
+            if not tics:
+                continue
+            texte_lower = texte_complet.lower()
+            tics_trouves = sum(
+                1 for tic in tics if tic.lower().rstrip("...!?. ") in texte_lower
+            )
+            nom = personnages[perso_id].get("nom_complet", perso_id)
+            if tics_trouves < 2:
+                logger.warning(
+                    "Tics de langage : %s n'utilise que %d/%d tics dans cet épisode "
+                    "(minimum recommandé : 2-3).",
+                    nom, tics_trouves, len(tics),
+                )
+            else:
+                logger.info(
+                    "Tics de langage : %s utilise %d/%d tics.",
+                    nom, tics_trouves, len(tics),
+                )
 
     @staticmethod
     def compter_mots(script: dict) -> int:

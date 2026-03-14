@@ -917,7 +917,9 @@ class TestMonteurCrossfade:
              "ton": "curieux", "pause_apres_ms": 0},
         ]
 
-        with patch.object(AudioSegment, "from_mp3", side_effect=[seg1, seg2]):
+        # Désactiver les micro-respirations pour un test déterministe
+        with patch.object(AudioSegment, "from_mp3", side_effect=[seg1, seg2]), \
+             patch("agents.monteur.random.random", return_value=1.0):
             monteur = Monteur()
             result = monteur._assembler_segments(segments, segments_dir)
 
@@ -944,7 +946,8 @@ class TestMonteurMaxPause:
              "ton": "neutre", "pause_apres_ms": 5000},  # > MAX_PAUSE_MS
         ]
 
-        with patch.object(AudioSegment, "from_mp3", return_value=seg):
+        with patch.object(AudioSegment, "from_mp3", return_value=seg), \
+             patch("agents.monteur.random.random", return_value=1.0):
             monteur = Monteur()
             result = monteur._assembler_segments(segments, segments_dir)
 
@@ -1052,3 +1055,344 @@ class TestScripteurTypeValidation:
             script["episode"]["type"] = "standard"
 
         assert script["episode"]["type"] == "standard"
+
+
+# ── Amélioration 1 : Mapping ton → voice_settings ─────────────────────────────
+
+
+class TestToneVoiceAdjustments:
+    """Le mapping ton → voice_settings doit ajuster les paramètres ElevenLabs."""
+
+    def test_tone_adjustments_existent(self):
+        """Le dict TONE_VOICE_ADJUSTMENTS doit contenir tous les tons du prompt."""
+        from agents.producteur_audio import TONE_VOICE_ADJUSTMENTS
+        tons_attendus = {
+            "chaleureux", "curieux", "inquiet", "neutre", "enthousiaste",
+            "dramatique", "joyeux", "rassurant", "ambiance",
+        }
+        for ton in tons_attendus:
+            assert ton in TONE_VOICE_ADJUSTMENTS, f"Ton '{ton}' manquant dans TONE_VOICE_ADJUSTMENTS"
+
+    def test_tone_neutre_pas_de_modification(self):
+        """Le ton 'neutre' ne doit pas modifier les paramètres de base."""
+        from agents.producteur_audio import TONE_VOICE_ADJUSTMENTS
+        neutre = TONE_VOICE_ADJUSTMENTS["neutre"]
+        assert neutre["stability"] == 0.0
+        assert neutre["similarity_boost"] == 0.0
+        assert neutre["style"] == 0.0
+
+    def test_tone_clamping(self):
+        """Les ajustements doivent rester dans [0.0, 1.0] après application."""
+        from agents.producteur_audio import TONE_VOICE_ADJUSTMENTS
+        for ton, adj in TONE_VOICE_ADJUSTMENTS.items():
+            # Test avec des valeurs de base extrêmes
+            for base_val in (0.0, 0.5, 1.0):
+                for key in ("stability", "similarity_boost", "style"):
+                    result = max(0.0, min(1.0, base_val + adj.get(key, 0.0)))
+                    assert 0.0 <= result <= 1.0, (
+                        f"Ton '{ton}', clé '{key}': résultat {result} hors limites"
+                    )
+
+    def test_tone_enthousiaste_baisse_stability(self):
+        """Un ton enthousiaste doit baisser la stability (voix plus variable)."""
+        from agents.producteur_audio import TONE_VOICE_ADJUSTMENTS
+        assert TONE_VOICE_ADJUSTMENTS["enthousiaste"]["stability"] < 0
+
+    def test_tone_rassurant_hausse_stability(self):
+        """Un ton rassurant doit hausser la stability (voix plus posée)."""
+        from agents.producteur_audio import TONE_VOICE_ADJUSTMENTS
+        assert TONE_VOICE_ADJUSTMENTS["rassurant"]["stability"] > 0
+
+
+# ── Amélioration 2 : SFX en anglais ──────────────────────────────────────────
+
+
+class TestSfxEnAnglais:
+    """Le prompt scripteur doit demander des descriptions SFX en anglais."""
+
+    def test_prompt_sfx_en_anglais(self):
+        """Le system prompt doit mentionner 'EN ANGLAIS' pour les SFX."""
+        from agents.scripteur import SYSTEM_PROMPT_BASE
+        assert "EN ANGLAIS" in SYSTEM_PROMPT_BASE
+
+    def test_prompt_sfx_exemples_anglais(self):
+        """Les exemples SFX doivent être en anglais."""
+        from agents.scripteur import SYSTEM_PROMPT_BASE
+        assert "door creaking" in SYSTEM_PROMPT_BASE
+        assert "birds singing" in SYSTEM_PROMPT_BASE
+
+
+# ── Amélioration 3 : Crossfade 100ms ─────────────────────────────────────────
+
+
+class TestCrossfade100ms:
+    """Le crossfade entre segments voix doit être de 100ms."""
+
+    def test_crossfade_voix_100ms(self):
+        """CROSSFADE_VOIX_MS doit être 100."""
+        from agents.monteur import CROSSFADE_VOIX_MS
+        assert CROSSFADE_VOIX_MS == 100
+
+    def test_crossfade_entre_segments(self, tmp_path):
+        """Le crossfade doit réduire la durée totale de 100ms."""
+        from agents.monteur import Monteur, CROSSFADE_VOIX_MS
+        from pydub import AudioSegment
+
+        seg1 = AudioSegment.silent(duration=500)
+        seg2 = AudioSegment.silent(duration=500)
+        segments_dir = tmp_path / "segments"
+        segments_dir.mkdir()
+        (segments_dir / "seg_001.mp3").write_bytes(b"fake")
+        (segments_dir / "seg_002.mp3").write_bytes(b"fake")
+
+        segments = [
+            {"id": "seg_001", "personnage": "papy_babou", "texte": "Bonjour",
+             "ton": "chaleureux", "pause_apres_ms": 0},
+            {"id": "seg_002", "personnage": "antoine", "texte": "Salut",
+             "ton": "curieux", "pause_apres_ms": 0},
+        ]
+
+        # Désactiver micro-respirations pour test déterministe
+        with patch.object(AudioSegment, "from_mp3", side_effect=[seg1, seg2]), \
+             patch("agents.monteur.random.random", return_value=1.0):
+            monteur = Monteur()
+            result = monteur._assembler_segments(segments, segments_dir)
+
+        assert len(result) == 1000 - CROSSFADE_VOIX_MS
+
+
+# ── Amélioration 4 : Transitions entre actes ─────────────────────────────────
+
+
+class TestTransitionsActes:
+    """Des transitions sonores doivent être insérées entre actes."""
+
+    def test_transition_prompt_exists(self):
+        """Le prompt de transition doit être défini."""
+        from agents.monteur import TRANSITION_PROMPT
+        assert "transition" in TRANSITION_PROMPT.lower()
+        assert len(TRANSITION_PROMPT) > 20
+
+    def test_charger_transition_fallback_silence(self, monkeypatch):
+        """Sans fichier ni API, la transition est un silence."""
+        from agents.monteur import Monteur
+        monkeypatch.setattr(config, "ELEVENLABS_API_KEY", "")
+        monteur = Monteur()
+        trans = monteur._charger_transition()
+        assert len(trans) >= 400
+
+
+# ── Amélioration 5 : Vérification tics de langage ────────────────────────────
+
+
+class TestVerificationTics:
+    """La vérification des tics de langage doit fonctionner post-script."""
+
+    def test_tics_detectes_dans_script(self, monkeypatch):
+        """Les tics présents dans le texte doivent être comptés."""
+        from agents.scripteur import Scripteur
+
+        monkeypatch.setattr(config, "charger_personnages", lambda: {
+            "personnages": {
+                "papy_babou": {
+                    "nom_complet": "Papy Babou",
+                    "tics_de_langage": [
+                        "Ah mes petits loups...",
+                        "Figurez-vous que...",
+                        "Et devinez quoi ?",
+                    ],
+                },
+            }
+        })
+
+        script = {
+            "episode": {
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Ah mes petits loups, figurez-vous que c'est incroyable !"},
+                    {"personnage": "papy_babou", "texte": "Et devinez quoi ? C'est formidable !"},
+                ],
+            }
+        }
+
+        # Ne doit pas lever d'exception
+        Scripteur._verifier_tics_de_langage(script)
+
+    def test_tics_warning_si_manquants(self, monkeypatch, caplog):
+        """Un warning doit être émis si trop peu de tics sont utilisés."""
+        import logging
+        from agents.scripteur import Scripteur
+
+        monkeypatch.setattr(config, "charger_personnages", lambda: {
+            "personnages": {
+                "papy_babou": {
+                    "nom_complet": "Papy Babou",
+                    "tics_de_langage": [
+                        "Ah mes petits loups...",
+                        "Figurez-vous que...",
+                        "Et devinez quoi ?",
+                    ],
+                },
+            }
+        })
+
+        script = {
+            "episode": {
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Bonjour les enfants, quelle belle journée."},
+                ],
+            }
+        }
+
+        with caplog.at_level(logging.WARNING):
+            Scripteur._verifier_tics_de_langage(script)
+        assert any("Tics de langage" in m for m in caplog.messages)
+
+
+# ── Amélioration 6 : Ambiance dynamique par acte ────────────────────────────
+
+
+class TestAmbianceDynamique:
+    """Le scripteur doit supporter ambiance_par_acte."""
+
+    def test_prompt_mentionne_ambiance_dynamique(self):
+        """Le prompt doit mentionner 'ambiance_par_acte'."""
+        from agents.scripteur import SYSTEM_PROMPT_BASE
+        assert "ambiance_par_acte" in SYSTEM_PROMPT_BASE
+
+    def test_monteur_mixer_ambiance_dynamique(self, monkeypatch):
+        """Le monteur doit mixer plusieurs ambiances quand ambiance_par_acte est fourni."""
+        from agents.monteur import Monteur
+        from pydub import AudioSegment
+
+        monkeypatch.setattr(config, "ELEVENLABS_API_KEY", "")
+
+        voix = AudioSegment.silent(duration=6000)
+        monteur = Monteur()
+
+        # Mock _charger_ambiance pour retourner du silence sans appels API
+        with patch.object(monteur, "_charger_ambiance",
+                          return_value=AudioSegment.silent(duration=3000)):
+            result = monteur._mixer_ambiance_dynamique(
+                voix, ["calme", "dramatique", "tendre"], []
+            )
+
+        # Le résultat doit avoir environ la même durée que les voix
+        # (avec les crossfades, il sera légèrement plus court)
+        assert abs(len(result) - 6000) < 5000
+
+
+# ── Amélioration 7 : Micro-respirations ──────────────────────────────────────
+
+
+class TestMicroRespirations:
+    """Des micro-respirations doivent être insérées entre certaines répliques."""
+
+    def test_respiration_constantes_definies(self):
+        """Les constantes de respiration doivent être définies."""
+        from agents.monteur import RESPIRATION_DUREE_MS, RESPIRATION_PROBABILITE
+        assert RESPIRATION_DUREE_MS > 0
+        assert 0.0 < RESPIRATION_PROBABILITE < 1.0
+
+    def test_generer_micro_respiration(self):
+        """La méthode de micro-respiration doit retourner un silence court."""
+        from agents.monteur import Monteur, RESPIRATION_DUREE_MS
+        monteur = Monteur()
+        respiration = monteur._generer_micro_respiration()
+        assert len(respiration) > 0
+        assert len(respiration) <= RESPIRATION_DUREE_MS + 30
+
+
+# ── Amélioration 8 : Effet narrateur ─────────────────────────────────────────
+
+
+class TestEffetNarrateur:
+    """Le narrateur doit avoir un effet audio distinct."""
+
+    def test_effet_narrateur_applique_gain(self):
+        """L'effet narrateur doit appliquer un gain négatif."""
+        from agents.monteur import Monteur, NARRATEUR_REVERB_DB
+        from pydub import AudioSegment
+
+        audio = AudioSegment.silent(duration=1000)
+        result = Monteur._appliquer_effet_narrateur(audio)
+        assert len(result) == len(audio)
+        assert NARRATEUR_REVERB_DB < 0
+
+
+# ── Amélioration 9 : Variation de rythme scénarisée ──────────────────────────
+
+
+class TestVariationRythme:
+    """Le champ 'rythme' doit moduler les pauses."""
+
+    def test_prompt_contient_rythme(self):
+        """Le format JSON du prompt doit mentionner le champ rythme."""
+        from agents.scripteur import SYSTEM_PROMPT_BASE
+        assert "rythme" in SYSTEM_PROMPT_BASE
+
+    def test_rythme_rapide_reduit_pause(self, tmp_path):
+        """Le rythme 'rapide' doit réduire les pauses."""
+        from agents.monteur import Monteur
+        from pydub import AudioSegment
+
+        seg = AudioSegment.silent(duration=200)
+        segments_dir = tmp_path / "segments"
+        segments_dir.mkdir()
+        (segments_dir / "seg_001.mp3").write_bytes(b"fake")
+
+        segments = [
+            {"id": "seg_001", "personnage": "papy_babou", "texte": "Test",
+             "ton": "neutre", "pause_apres_ms": 1000, "rythme": "rapide"},
+        ]
+
+        with patch.object(AudioSegment, "from_mp3", return_value=seg), \
+             patch("agents.monteur.random.random", return_value=1.0):
+            monteur = Monteur()
+            result = monteur._assembler_segments(segments, segments_dir)
+
+        # 200ms audio + 600ms pause (1000 * 0.6) = 800ms
+        assert len(result) == 200 + 600
+
+    def test_rythme_lent_augmente_pause(self, tmp_path):
+        """Le rythme 'lent' doit augmenter les pauses."""
+        from agents.monteur import Monteur
+        from pydub import AudioSegment
+
+        seg = AudioSegment.silent(duration=200)
+        segments_dir = tmp_path / "segments"
+        segments_dir.mkdir()
+        (segments_dir / "seg_001.mp3").write_bytes(b"fake")
+
+        segments = [
+            {"id": "seg_001", "personnage": "papy_babou", "texte": "Test",
+             "ton": "neutre", "pause_apres_ms": 1000, "rythme": "lent"},
+        ]
+
+        with patch.object(AudioSegment, "from_mp3", return_value=seg), \
+             patch("agents.monteur.random.random", return_value=1.0):
+            monteur = Monteur()
+            result = monteur._assembler_segments(segments, segments_dir)
+
+        # 200ms audio + 1500ms pause (1000 * 1.5) = 1700ms
+        assert len(result) == 200 + 1500
+
+
+# ── Amélioration 10 : Générique signature récurrent ──────────────────────────
+
+
+class TestGeneriqueSignature:
+    """Un jingle signature identique doit encadrer chaque épisode."""
+
+    def test_signature_prompt_exists(self):
+        """Le prompt de signature doit être défini."""
+        from agents.monteur import SIGNATURE_JINGLE_PROMPT
+        assert "signature" in SIGNATURE_JINGLE_PROMPT.lower()
+        assert "jingle" in SIGNATURE_JINGLE_PROMPT.lower()
+
+    def test_charger_signature_fallback(self, monkeypatch):
+        """Sans fichier ni API, la signature est un silence."""
+        from agents.monteur import Monteur
+        monkeypatch.setattr(config, "ELEVENLABS_API_KEY", "")
+        monteur = Monteur()
+        sig = monteur._charger_signature()
+        assert len(sig) >= 2000

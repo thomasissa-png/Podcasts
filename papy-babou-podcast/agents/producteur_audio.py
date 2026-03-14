@@ -15,6 +15,29 @@ logger = logging.getLogger(__name__)
 
 ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 
+# ── Mapping ton → ajustements dynamiques voice_settings ──────────────────────
+# Chaque ton modifie stability / similarity_boost / style par rapport aux
+# réglages de base du personnage.  Valeurs entre -0.3 et +0.3 (additives).
+TONE_VOICE_ADJUSTMENTS: dict[str, dict[str, float]] = {
+    "chaleureux":    {"stability": +0.05, "similarity_boost": 0.0,   "style": +0.05},
+    "curieux":       {"stability": -0.10, "similarity_boost": 0.0,   "style": +0.10},
+    "inquiet":       {"stability": -0.15, "similarity_boost": +0.05, "style": +0.15},
+    "neutre":        {"stability": 0.0,   "similarity_boost": 0.0,   "style": 0.0},
+    "enthousiaste":  {"stability": -0.15, "similarity_boost": 0.0,   "style": +0.20},
+    "dramatique":    {"stability": +0.10, "similarity_boost": +0.05, "style": +0.15},
+    "joyeux":        {"stability": -0.10, "similarity_boost": 0.0,   "style": +0.15},
+    "rassurant":     {"stability": +0.10, "similarity_boost": +0.05, "style": -0.05},
+    "triste":        {"stability": +0.10, "similarity_boost": +0.05, "style": +0.10},
+    "chuchotant":    {"stability": +0.20, "similarity_boost": +0.10, "style": -0.15},
+    "excite":        {"stability": -0.20, "similarity_boost": 0.0,   "style": +0.25},
+    "mystérieux":    {"stability": +0.05, "similarity_boost": +0.05, "style": +0.10},
+    "solennel":      {"stability": +0.15, "similarity_boost": +0.05, "style": -0.10},
+    "espiègle":      {"stability": -0.15, "similarity_boost": 0.0,   "style": +0.20},
+    "émerveillé":    {"stability": -0.10, "similarity_boost": +0.05, "style": +0.20},
+    "effrayé":       {"stability": -0.20, "similarity_boost": +0.05, "style": +0.20},
+    "ambiance":      {"stability": 0.0,   "similarity_boost": 0.0,   "style": 0.0},
+}
+
 
 class ProducteurAudio:
     """Orchestre les appels ElevenLabs pour générer les segments audio."""
@@ -133,6 +156,28 @@ class ProducteurAudio:
                 )
 
         settings = config.VOICE_SETTINGS.get(personnage, {})
+
+        # Ajuster les voice_settings selon le ton du segment
+        base_stability = settings.get("stability", 0.75)
+        base_similarity = settings.get("similarity_boost", 0.80)
+        base_style = settings.get("style", 0.2)
+
+        ton = segment.get("ton", "neutre")
+        adjustments = TONE_VOICE_ADJUSTMENTS.get(ton, {})
+        if adjustments:
+            adj_stability = max(0.0, min(1.0, base_stability + adjustments.get("stability", 0.0)))
+            adj_similarity = max(0.0, min(1.0, base_similarity + adjustments.get("similarity_boost", 0.0)))
+            adj_style = max(0.0, min(1.0, base_style + adjustments.get("style", 0.0)))
+            if ton != "neutre":
+                logger.debug(
+                    "  Ton '%s' → stability=%.2f, similarity=%.2f, style=%.2f",
+                    ton, adj_stability, adj_similarity, adj_style,
+                )
+        else:
+            adj_stability = base_stability
+            adj_similarity = base_similarity
+            adj_style = base_style
+
         url = ELEVENLABS_TTS_URL.format(voice_id=voice_id)
         headers = {
             "xi-api-key": self.api_key,
@@ -143,9 +188,9 @@ class ProducteurAudio:
             "text": segment["texte"],
             "model_id": "eleven_multilingual_v2",
             "voice_settings": {
-                "stability": settings.get("stability", 0.75),
-                "similarity_boost": settings.get("similarity_boost", 0.80),
-                "style": settings.get("style", 0.2),
+                "stability": adj_stability,
+                "similarity_boost": adj_similarity,
+                "style": adj_style,
                 "use_speaker_boost": True,
             },
         }
