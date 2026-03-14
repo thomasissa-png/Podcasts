@@ -158,16 +158,21 @@ def trouver_fichier_audio(episode_id: str) -> dict:
                 rows = cur.fetchall()
             for row in rows:
                 p = Path(row["chemin"])
-                if row["type_fichier"] == "episode_preview":
-                    result["preview"] = p.name
-                    if not result["duree_secondes"] and row["duree_secondes"]:
-                        result["duree_secondes"] = row["duree_secondes"]
-                elif row["type_fichier"] == "episode_hq":
-                    result["hq"] = p.name
-                    if not result["duree_secondes"] and row["duree_secondes"]:
-                        result["duree_secondes"] = row["duree_secondes"]
+                if not result["duree_secondes"] and row["duree_secondes"]:
+                    result["duree_secondes"] = row["duree_secondes"]
+                if row["type_fichier"] == "episode_hq":
                     if not result["taille_mb"] and row["taille_bytes"]:
                         result["taille_mb"] = round(row["taille_bytes"] / (1024 * 1024), 2)
+                # N'assigner que si le fichier existe réellement sur le filesystem
+                # sinon stocker comme missing et laisser step 4 (Object Storage) restaurer
+                if p.exists():
+                    if row["type_fichier"] == "episode_preview":
+                        result["preview"] = p.name
+                    elif row["type_fichier"] == "episode_hq":
+                        result["hq"] = p.name
+                else:
+                    key = "preview" if row["type_fichier"] == "episode_preview" else "hq"
+                    result[f"{key}_missing"] = p.name
         except Exception as e:
             logger.debug("DB indisponible pour fichiers audio %s : %s", episode_id, e)
 

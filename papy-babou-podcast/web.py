@@ -608,6 +608,20 @@ def api_delete_episode(episode_id):
         except Exception as e:
             logger.warning("Erreur soft-delete DB pour %s : %s", episode_id, e)
 
+    # 4. Nettoyer Object Storage
+    try:
+        import persistent_storage
+        if persistent_storage.is_available():
+            for prefix in [persistent_storage.PREFIX_AUDIO,
+                           persistent_storage.PREFIX_SCRIPT,
+                           persistent_storage.PREFIX_RAPPORT]:
+                keys = persistent_storage.list_files(f"{prefix}{episode_id}")
+                for key in keys:
+                    if persistent_storage.delete_file(key):
+                        supprime["fichiers"].append(f"object_storage/{key}")
+    except Exception as e:
+        logger.warning("Erreur nettoyage Object Storage pour %s : %s", episode_id, e)
+
     total = len(supprime["fichiers"]) + len(supprime["db"])
     if total == 0:
         return jsonify({

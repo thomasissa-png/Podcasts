@@ -20,6 +20,7 @@ Usage :
 """
 
 import logging
+import threading
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -28,25 +29,41 @@ logger = logging.getLogger(__name__)
 
 _client = None
 _available: bool | None = None  # None = pas encore testé
+_lock = threading.Lock()
 
 
 def _get_client():
-    """Retourne le client Object Storage, ou None si indisponible."""
+    """Retourne le client Object Storage, ou None si indisponible.
+
+    Thread-safe grâce à un lock. Vérifie la disponibilité réelle en
+    tentant une opération (list) plutôt que de se fier au constructeur.
+    """
     global _client, _available
+    # Fast path sans lock (lecture atomique de bool en CPython)
     if _available is False:
         return None
     if _client is not None:
         return _client
-    try:
-        from replit.object_storage import Client
-        _client = Client()
-        _available = True
-        logger.info("Replit Object Storage connecté.")
-        return _client
-    except Exception as e:
-        _available = False
-        logger.info("Replit Object Storage indisponible : %s (mode local)", e)
-        return None
+    with _lock:
+        # Re-check sous lock (double-checked locking)
+        if _available is False:
+            return None
+        if _client is not None:
+            return _client
+        try:
+            from replit.object_storage import Client
+            client = Client()
+            # Vérifier que le service est réellement accessible
+            # (le constructeur réussit même sans Object Storage)
+            client.list(prefix="__ping__")
+            _client = client
+            _available = True
+            logger.info("Replit Object Storage connecté.")
+            return _client
+        except Exception as e:
+            _available = False
+            logger.info("Replit Object Storage indisponible : %s (mode local)", e)
+            return None
 
 
 # ── Préfixes de stockage ─────────────────────────────────────────────────────
@@ -255,13 +272,18 @@ def restore_episode_audio(episode_id: str, dest_dir: Path) -> dict:
     for key in keys:
         filename = key.removeprefix(PREFIX_AUDIO)
         dest = dest_dir / filename
+
+        # Télécharger si absent localement
         if not dest.exists():
-            if download_file(key, dest):
-                if "_192k.mp3" in filename or "_hq.mp3" in filename:
-                    result["hq"] = dest
-                elif "_128k.mp3" in filename or "_preview.mp3" in filename:
-                    result["preview"] = dest
-                logger.info("Audio restauré : %s", dest)
+            if not download_file(key, dest):
+                continue
+            logger.info("Audio restauré : %s", dest)
+
+        # Toujours ajouter au résultat (même si le fichier existait déjà)
+        if "_192k.mp3" in filename or "_hq.mp3" in filename:
+            result["hq"] = dest
+        elif "_128k.mp3" in filename or "_preview.mp3" in filename:
+            result["preview"] = dest
 
     return result
 

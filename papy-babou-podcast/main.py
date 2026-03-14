@@ -2065,7 +2065,8 @@ def _pipeline_inner(
             # Upload audio vers Object Storage (persistance inter-deploy)
             try:
                 import persistent_storage
-                preview_path = Path(resultat_montage["chemin_preview"])
+                _preview_raw = resultat_montage.get("chemin_preview")
+                preview_path = Path(_preview_raw) if _preview_raw else None
                 storage_keys = persistent_storage.upload_episode_audio(
                     episode_id, Path(chemin_hq), preview_path,
                 )
@@ -2134,6 +2135,19 @@ def _pipeline_inner(
                     resultat_montage=resultat_montage,
                     rapport=rapport,
                 )
+
+            # Upload audio remontée vers Object Storage
+            try:
+                import persistent_storage
+                preview_remonté = resultat_montage.get("chemin_preview")
+                preview_path_r = Path(preview_remonté) if preview_remonté else None
+                storage_keys = persistent_storage.upload_episode_audio(
+                    episode_id, Path(chemin_hq), preview_path_r,
+                )
+                if storage_keys:
+                    rapport["etapes"]["montage"]["object_storage"] = storage_keys
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour audio remontée : %s", e)
 
             # M9: Save checkpoint after remontage loop to preserve remontage work
             sauvegarder_checkpoint(episode_id, "metadonnees", {
