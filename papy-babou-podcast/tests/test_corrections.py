@@ -1396,3 +1396,103 @@ class TestGeneriqueSignature:
         monteur = Monteur()
         sig = monteur._charger_signature()
         assert len(sig) >= 2000
+
+
+# ── Prévisualisation ambiances saison ─────────────────────────────────────────
+
+
+class TestJinglesSaisonCustom:
+    """Le système de jingles custom de saison doit fonctionner."""
+
+    def test_config_jingles_saison_vide_sans_plan(self, monkeypatch):
+        """Sans plan de saison, jingles_saison retourne un dict vide."""
+        monkeypatch.setattr(config, "charger_saison", lambda n: {})
+        result = config.jingles_saison(99)
+        assert result == {}
+
+    def test_config_jingles_saison_avec_custom(self, tmp_path, monkeypatch):
+        """Avec un plan contenant jingles_custom, les chemins sont retournés."""
+        jingle_file = tmp_path / "intro_custom.mp3"
+        jingle_file.write_bytes(b"fake audio")
+
+        plan = {
+            "saison": {
+                "jingles_custom": {
+                    "intro_saison": str(jingle_file),
+                }
+            }
+        }
+        monkeypatch.setattr(config, "charger_saison", lambda n: plan)
+        result = config.jingles_saison(1)
+        assert "intro_saison" in result
+        assert result["intro_saison"] == jingle_file
+
+    def test_config_jingles_saison_fichier_manquant(self, monkeypatch):
+        """Si le fichier custom n'existe plus, la clé est ignorée."""
+        plan = {
+            "saison": {
+                "jingles_custom": {
+                    "intro_saison": "/nonexistent/path.mp3",
+                }
+            }
+        }
+        monkeypatch.setattr(config, "charger_saison", lambda n: plan)
+        result = config.jingles_saison(1)
+        assert "intro_saison" not in result
+
+    def test_monteur_jingle_custom_prioritaire(self, tmp_path, monkeypatch):
+        """Le jingle custom de saison a priorité sur JINGLES_PAR_TYPE."""
+        from agents.monteur import Monteur
+        from pydub import AudioSegment
+
+        jingle_file = tmp_path / "intro_custom.mp3"
+        jingle_file.write_bytes(b"fake custom audio")
+        custom = {"intro_saison": jingle_file}
+
+        monkeypatch.setattr(config, "jingles_saison", lambda n: custom)
+        fake_audio = AudioSegment.silent(duration=5000)
+
+        monteur = Monteur()
+        with patch.object(AudioSegment, "from_mp3", return_value=fake_audio) as mock_from:
+            result = monteur._charger_jingle("intro", "ouverture", numero_saison=1)
+
+        # Doit avoir été appelé avec le chemin custom
+        mock_from.assert_called_with(str(jingle_file))
+        assert len(result) == 5000
+
+    def test_monteur_jingle_sans_saison_fallback(self, tmp_path, monkeypatch):
+        """Sans numéro de saison, le comportement par défaut est préservé."""
+        from agents.monteur import Monteur
+        from pydub import AudioSegment
+
+        monkeypatch.setattr(config, "ELEVENLABS_API_KEY", "")
+        fake_audio = AudioSegment.silent(duration=3000)
+
+        # Créer un fichier jingle standard
+        jingle_std = tmp_path / "intro_jingle.mp3"
+        jingle_std.write_bytes(b"fake")
+        monkeypatch.setattr(config, "AUDIO_ASSETS", {
+            "intro_jingle": jingle_std,
+        })
+        monkeypatch.setattr(config, "JINGLES_PAR_TYPE", {})
+
+        monteur = Monteur()
+        with patch.object(AudioSegment, "from_mp3", return_value=fake_audio):
+            result = monteur._charger_jingle("intro", "standard")
+
+        assert len(result) == 3000
+
+    def test_plan_jingles_custom_structure(self):
+        """Le plan de saison peut stocker jingles_custom correctement."""
+        plan = {"saison": {"numero": 1, "theme": "test"}}
+
+        # Simuler ce que fait _previsualiser_ambiances_saison
+        jingles_custom = {"intro_saison": "/path/to/custom.mp3"}
+        plan.setdefault("saison", {})["jingles_custom"] = jingles_custom
+        plan["saison"].setdefault("decisions_humaines", []).append({
+            "action": "ambiances_saison_validees",
+            "jingles_custom": jingles_custom,
+        })
+
+        assert plan["saison"]["jingles_custom"]["intro_saison"] == "/path/to/custom.mp3"
+        assert plan["saison"]["decisions_humaines"][-1]["action"] == "ambiances_saison_validees"

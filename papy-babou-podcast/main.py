@@ -812,6 +812,162 @@ def _validation_script(
             console.print("[red]  Choix non reconnu. Tapez v, m, c ou a.[/red]")
 
 
+def _previsualiser_ambiances_saison(
+    plan: dict,
+    chemin_json: Path,
+    saison: int,
+) -> dict:
+    """Prévisualisation et remplacement des jingles intro/outro de la saison.
+
+    Permet au producteur d'écouter les jingles de saison (intro_saison,
+    outro_saison), et de les remplacer soit par auto-génération ElevenLabs,
+    soit par un fichier audio custom.
+
+    Les chemins custom sont sauvegardés dans ``plan["saison"]["jingles_custom"]``
+    pour que le monteur les utilise durant toute la production de la saison.
+
+    Args:
+        plan: Plan de saison (sera muté avec les chemins jingles_custom).
+        chemin_json: Chemin du fichier JSON du plan (pour sauvegarde).
+        saison: Numéro de saison.
+
+    Returns:
+        Le plan mis à jour.
+    """
+    from agents.monteur import (
+        Monteur, JINGLE_PROMPTS,
+    )
+
+    console.print(Panel(
+        f"[bold]Prévisualisation des ambiances sonores — Saison {saison}[/bold]\n"
+        "Écoutez les jingles d'intro et d'outro de la saison.\n"
+        "Vous pouvez les remplacer si vous n'êtes pas satisfait.",
+        title=f"{Icons.SAISON} Ambiances sonores de saison",
+        border_style="blue",
+    ))
+
+    monteur = Monteur()
+    jingles_custom = plan.get("saison", {}).get("jingles_custom", {})
+
+    for position, label in [("intro", "Intro de saison"), ("outro", "Outro de saison")]:
+        jingle_key = f"{position}_saison"
+        chemin_defaut = config.JINGLES_PAR_TYPE.get(
+            "ouverture" if position == "intro" else "final", {},
+        ).get(position, config.ASSETS_DIR / "music" / f"{jingle_key}.mp3")
+
+        # Chercher le jingle actuel (custom ou par défaut)
+        chemin_custom = jingles_custom.get(jingle_key)
+        chemin_actuel = Path(chemin_custom) if chemin_custom and Path(chemin_custom).exists() else None
+        if not chemin_actuel and chemin_defaut.exists():
+            chemin_actuel = chemin_defaut
+        source = "custom" if chemin_custom else "par défaut"
+
+        # Générer si aucun fichier n'existe encore
+        if not chemin_actuel:
+            console.print(f"\n  [yellow]{label} : aucun fichier trouvé — génération automatique...[/yellow]")
+            prompt = JINGLE_PROMPTS.get(jingle_key, "")
+            if prompt and monteur._generer_asset_elevenlabs(prompt, 10.0, chemin_defaut):
+                chemin_actuel = chemin_defaut
+                source = "auto-généré"
+                console.print(f"  [{Palette.SUCCES}]Jingle généré : {chemin_defaut}[/]")
+            else:
+                console.print(f"  [red]Impossible de générer le jingle {position}.[/red]")
+                continue
+
+        console.print(f"\n  [bold]{label}[/bold] ({source}) : {chemin_actuel}")
+
+        # Boucle d'écoute / remplacement pour ce jingle
+        while True:
+            console.print(panel_validation([
+                ("e", f"Écouter le jingle {position}"),
+                ("v", "Valider — garder ce jingle"),
+                ("g", "Régénérer automatiquement (ElevenLabs)"),
+                ("f", "Remplacer par un fichier audio custom"),
+            ], titre=f"Jingle {label}"))
+
+            choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+
+            if choix in ("e", "ecouter"):
+                if chemin_actuel and chemin_actuel.exists():
+                    if ouvrir_fichier(chemin_actuel):
+                        console.print(f"  [{Palette.SUCCES}]Lecture lancée.[/]")
+                    else:
+                        console.print(f"  [yellow]Ouvrez manuellement : {chemin_actuel}[/yellow]")
+                else:
+                    console.print("  [red]Fichier introuvable.[/red]")
+
+            elif choix in ("v", "valider"):
+                console.print(f"  [{Palette.SUCCES}]Jingle {position} validé.[/]")
+                break
+
+            elif choix in ("g", "generer"):
+                console.print(f"  [cyan]Régénération du jingle {position}...[/cyan]")
+                prompt = JINGLE_PROMPTS.get(jingle_key, "")
+                if not prompt:
+                    console.print("  [red]Aucun prompt configuré pour ce jingle.[/red]")
+                    continue
+
+                # Supprimer l'ancien fichier pour forcer la régénération
+                chemin_gen = chemin_defaut
+                if chemin_gen.exists():
+                    chemin_gen.unlink()
+
+                if monteur._generer_asset_elevenlabs(prompt, 10.0, chemin_gen):
+                    chemin_actuel = chemin_gen
+                    source = "auto-généré"
+                    # Supprimer l'éventuel custom puisqu'on revient au généré
+                    jingles_custom.pop(jingle_key, None)
+                    console.print(f"  [{Palette.SUCCES}]Nouveau jingle généré : {chemin_gen}[/]")
+                else:
+                    console.print("  [red]Échec de la génération ElevenLabs.[/red]")
+
+            elif choix in ("f", "fichier"):
+                console.print(
+                    "\n  [yellow]Entrez le chemin absolu du fichier audio de remplacement "
+                    "(MP3) :[/yellow]"
+                )
+                chemin_input = console.input("  > ").strip()
+                if not chemin_input:
+                    console.print("  [yellow]Annulé.[/yellow]")
+                    continue
+
+                chemin_remplacement = Path(chemin_input)
+                if not chemin_remplacement.exists():
+                    console.print(f"  [red]Fichier introuvable : {chemin_remplacement}[/red]")
+                    continue
+                if not chemin_remplacement.suffix.lower() in (".mp3", ".wav", ".ogg", ".m4a"):
+                    console.print("  [red]Format non supporté. Utilisez MP3, WAV, OGG ou M4A.[/red]")
+                    continue
+
+                # Copier dans le dossier assets de la saison
+                import shutil
+                dest = config.ASSETS_DIR / "music" / f"saison_{saison:02d}_{jingle_key}{chemin_remplacement.suffix}"
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(chemin_remplacement), str(dest))
+                chemin_actuel = dest
+                jingles_custom[jingle_key] = str(dest)
+                console.print(f"  [{Palette.SUCCES}]Fichier copié : {dest}[/]")
+
+            else:
+                console.print("  [red]Choix non reconnu. Tapez e, v, g ou f.[/red]")
+
+    # Sauvegarder les jingles custom dans le plan
+    plan.setdefault("saison", {})["jingles_custom"] = jingles_custom
+    plan["saison"].setdefault("decisions_humaines", []).append({
+        "action": "ambiances_saison_validees",
+        "jingles_custom": jingles_custom,
+        "timestamp": datetime.now().isoformat(),
+    })
+
+    # Sauvegarder le plan mis à jour
+    from agents import Planificateur
+    planificateur = Planificateur()
+    planificateur.sauvegarder(plan, chemin_json)
+    console.print(f"\n[{Palette.SUCCES}]Ambiances sonores de saison validées et sauvegardées.[/]")
+
+    return plan
+
+
 def _validation_plan_saison(
     plan: dict,
     chemin_json: Path,
@@ -3122,6 +3278,14 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 "action": "auto_valide",
                 "timestamp": datetime.now().isoformat(),
             })
+
+        # ── Prévisualisation des ambiances sonores de saison ──────────
+        if not auto:
+            plan = _previsualiser_ambiances_saison(
+                plan=plan,
+                chemin_json=chemin_json,
+                saison=saison,
+            )
 
         # Re-sauvegarder le plan valide (peut avoir ete modifie ou regenere)
         planificateur.sauvegarder(plan, chemin_json)

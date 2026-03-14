@@ -225,6 +225,31 @@ JINGLES_PAR_TYPE = {
     },
 }
 
+
+def jingles_saison(numero_saison: int) -> dict[str, Path]:
+    """Retourne les chemins des jingles custom d'une saison (si définis).
+
+    Cherche dans le plan de saison le champ ``jingles_custom`` qui contient
+    les chemins absolus vers les fichiers audio choisis par le producteur.
+
+    Returns:
+        Dict ``{"intro_saison": Path, "outro_saison": Path}`` ou dict vide.
+    """
+    plan = charger_saison(numero_saison)
+    custom = plan.get("saison", {}).get("jingles_custom", {})
+    result: dict[str, Path] = {}
+    for key in ("intro_saison", "outro_saison"):
+        chemin_str = custom.get(key)
+        if chemin_str:
+            chemin = Path(chemin_str)
+            if chemin.exists():
+                result[key] = chemin
+            else:
+                _config_logger.warning(
+                    "Jingle custom '%s' introuvable : %s", key, chemin,
+                )
+    return result
+
 # ── Multi-ambiances musicales ────────────────────────────────────────────────
 # Le scripteur choisit l'ambiance dans le champ "ambiance" du script.
 # Si l'asset n'existe pas, on fallback sur "fond_doux".

@@ -442,6 +442,43 @@ Clear visual separation between single-episode and season production workflows:
 - **Planificateur episode count**: Validates generated episode count matches `nb_episodes` parameter; truncates excess, errors on deficit
 - **Scripteur arc injection**: First episode of season gets character arc starting states injected into prompt (was missing emotional context for opening episode)
 
+## Creative Quality Audit (Session 9)
+10 improvements to audio quality and scriptwriting, plus season jingle preview system.
+
+### Audio Production Improvements
+- **Tone → voice_settings mapping**: `TONE_VOICE_ADJUSTMENTS` in `producteur_audio.py` — 17 tones dynamically adjust ElevenLabs stability/similarity/style per segment. Applied additively to base character settings, clamped to [0.0, 1.0].
+- **Crossfade 100ms**: `CROSSFADE_VOIX_MS = 100` (was 50) in `monteur.py` for smoother voice transitions.
+- **Act transitions**: `_charger_transition()` generates/loads a 2s chime sound inserted every 8+ segments when narrateur starts a new section. Asset cached at `assets/music/transition_acte.mp3`.
+- **Micro-respirations**: 35% probability of 80ms silence between different speakers (`RESPIRATION_PROBABILITE`, `RESPIRATION_DUREE_MS`). Tests must patch `agents.monteur.random.random` to disable.
+- **Narrateur effect**: `_appliquer_effet_narrateur()` applies -3dB gain + fade in/out to distinguish narrator voice from characters.
+- **Rhythm variation**: Segments can have `"rythme": "rapide|normal|lent"` — monteur multiplies pause by 0.6/1.0/1.5.
+- **Signature jingle**: `_charger_signature()` loads/generates a 5s recurring jingle that bookends every episode. Asset cached at `assets/music/signature_jingle.mp3`.
+- **Dynamic ambiance per act**: `ambiance_par_acte` field in episode JSON (list of ambiance names). `_mixer_ambiance_dynamique()` splits audio into equal sections with 2s crossfade between ambiances.
+
+### Script Quality Improvements
+- **SFX in English**: Scripteur prompt now requires SFX descriptions in English for better ElevenLabs generation. Minimum 5 SFX per episode.
+- **Tics de langage verification**: `Scripteur._verifier_tics_de_langage()` post-validates that each character uses ≥2 of their signature phrases. Emits warning if insufficient.
+- **Prompt enhancements**: JSON format now includes `rythme` field and `ambiance_par_acte` field.
+
+### Season Jingle Preview System
+- **`_previsualiser_ambiances_saison()`** in `main.py`: Called after plan validation in `planifier-saison` (skipped in `--auto` mode).
+- **Flow**: For each jingle (intro_saison, outro_saison): listen (e), validate (v), regenerate via ElevenLabs (g), or replace with custom file (f).
+- **Custom files**: Copied to `assets/music/saison_XX_intro_saison.mp3`, path stored in `plan["saison"]["jingles_custom"]`.
+- **`config.jingles_saison(numero)`**: Reads custom jingle paths from season plan JSON.
+- **Monteur priority**: `_charger_jingle()` now accepts `numero_saison` parameter. Priority order: (0) season custom jingle → (1) JINGLES_PAR_TYPE → (2) AUDIO_ASSETS → (3) auto-gen → (4) silence.
+- **Decision logging**: Jingle choices logged in `plan["saison"]["decisions_humaines"]` with action `ambiances_saison_validees`.
+
+### When modifying monteur.py (Session 9 additions)
+- `_assembler_segments()` now takes optional `transition: AudioSegment` parameter — pass `None` to disable act transitions
+- `_assembler_segments()` uses `random.random()` for micro-respirations — mock `agents.monteur.random.random` in tests for determinism
+- `_charger_jingle()` now takes optional `numero_saison: int` — when provided, checks `config.jingles_saison()` first
+- `_assembler_final()` wraps episode with signature jingle on both ends
+- `_mixer_ambiance_dynamique()` splits voix into equal sections per ambiance with 2s crossfade
+- Segment `rythme` field ("rapide"/"normal"/"lent") modulates pause duration in `_assembler_segments()`
+
+### When modifying config.py (Session 9 additions)
+- `jingles_saison(numero)` reads `plan["saison"]["jingles_custom"]` from season JSON — returns dict of `{key: Path}` for existing files only
+
 ## Deployment (Gunicorn)
 - `gunicorn.conf.py`: gthread workers (2 workers × 4 threads = 8 concurrent requests)
 - Timeout: 1800s (30min) because production subprocesses block the thread during `proc.communicate()`

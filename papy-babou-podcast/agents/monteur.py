@@ -243,8 +243,9 @@ class Monteur:
 
         # 2. Charger les assets audio (jingles dynamiques par type d'épisode)
         type_episode = episode.get("type", "standard")
-        intro = self._charger_jingle("intro", type_episode)
-        outro = self._charger_jingle("outro", type_episode)
+        numero_saison = episode.get("saison")
+        intro = self._charger_jingle("intro", type_episode, numero_saison)
+        outro = self._charger_jingle("outro", type_episode, numero_saison)
 
         # 3. Charger la musique de fond selon l'ambiance (dynamique par acte si dispo)
         ambiance_par_acte = episode.get("ambiance_par_acte")
@@ -506,16 +507,36 @@ class Monteur:
 
         return False
 
-    def _charger_jingle(self, position: str, type_episode: str) -> AudioSegment:
+    def _charger_jingle(
+        self, position: str, type_episode: str,
+        numero_saison: int | None = None,
+    ) -> AudioSegment:
         """Charge un jingle adapté au type d'épisode.
 
-        Cherche d'abord dans JINGLES_PAR_TYPE, puis fallback vers AUDIO_ASSETS.
-        Si aucun fichier n'existe, génère automatiquement via ElevenLabs.
+        Ordre de priorité :
+        0. Jingle custom de la saison (choisi par le producteur).
+        1. JINGLES_PAR_TYPE (spécifique au type d'épisode).
+        2. AUDIO_ASSETS (jingle standard).
+        3. Auto-génération via ElevenLabs.
+        4. Silence.
 
         Args:
             position: "intro" ou "outro".
             type_episode: Type d'épisode (ouverture, standard, final, etc.).
+            numero_saison: Numéro de saison pour chercher les jingles custom.
         """
+        # 0. Jingle custom de la saison (priorité absolue)
+        if numero_saison is not None:
+            custom_key = f"{position}_saison"
+            custom_jingles = config.jingles_saison(numero_saison)
+            chemin_custom = custom_jingles.get(custom_key)
+            if chemin_custom:
+                logger.info(
+                    "Jingle %s custom de la saison %d : %s",
+                    position, numero_saison, chemin_custom,
+                )
+                return AudioSegment.from_mp3(str(chemin_custom))
+
         # 1. Chercher le jingle spécifique au type d'épisode
         jingles_type = config.JINGLES_PAR_TYPE.get(type_episode, {})
         chemin = jingles_type.get(position)
