@@ -350,14 +350,14 @@ class TestStructureNarrative:
     def test_structure_ouverture(self):
         """L'ouverture doit contenir les éléments spécifiques."""
         result = _construire_structure_narrative("ouverture")
-        assert "SAISON" in result
-        assert "TEASING" in result
+        assert "ACCROCHE" in result
+        assert "CONCLUSION" in result
 
     def test_structure_standard(self):
-        """La structure standard doit contenir previously-on et teasing."""
+        """La structure standard doit contenir un rappel naturel et teasing."""
         historique = [{"titre": "Épisode précédent", "morale": "La foi"}]
         result = _construire_structure_narrative("standard", historique=historique)
-        assert "PREVIOUSLY ON" in result
+        assert "RAPPEL NATUREL" in result
         assert "Épisode précédent" in result
 
     def test_structure_final(self):

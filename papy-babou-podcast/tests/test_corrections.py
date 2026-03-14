@@ -466,7 +466,7 @@ class TestQuestionsOuvertesVides:
             }
         ]
         result = _construire_structure_narrative("standard", historique=historique)
-        assert "PREVIOUSLY ON" in result
+        assert "RAPPEL NATUREL" in result
 
 
 # ── Bug #17 : max_workers >= 1 ────────────────────────────────────────────────

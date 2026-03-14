@@ -305,6 +305,8 @@ MOTS_INTERDITS = [
     "crever", "lapider", "brûler vif", "abomination",
     "exterminer", "anéantir", "fléau", "peste",
     "concubine", "fornication",
+    # Mots méta interdits dans les dialogues (cassent l'immersion)
+    "saison", "épisode", "podcast", "série", "émission",
 ]
 
 # ── Bible des personnages ────────────────────────────────────────────────────

@@ -18,7 +18,24 @@ logger = logging.getLogger(__name__)
 SYSTEM_PROMPT_BASE = """\
 Tu es un scénariste spécialisé dans les podcasts SÉRIELS pour enfants de 6 à 10 ans.
 Tu écris les scripts du podcast "Les Histoires de Papy Babou".
-Ce podcast fonctionne par SAISONS de 10 épisodes avec un arc narratif continu.
+Ce podcast fonctionne par séries de 10 épisodes avec un arc narratif continu.
+
+IMMERSION ET NATUREL :
+Le podcast est une SCÈNE DE VIE entre un grand-père et ses petits-enfants. Tout doit
+être naturel, comme si on écoutait une vraie conversation familiale.
+- PAS DE NARRATEUR : il n'y a pas de voix off. C'est Papy Babou qui raconte, explique,
+  décrit les lieux et fait les transitions. Les descriptions de contexte historique ou
+  géographique passent par SA voix, dans son style chaleureux.
+- JAMAIS de langage méta : ne JAMAIS utiliser les mots "saison", "épisode", "podcast",
+  "série" dans les dialogues. Ces concepts n'existent pas dans l'univers des personnages.
+- Chaque épisode commence par un PRÉTEXTE NATUREL qui amène l'histoire. Exemples :
+  * Les enfants viennent dormir chez Papy → histoire du soir
+  * Il pleut, on est coincés à la maison → "Tiens, je vais vous raconter..."
+  * Promenade dans la nature → un élément du paysage rappelle une histoire à Papy
+  * Les enfants trouvent un vieux livre ou objet → Papy raconte l'histoire liée
+  * Repas de famille, goûter → la conversation dérive vers une histoire
+  * Un événement du quotidien (dispute, peur, courage) → Papy fait le parallèle avec une histoire biblique
+  Le prétexte doit varier d'un épisode à l'autre pour garder la fraîcheur.
 
 {bible_personnages}
 
@@ -56,8 +73,12 @@ RÈGLES STRICTES :
     - Pause dramatique (révélation, suspense) : pause_apres_ms = 800-1500
     - Long silence dramatique (rare, 1-2 par épisode max) : pause_apres_ms = 1500-2500
     La MAJORITÉ des segments doivent avoir 150-400ms de pause pour un rythme naturel.
-8. Commencer par une scène où Papy Babou accueille les enfants.
-9. Terminer par la leçon de vie spécifiée et un au revoir chaleureux.
+8. Commencer par une scène de vie naturelle avec un PRÉTEXTE qui amène l'histoire
+   (voir la section IMMERSION ET NATUREL ci-dessus). Ne JAMAIS commencer par "Bienvenue dans..."
+   ou tout autre format de podcast. C'est une conversation, pas une émission.
+9. Terminer par la leçon de vie spécifiée et un au revoir chaleureux et naturel.
+   Ne JAMAIS dire "à la prochaine saison" ou "dans le prochain épisode". Préférer :
+   "La prochaine fois que vous viendrez...", "Un jour je vous raconterai...", "On en reparlera..."
 10. BRUITAGES : insère des segments avec personnage "sfx" pour enrichir l'ambiance.
     - Le champ "texte" contient une description courte du son EN ANGLAIS (pour l'API de génération).
       Exemples : "door creaking open slowly", "birds singing in morning sun", "thunder rumbling".
@@ -141,37 +162,36 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 
 STRUCTURES_NARRATIVES = {
     "ouverture": """\
-1. ACCROCHE DE SAISON (4-5 min) :
-   - Scène d'ouverture : Papy Babou présente le THÈME de la nouvelle saison.
-   - Il crée l'excitation : "Cette saison, on va découvrir ensemble..."
-   - Les enfants réagissent au thème avec enthousiasme et curiosité.
+1. ACCROCHE NATURELLE (4-5 min) :
+   - Scène de vie : un prétexte naturel amène les enfants chez Papy (ou Papy chez eux).
+   - Quelque chose éveille la curiosité des enfants et Papy commence à raconter.
+   - Les enfants réagissent avec enthousiasme et curiosité.
    - {ritual_accroche}
 
 2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (20-22 min) :
-   - Première histoire biblique de la saison, racontée EN PROFONDEUR.
+   - Première grande histoire biblique, racontée EN PROFONDEUR par Papy Babou.
    - Papy raconte avec des détails vivants : lieux, personnages, dialogues reconstitués.
    - Il inclut des anecdotes historiques et géographiques (ex: "À cette époque, en Mésopotamie...").
    - Les péripéties sont développées une par une, pas résumées.
    - Les enfants réagissent aux moments clés et posent des questions qui approfondissent le récit.
-   - Présentation des enjeux de la saison à travers l'histoire.
-   - Les enfants posent des questions qui ouvrent sur les épisodes suivants.
+   - L'histoire ouvre naturellement sur d'autres histoires à venir.
 {running_gag}
 
-3. CONCLUSION + TEASING (4-5 min) :
-   - Résolution de la première histoire.
-   - Leçon de vie inaugurale.
-   - Papy tease la prochaine histoire avec mystère.
+3. CONCLUSION (4-5 min) :
+   - Résolution de l'histoire.
+   - Leçon de vie que Papy tire naturellement du récit.
+   - Papy laisse entendre qu'il a d'autres histoires à raconter ("La prochaine fois...").
    - {ritual_au_revoir}""",
 
     "standard": """\
 1. ACCROCHE (3-4 min) :
    - {previously_on}
-   - Scène d'ouverture : Papy Babou accueille les enfants chaleureusement.
+   - Scène de vie : un prétexte naturel amène l'histoire (goûter, pluie, promenade, coucher...).
    - {ritual_accroche}
-   - Il plante le décor de l'histoire avec un élément d'intrigue.
+   - Papy plante le décor de l'histoire avec un élément d'intrigue.
 
 2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (17-19 min) :
-   - Récit principal de l'histoire biblique raconté EN PROFONDEUR et en détail.
+   - Récit principal de l'histoire biblique raconté EN PROFONDEUR et en détail par Papy Babou.
    - Papy raconte les événements un par un, avec des descriptions vivantes des lieux et personnages.
    - Il reconstitue les DIALOGUES des personnages bibliques (ex: "Et Dieu dit à Abraham...").
    - Il ajoute des détails historiques et géographiques qui enrichissent le récit.
@@ -183,58 +203,57 @@ STRUCTURES_NARRATIVES = {
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION + TEASING (3-4 min) :
+3. CONCLUSION (3-4 min) :
    - Résolution de l'histoire.
    - Leçon de vie claire et mémorable pour les enfants.
    - {teasing}
    - {ritual_au_revoir}""",
 
     "mi-saison": """\
-1. RÉCAPITULATIF + ACCROCHE (4-5 min) :
+1. ACCROCHE (4-5 min) :
    - {previously_on}
-   - Papy rappelle le fil rouge de la saison : ce qu'on a appris jusqu'ici.
+   - Scène de vie naturelle. Les enfants font naturellement le lien avec les histoires précédentes.
    - {ritual_accroche}
-   - Les enfants font le point sur ce qu'ils ont retenu.
+   - Les enfants se souviennent de ce qu'ils ont appris et veulent en savoir plus.
 
 2. DÉVELOPPEMENT — TOURNANT BIBLIQUE DÉTAILLÉ (20-22 min) :
-   - Histoire biblique qui représente un TOURNANT dans le thème de la saison.
-   - Le récit est raconté EN PROFONDEUR avec tous les détails narratifs.
+   - Histoire biblique qui représente un tournant important dans le thème abordé.
+   - Le récit est raconté EN PROFONDEUR avec tous les détails narratifs par Papy Babou.
    - Dialogues reconstitués, descriptions des lieux, contexte historique.
    - Moment de surprise ou de révélation pour les enfants.
    - Approfondissement du thème central à travers les détails de l'histoire.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION + OUVERTURE (4-5 min) :
+3. CONCLUSION (4-5 min) :
    - La résolution ouvre de nouvelles questions.
-   - Leçon de vie qui fait évoluer la compréhension du thème.
+   - Leçon de vie que Papy tire naturellement du récit.
    - {teasing}
    - {ritual_au_revoir}""",
 
     "final": """\
-1. GRAND RÉCAPITULATIF (4-5 min) :
+1. ACCROCHE ÉMOTIONNELLE (4-5 min) :
    - {previously_on}
-   - Papy rappelle toutes les histoires de la saison et leurs leçons.
+   - Scène de vie avec un prétexte spécial (moment intime, occasion particulière).
+   - Les enfants montrent naturellement combien ils ont grandi grâce aux histoires.
    - {ritual_accroche}
-   - Les enfants montrent combien ils ont grandi au fil de la saison.
 
 2. DÉVELOPPEMENT — CLIMAX BIBLIQUE DÉTAILLÉ (24-26 min) :
-   - Dernière histoire biblique qui conclut le thème de la saison, racontée EN PROFONDEUR.
-   - Le récit est le plus développé de la saison : détails, dialogues, péripéties secondaires.
+   - Dernière grande histoire biblique du thème, racontée EN PROFONDEUR par Papy Babou.
+   - Le récit est le plus développé : détails, dialogues, péripéties secondaires.
    - Moment émotionnel fort : les personnages montrent leur évolution.
-   - Résolution de toutes les questions ouvertes de la saison.
+   - Résolution de toutes les questions ouvertes des histoires précédentes.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION DE SAISON (4-5 min) :
-   - Grande leçon de vie qui résume toute la saison.
+3. CONCLUSION CHALEUREUSE (4-5 min) :
+   - Grande leçon de vie que Papy tire de toutes les histoires racontées.
    - Moment d'émotion entre Papy et les enfants.
-   - Au revoir spécial de fin de saison.
-   - Éventuel teasing de la prochaine saison (si applicable).""",
+   - Au revoir tendre, avec l'idée que d'autres histoires viendront un jour.""",
 
     "bonus": """\
 1. ACCROCHE SPÉCIALE (3 min) :
-   - Papy annonce un épisode spécial / bonus.
+   - Prétexte naturel pour un moment un peu différent (jeu, devinettes, retour sur les histoires).
    - {ritual_accroche}
 
 2. CONTENU SPÉCIAL (14-15 min) :
@@ -264,6 +283,9 @@ def _construire_bible_personnages(numero_saison: int = 1) -> str:
 
     sections = ["PERSONNAGES (bible de référence) :"]
     for key, perso in personnages.items():
+        # Pas de narrateur — tout passe par Papy Babou
+        if key == "narrateur":
+            continue
         nom = perso.get("nom_complet", key)
         # Progression d'âge : age_par_saison ou age de base
         age = perso.get("age", "")
@@ -363,8 +385,7 @@ PERSONNAGES :
 - Noémie : petite-fille de 5 ans, chipie avec un gros caractère, espiègle et rigolote.
   Tics : "Oh non, le pauvre...", "Hihihi ! C'est trop drôle !", "Babouuuu ! Encore une histoire !"
 - Mamie Sonia : épouse de Papy, 70 ans, née en Égypte, très gentille, cuisine divinement.
-  Apparitions légères : goûter, coucher, commentaire tendre depuis la cuisine.
-- Narrateur : voix neutre pour les transitions."""
+  Apparitions légères : goûter, coucher, commentaire tendre depuis la cuisine."""
 
 
 def _construire_contexte_serie(contexte_saison: dict | None = None) -> str:
@@ -379,18 +400,18 @@ def _construire_contexte_serie(contexte_saison: dict | None = None) -> str:
     if not contexte_saison:
         return "CONTEXTE : Épisode indépendant (pas de contexte de saison)."
 
-    sections = ["CONTEXTE DE LA SAISON :"]
+    sections = ["CONTEXTE DE LA SÉRIE D'HISTOIRES :"]
 
     saison = contexte_saison.get("saison", {})
     if saison:
-        sections.append(f"- Thème de la saison : {saison.get('theme', '?')}")
+        sections.append(f"- Thème principal : {saison.get('theme', '?')}")
         sections.append(f"- Description : {saison.get('description', '')}")
         sections.append(f"- Fil rouge : {saison.get('fil_rouge', '')}")
 
     # Arcs de personnages
     arcs = saison.get("arcs_personnages", {})
     if arcs:
-        sections.append("\nARCS DE PERSONNAGES CETTE SAISON :")
+        sections.append("\nARCS DE PERSONNAGES :")
         for perso, arc in arcs.items():
             nom = perso.replace("_", " ").title()
             sections.append(
@@ -434,7 +455,7 @@ def _construire_structure_narrative(
         else "Au revoir chaleureux de Papy Babou."
     )
     segment_recurrent = (
-        f"Intègre le segment récurrent de la saison : \"{rituels['segment_recurrent']}\""
+        f"Intègre le segment récurrent : \"{rituels['segment_recurrent']}\""
         if rituels.get("segment_recurrent")
         else ""
     )
@@ -442,18 +463,20 @@ def _construire_structure_narrative(
     running_gag = ""
     if rituels.get("running_gag"):
         running_gag = (
-            f"   - RUNNING GAG : intègre naturellement le gag récurrent "
-            f"de la saison : \"{rituels['running_gag']}\""
+            f"   - RUNNING GAG : intègre naturellement le gag récurrent : "
+            f"\"{rituels['running_gag']}\""
         )
 
-    # Previously On
+    # Previously On — rappel naturel de l'histoire précédente
     previously_on = ""
     if historique and len(historique) > 0:
         dernier = historique[-1]
         previously_on = (
-            f"PREVIOUSLY ON : Papy rappelle brièvement l'épisode précédent "
-            f"\"{dernier.get('titre', '?')}\" et sa leçon "
-            f"({dernier.get('morale', '?')})."
+            f"RAPPEL NATUREL : Papy ou les enfants font naturellement référence à "
+            f"l'histoire précédente \"{dernier.get('titre', '?')}\" et sa leçon "
+            f"({dernier.get('morale', '?')}). Le rappel doit être conversationnel, "
+            f"pas un résumé formel (ex: \"Vous vous souvenez de...\" ou un enfant qui dit "
+            f"\"Papy, c'est comme dans l'histoire de...\")."
         )
         if dernier.get("questions_ouvertes"):
             questions = dernier["questions_ouvertes"]
@@ -468,13 +491,13 @@ def _construire_structure_narrative(
     if (not historique or len(historique) == 0) and contexte_saison:
         arcs = contexte_saison.get("saison", {}).get("arcs_personnages", {})
         if arcs:
-            arc_lines = ["\nÉTATS INITIAUX DES PERSONNAGES (début de saison) :"]
+            arc_lines = ["\nÉTATS INITIAUX DES PERSONNAGES :"]
             for perso, arc in arcs.items():
                 nom = perso.replace("_", " ").title()
                 depart = arc.get("depart", "")
                 if depart:
                     arc_lines.append(
-                        f"  - {nom} commence cette saison dans l'état : \"{depart}\". "
+                        f"  - {nom} commence dans l'état : \"{depart}\". "
                         f"Montre cet état dans ses réactions et dialogues."
                     )
             if len(arc_lines) > 1:
@@ -530,15 +553,15 @@ def _construire_system_prompt(
     duree_cible = format_ep["duree_cible_minutes"]
     mots_cible = format_ep["mots_cible"]
 
-    # Personnages dynamiques
+    # Personnages dynamiques (pas de narrateur — tout passe par Papy Babou)
     personnages_connus = config.personnages_valides()
-    personnages_voix = sorted(p for p in personnages_connus if p != "sfx")
+    personnages_voix = sorted(p for p in personnages_connus if p not in ("sfx", "narrateur"))
     personnages_format = "|".join(personnages_voix)
     regles_dyn = ""
     extra_persos = personnages_connus - {"papy_babou", "antoine", "noemie", "narrateur", "sfx"}
     if extra_persos:
         regles_dyn = (
-            "\n12. PERSONNAGES SECONDAIRES disponibles cette saison : "
+            "\n12. PERSONNAGES SECONDAIRES disponibles : "
             + ", ".join(sorted(extra_persos))
             + ".\n    N'utilise un personnage secondaire QUE s'il est mentionné dans les "
             "personnages présents de cet épisode."
