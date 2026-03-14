@@ -483,6 +483,7 @@ class Scripteur:
         episode_plan: dict | None = None,
         type_episode: str = "standard",
         preferences_producteur: str = "",
+        scripts_precedents: list[dict] | None = None,
     ) -> dict:
         """Génère un script JSON structuré pour un épisode.
 
@@ -572,6 +573,31 @@ class Scripteur:
                 if ep.get("retours_humains"):
                     ep_info += f" | Retours producteur : {ep['retours_humains']}"
                 prompt += ep_info + "\n"
+
+        # Injecter les dialogues réels des épisodes précédents de la saison
+        # (plus riche que l'historique qui ne contient qu'un résumé court)
+        if scripts_precedents:
+            prompt += (
+                "\n📖 SCRIPTS DES ÉPISODES PRÉCÉDENTS DE CETTE SAISON "
+                "(lis attentivement pour assurer la continuité des dialogues, "
+                "du ton, des personnages et des arcs narratifs) :\n"
+            )
+            for sp in scripts_precedents:
+                prompt += f"\n--- {sp['episode_id']} \"{sp['titre']}\" "
+                if sp.get("ambiance"):
+                    prompt += f"(ambiance: {sp['ambiance']}) "
+                prompt += f"({sp['nb_segments']} segments) ---\n"
+                # Inclure les dialogues (limités pour le contexte)
+                dialogues = sp.get("dialogues", [])
+                # Pour le dernier épisode : plus de détails (20 lignes)
+                # Pour les précédents : résumé (10 lignes)
+                is_dernier = (sp == scripts_precedents[-1])
+                max_lignes = 20 if is_dernier else 10
+                for ligne in dialogues[:max_lignes]:
+                    prompt += f"  {ligne}\n"
+                if len(dialogues) > max_lignes:
+                    prompt += f"  [...{len(dialogues) - max_lignes} lignes supplémentaires...]\n"
+            prompt += "\n"
 
         if corrections:
             prompt += (

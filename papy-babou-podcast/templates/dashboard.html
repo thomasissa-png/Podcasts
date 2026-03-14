@@ -1168,21 +1168,21 @@
 </div>
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  2. PRODUIRE UNE SAISON                                               ║
+     ║  2. PRODUIRE UNE SAISON (épisode par épisode)                         ║
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-produire-saison">
     <div class="page-header">
-        <h2>&#127916; Étape 2 — Lancer la production d'une saison</h2>
+        <h2>&#127916; Étape 2 — Production de saison</h2>
         {% if saisons_dispo %}
         <p>
-            Sélectionnez une saison planifiée ci-dessous pour voir son contenu,
-            puis lancez la <strong>production automatique</strong> de tous ses épisodes
-            (ou seulement ceux de votre choix).
+            La production se fait <strong>épisode par épisode</strong>, dans l'ordre.
+            Chaque épisode doit être validé (script + audio) avant de passer au suivant,
+            pour que le scripteur puisse lire les scripts précédents et assurer la continuité.
         </p>
         {% else %}
         <p>
             Aucune saison planifiée pour le moment.
-            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Commencez par planifier une saison →</a>
+            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Commencez par planifier une saison &rarr;</a>
         </p>
         {% endif %}
     </div>
@@ -1190,53 +1190,61 @@
     {% if saisons_dispo %}
     <div class="card">
         <div class="card-header">
-            <span class="icon">&#127916;</span> Choisir et lancer une saison
+            <span class="icon">&#127916;</span> Progression de la saison
         </div>
         <div class="card-body">
             <div id="alert-produire-saison" class="alert"></div>
 
-            <form id="form-produire-saison" onsubmit="return submitProduireSaison(event)">
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="ps-saison">Saison à produire *</label>
-                    <select id="ps-saison" class="form-input" required style="max-width: 500px;">
-                        {% for num in saisons_dispo %}
-                        <option value="{{ num }}" {% if num == saisons_dispo[-1] %}selected{% endif %}>
-                            Saison {{ num }}{% if num in saisons_info %} — {{ saisons_info[num].theme }} ({{ saisons_info[num].nb_episodes }} ép.){% endif %}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="ps-saison">Saison</label>
+                <select id="ps-saison" class="form-input" required style="max-width: 500px;" onchange="loadSaisonProgress()">
+                    {% for num in saisons_dispo %}
+                    <option value="{{ num }}" {% if num == saisons_dispo[-1] %}selected{% endif %}>
+                        Saison {{ num }}{% if num in saisons_info %} — {{ saisons_info[num].theme }} ({{ saisons_info[num].nb_episodes }} ép.){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <!-- Apercu du plan de saison -->
-                <div id="ps-plan-preview" class="card" style="margin-bottom: 1rem; border: 1px solid var(--border); box-shadow: none;">
-                    <div class="card-header" style="padding: 0.6rem 1rem; font-size: 0.85rem;">
-                        <span class="icon">&#128214;</span> <span id="ps-plan-titre">Aperçu du plan</span>
-                    </div>
-                    <div class="card-body" id="ps-plan-body" style="padding: 0.8rem 1rem; font-size: 0.85rem;">
-                        <em style="color: var(--texte-light);">Chargement...</em>
-                    </div>
-                </div>
+            <!-- Progression de la saison -->
+            <div id="ps-progress-zone" style="margin-bottom: 1.5rem;">
+                <em style="color: var(--texte-light);">Chargement de la progression...</em>
+            </div>
 
-                <div class="form-row-3">
-                    <div class="form-group">
-                        <label for="ps-episodes">Quels épisodes ?</label>
-                        <input type="text" id="ps-episodes" class="form-input" placeholder="Vide = tous les épisodes">
-                        <div class="hint">Laissez vide pour tout produire, ou indiquez les numéros : 1,3,5</div>
+            <!-- Prochain épisode -->
+            <div id="ps-next-episode-zone" style="display: none;">
+                <div class="card" style="border: 2px solid var(--turquoise); box-shadow: none; margin-bottom: 1rem;">
+                    <div class="card-header" style="background: var(--turquoise); color: white; padding: 0.6rem 1rem;">
+                        <span class="icon">&#127908;</span> <span id="ps-next-titre">Prochain épisode</span>
                     </div>
-                    <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; padding-top: 1.2rem;">
-                        <div class="form-check">
-                            <input type="checkbox" id="ps-dryrun">
-                            <label for="ps-dryrun">Mode test (sans audio)</label>
+                    <div class="card-body" style="padding: 1rem;">
+                        <div id="ps-next-details"></div>
+                        <div style="margin-top: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <div class="form-check">
+                                <input type="checkbox" id="ps-dryrun">
+                                <label for="ps-dryrun">Mode test (sans audio)</label>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btn-produire-saison" onclick="produireProchainEpisode()">
+                                &#127908; Lancer le script
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" id="btn-produire-saison">
-                        &#127916; Lancer la production de la saison
-                    </button>
+            <!-- Bloqué par épisode précédent -->
+            <div id="ps-blocked-zone" style="display: none;">
+                <div class="alert alert-warning" style="display: block;">
+                    <strong>Production bloquée :</strong> <span id="ps-blocked-msg"></span>
                 </div>
-            </form>
+            </div>
+
+            <!-- Saison terminée -->
+            <div id="ps-complete-zone" style="display: none;">
+                <div class="alert alert-success" style="display: block;">
+                    <strong>Saison terminée !</strong> Tous les épisodes ont été produits et validés.
+                </div>
+            </div>
 
             <div class="console-output" id="console-produire-saison"></div>
         </div>
@@ -2594,45 +2602,174 @@ async function loadPsPreview(numero) {
     }
 }
 
-/* Charger l apercu au changement de saison et au chargement initial */
+/* Charger la progression au changement de saison et au chargement initial */
 document.getElementById('ps-saison').addEventListener('change', function() {
-    loadPsPreview(parseInt(this.value));
+    loadSaisonProgress();
 });
 /* Chargement initial */
 (function() {
     const sel = document.getElementById('ps-saison');
-    if (sel && sel.value) loadPsPreview(parseInt(sel.value));
+    if (sel && sel.value) loadSaisonProgress();
 })();
 
-/* ── Produire une saison ────────────────────────────────────────────────── */
-async function submitProduireSaison(e) {
-    e.preventDefault();
-    hideAlert('alert-produire-saison');
+/* ── Progression de la saison (épisode par épisode) ───────────────────── */
+var _saisonProgressData = null;
 
+async function loadSaisonProgress() {
     const saison = parseInt(document.getElementById('ps-saison').value);
-    const episodes = document.getElementById('ps-episodes').value.trim();
-    const dryRun = document.getElementById('ps-dryrun').checked;
+    const zone = document.getElementById('ps-progress-zone');
+    const nextZone = document.getElementById('ps-next-episode-zone');
+    const blockedZone = document.getElementById('ps-blocked-zone');
+    const completeZone = document.getElementById('ps-complete-zone');
 
-    const btn = document.getElementById('btn-produire-saison');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Production en cours...';
-    showLoading('Production de la saison ' + saison + '...');
+    nextZone.style.display = 'none';
+    blockedZone.style.display = 'none';
+    completeZone.style.display = 'none';
+    zone.innerHTML = '<em style="color: var(--texte-light);"><span class="spinner"></span> Chargement...</em>';
 
     try {
-        const data = await apiCallAsync('/api/produire-saison', {
-            saison, episodes, dry_run: dryRun
-        });
-        handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
-            'Saison ' + saison + ' terminée ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
+        const resp = await fetch('/api/saison/' + saison + '/prochain-episode');
+        const data = await resp.json();
+        if (!resp.ok) {
+            zone.innerHTML = '<em style="color: var(--rouge-doux);">' + escapeHtml(data.error || 'Erreur') + '</em>';
+            return;
+        }
+        _saisonProgressData = data;
+
+        /* Barre de progression */
+        var statusLabels = {
+            'termine': 'Terminé',
+            'montage_valide': 'Montage validé',
+            'attente_validation_montage': 'Audio prêt',
+            'script_valide': 'Script validé',
+            'attente_validation_script': 'Script prêt',
+            'en_cours': 'En cours',
+            'a_faire': 'À faire'
+        };
+        var statusColors = {
+            'termine': 'var(--vert-doux)',
+            'montage_valide': 'var(--turquoise)',
+            'attente_validation_montage': 'var(--orange-chaud)',
+            'script_valide': 'var(--turquoise)',
+            'attente_validation_script': 'var(--orange-chaud)',
+            'en_cours': 'var(--miel)',
+            'a_faire': 'var(--border)'
+        };
+
+        var html = '<div style="margin-bottom: 0.75rem;">';
+        if (data.theme) html += '<strong>Thème :</strong> ' + escapeHtml(data.theme) + ' — ';
+        html += '<strong>' + data.termines + '/' + data.total + '</strong> épisodes terminés</div>';
+
+        /* Grille des épisodes */
+        html += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">';
+        for (var i = 0; i < data.episodes.length; i++) {
+            var ep = data.episodes[i];
+            var color = statusColors[ep.status] || 'var(--border)';
+            var label = statusLabels[ep.status] || ep.status;
+            var isNext = data.prochain && ep.episode_id === data.prochain.episode_id;
+            var border = isNext ? '3px solid var(--turquoise)' : '1px solid ' + color;
+            html += '<div style="border: ' + border + '; border-radius: 8px; padding: 0.5rem 0.75rem; min-width: 120px; background: var(--fond-sidebar); text-align: center;">';
+            html += '<div style="font-weight: 700; font-size: 0.9rem;">' + escapeHtml(ep.episode_id) + '</div>';
+            html += '<div style="font-size: 0.78rem; color: var(--texte-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" title="' + escapeHtml(ep.titre) + '">' + escapeHtml(ep.titre) + '</div>';
+            html += '<div style="font-size: 0.72rem; margin-top: 0.25rem; color: ' + color + '; font-weight: 600;">' + label + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        zone.innerHTML = html;
+
+        /* Afficher le prochain épisode ou le message */
+        if (!data.prochain) {
+            /* Tous terminés */
+            completeZone.style.display = 'block';
+        } else if (data.bloque_par) {
+            /* Bloqué par un épisode précédent */
+            blockedZone.style.display = 'block';
+            var msg = 'L\'épisode <strong>' + escapeHtml(data.bloque_par.episode_id)
+                + '</strong> (' + escapeHtml(statusLabels[data.bloque_par.status] || data.bloque_par.status) + ') '
+                + 'doit être terminé avant de produire <strong>' + escapeHtml(data.prochain.episode_id) + '</strong>. ';
+            if (data.bloque_par.status.includes('attente_validation') || data.bloque_par.status.includes('valide')) {
+                msg += '<a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\'))" style="color: var(--turquoise); font-weight: 700;">Aller à la validation &rarr;</a>';
+            }
+            document.getElementById('ps-blocked-msg').innerHTML = msg;
+            /* Quand même afficher le prochain pour info (mais bouton désactivé) */
+            nextZone.style.display = 'block';
+            document.getElementById('ps-next-titre').textContent = 'Prochain : ' + data.prochain.episode_id + ' — ' + data.prochain.titre;
+            document.getElementById('ps-next-details').innerHTML =
+                '<span style="font-size: 0.85rem; color: var(--texte-dim);">Type : ' + escapeHtml(data.prochain.type) + '</span>';
+            document.getElementById('btn-produire-saison').disabled = true;
+        } else {
+            /* Prêt à produire */
+            var ep = data.prochain;
+            nextZone.style.display = 'block';
+            document.getElementById('ps-next-titre').textContent = 'Prochain : ' + ep.episode_id + ' — ' + ep.titre;
+            var details = '<span style="font-size: 0.85rem;">Type : <strong>' + escapeHtml(ep.type) + '</strong></span>';
+            if (ep.status !== 'a_faire') {
+                details += ' &mdash; <span style="color: var(--orange-chaud);">' + escapeHtml(statusLabels[ep.status] || ep.status) + '</span>';
+            }
+            document.getElementById('ps-next-details').innerHTML = details;
+            var btn = document.getElementById('btn-produire-saison');
+            btn.disabled = false;
+            /* Adapter le label du bouton selon l'état */
+            if (ep.status === 'attente_validation_script' || ep.status === 'script_valide') {
+                btn.innerHTML = '&#127908; Lancer l\'audio';
+            } else if (ep.status === 'attente_validation_montage' || ep.status === 'montage_valide') {
+                btn.innerHTML = '&#128225; Publier';
+            } else {
+                btn.innerHTML = '&#127908; Lancer le script';
+            }
+        }
     } catch (err) {
-        showAlert('alert-produire-saison', 'error', 'Erreur : ' + err.message);
+        zone.innerHTML = '<em style="color: var(--rouge-doux);">Erreur : ' + escapeHtml(err.message) + '</em>';
+    }
+}
+
+async function produireProchainEpisode() {
+    if (!_saisonProgressData || !_saisonProgressData.prochain) return;
+    hideAlert('alert-produire-saison');
+
+    var saison = _saisonProgressData.saison;
+    var ep = _saisonProgressData.prochain;
+    var dryRun = document.getElementById('ps-dryrun').checked;
+
+    var btn = document.getElementById('btn-produire-saison');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Production en cours...';
+    showLoading('Production de ' + ep.episode_id + '...');
+
+    try {
+        /* Déterminer l'action selon l'état de l'épisode */
+        var data;
+        if (ep.status === 'script_valide' || ep.status === 'attente_validation_script') {
+            /* Script déjà fait, lancer l'audio */
+            data = await apiCallAsync('/api/episode/' + ep.episode_id + '/continue-production', { phase: 'audio' });
+        } else if (ep.status === 'montage_valide' || ep.status === 'attente_validation_montage') {
+            /* Audio fait, lancer la publication */
+            data = await apiCallAsync('/api/episode/' + ep.episode_id + '/continue-production', { phase: 'publication' });
+        } else {
+            /* Premier lancement : produire le script */
+            data = await apiCallAsync('/api/produire-saison', {
+                saison: saison, numero: ep.numero, dry_run: dryRun
+            });
+        }
+
+        if (data.status === 'ok') {
+            showAlert('alert-produire-saison', 'success',
+                ep.episode_id + ' : script généré. '
+                + '<a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\'))" '
+                + 'style="color: inherit; text-decoration: underline;">Valider le script &rarr;</a>');
+        } else if (data.error) {
+            showAlert('alert-produire-saison', 'error', escapeHtml(data.error));
+        } else {
+            handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
+                ep.episode_id + ' traité.');
+        }
+    } catch (err) {
+        showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(err.message));
     } finally {
         hideLoading();
+        /* Recharger la progression */
+        await loadSaisonProgress();
     }
-
-    btn.disabled = false;
-    btn.innerHTML = '&#127916; Lancer la production';
-    return false;
 }
 
 /* ── Reprendre un checkpoint ────────────────────────────────────────────── */

@@ -1364,29 +1364,180 @@ def api_planifier_saison():
     return jsonify({"status": "accepted", "job_id": job_id})
 
 
+@app.route("/api/saison/<int:saison_num>/prochain-episode")
+def api_prochain_episode(saison_num):
+    """Retourne le prochain épisode à produire dans une saison.
+
+    La production sérielle est séquentielle : on ne peut pas produire l'épisode N
+    tant que l'épisode N-1 n'est pas terminé (script + audio validés, ou publié).
+    """
+    import json as _json
+
+    plan = config.charger_saison(saison_num)
+    if not plan:
+        return jsonify({"error": f"Plan de saison {saison_num} introuvable."}), 404
+
+    saison_data = plan.get("saison", {})
+    episodes_plan = saison_data.get("episodes", [])
+    if not episodes_plan:
+        return jsonify({"error": "Le plan de saison ne contient aucun épisode."}), 400
+
+    # Charger l'état de chaque épisode
+    episodes_status = []
+    for ep in sorted(episodes_plan, key=lambda e: e.get("numero", 0)):
+        ep_id = f"S{saison_num:02d}E{ep['numero']:02d}"
+        rapport_path = config.LOGS_DIR / f"{ep_id}_rapport.json"
+        checkpoint_path = config.CHECKPOINTS_DIR / f"{ep_id}_checkpoint.json"
+
+        status = "a_faire"  # Par défaut : pas encore commencé
+        validation_script = False
+        validation_montage = False
+
+        if rapport_path.exists():
+            try:
+                with open(rapport_path, "r", encoding="utf-8") as f:
+                    rapport = _json.load(f)
+                etapes = rapport.get("etapes", {})
+                validation_script = etapes.get("script", {}).get("validation_humaine", False)
+                validation_montage = etapes.get("montage", {}).get("validation_humaine", False)
+                pub = etapes.get("publication", {})
+
+                if pub.get("validation_humaine") or rapport.get("status") == "completed":
+                    status = "termine"
+                elif validation_montage:
+                    status = "montage_valide"
+                elif validation_script:
+                    # Script validé : vérifier si audio est en cours/terminé
+                    if etapes.get("montage", {}).get("chemin_hq"):
+                        status = "attente_validation_montage"
+                    else:
+                        status = "script_valide"
+                elif rapport.get("status") == "waiting_validation":
+                    status = "attente_validation_script"
+                else:
+                    status = "en_cours"
+            except (ValueError, OSError):
+                pass
+        elif checkpoint_path.exists():
+            status = "en_cours"
+
+        episodes_status.append({
+            "numero": ep["numero"],
+            "episode_id": ep_id,
+            "titre": ep.get("titre", ""),
+            "type": ep.get("type", "standard"),
+            "status": status,
+            "validation_script": validation_script,
+            "validation_montage": validation_montage,
+        })
+
+    # Trouver le prochain épisode à produire (premier non terminé)
+    prochain = None
+    bloque_par = None
+    for i, ep_s in enumerate(episodes_status):
+        if ep_s["status"] in ("termine", "montage_valide"):
+            continue
+        # Vérifier que l'épisode précédent est terminé (sauf pour le premier)
+        if i > 0 and episodes_status[i - 1]["status"] != "termine":
+            bloque_par = episodes_status[i - 1]
+        prochain = ep_s
+        break
+
+    return jsonify({
+        "saison": saison_num,
+        "theme": saison_data.get("theme", ""),
+        "episodes": episodes_status,
+        "prochain": prochain,
+        "bloque_par": bloque_par,
+        "total": len(episodes_plan),
+        "termines": sum(1 for e in episodes_status if e["status"] == "termine"),
+    })
+
+
 @app.route("/api/produire-saison", methods=["POST"])
 def api_produire_saison():
-    """Produit les episodes d'une saison planifiee (asynchrone)."""
+    """Produit le prochain épisode d'une saison (un seul à la fois).
+
+    La production sérielle est séquentielle : chaque épisode doit être validé
+    avant de passer au suivant, pour que le scripteur puisse lire les scripts
+    précédents et assurer la continuité narrative.
+    """
     err = _check_api_key("ANTHROPIC_API_KEY")
     if err:
         return err
     body = request.get_json(force=True)
     saison = body.get("saison", 1)
-    episodes = body.get("episodes", "").strip()
+    numero = body.get("numero")  # Numéro spécifique de l'épisode à produire
     dry_run = body.get("dry_run", False)
 
+    # Charger le plan de saison
+    plan = config.charger_saison(saison)
+    if not plan:
+        return jsonify({"error": f"Plan de saison {saison} introuvable."}), 404
+
+    saison_data = plan.get("saison", {})
+    episodes_plan = saison_data.get("episodes", [])
+
+    if not numero:
+        return jsonify({"error": "Numéro d'épisode requis. Utilisez /api/saison/<n>/prochain-episode pour connaître le prochain."}), 400
+
+    # Trouver l'épisode dans le plan
+    ep = next((e for e in episodes_plan if e.get("numero") == numero), None)
+    if not ep:
+        return jsonify({"error": f"Épisode {numero} introuvable dans le plan de saison {saison}."}), 404
+
+    episode_id = f"S{saison:02d}E{numero:02d}"
+
+    # Vérifier que les épisodes précédents sont terminés
+    import json as _json
+    for n in range(1, numero):
+        prev_id = f"S{saison:02d}E{n:02d}"
+        rapport_path = config.LOGS_DIR / f"{prev_id}_rapport.json"
+        if not rapport_path.exists():
+            return jsonify({
+                "error": f"L'épisode {prev_id} doit être terminé avant de produire {episode_id}. "
+                         f"La production sérielle est séquentielle."
+            }), 409
+        try:
+            with open(rapport_path, "r", encoding="utf-8") as f:
+                rp = _json.load(f)
+            etapes = rp.get("etapes", {})
+            script_ok = etapes.get("script", {}).get("validation_humaine", False)
+            montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
+            if not (script_ok and montage_ok):
+                return jsonify({
+                    "error": f"L'épisode {prev_id} n'est pas entièrement validé "
+                             f"(script: {'OK' if script_ok else 'en attente'}, "
+                             f"montage: {'OK' if montage_ok else 'en attente'}). "
+                             f"Terminez-le avant de passer à {episode_id}."
+                }), 409
+        except (ValueError, OSError):
+            return jsonify({"error": f"Rapport de {prev_id} illisible."}), 500
+
+    # Produire l'épisode avec --stop-after script (workflow séquentiel)
     cmd = [
-        "produire-saison",
+        "produire",
+        "-e", ep.get("titre", ""),
         "-s", str(saison),
+        "-n", str(numero),
+        "-r", ep.get("resume", ep.get("histoire_biblique", "")),
+        "-t", ep.get("type", "standard"),
         "--auto",
+        "--stop-after", "script",
     ]
-    if episodes:
-        cmd.extend(["-e", episodes])
+    if ep.get("morale"):
+        cmd.extend(["-m", ep["morale"]])
     if dry_run:
         cmd.append("--dry-run")
 
-    job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE_SAISON)
-    return jsonify({"status": "accepted", "job_id": job_id})
+    job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+    return jsonify({
+        "status": "accepted",
+        "job_id": job_id,
+        "episode_id": episode_id,
+        "phase": "script",
+        "message": f"Production du script de {episode_id} lancée.",
+    })
 
 
 @app.route("/api/reprendre", methods=["POST"])

@@ -207,6 +207,55 @@ def _construire_bloc_preferences() -> str:
     return "\n".join(lignes)
 
 
+def _charger_scripts_precedents_saison(saison: int, numero: int) -> list[dict]:
+    """Charge les scripts validés des épisodes précédents de la même saison.
+
+    Pour l'épisode S01E03, charge les scripts de S01E01 et S01E02.
+    Cela permet au scripteur de lire les vrais dialogues et événements,
+    pas seulement les résumés courts de l'historique.
+
+    Returns:
+        Liste de dicts {episode_id, titre, segments_resume} triés par numéro.
+    """
+    scripts_precedents = []
+    for n in range(1, numero):
+        ep_id = f"S{saison:02d}E{n:02d}"
+        chemin = config.SCRIPTS_DIR / f"{ep_id}_valide.json"
+        if not chemin.exists():
+            continue
+        try:
+            with open(chemin, "r", encoding="utf-8") as f:
+                script_data = json.load(f)
+            episode = script_data.get("episode", {})
+            segments = episode.get("segments", [])
+
+            # Extraire les dialogues clés (pas les SFX) — résumé condensé
+            dialogues = []
+            for seg in segments:
+                if seg.get("personnage", "") == "sfx":
+                    continue
+                texte = seg.get("texte", "").strip()
+                perso = seg.get("personnage", "inconnu")
+                if texte:
+                    # Tronquer les longs textes pour ne pas exploser le contexte
+                    if len(texte) > 300:
+                        texte = texte[:300] + "..."
+                    dialogues.append(f"[{perso}] {texte}")
+
+            scripts_precedents.append({
+                "episode_id": ep_id,
+                "titre": episode.get("titre", ep_id),
+                "ambiance": episode.get("ambiance", ""),
+                "nb_segments": len(segments),
+                "dialogues": dialogues,
+            })
+        except (json.JSONDecodeError, KeyError, OSError) as e:
+            logger.debug("Script précédent %s illisible : %s", ep_id, e)
+            continue
+
+    return scripts_precedents
+
+
 def ajouter_historique(rapport: dict, script: dict) -> None:
     """Ajoute un épisode à l'historique (DB + JSON pour rétrocompatibilité)."""
     episode = script.get("episode", {})
@@ -1757,6 +1806,16 @@ def _pipeline_inner(
         if max_iterations_review < 1:
             raise ValueError(f"max_iterations_review doit être >= 1, reçu {max_iterations_review}")
 
+        # Charger les scripts validés des épisodes précédents de la saison
+        # pour que le scripteur puisse lire les vrais dialogues
+        scripts_precedents = _charger_scripts_precedents_saison(saison, numero)
+        if scripts_precedents:
+            console.print(
+                f"  [bold cyan]Contexte sériel :[/bold cyan] "
+                f"{len(scripts_precedents)} script(s) précédent(s) chargé(s) "
+                f"({', '.join(s['episode_id'] for s in scripts_precedents)})"
+            )
+
         for iteration in range(1, max_iterations_review + 1):
             console.print(f"  Iteration {iteration}/{max_iterations_review}...")
 
@@ -1766,6 +1825,7 @@ def _pipeline_inner(
                 contexte_saison=contexte_saison, episode_plan=episode_plan,
                 type_episode=type_episode,
                 preferences_producteur=_construire_bloc_preferences(),
+                scripts_precedents=scripts_precedents,
             )
 
             chemin_script = config.SCRIPTS_DIR / f"{episode_id}_v{iteration}.json"
