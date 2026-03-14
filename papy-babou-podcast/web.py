@@ -422,6 +422,171 @@ def api_config():
         return jsonify({"error": str(e)}), 500
 
 
+# ── Routes API — Suppression d'épisodes ──────────────────────────────────────
+
+
+@app.route("/api/episode/<episode_id>/delete", methods=["POST"])
+def api_delete_episode(episode_id):
+    """Supprime un épisode produit (soft-delete DB + archivage fichiers).
+
+    Supprime les fichiers locaux (script, rapport, audio, cover, checkpoint)
+    et marque l'épisode comme supprimé en DB si PostgreSQL est disponible.
+    L'historique JSON est aussi nettoyé.
+
+    Body JSON optionnel :
+        {"raison": "Pas satisfait du résultat"}
+    """
+    import json as _json
+    import shutil
+
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format d'identifiant invalide (attendu: S01E01)"}), 400
+
+    body = request.get_json(silent=True) or {}
+    raison = body.get("raison", "").strip()
+
+    supprime = {"fichiers": [], "db": []}
+
+    # 1. Archiver les fichiers locaux (déplacer vers output/archive/)
+    archive_dir = _THIS_DIR / "output" / "archive" / episode_id
+    archive_dir.mkdir(parents=True, exist_ok=True)
+
+    # Script
+    for pattern in [f"{episode_id}_valide.json", f"{episode_id}_script*.json"]:
+        for f in config.SCRIPTS_DIR.glob(pattern):
+            try:
+                shutil.move(str(f), str(archive_dir / f.name))
+                supprime["fichiers"].append(f"scripts/{f.name}")
+            except Exception:
+                pass
+
+    # Rapport
+    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+    if rapport_path.exists():
+        try:
+            shutil.move(str(rapport_path), str(archive_dir / rapport_path.name))
+            supprime["fichiers"].append(f"logs/{rapport_path.name}")
+        except Exception:
+            pass
+    # Rapport d'échec aussi
+    for f in config.LOGS_DIR.glob(f"{episode_id}_rapport_echec*.json"):
+        try:
+            shutil.move(str(f), str(archive_dir / f.name))
+            supprime["fichiers"].append(f"logs/{f.name}")
+        except Exception:
+            pass
+
+    # Audio (preview + HQ)
+    episodes_dir = _THIS_DIR / "output" / "episodes"
+    if episodes_dir.exists():
+        for f in episodes_dir.glob(f"{episode_id}*"):
+            try:
+                shutil.move(str(f), str(archive_dir / f.name))
+                supprime["fichiers"].append(f"episodes/{f.name}")
+            except Exception:
+                pass
+
+    # Cover art
+    if hasattr(config, "COVERS_DIR") and config.COVERS_DIR.exists():
+        for f in config.COVERS_DIR.glob(f"{episode_id}_cover*"):
+            try:
+                shutil.move(str(f), str(archive_dir / f.name))
+                supprime["fichiers"].append(f"covers/{f.name}")
+            except Exception:
+                pass
+
+    # Transcript
+    if hasattr(config, "TRANSCRIPTS_DIR") and config.TRANSCRIPTS_DIR.exists():
+        for f in config.TRANSCRIPTS_DIR.glob(f"{episode_id}_transcript*"):
+            try:
+                shutil.move(str(f), str(archive_dir / f.name))
+                supprime["fichiers"].append(f"transcripts/{f.name}")
+            except Exception:
+                pass
+
+    # Checkpoint
+    if hasattr(config, "CHECKPOINTS_DIR"):
+        for f in config.CHECKPOINTS_DIR.glob(f"{episode_id}*checkpoint*"):
+            try:
+                shutil.move(str(f), str(archive_dir / f.name))
+                supprime["fichiers"].append(f"checkpoints/{f.name}")
+            except Exception:
+                pass
+
+    # 2. Supprimer de l'historique JSON
+    historique_path = config.HISTORIQUE_DIR / "historique_episodes.json"
+    if historique_path.exists():
+        try:
+            with open(historique_path, "r", encoding="utf-8") as f:
+                historique = _json.load(f)
+            original_len = len(historique)
+            historique = [ep for ep in historique if ep.get("episode_id") != episode_id]
+            if len(historique) < original_len:
+                with open(historique_path, "w", encoding="utf-8") as f:
+                    _json.dump(historique, f, ensure_ascii=False, indent=2)
+                supprime["fichiers"].append("historique_episodes.json (entrée retirée)")
+        except Exception as e:
+            logger.warning("Erreur nettoyage historique JSON pour %s : %s", episode_id, e)
+
+    # 3. Soft-delete en DB (si disponible)
+    if _DB_AVAILABLE:
+        try:
+            from database import get_cursor
+            with get_cursor() as cur:
+                # Soft-delete épisode
+                cur.execute(
+                    "UPDATE episodes SET deleted_at = NOW(), status = 'deleted' "
+                    "WHERE episode_id = %s AND deleted_at IS NULL",
+                    (episode_id,),
+                )
+                if cur.rowcount > 0:
+                    supprime["db"].append("episodes")
+
+                # Soft-delete de l'historique DB
+                cur.execute(
+                    "DELETE FROM historique_episodes WHERE episode_id = %s",
+                    (episode_id,),
+                )
+                if cur.rowcount > 0:
+                    supprime["db"].append("historique_episodes")
+
+                # Marquer les productions comme failed/deleted
+                cur.execute(
+                    "UPDATE productions SET status = 'deleted' "
+                    "WHERE episode_id = %s AND status NOT IN ('deleted')",
+                    (episode_id,),
+                )
+                if cur.rowcount > 0:
+                    supprime["db"].append("productions")
+
+                # Log dans audit_log
+                cur.execute(
+                    "INSERT INTO audit_log (table_name, action, context) "
+                    "VALUES ('episodes', 'SOFT_DELETE', %s)",
+                    (_json.dumps({
+                        "episode_id": episode_id,
+                        "raison": raison,
+                        "fichiers_archives": supprime["fichiers"],
+                    }, ensure_ascii=False),),
+                )
+        except Exception as e:
+            logger.warning("Erreur soft-delete DB pour %s : %s", episode_id, e)
+
+    total = len(supprime["fichiers"]) + len(supprime["db"])
+    if total == 0:
+        return jsonify({
+            "status": "warning",
+            "message": f"Aucune donnée trouvée pour {episode_id}. L'épisode n'existe peut-être pas.",
+        })
+
+    return jsonify({
+        "status": "ok",
+        "message": f"Épisode {episode_id} supprimé. {len(supprime['fichiers'])} fichier(s) archivé(s), {len(supprime['db'])} table(s) DB nettoyée(s).",
+        "archive": str(archive_dir),
+        "details": supprime,
+    })
+
+
 # ── Routes API — Validation des épisodes ─────────────────────────────────────
 
 

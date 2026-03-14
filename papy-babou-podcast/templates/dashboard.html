@@ -154,6 +154,7 @@
 
         @media (max-width: 900px) {
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .main { padding: 1rem; }
         }
 
         /* ── Cartes ──────────────────────────────────────────────── */
@@ -865,6 +866,143 @@
             color: var(--texte-dim);
             font-weight: 600;
         }
+
+        /* ═══════════════════════════════════════════════════════════════
+           MOBILE — Navigation, tables, validation, touch targets
+           ═══════════════════════════════════════════════════════════════ */
+
+        /* Hide elements on mobile */
+        @media (max-width: 768px) {
+            .hide-mobile { display: none !important; }
+        }
+
+        /* Navigation mobile : onglets compacts, scrollable, touch-friendly */
+        @media (max-width: 768px) {
+            .header { padding: 0.85rem 1rem; }
+            .header-title h1 { font-size: 1.1rem; }
+            .header-title .subtitle { font-size: 0.7rem; }
+            .header-title .logo { width: 36px; height: 36px; font-size: 1.2rem; }
+
+            .nav-bar {
+                padding: 0 0.5rem;
+                gap: 0;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .nav-bar::-webkit-scrollbar { display: none; }
+
+            .nav-tab {
+                padding: 0.7rem 0.65rem;
+                font-size: 0.72rem;
+                min-height: 44px;
+            }
+            .nav-tab .tab-icon { font-size: 1rem; }
+
+            /* Cacher le texte long des onglets, garder numéro + icône */
+            .nav-tab { white-space: nowrap; }
+
+            /* Boutons : touch targets minimum 44px */
+            .btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.85rem;
+                min-height: 44px;
+            }
+
+            /* Tables episode : cacher colonnes secondaires sur mobile */
+            .table-wrap { margin: 0 -0.5rem; }
+            table { font-size: 0.8rem; }
+            thead th, td { padding: 0.5rem 0.5rem; }
+
+            /* Dashboard episode table: hide audio, durée, date on mobile */
+            .table-wrap th:nth-child(6),
+            .table-wrap td:nth-child(6),
+            .table-wrap th:nth-child(7),
+            .table-wrap td:nth-child(7),
+            .table-wrap th:nth-child(9),
+            .table-wrap td:nth-child(9) {
+                display: none;
+            }
+
+            /* Score bar plus compact */
+            .score-track { min-width: 40px; }
+            .score-num { font-size: 0.78rem; min-width: 2rem; }
+
+            /* Titre tronqué */
+            .ep-titre { max-width: 120px; }
+
+            /* Stats KPI */
+            .stat-value { font-size: 1.5rem; }
+            .stat-card { padding: 0.85rem; }
+
+            /* Formulaires */
+            .form-input, .form-textarea, .form-select {
+                padding: 0.85rem 1rem;
+                font-size: 1rem; /* Empêche le zoom sur iOS */
+            }
+
+            /* Page header */
+            .page-header h2 { font-size: 1.2rem; }
+            .page-header p { font-size: 0.82rem; }
+
+            .section-title { font-size: 1rem; }
+
+            /* Validation page: stacked buttons */
+            .val-actions-grid {
+                flex-direction: column !important;
+            }
+            .val-actions-grid .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 480px) {
+            .nav-tab {
+                padding: 0.65rem 0.5rem;
+                font-size: 0.68rem;
+            }
+
+            .main { padding: 0.75rem; }
+            .card-header { padding: 0.7rem 0.85rem; font-size: 0.82rem; }
+            .card-body { padding: 0.85rem; }
+
+            /* Stats: full width */
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+            /* Ep titre encore plus court */
+            .ep-titre { max-width: 90px; }
+
+            /* Cacher aussi checkmark et type sur très petit écran */
+            .table-wrap th:nth-child(1),
+            .table-wrap td:nth-child(1),
+            .table-wrap th:nth-child(4),
+            .table-wrap td:nth-child(4) {
+                display: none;
+            }
+        }
+
+        /* ── Delete episode ──────────────────────────────────────────── */
+        .btn-danger {
+            background: #DC3545;
+            color: var(--blanc);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #C82333;
+        }
+
+        .delete-confirm-zone {
+            background: rgba(255, 107, 107, 0.08);
+            border: 2px solid rgba(255, 107, 107, 0.25);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .delete-confirm-zone.show { display: block; }
     </style>
 </head>
 <body>
@@ -1390,7 +1528,7 @@
         </div>
 
         <!-- Cover art -->
-        <div class="card" style="margin-bottom: 1.25rem;" id="val-cover-card" style="display: none;">
+        <div class="card" style="margin-bottom: 1.25rem; display: none;" id="val-cover-card">
             <div class="card-header">
                 <span class="icon">&#127912;</span> Couverture
             </div>
@@ -1409,7 +1547,7 @@
                     <label>Commentaire (optionnel)</label>
                     <textarea class="form-textarea" id="val-comment" rows="2" placeholder="Remarques, corrections, retours..."></textarea>
                 </div>
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                <div class="val-actions-grid" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
                     <button class="btn btn-turquoise" onclick="validateStep('script', 'validate')" id="btn-val-script">
                         &#10003; Valider le script
                     </button>
@@ -1434,6 +1572,35 @@
                     <button class="btn btn-primary" onclick="validateStep('publication', 'publish')" id="btn-val-publish" disabled>
                         &#128225; Autoriser la publication
                     </button>
+                </div>
+                <!-- Suppression d'épisode -->
+                <hr style="border: none; border-top: 2px solid var(--border); margin: 1.5rem 0;">
+                <div>
+                    <button class="btn btn-danger" onclick="toggleDeleteConfirm()" id="btn-delete-toggle" style="font-size: 0.82rem;">
+                        &#128465; Supprimer cet épisode
+                    </button>
+                    <div class="delete-confirm-zone" id="delete-confirm-zone">
+                        <p style="font-weight: 700; color: var(--corail); margin-bottom: 0.5rem;">
+                            &#9888; Êtes-vous sûr de vouloir supprimer cet épisode ?
+                        </p>
+                        <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
+                            Les fichiers (script, audio, cover, rapport) seront archivés dans <code>output/archive/</code>.
+                            L'épisode disparaîtra du dashboard et de l'historique.
+                            Cette action est réversible en restaurant les fichiers depuis l'archive.
+                        </p>
+                        <div class="form-group" style="margin-bottom: 0.75rem;">
+                            <label style="font-size: 0.82rem;">Raison (optionnel)</label>
+                            <input type="text" class="form-input" id="delete-raison" placeholder="ex: Pas satisfait du résultat">
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <button class="btn btn-danger" onclick="deleteEpisode()">
+                                &#128465; Confirmer la suppression
+                            </button>
+                            <button class="btn btn-secondary" onclick="toggleDeleteConfirm()">
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2726,9 +2893,9 @@ async function loadValidationEpisodes() {
             return;
         }
 
-        let html = '<table><thead><tr>'
-            + '<th>ID</th><th>Titre</th><th>Type</th><th>Audio</th>'
-            + '<th>Script</th><th>Montage</th><th>Action</th>'
+        let html = '<table class="val-table"><thead><tr>'
+            + '<th>ID</th><th>Titre</th><th class="hide-mobile">Type</th><th class="hide-mobile">Audio</th>'
+            + '<th class="hide-mobile">Script</th><th class="hide-mobile">Montage</th><th>Action</th>'
             + '</tr></thead><tbody>';
 
         for (const ep of episodes) {
@@ -2749,11 +2916,11 @@ async function loadValidationEpisodes() {
             html += '<tr' + rowStyle + '>'
                 + '<td class="ep-id">' + escapeHtml(ep.episode_id) + '</td>'
                 + '<td class="ep-titre">' + escapeHtml(ep.titre) + '</td>'
-                + '<td><span class="ep-type type-' + (ep.type_episode || 'standard') + '">' + escapeHtml(ep.type_episode || 'standard') + '</span></td>'
-                + '<td>' + audioBadge + '</td>'
-                + '<td>' + scriptBadge + '</td>'
-                + '<td>' + montageBadge + '</td>'
-                + '<td><button class="btn btn-secondary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')">&#128269; Voir / Valider</button></td>'
+                + '<td class="hide-mobile"><span class="ep-type type-' + (ep.type_episode || 'standard') + '">' + escapeHtml(ep.type_episode || 'standard') + '</span></td>'
+                + '<td class="hide-mobile">' + audioBadge + '</td>'
+                + '<td class="hide-mobile">' + scriptBadge + '</td>'
+                + '<td class="hide-mobile">' + montageBadge + '</td>'
+                + '<td><button class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; min-height: 44px;" onclick="loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')">&#128269; Voir</button></td>'
                 + '</tr>';
         }
         html += '</tbody></table>';
@@ -2926,6 +3093,45 @@ async function validateStep(step, action) {
 
         /* Recharger le détail et la liste */
         await loadEpisodeDetail(_currentEpisodeId);
+        await loadValidationEpisodes();
+        _dashboardDirty = true;
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+    }
+}
+
+function toggleDeleteConfirm() {
+    const zone = document.getElementById('delete-confirm-zone');
+    zone.classList.toggle('show');
+    if (!zone.classList.contains('show')) {
+        document.getElementById('delete-raison').value = '';
+    }
+}
+
+async function deleteEpisode() {
+    if (!_currentEpisodeId) return;
+
+    const raison = document.getElementById('delete-raison').value.trim();
+
+    try {
+        const resp = await fetch('/api/episode/' + _currentEpisodeId + '/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ raison })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            showAlert('alert-validation', 'error', data.error || 'Erreur lors de la suppression');
+            return;
+        }
+
+        showAlert('alert-validation', 'success', data.message);
+
+        /* Masquer le détail et recharger la liste */
+        document.getElementById('val-detail').style.display = 'none';
+        document.getElementById('delete-confirm-zone').classList.remove('show');
+        _currentEpisodeId = null;
         await loadValidationEpisodes();
         _dashboardDirty = true;
     } catch (err) {

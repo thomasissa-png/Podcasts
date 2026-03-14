@@ -376,6 +376,25 @@ Clear visual separation between single-episode and season production workflows:
 - `_mettre_a_jour_rss()` delegates to `_ecrire_rss()` under lock
 - `_upload_buzzsprout()` has retry loop — mock `time.sleep` in tests
 
+## Web Dashboard (Session 7)
+
+### Episode Deletion
+- `POST /api/episode/<episode_id>/delete` — soft-delete + file archival
+- Files moved to `output/archive/<episode_id>/` (not deleted — recoverable)
+- DB: soft-delete on `episodes` table, removes from `historique_episodes`, marks `productions` as deleted
+- Audit trail logged in `audit_log` table with reason
+- Frontend: two-step confirmation in validation page (click delete → confirm zone with reason input)
+
+### Mobile Responsive Design
+- Breakpoints: 768px (tablet), 600px (phone), 480px (small phone)
+- `.hide-mobile` class hides elements at ≤768px
+- Navigation tabs: compact padding, scrollable, no scrollbar, min-height 44px (touch target)
+- Dashboard episode table: audio, durée, date columns hidden on mobile; type + checkmark hidden on small phones
+- Validation episode list: type, audio, script, montage columns hidden on mobile — only ID, titre, action button shown
+- All `.btn` elements have `min-height: 44px` on mobile for touch targets
+- Form inputs use `font-size: 1rem` on mobile to prevent iOS zoom on focus
+- Validation action buttons stack vertically on mobile (`.val-actions-grid` → `flex-direction: column`)
+
 ## Deployment (Gunicorn)
 - `gunicorn.conf.py`: gthread workers (2 workers × 4 threads = 8 concurrent requests)
 - Timeout: 1800s (30min) because production subprocesses block the thread during `proc.communicate()`
