@@ -29,6 +29,7 @@ from flask import Flask, jsonify, render_template, request, send_from_directory
 import config
 import dashboard_data as dashboard_data_mod
 from dashboard_data import get_dashboard_data, charger_preferences, charger_checkpoints, charger_publications
+from utils import fichier_lock
 
 # ── Initialisation PostgreSQL ─────────────────────────────────────────────────
 try:
@@ -886,40 +887,41 @@ def api_validate_episode(episode_id):
     if action not in ("validate", "reject"):
         return jsonify({"error": "Action invalide. Valeurs acceptées : validate, reject"}), 400
 
-    # Load or create the rapport file
+    # Load, update, and save rapport under file lock (BUG #12: race condition)
     rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
-    rapport = {}
-    if rapport_path.exists():
-        try:
-            with open(rapport_path, "r", encoding="utf-8") as f:
-                rapport = _json.load(f)
-        except (ValueError, FileNotFoundError):
-            pass
-
-    # Update validation status
-    rapport.setdefault("etapes", {})
-    rapport["etapes"].setdefault(step, {})
-    rapport["etapes"][step]["validation_humaine"] = (action == "validate")
-    rapport["etapes"][step]["validation_web"] = True
-    rapport["etapes"][step]["validation_date"] = datetime.now().isoformat()
-
-    if comment:
-        rapport["etapes"][step]["commentaire_validation"] = comment
-
-    # Log the decision
-    rapport.setdefault("decisions_humaines", [])
-    rapport["decisions_humaines"].append({
-        "timestamp": datetime.now().isoformat(),
-        "type": f"validation_{step}_web",
-        "action": action,
-        "commentaire": comment or "",
-    })
-
-    # Save rapport
     try:
-        with open(rapport_path, "w", encoding="utf-8") as f:
-            _json.dump(rapport, f, ensure_ascii=False, indent=2)
-    except Exception as e:
+        with fichier_lock(rapport_path):
+            rapport = {}
+            if rapport_path.exists():
+                try:
+                    with open(rapport_path, "r", encoding="utf-8") as f:
+                        rapport = _json.load(f)
+                except (ValueError, FileNotFoundError):
+                    pass
+
+            # Update validation status
+            rapport.setdefault("etapes", {})
+            rapport["etapes"].setdefault(step, {})
+            rapport["etapes"][step]["validation_humaine"] = (action == "validate")
+            rapport["etapes"][step]["validation_web"] = True
+            rapport["etapes"][step]["validation_date"] = datetime.now().isoformat()
+
+            if comment:
+                rapport["etapes"][step]["commentaire_validation"] = comment
+
+            # Log the decision
+            rapport.setdefault("decisions_humaines", [])
+            rapport["decisions_humaines"].append({
+                "timestamp": datetime.now().isoformat(),
+                "type": f"validation_{step}_web",
+                "action": action,
+                "commentaire": comment or "",
+            })
+
+            # Save rapport
+            with open(rapport_path, "w", encoding="utf-8") as f:
+                _json.dump(rapport, f, ensure_ascii=False, indent=2)
+    except OSError as e:
         return jsonify({"error": f"Erreur sauvegarde rapport : {e}"}), 500
 
     action_label = "validé" if action == "validate" else "rejeté"
@@ -931,8 +933,13 @@ def api_validate_episode(episode_id):
         "message": f"{step_labels.get(step, step)} {action_label} pour {episode_id}.",
     }
     if step == "script" and action == "validate":
-        response["next_phase"] = "audio"
-        response["message"] += " Lancez maintenant la production audio."
+        # BUG #4: Vérifier que le checkpoint existe avant de proposer la suite
+        checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        if checkpoint_path.exists():
+            response["next_phase"] = "audio"
+            response["message"] += " Lancez maintenant la production audio."
+        else:
+            response["message"] += " Checkpoint introuvable — relancez la production manuellement."
     elif step == "montage" and action == "validate":
         response["next_phase"] = "publication"
         response["message"] += " L'épisode est prêt pour la publication."
@@ -1200,14 +1207,7 @@ def _handle_publication(episode_id, comment=""):
                      f"Validez d'abord le script et le montage avant de publier.",
         }), 400
 
-    # Launch publication via CLI (async)
-    cmd = [
-        "produire",
-        "-e", episode_id,
-        "--auto",
-    ]
-
-    # For now, just mark publication as validated in the rapport
+    # Mark publication as validated in the rapport
     rapport["etapes"].setdefault("publication", {})
     rapport["etapes"]["publication"]["validation_humaine"] = True
     rapport["etapes"]["publication"]["validation_web"] = True
@@ -1256,8 +1256,13 @@ def serve_cover_art(filename):
     """Sert les fichiers cover art des épisodes."""
     if ".." in filename or "/" in filename or "\\" in filename:
         return jsonify({"error": "Nom de fichier invalide"}), 400
+    # SEC #1: Valider l'extension (images uniquement) et le chemin résolu
+    if not filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+        return jsonify({"error": "Type de fichier invalide"}), 400
     covers_dir = config.COVERS_DIR
-    cover_path = covers_dir / filename
+    cover_path = (covers_dir / filename).resolve()
+    if not str(cover_path).startswith(str(covers_dir.resolve())):
+        return jsonify({"error": "Fichier hors du répertoire autorisé"}), 400
     if not cover_path.exists():
         return jsonify({"error": f"Cover introuvable : {filename}"}), 404
     mimetype = "image/png" if filename.endswith(".png") else "image/jpeg"
