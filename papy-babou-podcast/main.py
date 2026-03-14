@@ -222,6 +222,11 @@ def _charger_scripts_precedents_saison(saison: int, numero: int) -> list[dict]:
         ep_id = f"S{saison:02d}E{n:02d}"
         chemin = config.SCRIPTS_DIR / f"{ep_id}_valide.json"
         if not chemin.exists():
+            # B8: Signaler le script manquant (trou dans la continuité narrative)
+            logger.warning(
+                "Script précédent %s introuvable — trou dans la continuité "
+                "narrative pour S%02dE%02d", ep_id, saison, numero,
+            )
             continue
         try:
             with open(chemin, "r", encoding="utf-8") as f:

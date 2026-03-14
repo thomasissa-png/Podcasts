@@ -1023,22 +1023,23 @@ def api_regenerate_episode(episode_id):
         corrections_path.parent.mkdir(parents=True, exist_ok=True)
         corrections_path.write_text(instructions, encoding="utf-8")
 
-        # Réinitialiser le flag de validation script dans le rapport
+        # Réinitialiser le flag de validation script dans le rapport (B1: avec file lock)
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
         if rapport_path.exists():
             try:
-                with open(rapport_path, "r", encoding="utf-8") as f:
-                    rapport = _json.load(f)
-                rapport.get("etapes", {}).get("script", {}).pop("validation_humaine", None)
-                rapport.setdefault("decisions_humaines", []).append({
-                    "timestamp": datetime.now().isoformat(),
-                    "type": "regeneration_script_web",
-                    "instructions": instructions,
-                })
-                with open(rapport_path, "w", encoding="utf-8") as f:
-                    _json.dump(rapport, f, ensure_ascii=False, indent=2)
-            except Exception:
-                pass
+                with fichier_lock(rapport_path):
+                    with open(rapport_path, "r", encoding="utf-8") as f:
+                        rapport = _json.load(f)
+                    rapport.get("etapes", {}).get("script", {}).pop("validation_humaine", None)
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "timestamp": datetime.now().isoformat(),
+                        "type": "regeneration_script_web",
+                        "instructions": instructions,
+                    })
+                    with open(rapport_path, "w", encoding="utf-8") as f:
+                        _json.dump(rapport, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
 
         # W3: Utiliser reprendre depuis le checkpoint pour éviter de créer
         # une nouvelle entrée production en DB (produire en crée une à chaque appel)
@@ -1047,6 +1048,7 @@ def api_regenerate_episode(episode_id):
             try:
                 with open(checkpoint_path, "r", encoding="utf-8") as f:
                     cp = _json.load(f)
+                # B4: Ne modifier QUE l'étape, préserver toutes les données
                 cp["etape"] = "script"
                 with open(checkpoint_path, "w", encoding="utf-8") as f:
                     _json.dump(cp, f, ensure_ascii=False, indent=2)
@@ -1091,28 +1093,28 @@ def api_regenerate_episode(episode_id):
         if not checkpoint_path.exists():
             return jsonify({"error": f"Checkpoint introuvable pour {episode_id}."}), 404
 
-        # Sauvegarder les instructions dans le rapport
+        # Sauvegarder les instructions dans le rapport (B1: avec file lock)
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
         if rapport_path.exists():
             try:
-                with open(rapport_path, "r", encoding="utf-8") as f:
-                    rapport = _json.load(f)
-                montage_etape = rapport.get("etapes", {}).get("montage", {})
-                montage_etape.pop("validation_humaine", None)
-                # W7: Nettoyer les données de montage obsolètes pour éviter
-                # d'afficher d'anciennes valeurs après la régénération
-                for stale_key in ("chemin_hq", "chemin_preview", "duree_secondes",
-                                  "taille_bytes", "chapitres", "object_storage"):
-                    montage_etape.pop(stale_key, None)
-                rapport.setdefault("decisions_humaines", []).append({
-                    "timestamp": datetime.now().isoformat(),
-                    "type": "regeneration_montage_web",
-                    "instructions": instructions,
-                })
-                with open(rapport_path, "w", encoding="utf-8") as f:
-                    _json.dump(rapport, f, ensure_ascii=False, indent=2)
-            except Exception:
-                pass
+                with fichier_lock(rapport_path):
+                    with open(rapport_path, "r", encoding="utf-8") as f:
+                        rapport = _json.load(f)
+                    montage_etape = rapport.get("etapes", {}).get("montage", {})
+                    montage_etape.pop("validation_humaine", None)
+                    # W7: Nettoyer les données de montage obsolètes
+                    for stale_key in ("chemin_hq", "chemin_preview", "duree_secondes",
+                                      "taille_bytes", "chapitres", "object_storage"):
+                        montage_etape.pop(stale_key, None)
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "timestamp": datetime.now().isoformat(),
+                        "type": "regeneration_montage_web",
+                        "instructions": instructions,
+                    })
+                    with open(rapport_path, "w", encoding="utf-8") as f:
+                        _json.dump(rapport, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
 
         # Forcer la reprise depuis l'étape audio en réécrivant le checkpoint
         try:
@@ -1186,45 +1188,45 @@ def _handle_publication(episode_id, comment=""):
     if not rapport_path.exists():
         return jsonify({"error": "Aucun rapport trouvé. L'épisode doit d'abord être produit."}), 400
 
+    # B2: Lecture + écriture rapport sous file lock
     try:
-        with open(rapport_path, "r", encoding="utf-8") as f:
-            rapport = _json.load(f)
+        with fichier_lock(rapport_path):
+            with open(rapport_path, "r", encoding="utf-8") as f:
+                rapport = _json.load(f)
+
+            etapes = rapport.get("etapes", {})
+            script_ok = etapes.get("script", {}).get("validation_humaine", False)
+            montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
+
+            if not script_ok or not montage_ok:
+                missing = []
+                if not script_ok:
+                    missing.append("script")
+                if not montage_ok:
+                    missing.append("montage")
+                return jsonify({
+                    "error": f"Publication bloquée : validation(s) manquante(s) — {', '.join(missing)}. "
+                             f"Validez d'abord le script et le montage avant de publier.",
+                }), 400
+
+            rapport["etapes"].setdefault("publication", {})
+            rapport["etapes"]["publication"]["validation_humaine"] = True
+            rapport["etapes"]["publication"]["validation_web"] = True
+            rapport["etapes"]["publication"]["validation_date"] = datetime.now().isoformat()
+
+            rapport.setdefault("decisions_humaines", [])
+            rapport["decisions_humaines"].append({
+                "timestamp": datetime.now().isoformat(),
+                "type": "validation_publication_web",
+                "action": "publish",
+                "commentaire": comment or "",
+            })
+
+            with open(rapport_path, "w", encoding="utf-8") as f:
+                _json.dump(rapport, f, ensure_ascii=False, indent=2)
     except (ValueError, FileNotFoundError):
         return jsonify({"error": "Rapport illisible."}), 500
-
-    etapes = rapport.get("etapes", {})
-    script_ok = etapes.get("script", {}).get("validation_humaine", False)
-    montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
-
-    if not script_ok or not montage_ok:
-        missing = []
-        if not script_ok:
-            missing.append("script")
-        if not montage_ok:
-            missing.append("montage")
-        return jsonify({
-            "error": f"Publication bloquée : validation(s) manquante(s) — {', '.join(missing)}. "
-                     f"Validez d'abord le script et le montage avant de publier.",
-        }), 400
-
-    # Mark publication as validated in the rapport
-    rapport["etapes"].setdefault("publication", {})
-    rapport["etapes"]["publication"]["validation_humaine"] = True
-    rapport["etapes"]["publication"]["validation_web"] = True
-    rapport["etapes"]["publication"]["validation_date"] = datetime.now().isoformat()
-
-    rapport.setdefault("decisions_humaines", [])
-    rapport["decisions_humaines"].append({
-        "timestamp": datetime.now().isoformat(),
-        "type": "validation_publication_web",
-        "action": "publish",
-        "commentaire": comment or "",
-    })
-
-    try:
-        with open(rapport_path, "w", encoding="utf-8") as f:
-            _json.dump(rapport, f, ensure_ascii=False, indent=2)
-    except Exception as e:
+    except OSError as e:
         return jsonify({"error": f"Erreur sauvegarde : {e}"}), 500
 
     return jsonify({
@@ -1432,13 +1434,16 @@ def api_prochain_episode(saison_num):
         })
 
     # Trouver le prochain épisode à produire (premier non terminé)
+    # B3: Un épisode est "prêt" quand script ET montage sont validés
+    # (pas besoin d'attendre la publication pour passer au suivant)
+    STATUTS_PRETS = ("termine", "montage_valide")
     prochain = None
     bloque_par = None
     for i, ep_s in enumerate(episodes_status):
-        if ep_s["status"] in ("termine", "montage_valide"):
+        if ep_s["status"] in STATUTS_PRETS:
             continue
-        # Vérifier que l'épisode précédent est terminé (sauf pour le premier)
-        if i > 0 and episodes_status[i - 1]["status"] != "termine":
+        # Vérifier que l'épisode précédent est prêt (sauf pour le premier)
+        if i > 0 and episodes_status[i - 1]["status"] not in STATUTS_PRETS:
             bloque_par = episodes_status[i - 1]
         prochain = ep_s
         break

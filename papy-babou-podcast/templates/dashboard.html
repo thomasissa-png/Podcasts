@@ -3317,8 +3317,12 @@ function updateValidationButtons(scriptOk, montageOk) {
     btnPublish.disabled = !(scriptOk && montageOk);
 }
 
+var _validationRunning = false;  /* B6: anti double-clic validation */
+
 async function validateStep(step, action) {
     if (!_currentEpisodeId) return;
+    if (_validationRunning) return;
+    _validationRunning = true;
 
     const comment = document.getElementById('val-comment').value.trim();
 
@@ -3358,6 +3362,8 @@ async function validateStep(step, action) {
         _dashboardDirty = true;
     } catch (err) {
         showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+    } finally {
+        _validationRunning = false;
     }
 }
 
@@ -3422,14 +3428,18 @@ function toggleModifyZone(step) {
     zone.style.display = (zone.style.display === 'none') ? 'block' : 'none';
 }
 
+var _regenerationRunning = false;  /* B6: anti double-clic régénération */
+
 async function regenerateStep(step) {
     if (!_currentEpisodeId) return;
+    if (_regenerationRunning) return;
     var textarea = document.getElementById('modify-instructions-' + step);
     var instructions = textarea ? textarea.value.trim() : '';
     if (!instructions) {
         showAlert('alert-validation', 'error', 'Veuillez entrer vos instructions de modification.');
         return;
     }
+    _regenerationRunning = true;
 
     /* Masquer la zone de modification */
     toggleModifyZone(step);
@@ -3461,6 +3471,7 @@ async function regenerateStep(step) {
         showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
     } finally {
         hideLoading();
+        _regenerationRunning = false;
     }
 }
 
@@ -3473,12 +3484,17 @@ async function rejectAndArchive(step) {
 
     var comment = document.getElementById('val-comment').value.trim();
     try {
-        /* 1. Marquer comme rejeté dans le rapport */
-        await fetch('/api/episode/' + _currentEpisodeId + '/validate', {
+        /* 1. Marquer comme rejeté dans le rapport (B7: vérifier le résultat) */
+        var rejectResp = await fetch('/api/episode/' + _currentEpisodeId + '/validate', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ step: step, action: 'reject', comment: comment || 'Refusé par le producteur' })
         });
+        if (!rejectResp.ok) {
+            var rejectData = await rejectResp.json();
+            showAlert('alert-validation', 'error', 'Erreur rejet : ' + (rejectData.error || 'inconnue'));
+            return;
+        }
 
         /* 2. Archiver l'épisode */
         var resp = await fetch('/api/episode/' + _currentEpisodeId + '/delete', {
