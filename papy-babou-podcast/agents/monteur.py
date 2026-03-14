@@ -15,9 +15,11 @@ logger = logging.getLogger(__name__)
 
 # Constantes audio (en ms sauf mention contraire)
 FADE_JINGLE_MS = 1500          # Durée du fade in/out pour les jingles
-SILENCE_TRANSITION_MS = 500     # Silence entre jingle et contenu
+SILENCE_TRANSITION_MS = 300     # Silence entre jingle et contenu (réduit de 500)
 FADE_AMBIANCE_MS = 3000         # Durée du fade in/out pour la musique de fond
 FALLBACK_ASSET_DUREE_MS = 5000  # Durée du silence de remplacement d'un asset manquant
+CROSSFADE_VOIX_MS = 50          # Léger crossfade entre segments voix pour transitions douces
+MAX_PAUSE_MS = 2500             # Plafond de pause pour éviter les silences excessifs
 
 
 def _normaliser_lufs(audio: AudioSegment, cible_lufs: float = -16.0) -> AudioSegment:
@@ -307,9 +309,18 @@ class Monteur:
                         audio = audio.overlay(sfx_overlay)
                     overlays_pending.clear()
 
-                resultat += audio
+                # Crossfade entre segments voix pour transitions plus naturelles
+                if (len(resultat) > CROSSFADE_VOIX_MS
+                        and len(audio) > CROSSFADE_VOIX_MS):
+                    resultat = resultat.append(audio, crossfade=CROSSFADE_VOIX_MS)
+                else:
+                    resultat += audio
 
             pause_ms = seg.get("pause_apres_ms", 0)
+            # Plafonner les pauses excessives
+            if pause_ms > MAX_PAUSE_MS:
+                logger.debug("Pause plafonnée de %dms à %dms", pause_ms, MAX_PAUSE_MS)
+                pause_ms = MAX_PAUSE_MS
             if pause_ms > 0:
                 resultat += AudioSegment.silent(duration=pause_ms)
 

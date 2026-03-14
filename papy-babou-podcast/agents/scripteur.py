@@ -34,7 +34,12 @@ RÈGLES STRICTES :
 4. Utiliser les tics de langage de chaque personnage régulièrement.
 5. Expliquer les mots ou concepts difficiles avec des analogies simples.
 6. L'histoire biblique doit être fidèle au texte original, adaptée aux enfants.
-7. Marquer les silences dramatiques avec pause_apres_ms élevé (1500-3000ms).
+7. PAUSES NATURELLES : les transitions entre personnages doivent être fluides.
+    - Réplique conversationnelle rapide (enchaînement naturel) : pause_apres_ms = 150-300
+    - Pause normale (changement de sujet, respiration) : pause_apres_ms = 400-600
+    - Pause dramatique (révélation, suspense) : pause_apres_ms = 800-1500
+    - Long silence dramatique (rare, 1-2 par épisode max) : pause_apres_ms = 1500-2500
+    La MAJORITÉ des segments doivent avoir 150-400ms de pause pour un rythme naturel.
 8. Commencer par une scène où Papy Babou accueille les enfants.
 9. Terminer par la leçon de vie spécifiée et un au revoir chaleureux.
 10. BRUITAGES : insère des segments avec personnage "sfx" pour enrichir l'ambiance.
@@ -83,7 +88,7 @@ FORMAT DE SORTIE — JSON STRICT :
         "personnage": "{personnages_format}",
         "texte": "...",
         "ton": "chaleureux|curieux|inquiet|neutre|enthousiaste|dramatique|joyeux|rassurant",
-        "pause_apres_ms": 800
+        "pause_apres_ms": 250
       }},
       {{
         "id": "sfx_001",
