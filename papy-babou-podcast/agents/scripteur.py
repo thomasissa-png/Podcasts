@@ -100,7 +100,7 @@ FORMAT DE SORTIE — JSON STRICT :
         "id": "seg_001",
         "personnage": "{personnages_format}",
         "texte": "...",
-        "ton": "chaleureux|curieux|inquiet|neutre|enthousiaste|dramatique|joyeux|rassurant",
+        "ton": "chaleureux|curieux|inquiet|neutre|enthousiaste|dramatique|joyeux|rassurant|triste|chuchotant|excite|mystérieux|solennel|espiègle|émerveillé|effrayé",
         "rythme": "normal|rapide|lent",
         "pause_apres_ms": 250
       }},

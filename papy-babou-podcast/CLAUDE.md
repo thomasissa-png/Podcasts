@@ -31,7 +31,7 @@ papy-babou-podcast/
 │   ├── test_config.py       # API keys, rate limiter, formats, seasons, characters
 │   ├── test_sfx_provider.py # Local/cache/API fallback chain
 │   ├── test_planificateur.py# Validation, export CSV/MD, generation
-│   └── test_corrections.py  # Bug regression tests (30 tests)
+│   └── test_corrections.py  # Bug regression + creative quality tests (77 tests)
 ├── assets/                  # Audio assets (jingles, music)
 ├── data/
 │   ├── personnages.json     # Character bible
@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 378 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 394 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
