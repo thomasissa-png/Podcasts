@@ -147,8 +147,12 @@ def charger_preferences() -> list[dict]:
         Liste de regles/preferences persistantes.
     """
     if config.PREFERENCES_PATH.exists():
-        with open(config.PREFERENCES_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(config.PREFERENCES_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("Fichier préférences corrompu (%s) : %s — ignoré",
+                           config.PREFERENCES_PATH, e)
     return []
 
 
@@ -221,6 +225,13 @@ def _charger_scripts_precedents_saison(saison: int, numero: int) -> list[dict]:
     for n in range(1, numero):
         ep_id = f"S{saison:02d}E{n:02d}"
         chemin = config.SCRIPTS_DIR / f"{ep_id}_valide.json"
+        if not chemin.exists():
+            # Tenter la restauration depuis Object Storage
+            try:
+                import persistent_storage
+                persistent_storage.restore_script(ep_id, config.SCRIPTS_DIR)
+            except Exception:
+                pass
         if not chemin.exists():
             # B8: Signaler le script manquant (trou dans la continuité narrative)
             logger.warning(
@@ -426,10 +437,14 @@ def archiver_checkpoint(episode_id: str) -> None:
 
     # Fichier JSON : renommer au lieu de supprimer
     chemin = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
-    if chemin.exists():
-        archive = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint_done_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        chemin.rename(archive)
-        logger.info("Checkpoint archivé (non supprimé) : %s → %s", chemin, archive)
+    try:
+        if chemin.exists():
+            archive = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint_done_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            chemin.rename(archive)
+            logger.info("Checkpoint archivé (non supprimé) : %s → %s", chemin, archive)
+    except FileNotFoundError:
+        # Déjà archivé par un autre processus concurrent
+        logger.debug("Checkpoint déjà archivé par un autre processus : %s", chemin)
 
 
 # ── Métriques de coût ────────────────────────────────────────────────────────
@@ -1574,7 +1589,7 @@ def pipeline(
     _production_id_courante = None  # Reset au début de chaque pipeline
 
     episode_id = f"S{saison:02d}E{numero:02d}"
-    rapport = checkpoint_data or {
+    rapport = checkpoint_data if checkpoint_data is not None else {
         "episode_id": episode_id,
         "titre": titre,
         "dry_run": dry_run,
@@ -1630,16 +1645,6 @@ def pipeline(
                 EpisodeRepo.maj_status(episode_id, "failed")
             except Exception as db_err:
                 logger.warning("DB indisponible pour marquage échec : %s", db_err)
-        # Sauvegarder le rapport partiel
-        rapport["erreur"] = str(e)
-        rapport["fin"] = datetime.now().isoformat()
-        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport_echec.json"
-        with open(chemin_rapport, "w", encoding="utf-8") as f:
-            json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
-        console.print(panel_erreur(
-            f"Pipeline échoué pour {episode_id} : {e}\n"
-            f"Rapport partiel sauvé : {chemin_rapport}"
-        ))
         # W13: Nettoyer le fichier de corrections web en cas de crash
         # pour éviter qu'il ne soit réutilisé lors d'une prochaine production
         try:
@@ -1648,6 +1653,28 @@ def pipeline(
                 corrections_stale.unlink()
         except OSError:
             pass
+        # Sauvegarder le rapport partiel
+        rapport["erreur"] = str(e)
+        rapport["fin"] = datetime.now().isoformat()
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport_echec.json"
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f:
+                json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+        # Sauvegarder un checkpoint d'erreur pour permettre la reprise
+        try:
+            sauvegarder_checkpoint(episode_id, "erreur", {
+                "episode_id": episode_id, "titre": titre, "resume": resume,
+                "saison": saison, "numero": numero, "morale": morale,
+                "type_episode": type_episode,
+                "dry_run": dry_run, "rapport": rapport,
+                "pubdate_offset_seconds": pubdate_offset_seconds,
+            })
+        except Exception:
+            logger.debug("Impossible de sauvegarder le checkpoint d'erreur")
+        console.print(panel_erreur(
+            f"Pipeline échoué pour {episode_id} : {e}\n"
+            f"Rapport partiel sauvé : {chemin_rapport}"
+        ))
         raise
 
 
@@ -1776,8 +1803,24 @@ def _pipeline_inner(
 
     # Si on reprend, charger le script existant et restaurer le score
     if etape_idx > 0 and chemin_valide.exists():
-        with open(chemin_valide, "r", encoding="utf-8") as f:
-            script = json.load(f)
+        try:
+            with open(chemin_valide, "r", encoding="utf-8") as f:
+                script = json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            # Tenter la restauration depuis Object Storage si le fichier local est corrompu
+            try:
+                import persistent_storage
+                if persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR):
+                    with open(chemin_valide, "r", encoding="utf-8") as f:
+                        script = json.load(f)
+                    logger.info("Script restauré depuis Object Storage après corruption locale")
+                else:
+                    raise
+            except Exception:
+                raise ValueError(
+                    f"Script validé corrompu ({chemin_valide}) : {e}. "
+                    f"Supprimez-le et relancez la production."
+                ) from e
         if checkpoint_data:
             score = checkpoint_data.get("etapes", {}).get("script", {}).get("score_review", 0)
         logger.info("Script chargé depuis le checkpoint : %s", chemin_valide)
@@ -1988,8 +2031,9 @@ def _pipeline_inner(
         )
         # Sauvegarder le rapport partiel
         chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
-        with open(chemin_rapport, "w", encoding="utf-8") as f_out:
-            json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
         # Marquer la production DB comme en attente (pas "in_progress" indéfiniment)
         if _use_db() and _production_id_courante:
             try:
@@ -2122,6 +2166,15 @@ def _pipeline_inner(
                         )
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement SFX : %s", e)
+
+        # Checkpoint après SFX (manquant auparavant — perte de données SFX sur crash)
+        sauvegarder_checkpoint(episode_id, "montage", {
+            "episode_id": episode_id, "titre": titre, "resume": resume,
+            "saison": saison, "numero": numero, "morale": morale,
+            "type_episode": type_episode,
+            "dry_run": dry_run, "rapport": rapport,
+            "pubdate_offset_seconds": pubdate_offset_seconds,
+        })
 
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
 
@@ -2311,8 +2364,9 @@ def _pipeline_inner(
             f"en attente de validation.[/bold cyan]"
         )
         chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
-        with open(chemin_rapport, "w", encoding="utf-8") as f_out:
-            json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
         if _use_db() and _production_id_courante:
             try:
                 ProductionRepo.maj_etape(
@@ -2471,8 +2525,9 @@ def _pipeline_inner(
 
     # Sauvegarder le rapport
     chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
-    with open(chemin_rapport, "w", encoding="utf-8") as f:
-        json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+    with fichier_lock(chemin_rapport):
+        with open(chemin_rapport, "w", encoding="utf-8") as f:
+            json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
 
     # Upload rapport vers Object Storage (persistance inter-deploy)
     try:

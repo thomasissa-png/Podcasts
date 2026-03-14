@@ -238,21 +238,35 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
                 _job_processes.pop(job_id, None)
 
 
-def _start_job(cmd_args, timeout=300, cleanup_fn=None):
+def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
     """Lance un job en arriere-plan et retourne son ID immediatement.
 
     Args:
         cmd_args: Arguments pour main.py.
         timeout: Timeout en secondes.
         cleanup_fn: Fonction optionnelle appelee apres le job (ex: supprimer fichier temp).
+        episode_id: Identifiant de l'épisode (pour empêcher les jobs concurrents).
 
     Returns:
         job_id (str): Identifiant unique du job.
+
+    Raises:
+        ValueError: Si un job est déjà en cours pour cet épisode.
     """
     job_id = uuid.uuid4().hex[:12]
     with _jobs_lock:
         _gc_expired_jobs()
-        _jobs[job_id] = {"status": "running", "result": None, "created_at": time.monotonic()}
+        # Vérifier qu'aucun job n'est déjà en cours pour cet épisode
+        if episode_id:
+            for existing_job in _jobs.values():
+                if (existing_job.get("episode_id") == episode_id
+                        and existing_job["status"] == "running"):
+                    raise ValueError(f"Un job est déjà en cours pour {episode_id}")
+        _jobs[job_id] = {
+            "status": "running", "result": None,
+            "created_at": time.monotonic(),
+            "episode_id": episode_id,
+        }
 
     def _worker():
         try:
@@ -295,6 +309,7 @@ def api_job_status(job_id):
     if not _JOB_ID_RE.match(job_id):
         return jsonify({"error": "Format de job_id invalide"}), 400
     with _jobs_lock:
+        _gc_expired_jobs()  # Nettoyage actif à chaque poll (pas seulement au lancement)
         job = _jobs.get(job_id)
         if not job:
             return jsonify({"error": f"Job introuvable : {job_id}"}), 404
@@ -979,7 +994,10 @@ def api_continue_production(episode_id):
             "--auto",
             "--stop-after", "montage",
         ]
-        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+        try:
+            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 409
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "audio"})
 
     elif phase == "publication":
@@ -1004,7 +1022,10 @@ def api_continue_production(episode_id):
             "-c", str(checkpoint_path),
             "--auto",
         ]
-        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+        try:
+            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 409
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "publication"})
 
 
@@ -1077,7 +1098,10 @@ def api_regenerate_episode(episode_id):
                 "--auto",
                 "--stop-after", "script",
             ]
-            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+            try:
+                job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+            except ValueError as e:
+                return jsonify({"error": str(e)}), 409
             return jsonify({"status": "accepted", "job_id": job_id, "phase": "script"})
 
         # Fallback: pas de checkpoint, utiliser produire (première production)
@@ -1099,7 +1123,10 @@ def api_regenerate_episode(episode_id):
         if params.get("morale"):
             cmd.extend(["-m", params["morale"]])
 
-        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+        try:
+            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 409
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "script"})
 
     elif step == "montage":
@@ -1147,7 +1174,10 @@ def api_regenerate_episode(episode_id):
             "--auto",
             "--stop-after", "montage",
         ]
-        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+        try:
+            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 409
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "montage"})
 
 
@@ -1345,7 +1375,11 @@ def api_produire():
     if dry_run:
         cmd.append("--dry-run")
 
-    job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+    episode_id = f"S{saison:02d}E{numero:02d}"
+    try:
+        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
     return jsonify({"status": "accepted", "job_id": job_id, "phase": "script"})
 
 
@@ -1550,7 +1584,10 @@ def api_produire_saison():
     if dry_run:
         cmd.append("--dry-run")
 
-    job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+    try:
+        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
     return jsonify({
         "status": "accepted",
         "job_id": job_id,
@@ -1583,7 +1620,13 @@ def api_reprendre():
         "--auto",
     ]
 
-    job_id = _start_job(cmd, timeout=_TIMEOUT_REPRENDRE)
+    # Extraire l'episode_id du nom de fichier (S01E01_checkpoint.json)
+    ep_id_match = re.match(r'^(S\d{2}E\d{2})_', fichier)
+    ep_id = ep_id_match.group(1) if ep_id_match else None
+    try:
+        job_id = _start_job(cmd, timeout=_TIMEOUT_REPRENDRE, episode_id=ep_id)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
     return jsonify({"status": "accepted", "job_id": job_id})
 
 
