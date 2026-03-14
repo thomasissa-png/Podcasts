@@ -683,7 +683,13 @@ class Scripteur:
         self._valider_structure(script)
 
         # Inject type_episode into script so reviewer can read it
-        if "type" not in script.get("episode", {}):
+        # Valider et auto-corriger le type si le LLM a généré un type invalide
+        valid_types = {"ouverture", "standard", "mi-saison", "final", "bonus"}
+        ep_type = script.get("episode", {}).get("type", "")
+        if ep_type not in valid_types:
+            if ep_type:
+                logger.warning("Type épisode invalide '%s' généré par le LLM — corrigé à '%s'",
+                               ep_type, type_episode)
             script.setdefault("episode", {})["type"] = type_episode
 
         nb_mots = self.compter_mots(script)

@@ -2497,6 +2497,7 @@ def _pipeline_inner(
                     console.print(f"  URL audio : {rapport_pub['url_audio']}")
                     if rapport_pub.get("transcript_url"):
                         console.print(f"  Transcript : {rapport_pub['transcript_url']}")
+                    rapport_pub["validation_humaine"] = True
                     rapport["etapes"]["publication"] = rapport_pub
 
                     # Enregistrer publication en DB
@@ -2519,6 +2520,7 @@ def _pipeline_inner(
 
     console.print(f"\n{Typo.etape(8, 8, 'Rapport final')}")
     rapport["fin"] = datetime.now().isoformat()
+    rapport["status"] = "completed"
 
     # Calculer les métriques de coût
     rapport["couts"] = _calculer_couts(rapport)
