@@ -3,6 +3,7 @@
     "papy_babou": {
       "nom_complet": "Papy Babou",
       "age": 72,
+      "age_par_saison": {"1": 72, "2": 73, "3": 73, "4": 74},
       "description": "Grand-père bienveillant, très courageux et protecteur. A beaucoup voyagé et vécu à l'étranger (Liban, Suisse, Afrique du Sud) avant de s'installer en France. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants Antoine et Noémie.",
       "apparence": {
         "cheveux": "blancs, légèrement dégarni, mèches rebelles",
@@ -51,6 +52,7 @@
     "antoine": {
       "nom_complet": "Antoine",
       "age": 8,
+      "age_par_saison": {"1": 8, "2": 9, "3": 9, "4": 10},
       "description": "Petit-fils curieux et aventurier. Garçon qui aime le football et fait du judo. Adore vouloir faire comme les grands et faire le courageux. Gentil, social, travaille bien en classe. Aime jouer dehors, faire des cabanes, et aller chez Babou et mamie.",
       "apparence": {
         "cheveux": "bruns ébouriffés, mèche rebelle sur le front",
@@ -91,6 +93,7 @@
     "noemie": {
       "nom_complet": "Noémie",
       "age": 5,
+      "age_par_saison": {"1": 5, "2": 6, "3": 6, "4": 7},
       "description": "Petite fille vraiment très chipie, avec un très gros caractère. Aime faire des blagues et n'est pas toujours très courageuse. Adore embêter tout le monde gentiment et rigole beaucoup. Adore son Babou plus que tout.",
       "apparence": {
         "cheveux": "blonds bouclés, souvent attachés avec un ruban rose ou une barrette fleur",
@@ -129,6 +132,7 @@
       "premiere_apparition": "S01E02",
       "frequence": "apparitions régulières mais légères — amener le goûter, annoncer l'heure du coucher, parfois rester un moment",
       "age": 70,
+      "age_par_saison": {"1": 70, "2": 71, "3": 71, "4": 72},
       "description": "La plus gentille mamie du monde. Attentionnée, douce, adore ses petits-enfants plus que tout. Cuisine extrêmement bien. Architecte d'intérieur de métier.",
       "ton": "doux, chaleureux, attentionné",
       "backstory": "Née en Égypte. A beaucoup voyagé — a habité en France, au Liban, en Suisse, et en Afrique du Sud. Mariée à Papy Babou.",

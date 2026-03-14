@@ -95,6 +95,7 @@ FORMAT DE SORTIE — JSON STRICT :
     "morale": "La leçon de vie de cet épisode",
     "personnages_presents": ["papy_babou", "antoine", "noemie"],
     "moments_cles": ["Moment important 1", "Moment important 2"],
+    "evolutions_personnages": "Résumé en 1-2 phrases de comment les personnages ont évolué dans cet épisode (émotions, apprentissages, relations).",
     "segments": [
       {{
         "id": "seg_001",
@@ -219,8 +220,12 @@ STRUCTURES_NARRATIVES = {
 }
 
 
-def _construire_bible_personnages() -> str:
-    """Construit la section personnages du prompt à partir de personnages.json."""
+def _construire_bible_personnages(numero_saison: int = 1) -> str:
+    """Construit la section personnages du prompt à partir de personnages.json.
+
+    Args:
+        numero_saison: Numéro de saison en cours (pour la progression d'âge).
+    """
     data = config.charger_personnages()
     if not data:
         return _BIBLE_FALLBACK
@@ -231,12 +236,17 @@ def _construire_bible_personnages() -> str:
     sections = ["PERSONNAGES (bible de référence) :"]
     for key, perso in personnages.items():
         nom = perso.get("nom_complet", key)
+        # Progression d'âge : age_par_saison ou age de base
         age = perso.get("age", "")
+        age_par_saison = perso.get("age_par_saison", {})
+        if age_par_saison and str(numero_saison) in age_par_saison:
+            age = age_par_saison[str(numero_saison)]
         desc = perso.get("description", "")
         ton = perso.get("ton", "")
+        role = perso.get("role", "principal")
         age_str = f", {age} ans" if age else ""
 
-        section = f"- {nom}{age_str} : {desc}\n  Ton : {ton}"
+        section = f"- {nom}{age_str} ({role}) : {desc}\n  Ton : {ton}"
 
         tics = perso.get("tics_de_langage", [])
         if tics:
@@ -258,6 +268,51 @@ def _construire_bible_personnages() -> str:
         if usage:
             section += f"\n  Usage : {'; '.join(usage)}"
 
+        # Backstory et famille — enrichissement narratif
+        backstory = perso.get("backstory", "")
+        if backstory:
+            section += f"\n  Backstory : {backstory}"
+
+        famille = perso.get("famille", {})
+        if famille:
+            liens = []
+            for lien, membres in famille.items():
+                if isinstance(membres, list):
+                    liens.append(f"{lien}: {', '.join(membres)}")
+                else:
+                    liens.append(f"{lien}: {membres}")
+            section += f"\n  Famille : {'; '.join(liens)}"
+
+        anecdotes = perso.get("anecdotes_possibles", [])
+        if anecdotes:
+            section += f"\n  Anecdotes possibles : {'; '.join(anecdotes)}"
+
+        # Relations entre personnages
+        for rel_key in ("relation_avec_papy", "relation_avec_noemie",
+                        "relation_avec_antoine"):
+            rel = perso.get(rel_key, "")
+            if rel:
+                qui = rel_key.replace("relation_avec_", "").replace("_", " ").title()
+                section += f"\n  Relation avec {qui} : {rel}"
+
+        # Personnages secondaires — infos spécifiques
+        premiere = perso.get("premiere_apparition", "")
+        if premiere:
+            section += f"\n  Première apparition : {premiere}"
+
+        frequence = perso.get("frequence", "")
+        if frequence:
+            section += f"\n  Fréquence : {frequence}"
+
+        interventions = perso.get("interventions_typiques", [])
+        if interventions:
+            section += f"\n  Interventions typiques : {'; '.join(interventions)}"
+
+        # Règles spéciales (ex: Lucas fil rouge)
+        regles_perso = perso.get("regles", [])
+        if regles_perso:
+            section += f"\n  RÈGLES STRICTES : {'; '.join(regles_perso)}"
+
         sections.append(section)
 
     if regles:
@@ -270,13 +325,16 @@ def _construire_bible_personnages() -> str:
 
 _BIBLE_FALLBACK = """\
 PERSONNAGES :
-- Papy Babou : grand-père de 72 ans, ancien instituteur, ton chaleureux et grave.
+- Papy Babou : grand-père de 72 ans, grand voyageur (Liban, Suisse, Afrique du Sud), ton chaleureux et grave.
   Tics de langage : "Ah mes petits loups...", "Figurez-vous que...", "Et devinez quoi ?",
   "Comme disait ma grand-mère...", "C'est pas merveilleux, ça ?", "Attendez, attendez, j'y viens !"
-- Antoine : petit-fils de 8 ans, curieux et aventurier, pose des questions d'action.
+  Backstory : Gourmand, très courageux et fort, père de Thomas et Nathalie, marié à mamie Sonia.
+- Antoine : petit-fils de 8 ans, curieux et aventurier, fait du judo et du football.
   Tics : "Mais Papy, pourquoi... ?", "Trop cool !", "Et après ?", "Comme un super-héros ?"
-- Noémie : petite-fille de 6 ans, sensible et empathique, s'inquiète pour les personnages.
-  Tics : "Oh non, le pauvre...", "Il avait pas peur, Papy ?", "C'est triste, Papy..."
+- Noémie : petite-fille de 5 ans, chipie avec un gros caractère, espiègle et rigolote.
+  Tics : "Oh non, le pauvre...", "Hihihi ! C'est trop drôle !", "Babouuuu ! Encore une histoire !"
+- Mamie Sonia : épouse de Papy, 70 ans, née en Égypte, très gentille, cuisine divinement.
+  Apparitions légères : goûter, coucher, commentaire tendre depuis la cuisine.
 - Narrateur : voix neutre pour les transitions."""
 
 
@@ -419,6 +477,7 @@ def _construire_system_prompt(
     type_episode: str = "standard",
     historique: list[dict] | None = None,
     preferences_producteur: str = "",
+    numero_saison: int = 1,
 ) -> str:
     """Construit le system prompt complet avec bible, contexte sériel et mots interdits.
 
@@ -428,8 +487,9 @@ def _construire_system_prompt(
         type_episode: Type d'épisode.
         historique: Historique des épisodes précédents.
         preferences_producteur: Bloc de préférences du producteur à injecter.
+        numero_saison: Numéro de saison (pour progression d'âge).
     """
-    bible = _construire_bible_personnages()
+    bible = _construire_bible_personnages(numero_saison=numero_saison)
     mots = ", ".join(config.MOTS_INTERDITS)
     contexte_serie = _construire_contexte_serie(contexte_saison)
     structure = _construire_structure_narrative(
@@ -637,6 +697,7 @@ class Scripteur:
             type_episode=type_episode,
             historique=historique,
             preferences_producteur=preferences_producteur,
+            numero_saison=saison,
         )
 
         # max_tokens adaptatif selon le type d'épisode
@@ -886,3 +947,12 @@ class Scripteur:
             logger.warning("Trop de bruitages : %d (recommandé 3-8).", sfx_count)
         elif sfx_count < 1:
             logger.warning("Aucun bruitage dans le script (recommandé 3-8).")
+
+        # Vérifier que evolutions_personnages est présent et non vide
+        evolutions = ep.get("evolutions_personnages", "")
+        if not evolutions or (isinstance(evolutions, str) and not evolutions.strip()):
+            logger.warning(
+                "Champ 'evolutions_personnages' manquant ou vide — "
+                "l'historique inter-épisodes perdra la trace de l'évolution "
+                "des personnages pour cet épisode."
+            )

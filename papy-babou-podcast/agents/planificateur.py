@@ -175,7 +175,20 @@ class Planificateur:
         if personnages:
             prompt += "\nBIBLE DES PERSONNAGES (référence) :\n"
             for key, perso in personnages.get("personnages", {}).items():
-                prompt += f"  - {perso.get('nom_complet', key)} : {perso.get('description', '')}\n"
+                nom = perso.get("nom_complet", key)
+                desc = perso.get("description", "")
+                role = perso.get("role", "principal")
+                line = f"  - {nom} ({role}) : {desc}"
+                backstory = perso.get("backstory", "")
+                if backstory:
+                    line += f"\n    Backstory : {backstory}"
+                anecdotes = perso.get("anecdotes_possibles", [])
+                if anecdotes:
+                    line += f"\n    Anecdotes possibles : {'; '.join(anecdotes)}"
+                regles_perso = perso.get("regles", [])
+                if regles_perso:
+                    line += f"\n    Règles : {'; '.join(regles_perso)}"
+                prompt += line + "\n"
 
         if preferences_producteur:
             prompt += f"\n{preferences_producteur}\n"
