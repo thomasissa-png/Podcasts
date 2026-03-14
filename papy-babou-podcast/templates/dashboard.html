@@ -892,7 +892,7 @@
 <!-- ═══ NAVIGATION ═════════════════════════════════════════════════════════ -->
 <!-- Ordre chronologique du workflow de production :
      1. Planifier → 2. Produire saison → 3. Produire (unitaire) → 4. Batch
-     → 5. Reprendre → 6. Publication → 7. Dashboard (suivi) → Configuration -->
+     → 5. Reprendre → 6. Valider → 7. Publication → 8. Dashboard (suivi) → Configuration -->
 <nav class="nav-bar">
     <button class="nav-tab" data-page="planifier" onclick="showPage('planifier', this)">
         <span class="tab-icon">&#128197;</span> 1. Planifier une saison
@@ -909,11 +909,14 @@
     <button class="nav-tab" data-page="reprendre" onclick="showPage('reprendre', this)">
         <span class="tab-icon">&#9654;</span> 5. Reprendre
     </button>
+    <button class="nav-tab" data-page="validation" onclick="showPage('validation', this)">
+        <span class="tab-icon">&#9989;</span> 6. Valider
+    </button>
     <button class="nav-tab" data-page="publication" onclick="showPage('publication', this)">
-        <span class="tab-icon">&#128225;</span> 6. Publication
+        <span class="tab-icon">&#128225;</span> 7. Publication
     </button>
     <button class="nav-tab" data-page="dashboard" onclick="showPage('dashboard', this)">
-        <span class="tab-icon">&#127968;</span> 7. Suivi &amp; résultats
+        <span class="tab-icon">&#127968;</span> 8. Suivi &amp; résultats
     </button>
     <button class="nav-tab" data-page="config" onclick="showPage('config', this)">
         <span class="tab-icon">&#9881;</span> Configuration
@@ -1312,11 +1315,137 @@
 </div>
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  6. PUBLICATION                                                       ║
+     ║  6. VALIDATION                                                        ║
+     ╚════════════════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-validation">
+    <div class="page-header">
+        <h2>&#9989; Étape 6 — Écouter et valider</h2>
+        <p>
+            C'est ici que vous <strong>écoutez</strong> les épisodes produits, <strong>lisez</strong>
+            le script, et <strong>validez</strong> (ou rejetez) chaque étape avant publication.
+            Un épisode ne peut être publié que si le script ET le montage ont été validés.
+        </p>
+    </div>
+
+    <div id="alert-validation" class="alert"></div>
+
+    <!-- Liste des épisodes à valider -->
+    <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-header">
+            <span class="icon">&#128221;</span> Épisodes produits
+            <span class="count" id="val-count">...</span>
+        </div>
+        <div class="card-body" id="val-episodes-list">
+            <p style="color: var(--texte-dim);">Chargement...</p>
+        </div>
+    </div>
+
+    <!-- Détail d'un épisode sélectionné (caché par défaut) -->
+    <div id="val-detail" style="display: none;">
+        <!-- Header de l'épisode -->
+        <div class="card" style="margin-bottom: 1.25rem;">
+            <div class="card-header">
+                <span class="icon">&#127908;</span>
+                <span id="val-detail-titre">...</span>
+            </div>
+            <div class="card-body">
+                <div class="grid-2">
+                    <div>
+                        <div style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.5rem;">
+                            <strong>Type :</strong> <span id="val-detail-type">—</span> &bull;
+                            <strong>Score :</strong> <span id="val-detail-score">—</span> &bull;
+                            <strong>Date :</strong> <span id="val-detail-date">—</span>
+                        </div>
+                        <div style="font-size: 0.82rem; color: var(--texte-dim);">
+                            <strong>Morale :</strong> <span id="val-detail-morale">—</span>
+                        </div>
+                    </div>
+                    <div>
+                        <!-- Statut de validation -->
+                        <div id="val-detail-status" style="font-size: 0.85rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lecteur audio -->
+        <div class="card" style="margin-bottom: 1.25rem;">
+            <div class="card-header">
+                <span class="icon">&#127911;</span> Écouter l'épisode
+            </div>
+            <div class="card-body" id="val-audio-section">
+                <p style="color: var(--texte-light);">Pas d'audio disponible.</p>
+            </div>
+        </div>
+
+        <!-- Script -->
+        <div class="card" style="margin-bottom: 1.25rem;">
+            <div class="card-header" style="cursor: pointer;" onclick="toggleSection('val-script-body')">
+                <span class="icon">&#128220;</span> Script
+                <span style="margin-left: auto; font-size: 0.8rem; color: var(--texte-dim);">cliquer pour ouvrir/fermer</span>
+            </div>
+            <div class="card-body" id="val-script-body" style="display: none; max-height: 500px; overflow-y: auto;">
+                <p style="color: var(--texte-light);">Pas de script disponible.</p>
+            </div>
+        </div>
+
+        <!-- Cover art -->
+        <div class="card" style="margin-bottom: 1.25rem;" id="val-cover-card" style="display: none;">
+            <div class="card-header">
+                <span class="icon">&#127912;</span> Couverture
+            </div>
+            <div class="card-body" id="val-cover-section">
+                <p style="color: var(--texte-light);">Pas de couverture disponible.</p>
+            </div>
+        </div>
+
+        <!-- Actions de validation -->
+        <div class="card" style="margin-bottom: 1.25rem;">
+            <div class="card-header">
+                <span class="icon">&#9989;</span> Actions de validation
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Commentaire (optionnel)</label>
+                    <textarea class="form-textarea" id="val-comment" rows="2" placeholder="Remarques, corrections, retours..."></textarea>
+                </div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <button class="btn btn-turquoise" onclick="validateStep('script', 'validate')" id="btn-val-script">
+                        &#10003; Valider le script
+                    </button>
+                    <button class="btn btn-turquoise" onclick="validateStep('montage', 'validate')" id="btn-val-montage">
+                        &#10003; Valider le montage
+                    </button>
+                    <button class="btn btn-turquoise" onclick="validateStep('metadonnees', 'validate')" id="btn-val-meta">
+                        &#10003; Valider les métadonnées
+                    </button>
+                    <button class="btn btn-corail" onclick="validateStep('script', 'reject')" id="btn-rej-script" style="font-size: 0.8rem;">
+                        &#10007; Rejeter le script
+                    </button>
+                    <button class="btn btn-corail" onclick="validateStep('montage', 'reject')" id="btn-rej-montage" style="font-size: 0.8rem;">
+                        &#10007; Rejeter le montage
+                    </button>
+                </div>
+                <hr style="border: none; border-top: 2px solid var(--border); margin: 1.5rem 0;">
+                <div>
+                    <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
+                        La publication n'est possible que si le <strong>script</strong> ET le <strong>montage</strong> sont validés.
+                    </p>
+                    <button class="btn btn-primary" onclick="validateStep('publication', 'publish')" id="btn-val-publish" disabled>
+                        &#128225; Autoriser la publication
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔════════════════════════════════════════════════════════════════════════╗
+     ║  7. PUBLICATION                                                       ║
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-publication">
     <div class="page-header">
-        <h2>&#128225; Étape 6 — Publication</h2>
+        <h2>&#128225; Étape 7 — Publication</h2>
         <p>
             La publication est l'étape finale : vos épisodes sont envoyés vers Buzzsprout,
             le flux RSS est mis à jour, et les plateformes (Apple Podcasts, Spotify, Deezer...)
@@ -1393,7 +1522,7 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-dashboard">
     <div class="page-header">
-        <h2>&#127968; Suivi &amp; résultats</h2>
+        <h2>&#127968; Étape 8 — Suivi &amp; résultats</h2>
         <p>
             Retrouvez ici tout ce qui a été produit : épisodes, scores de qualité,
             progression des saisons, budget et personnages. Filtrez par saison pour
@@ -1800,6 +1929,7 @@ function showPage(pageId, tabEl) {
     if (tabEl) tabEl.classList.add('active');
     if (pageId === 'config' && !_configLoaded) loadConfig();
     if (pageId === 'publication' && !_pubLoaded) loadPublications();
+    if (pageId === 'validation') loadValidationEpisodes();
     /* Si on revient au dashboard après une production, recharger la page */
     if (pageId === 'dashboard' && _dashboardDirty) {
         window.location.href = window.location.pathname + window.location.search;
@@ -2567,6 +2697,239 @@ async function loadConfig() {
         ['config-production', 'config-voix', 'config-couts', 'config-api', 'config-formats'].forEach(id => {
             document.getElementById(id).innerHTML = errMsg;
         });
+    }
+}
+
+/* ── Validation : chargement et interactions ───────────────────────────── */
+let _currentEpisodeId = null;
+let _valLoaded = false;
+
+function toggleSection(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function loadValidationEpisodes() {
+    try {
+        const resp = await fetch('/api/episodes-a-valider');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const episodes = await resp.json();
+
+        document.getElementById('val-count').textContent = episodes.length;
+
+        if (episodes.length === 0) {
+            document.getElementById('val-episodes-list').innerHTML =
+                '<div class="empty"><div class="icon">&#9989;</div>'
+                + '<p>Aucun épisode produit pour le moment.</p>'
+                + '<p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">'
+                + 'Produisez un épisode dans l\'onglet "Un épisode" ou "Lancer la saison" pour commencer.</p></div>';
+            return;
+        }
+
+        let html = '<table><thead><tr>'
+            + '<th>ID</th><th>Titre</th><th>Type</th><th>Audio</th>'
+            + '<th>Script</th><th>Montage</th><th>Action</th>'
+            + '</tr></thead><tbody>';
+
+        for (const ep of episodes) {
+            const hasAudio = ep.has_audio;
+            const audioBadge = hasAudio
+                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Oui</span>'
+                : '<span style="color: var(--corail); font-weight: 800;">&#10007; Non</span>';
+            const scriptBadge = ep.validation_script
+                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
+                : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
+            const montageBadge = ep.validation_montage
+                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
+                : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
+
+            const rowStyle = (ep.validation_script && ep.validation_montage)
+                ? ' style="opacity: 0.6;"' : '';
+
+            html += '<tr' + rowStyle + '>'
+                + '<td class="ep-id">' + escapeHtml(ep.episode_id) + '</td>'
+                + '<td class="ep-titre">' + escapeHtml(ep.titre) + '</td>'
+                + '<td><span class="ep-type type-' + (ep.type_episode || 'standard') + '">' + escapeHtml(ep.type_episode || 'standard') + '</span></td>'
+                + '<td>' + audioBadge + '</td>'
+                + '<td>' + scriptBadge + '</td>'
+                + '<td>' + montageBadge + '</td>'
+                + '<td><button class="btn btn-secondary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')">&#128269; Voir / Valider</button></td>'
+                + '</tr>';
+        }
+        html += '</tbody></table>';
+        document.getElementById('val-episodes-list').innerHTML = html;
+        _valLoaded = true;
+    } catch (err) {
+        document.getElementById('val-episodes-list').innerHTML =
+            '<div class="empty"><p>Erreur : ' + escapeHtml(err.message) + '</p></div>';
+    }
+}
+
+async function loadEpisodeDetail(episodeId) {
+    _currentEpisodeId = episodeId;
+    const detail = document.getElementById('val-detail');
+    detail.style.display = 'block';
+    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    try {
+        const resp = await fetch('/api/episode/' + episodeId);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const ep = await resp.json();
+
+        /* Header */
+        document.getElementById('val-detail-titre').textContent = episodeId + ' — ' + (ep.titre || '?');
+        document.getElementById('val-detail-type').textContent = ep.type_episode || 'standard';
+        document.getElementById('val-detail-score').textContent = ep.score ? (ep.score + '/10') : '—';
+        document.getElementById('val-detail-date').textContent = ep.date ? ep.date.substring(0, 10) : '—';
+        document.getElementById('val-detail-morale').textContent = ep.morale || '—';
+
+        /* Statut de validation */
+        const scriptOk = ep.validation_script;
+        const montageOk = ep.validation_montage;
+        let statusHtml = '<div style="display: flex; gap: 1rem; flex-wrap: wrap;">';
+        statusHtml += '<span style="color: ' + (scriptOk ? 'var(--vert-prairie)' : 'var(--corail)') + '; font-weight: 800;">'
+            + (scriptOk ? '&#10003;' : '&#9675;') + ' Script</span>';
+        statusHtml += '<span style="color: ' + (montageOk ? 'var(--vert-prairie)' : 'var(--corail)') + '; font-weight: 800;">'
+            + (montageOk ? '&#10003;' : '&#9675;') + ' Montage</span>';
+        statusHtml += '</div>';
+        document.getElementById('val-detail-status').innerHTML = statusHtml;
+
+        /* Audio player */
+        const audioFile = ep.audio_preview || ep.audio_hq;
+        if (audioFile) {
+            let audioHtml = '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
+                + '<source src="/audio/episodes/' + escapeHtml(audioFile) + '" type="audio/mpeg">'
+                + '</audio>';
+            if (ep.duree_secondes) {
+                const min = Math.floor(ep.duree_secondes / 60);
+                const sec = Math.round(ep.duree_secondes % 60);
+                audioHtml += '<p style="font-size: 0.82rem; color: var(--texte-dim);">Durée : ' + min + ':' + String(sec).padStart(2, '0');
+                if (ep.taille_mb) audioHtml += ' — ' + ep.taille_mb + ' MB';
+                audioHtml += '</p>';
+            }
+            if (ep.audio_hq) {
+                audioHtml += '<p style="margin-top: 0.3rem;"><a href="/audio/episodes/' + escapeHtml(ep.audio_hq) + '" download style="color: var(--turquoise); font-weight: 700; text-decoration: none; font-size: 0.85rem;">&#11015; Télécharger HQ</a></p>';
+            }
+            document.getElementById('val-audio-section').innerHTML = audioHtml;
+        } else {
+            document.getElementById('val-audio-section').innerHTML =
+                '<div style="padding: 1.5rem; text-align: center; color: var(--corail); font-weight: 700;">'
+                + '&#9888; Pas d\'audio disponible pour cet épisode.'
+                + '<p style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--texte-dim); font-weight: 400;">'
+                + 'L\'épisode a peut-être été produit en mode test (dry-run), ou la génération audio a échoué. '
+                + 'Relancez la production sans le mode test pour générer l\'audio.</p></div>';
+        }
+
+        /* Script display */
+        const scriptBody = document.getElementById('val-script-body');
+        if (ep.script) {
+            const episode = ep.script.episode || ep.script;
+            const segments = episode.segments || [];
+            if (segments.length > 0) {
+                let scriptHtml = '<div style="font-size: 0.85rem; line-height: 1.8;">';
+                const persoColors = {
+                    'papy_babou': 'var(--orange-chaud)',
+                    'antoine': 'var(--bleu-doux)',
+                    'noemie': 'var(--rose-tendre)',
+                    'narrateur': 'var(--texte-dim)',
+                };
+                for (const seg of segments) {
+                    const perso = seg.personnage || 'narrateur';
+                    const nom = perso.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    const color = persoColors[perso] || 'var(--violet-doux)';
+                    scriptHtml += '<div style="margin-bottom: 0.6rem; padding: 0.4rem 0.6rem; border-left: 3px solid ' + color + '; background: rgba(0,0,0,0.02); border-radius: 0 6px 6px 0;">';
+                    scriptHtml += '<strong style="color: ' + color + ';">' + escapeHtml(nom) + '</strong>';
+                    if (seg.ton) scriptHtml += ' <em style="color: var(--texte-light); font-size: 0.78rem;">(' + escapeHtml(seg.ton) + ')</em>';
+                    if (seg.didascalie) scriptHtml += ' <span style="color: var(--violet-doux); font-size: 0.78rem;">[' + escapeHtml(seg.didascalie) + ']</span>';
+                    scriptHtml += '<br>' + escapeHtml(seg.texte || '');
+                    if (seg.sfx) scriptHtml += '<br><span style="color: var(--turquoise); font-size: 0.78rem;">&#127925; SFX : ' + escapeHtml(seg.sfx) + '</span>';
+                    scriptHtml += '</div>';
+                }
+                scriptHtml += '</div>';
+                scriptBody.innerHTML = scriptHtml;
+            } else {
+                scriptBody.innerHTML = '<p style="color: var(--texte-light);">Script vide (aucun segment).</p>';
+            }
+        } else {
+            scriptBody.innerHTML = '<p style="color: var(--texte-light);">Script non disponible. Le fichier de script n\'a pas été trouvé.</p>';
+        }
+
+        /* Cover art */
+        const coverCard = document.getElementById('val-cover-card');
+        if (ep.cover_art) {
+            coverCard.style.display = 'block';
+            document.getElementById('val-cover-section').innerHTML =
+                '<img src="/audio/covers/' + escapeHtml(ep.cover_art) + '" alt="Couverture" style="max-width: 300px; border-radius: var(--radius-sm); box-shadow: var(--ombre);">';
+        } else {
+            coverCard.style.display = 'none';
+        }
+
+        /* Update buttons state */
+        updateValidationButtons(scriptOk, montageOk);
+
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur chargement : ' + escapeHtml(err.message));
+    }
+}
+
+function updateValidationButtons(scriptOk, montageOk) {
+    const btnValScript = document.getElementById('btn-val-script');
+    const btnRejScript = document.getElementById('btn-rej-script');
+    const btnValMontage = document.getElementById('btn-val-montage');
+    const btnRejMontage = document.getElementById('btn-rej-montage');
+    const btnPublish = document.getElementById('btn-val-publish');
+
+    if (scriptOk) {
+        btnValScript.innerHTML = '&#10003; Script validé';
+        btnValScript.disabled = true;
+        btnValScript.style.opacity = '0.5';
+    } else {
+        btnValScript.innerHTML = '&#10003; Valider le script';
+        btnValScript.disabled = false;
+        btnValScript.style.opacity = '1';
+    }
+
+    if (montageOk) {
+        btnValMontage.innerHTML = '&#10003; Montage validé';
+        btnValMontage.disabled = true;
+        btnValMontage.style.opacity = '0.5';
+    } else {
+        btnValMontage.innerHTML = '&#10003; Valider le montage';
+        btnValMontage.disabled = false;
+        btnValMontage.style.opacity = '1';
+    }
+
+    btnPublish.disabled = !(scriptOk && montageOk);
+}
+
+async function validateStep(step, action) {
+    if (!_currentEpisodeId) return;
+
+    const comment = document.getElementById('val-comment').value.trim();
+
+    try {
+        const resp = await fetch('/api/episode/' + _currentEpisodeId + '/validate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ step, action, comment })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            showAlert('alert-validation', 'error', data.error || 'Erreur inconnue');
+            return;
+        }
+
+        const alertType = (action === 'reject') ? 'warning' : 'success';
+        showAlert('alert-validation', alertType, data.message);
+        document.getElementById('val-comment').value = '';
+
+        /* Recharger le détail et la liste */
+        await loadEpisodeDetail(_currentEpisodeId);
+        await loadValidationEpisodes();
+        _dashboardDirty = true;
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
     }
 }
 

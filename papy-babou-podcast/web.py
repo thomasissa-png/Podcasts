@@ -15,6 +15,7 @@ import sys
 import threading
 import time
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 # Ensure imports work when launched from repo root (Replit)
@@ -26,6 +27,7 @@ os.chdir(_THIS_DIR)
 from flask import Flask, jsonify, render_template, request, send_from_directory
 
 import config
+import dashboard_data as dashboard_data_mod
 from dashboard_data import get_dashboard_data, charger_preferences, charger_checkpoints, charger_publications
 
 # ── Initialisation PostgreSQL ─────────────────────────────────────────────────
@@ -418,6 +420,258 @@ def api_config():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ── Routes API — Validation des épisodes ─────────────────────────────────────
+
+
+@app.route("/api/episode/<episode_id>")
+def api_episode_detail(episode_id):
+    """API JSON — Détail complet d'un épisode pour la validation."""
+    import json as _json
+
+    # Security: validate episode_id format (S01E01)
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format d'identifiant invalide (attendu: S01E01)"}), 400
+
+    data = get_dashboard_data(0)
+    episode = next((ep for ep in data["episodes"] if ep["episode_id"] == episode_id), None)
+    if not episode:
+        return jsonify({"error": f"Épisode introuvable : {episode_id}"}), 404
+
+    # Load script content
+    script = None
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    if script_path.exists():
+        try:
+            with open(script_path, "r", encoding="utf-8") as f:
+                script = _json.load(f)
+        except (ValueError, FileNotFoundError):
+            pass
+
+    # Load rapport for detailed info
+    rapport = dashboard_data_mod.charger_rapport(episode_id)
+
+    # Load cover art path
+    cover_art = None
+    for ext in (".png", ".jpg"):
+        cover_path = config.COVERS_DIR / f"{episode_id}_cover{ext}"
+        if cover_path.exists():
+            cover_art = f"{episode_id}_cover{ext}"
+            break
+
+    # Load transcript
+    transcript = None
+    transcript_path = config.TRANSCRIPTS_DIR / f"{episode_id}_transcript.txt"
+    if transcript_path.exists():
+        try:
+            with open(transcript_path, "r", encoding="utf-8") as f:
+                transcript = f.read()
+        except FileNotFoundError:
+            pass
+
+    # Extract metadata from rapport
+    metadonnees = None
+    if rapport:
+        metadonnees = rapport.get("etapes", {}).get("metadonnees", {})
+
+    result = {
+        **episode,
+        "script": script,
+        "rapport": rapport,
+        "cover_art": cover_art,
+        "transcript": transcript,
+        "metadonnees": metadonnees,
+    }
+    return jsonify(result)
+
+
+@app.route("/api/episode/<episode_id>/script")
+def api_episode_script(episode_id):
+    """API JSON — Script complet d'un épisode (segments, personnages, tons)."""
+    import json as _json
+
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format d'identifiant invalide"}), 400
+
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    if not script_path.exists():
+        return jsonify({"error": f"Script introuvable pour {episode_id}"}), 404
+
+    try:
+        with open(script_path, "r", encoding="utf-8") as f:
+            script = _json.load(f)
+        return jsonify(script)
+    except (ValueError, FileNotFoundError) as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/episode/<episode_id>/validate", methods=["POST"])
+def api_validate_episode(episode_id):
+    """Valide une étape d'un épisode (script, montage, metadonnees, publication).
+
+    Body JSON attendu:
+        {"step": "script"|"montage"|"metadonnees", "action": "validate"|"reject", "comment": "..."}
+
+    Pour la publication:
+        {"step": "publication", "action": "publish"}
+    """
+    import json as _json
+
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format d'identifiant invalide"}), 400
+
+    body = request.get_json(force=True)
+    step = body.get("step", "").strip()
+    action = body.get("action", "").strip()
+    comment = body.get("comment", "").strip()
+
+    valid_steps = ("script", "montage", "metadonnees")
+    if step == "publication":
+        return _handle_publication(episode_id, comment)
+
+    if step not in valid_steps:
+        return jsonify({"error": f"Étape invalide : {step}. Valeurs acceptées : {', '.join(valid_steps)}, publication"}), 400
+
+    if action not in ("validate", "reject"):
+        return jsonify({"error": "Action invalide. Valeurs acceptées : validate, reject"}), 400
+
+    # Load or create the rapport file
+    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+    rapport = {}
+    if rapport_path.exists():
+        try:
+            with open(rapport_path, "r", encoding="utf-8") as f:
+                rapport = _json.load(f)
+        except (ValueError, FileNotFoundError):
+            pass
+
+    # Update validation status
+    rapport.setdefault("etapes", {})
+    rapport["etapes"].setdefault(step, {})
+    rapport["etapes"][step]["validation_humaine"] = (action == "validate")
+    rapport["etapes"][step]["validation_web"] = True
+    rapport["etapes"][step]["validation_date"] = datetime.now().isoformat()
+
+    if comment:
+        rapport["etapes"][step]["commentaire_validation"] = comment
+
+    # Log the decision
+    rapport.setdefault("decisions_humaines", [])
+    rapport["decisions_humaines"].append({
+        "timestamp": datetime.now().isoformat(),
+        "type": f"validation_{step}_web",
+        "action": action,
+        "commentaire": comment or "",
+    })
+
+    # Save rapport
+    try:
+        with open(rapport_path, "w", encoding="utf-8") as f:
+            _json.dump(rapport, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return jsonify({"error": f"Erreur sauvegarde rapport : {e}"}), 500
+
+    action_label = "validé" if action == "validate" else "rejeté"
+    step_labels = {"script": "Script", "montage": "Montage", "metadonnees": "Métadonnées"}
+    return jsonify({
+        "status": "ok",
+        "message": f"{step_labels.get(step, step)} {action_label} pour {episode_id}.",
+    })
+
+
+def _handle_publication(episode_id, comment=""):
+    """Gère la publication d'un épisode validé via le web."""
+    import json as _json
+
+    # Check prerequisites: script AND montage must be validated
+    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+    if not rapport_path.exists():
+        return jsonify({"error": "Aucun rapport trouvé. L'épisode doit d'abord être produit."}), 400
+
+    try:
+        with open(rapport_path, "r", encoding="utf-8") as f:
+            rapport = _json.load(f)
+    except (ValueError, FileNotFoundError):
+        return jsonify({"error": "Rapport illisible."}), 500
+
+    etapes = rapport.get("etapes", {})
+    script_ok = etapes.get("script", {}).get("validation_humaine", False)
+    montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
+
+    if not script_ok or not montage_ok:
+        missing = []
+        if not script_ok:
+            missing.append("script")
+        if not montage_ok:
+            missing.append("montage")
+        return jsonify({
+            "error": f"Publication bloquée : validation(s) manquante(s) — {', '.join(missing)}. "
+                     f"Validez d'abord le script et le montage avant de publier.",
+        }), 400
+
+    # Launch publication via CLI (async)
+    cmd = [
+        "produire",
+        "-e", episode_id,
+        "--auto",
+    ]
+
+    # For now, just mark publication as validated in the rapport
+    rapport["etapes"].setdefault("publication", {})
+    rapport["etapes"]["publication"]["validation_humaine"] = True
+    rapport["etapes"]["publication"]["validation_web"] = True
+    rapport["etapes"]["publication"]["validation_date"] = datetime.now().isoformat()
+
+    rapport.setdefault("decisions_humaines", [])
+    rapport["decisions_humaines"].append({
+        "timestamp": datetime.now().isoformat(),
+        "type": "validation_publication_web",
+        "action": "publish",
+        "commentaire": comment or "",
+    })
+
+    try:
+        with open(rapport_path, "w", encoding="utf-8") as f:
+            _json.dump(rapport, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return jsonify({"error": f"Erreur sauvegarde : {e}"}), 500
+
+    return jsonify({
+        "status": "ok",
+        "message": f"Publication validée pour {episode_id}. L'épisode peut maintenant être publié.",
+    })
+
+
+@app.route("/api/episodes-a-valider")
+def api_episodes_a_valider():
+    """API JSON — Liste des épisodes en attente de validation."""
+    data = get_dashboard_data(0)
+    episodes = []
+    for ep in data["episodes"]:
+        needs_validation = (
+            not ep.get("validation_script", False)
+            or not ep.get("validation_montage", False)
+        )
+        episodes.append({
+            **ep,
+            "needs_validation": needs_validation,
+            "has_audio": bool(ep.get("audio_preview") or ep.get("audio_hq")),
+        })
+    return jsonify(episodes)
+
+
+@app.route("/audio/covers/<path:filename>")
+def serve_cover_art(filename):
+    """Sert les fichiers cover art des épisodes."""
+    if ".." in filename or "/" in filename or "\\" in filename:
+        return jsonify({"error": "Nom de fichier invalide"}), 400
+    covers_dir = config.COVERS_DIR
+    cover_path = covers_dir / filename
+    if not cover_path.exists():
+        return jsonify({"error": f"Cover introuvable : {filename}"}), 404
+    mimetype = "image/png" if filename.endswith(".png") else "image/jpeg"
+    return send_from_directory(str(covers_dir), filename, mimetype=mimetype)
 
 
 # ── Route API — Annulation ───────────────────────────────────────────────────
