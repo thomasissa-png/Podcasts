@@ -2989,6 +2989,21 @@ async function loadEpisodeDetail(episodeId) {
                 audioHtml += '<p style="margin-top: 0.3rem;"><a href="/audio/episodes/' + escapeHtml(ep.audio_hq) + '" download style="color: var(--turquoise); font-weight: 700; text-decoration: none; font-size: 0.85rem;">&#11015; Télécharger HQ</a></p>';
             }
             document.getElementById('val-audio-section').innerHTML = audioHtml;
+        } else if (ep.audio_missing) {
+            /* Audio was produced but files are missing (e.g. after Replit re-deploy) */
+            let missingHtml = '<div style="padding: 1.5rem; text-align: center; color: var(--orange-chaud); font-weight: 700;">'
+                + '&#128260; Les fichiers audio ont été produits mais ne sont plus disponibles sur le serveur.';
+            if (ep.duree_secondes) {
+                const min = Math.floor(ep.duree_secondes / 60);
+                const sec = Math.round(ep.duree_secondes % 60);
+                missingHtml += '<p style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--texte-dim); font-weight: 400;">'
+                    + 'Durée originale : ' + min + ':' + String(sec).padStart(2, '0');
+                if (ep.taille_mb) missingHtml += ' — ' + ep.taille_mb + ' MB';
+                missingHtml += '</p>';
+            }
+            missingHtml += '<p style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--texte-dim); font-weight: 400;">'
+                + 'Relancez la production pour régénérer les fichiers audio.</p></div>';
+            document.getElementById('val-audio-section').innerHTML = missingHtml;
         } else {
             document.getElementById('val-audio-section').innerHTML =
                 '<div style="padding: 1.5rem; text-align: center; color: var(--corail); font-weight: 700;">'

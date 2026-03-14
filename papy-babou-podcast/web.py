@@ -627,7 +627,7 @@ def api_episode_detail(episode_id):
     if not episode:
         return jsonify({"error": f"Épisode introuvable : {episode_id}"}), 404
 
-    # Load script content
+    # Load script content (filesystem first, DB fallback)
     script = None
     script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
     if script_path.exists():
@@ -635,6 +635,15 @@ def api_episode_detail(episode_id):
             with open(script_path, "r", encoding="utf-8") as f:
                 script = _json.load(f)
         except (ValueError, FileNotFoundError):
+            pass
+    if not script:
+        # Fallback: load validated script from DB (survives re-deploys)
+        try:
+            from db_models import ScriptRepo
+            script = ScriptRepo.charger_valide(episode_id)
+            if not script:
+                script = ScriptRepo.charger_derniere_version(episode_id)
+        except Exception:
             pass
 
     # Load rapport for detailed info
@@ -682,16 +691,25 @@ def api_episode_script(episode_id):
     if not re.match(r'^S\d{2}E\d{2}$', episode_id):
         return jsonify({"error": "Format d'identifiant invalide"}), 400
 
+    script = None
     script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
-    if not script_path.exists():
+    if script_path.exists():
+        try:
+            with open(script_path, "r", encoding="utf-8") as f:
+                script = _json.load(f)
+        except (ValueError, FileNotFoundError):
+            pass
+    if not script:
+        try:
+            from db_models import ScriptRepo
+            script = ScriptRepo.charger_valide(episode_id)
+            if not script:
+                script = ScriptRepo.charger_derniere_version(episode_id)
+        except Exception:
+            pass
+    if not script:
         return jsonify({"error": f"Script introuvable pour {episode_id}"}), 404
-
-    try:
-        with open(script_path, "r", encoding="utf-8") as f:
-            script = _json.load(f)
-        return jsonify(script)
-    except (ValueError, FileNotFoundError) as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify(script)
 
 
 @app.route("/api/episode/<episode_id>/validate", methods=["POST"])

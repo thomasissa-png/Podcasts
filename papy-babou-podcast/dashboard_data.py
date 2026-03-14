@@ -54,13 +54,18 @@ def charger_historique_complet() -> list[dict]:
 # ── Rapports de production ─────────────────────────────────────────────────────
 
 def charger_rapport(episode_id: str) -> dict | None:
-    """Charge le rapport de production d'un épisode (DB prioritaire, JSON fallback)."""
-    # 1. Essayer la DB
+    """Charge le rapport de production d'un épisode (DB prioritaire, JSON fallback).
+
+    Cherche d'abord les productions terminées (completed), puis les productions
+    en cours qui ont un rapport (cas où ProductionRepo.terminer a échoué),
+    enfin le fichier JSON sur le filesystem.
+    """
+    # 1. Essayer la DB — productions terminées puis en cours avec rapport
     if _db_disponible():
         try:
-            from db_models import ProductionRepo
             from database import get_cursor
             with get_cursor(commit=False) as cur:
+                # D'abord les completed (source la plus fiable)
                 cur.execute(
                     "SELECT rapport_json FROM productions "
                     "WHERE episode_id = %s AND status = 'completed' "
@@ -68,8 +73,20 @@ def charger_rapport(episode_id: str) -> dict | None:
                     (episode_id,),
                 )
                 row = cur.fetchone()
-            if row and row["rapport_json"]:
-                return row["rapport_json"]
+                if row and row["rapport_json"]:
+                    return row["rapport_json"]
+
+                # Fallback: production in_progress avec rapport_json non null
+                # (cas où terminer() a échoué mais le rapport a été écrit)
+                cur.execute(
+                    "SELECT rapport_json FROM productions "
+                    "WHERE episode_id = %s AND rapport_json IS NOT NULL "
+                    "ORDER BY created_at DESC LIMIT 1",
+                    (episode_id,),
+                )
+                row = cur.fetchone()
+                if row and row["rapport_json"]:
+                    return row["rapport_json"]
         except Exception as e:
             logger.debug("DB indisponible pour rapport %s : %s", episode_id, e)
 
@@ -108,6 +125,10 @@ def trouver_fichier_audio(episode_id: str) -> dict:
                     p = Path(chemin)
                     if p.exists():
                         result[key] = p.name
+                    else:
+                        # Fichier absent (re-deploy Replit) — stocker le nom pour info
+                        # mais marquer comme manquant pour affichage dans le dashboard
+                        result[f"{key}_missing"] = p.name
 
         # Validation info
         etapes = rapport.get("etapes", {})
@@ -442,6 +463,7 @@ def get_dashboard_data(saison: int = 0) -> dict:
             "taille_mb": audio_info.get("taille_mb"),
             "validation_script": audio_info.get("validation_script", False),
             "validation_montage": audio_info.get("validation_montage", False),
+            "audio_missing": bool(audio_info.get("hq_missing") or audio_info.get("preview_missing")),
         })
 
     # Statistiques
