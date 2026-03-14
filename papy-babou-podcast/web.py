@@ -28,8 +28,30 @@ from flask import Flask, jsonify, render_template, request, send_from_directory
 import config
 from dashboard_data import get_dashboard_data, charger_preferences, charger_checkpoints, charger_publications
 
+# ── Initialisation PostgreSQL ─────────────────────────────────────────────────
+try:
+    import database
+    from database import DATABASE_URL
+    _DB_AVAILABLE = bool(DATABASE_URL)
+except ImportError:
+    _DB_AVAILABLE = False
+
 app = Flask(__name__, template_folder=str(_THIS_DIR / "templates"))
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "papy-babou-dev-key")
+
+
+def _init_db_if_available():
+    """Initialise le schema PostgreSQL au demarrage du serveur web."""
+    if not _DB_AVAILABLE:
+        logger.info("PostgreSQL non configure — mode fichiers JSON")
+        return False
+    try:
+        database.initialiser_schema()
+        logger.info("PostgreSQL schema initialise avec succes")
+        return True
+    except Exception as e:
+        logger.warning("PostgreSQL indisponible au demarrage : %s", e)
+        return False
 
 logger = logging.getLogger(__name__)
 
@@ -593,6 +615,11 @@ def api_batch():
     job_id = _start_job(cmd, timeout=_TIMEOUT_BATCH, cleanup_fn=_cleanup)
     return jsonify({"status": "accepted", "job_id": job_id})
 
+
+# ── Initialisation au chargement du module ──────────────────────────────────
+# Important : cette initialisation doit se faire au niveau module pour que
+# gunicorn/Replit l'execute aussi (pas seulement __main__).
+_init_db_if_available()
 
 # ── Lancement ────────────────────────────────────────────────────────────────
 

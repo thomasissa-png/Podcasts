@@ -2,6 +2,10 @@
 
 Extrait et structure les données du dashboard pour éviter la duplication
 entre la commande CLI (main.py) et le frontend web (web.py).
+
+Stratégie de persistance :
+  - PostgreSQL est la source primaire (survit aux redéploiements Replit)
+  - Fichiers JSON en fallback uniquement si la DB est indisponible
 """
 
 import json
@@ -12,6 +16,21 @@ import config
 
 logger = logging.getLogger(__name__)
 
+# ── Helper : vérifier si la DB est disponible ─────────────────────────────────
+
+def _db_disponible() -> bool:
+    """Vérifie si PostgreSQL est accessible."""
+    try:
+        from database import DATABASE_URL
+        if not DATABASE_URL:
+            return False
+        from database import verifier_connexion
+        return verifier_connexion()
+    except Exception:
+        return False
+
+
+# ── Historique ─────────────────────────────────────────────────────────────────
 
 def charger_historique_complet() -> list[dict]:
     """Charge tout l'historique des épisodes (DB prioritaire, JSON fallback)."""
@@ -32,8 +51,29 @@ def charger_historique_complet() -> list[dict]:
     return []
 
 
+# ── Rapports de production ─────────────────────────────────────────────────────
+
 def charger_rapport(episode_id: str) -> dict | None:
-    """Charge le rapport de production d'un épisode."""
+    """Charge le rapport de production d'un épisode (DB prioritaire, JSON fallback)."""
+    # 1. Essayer la DB
+    if _db_disponible():
+        try:
+            from db_models import ProductionRepo
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT rapport_json FROM productions "
+                    "WHERE episode_id = %s AND status = 'completed' "
+                    "ORDER BY completed_at DESC LIMIT 1",
+                    (episode_id,),
+                )
+                row = cur.fetchone()
+            if row and row["rapport_json"]:
+                return row["rapport_json"]
+        except Exception as e:
+            logger.debug("DB indisponible pour rapport %s : %s", episode_id, e)
+
+    # 2. Fallback fichier JSON
     rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
     if rapport_path.exists():
         try:
@@ -47,19 +87,21 @@ def charger_rapport(episode_id: str) -> dict | None:
 def trouver_fichier_audio(episode_id: str) -> dict:
     """Trouve les fichiers audio d'un épisode (preview et HQ).
 
-    Cherche d'abord dans le rapport de production, puis par convention de nommage.
+    Cherche d'abord dans la DB (survit aux redéploiements), puis dans le
+    rapport JSON, puis par convention de nommage sur le système de fichiers.
     """
     result = {"preview": None, "hq": None, "duree_secondes": None, "taille_mb": None}
 
-    # 1. Chercher dans le rapport de production
+    # 1. Chercher dans la DB (fichiers_audio + productions)
     rapport = charger_rapport(episode_id)
+
     if rapport:
         montage = rapport.get("etapes", {}).get("montage", {})
         if montage:
             result["duree_secondes"] = montage.get("duree_secondes")
             result["taille_mb"] = montage.get("taille_mb")
 
-            # Vérifier que les fichiers existent encore
+            # Vérifier que les fichiers existent encore sur le filesystem
             for key, rapport_key in [("preview", "chemin_preview"), ("hq", "chemin_hq")]:
                 chemin = montage.get(rapport_key)
                 if chemin:
@@ -73,7 +115,35 @@ def trouver_fichier_audio(episode_id: str) -> dict:
         result["validation_montage"] = etapes.get("montage", {}).get("validation_humaine", False)
         result["publication"] = etapes.get("publication", {})
 
-    # 2. Fallback: chercher par convention de nommage dans output/episodes/
+    # 2. Si pas d'audio trouvé, chercher dans la table fichiers_audio (DB)
+    if not result["preview"] and not result["hq"] and _db_disponible():
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT type_fichier, chemin, duree_secondes, taille_bytes "
+                    "FROM fichiers_audio "
+                    "WHERE episode_id = %s AND type_fichier IN ('episode_hq', 'episode_preview') "
+                    "ORDER BY created_at DESC",
+                    (episode_id,),
+                )
+                rows = cur.fetchall()
+            for row in rows:
+                p = Path(row["chemin"])
+                if row["type_fichier"] == "episode_preview":
+                    result["preview"] = p.name
+                    if not result["duree_secondes"] and row["duree_secondes"]:
+                        result["duree_secondes"] = row["duree_secondes"]
+                elif row["type_fichier"] == "episode_hq":
+                    result["hq"] = p.name
+                    if not result["duree_secondes"] and row["duree_secondes"]:
+                        result["duree_secondes"] = row["duree_secondes"]
+                    if not result["taille_mb"] and row["taille_bytes"]:
+                        result["taille_mb"] = round(row["taille_bytes"] / (1024 * 1024), 2)
+        except Exception as e:
+            logger.debug("DB indisponible pour fichiers audio %s : %s", episode_id, e)
+
+    # 3. Fallback: chercher par convention de nommage dans output/episodes/
     if not result["preview"] and not result["hq"]:
         episodes_dir = config.OUTPUT_DIR
         if episodes_dir.exists():
@@ -85,16 +155,58 @@ def trouver_fichier_audio(episode_id: str) -> dict:
     return result
 
 
+# ── Préférences producteur ─────────────────────────────────────────────────────
+
 def charger_preferences() -> list[dict]:
-    """Charge les préférences producteur."""
+    """Charge les préférences producteur (DB prioritaire, JSON fallback)."""
+    if _db_disponible():
+        try:
+            from db_models import PreferencesRepo
+            prefs = PreferencesRepo.charger_actives()
+            if prefs is not None:
+                # Convertir les datetime en strings pour JSON serialization
+                for p in prefs:
+                    if "date_ajout" in p and hasattr(p["date_ajout"], "isoformat"):
+                        p["date_ajout"] = p["date_ajout"].isoformat()
+                return prefs
+        except Exception as e:
+            logger.debug("DB indisponible pour preferences : %s", e)
+
     if config.PREFERENCES_PATH.exists():
         with open(config.PREFERENCES_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     return []
 
 
+# ── Checkpoints ────────────────────────────────────────────────────────────────
+
 def charger_checkpoints() -> list[dict]:
-    """Charge les checkpoints en attente."""
+    """Charge les checkpoints en attente (DB prioritaire, JSON fallback)."""
+    if _db_disponible():
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT id, episode_id, etape_courante, started_at, status "
+                    "FROM productions "
+                    "WHERE status NOT IN ('completed', 'failed') "
+                    "ORDER BY started_at DESC"
+                )
+                rows = cur.fetchall()
+            if rows is not None:
+                return [
+                    {
+                        "episode_id": row["episode_id"],
+                        "etape": row["etape_courante"],
+                        "timestamp": row["started_at"].isoformat() if hasattr(row["started_at"], "isoformat") else str(row["started_at"]),
+                        "fichier": f"production_db_{row['id']}",
+                    }
+                    for row in rows
+                ]
+        except Exception as e:
+            logger.debug("DB indisponible pour checkpoints : %s", e)
+
+    # Fallback fichiers JSON
     checkpoints = []
     for cp_path in config.CHECKPOINTS_DIR.glob("*_checkpoint.json"):
         try:
@@ -116,10 +228,11 @@ def charger_checkpoints() -> list[dict]:
     return checkpoints
 
 
+# ── Publications ───────────────────────────────────────────────────────────────
+
 def charger_publications() -> dict:
-    """Charge les informations de publication (flux RSS, Buzzsprout)."""
+    """Charge les informations de publication (DB prioritaire, RSS/JSON fallback)."""
     import os
-    from xml.etree import ElementTree as ET
 
     result = {
         "rss_existe": False,
@@ -138,7 +251,32 @@ def charger_publications() -> dict:
             "site_web": pc.get("site_web", ""),
         }
 
-    # Lire le flux RSS
+    # 1. Essayer la DB
+    if _db_disponible():
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT episode_id, url_audio, published_at "
+                    "FROM publications "
+                    "ORDER BY published_at DESC LIMIT 10"
+                )
+                rows = cur.fetchall()
+            if rows:
+                result["rss_existe"] = True
+                result["nb_episodes_rss"] = len(rows)
+                for row in rows:
+                    result["episodes_publies"].append({
+                        "titre": row["episode_id"],
+                        "date": row["published_at"].isoformat() if hasattr(row["published_at"], "isoformat") else str(row["published_at"]),
+                        "url_audio": row.get("url_audio", ""),
+                    })
+                return result
+        except Exception as e:
+            logger.debug("DB indisponible pour publications : %s", e)
+
+    # 2. Fallback: lire le flux RSS
+    from xml.etree import ElementTree as ET
     feed_path = config.RSS_DIR / "feed.xml"
     if feed_path.exists():
         result["rss_existe"] = True
@@ -162,23 +300,72 @@ def charger_publications() -> dict:
         except Exception as e:
             logger.warning("Erreur lecture flux RSS : %s", e)
 
-    # Vérifier les rapports de production pour les publications
-    for rapport_path in config.LOGS_DIR.glob("S*_rapport.json"):
-        try:
-            with open(rapport_path, "r", encoding="utf-8") as f:
-                rapport = json.load(f)
-            pub = rapport.get("etapes", {}).get("publication", {})
-            if isinstance(pub, dict) and pub.get("url_audio"):
-                # Déjà couvert par le RSS, mais on note les infos supplémentaires
-                pass
-        except (json.JSONDecodeError, FileNotFoundError):
-            pass
-
     return result
 
 
+# ── Coûts ──────────────────────────────────────────────────────────────────────
+
 def calculer_couts(saison: int = 0) -> dict:
-    """Calcule les coûts à partir des rapports JSON."""
+    """Calcule les coûts (DB prioritaire, rapports JSON fallback)."""
+    # 1. Essayer la DB
+    if _db_disponible():
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                if saison > 0:
+                    prefix = f"S{saison:02d}%"
+                    cur.execute(
+                        "SELECT COALESCE(SUM(cout_estime), 0) AS total "
+                        "FROM couts_api WHERE episode_id LIKE %s",
+                        (prefix,),
+                    )
+                else:
+                    cur.execute("SELECT COALESCE(SUM(cout_estime), 0) AS total FROM couts_api")
+                total = float(cur.fetchone()["total"])
+
+                # Coûts par service
+                if saison > 0:
+                    cur.execute(
+                        "SELECT service, SUM(cout_estime) AS total "
+                        "FROM couts_api WHERE episode_id LIKE %s "
+                        "GROUP BY service",
+                        (prefix,),
+                    )
+                else:
+                    cur.execute(
+                        "SELECT service, SUM(cout_estime) AS total "
+                        "FROM couts_api GROUP BY service"
+                    )
+                par_service = {row["service"]: float(row["total"]) for row in cur.fetchall()}
+
+                # Total caractères depuis les rapports en DB
+                total_chars = 0
+                if saison > 0:
+                    cur.execute(
+                        "SELECT rapport_json FROM productions "
+                        "WHERE episode_id LIKE %s AND status = 'completed'",
+                        (prefix,),
+                    )
+                else:
+                    cur.execute(
+                        "SELECT rapport_json FROM productions WHERE status = 'completed'"
+                    )
+                for row in cur.fetchall():
+                    rapport = row.get("rapport_json") or {}
+                    chars = rapport.get("etapes", {}).get("audio", {}).get("caracteres", {})
+                    if isinstance(chars, dict):
+                        total_chars += sum(v for v in chars.values() if isinstance(v, (int, float)))
+
+            if total > 0 or par_service:
+                return {
+                    "total": total,
+                    "total_chars": total_chars,
+                    "par_service": par_service,
+                }
+        except Exception as e:
+            logger.debug("DB indisponible pour couts : %s", e)
+
+    # 2. Fallback: rapports JSON
     cout_total = 0.0
     total_chars = 0
     cout_par_service: dict[str, float] = {}
@@ -209,6 +396,8 @@ def calculer_couts(saison: int = 0) -> dict:
     }
 
 
+# ── Données complètes du dashboard ────────────────────────────────────────────
+
 def get_dashboard_data(saison: int = 0) -> dict:
     """Retourne toutes les données du dashboard sous forme structurée.
 
@@ -233,13 +422,17 @@ def get_dashboard_data(saison: int = 0) -> dict:
             score_val = 0
         episode_id = ep.get("episode_id", "?")
         audio_info = trouver_fichier_audio(episode_id)
+        # date_production peut être un datetime (depuis la DB) ou une string (depuis JSON)
+        date_val = ep.get("date_production", "")
+        if hasattr(date_val, "isoformat"):
+            date_val = date_val.isoformat()
         episodes.append({
             "episode_id": episode_id,
             "titre": ep.get("titre", "?"),
             "type_episode": ep.get("type_episode", "standard"),
             "score": round(score_val, 1),
             "ambiance": ep.get("ambiance", ""),
-            "date": ep.get("date_production", ""),
+            "date": date_val,
             "morale": ep.get("morale", ""),
             "personnages": ep.get("personnages_presents", []),
             "retours_humains": ep.get("retours_humains", ""),
