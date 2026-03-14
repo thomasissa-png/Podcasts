@@ -1851,6 +1851,15 @@ def _pipeline_inner(
             "chemin": str(chemin_valide),
         }
 
+        # Upload script vers Object Storage (persistance inter-deploy)
+        try:
+            import persistent_storage
+            script_key = persistent_storage.upload_script(episode_id, chemin_valide)
+            if script_key:
+                rapport["etapes"]["script"]["object_storage"] = script_key
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour script : %s", e)
+
         # Checkpoint après script (inclut le chemin du script validé)
         sauvegarder_checkpoint(episode_id, "audio", {
             "episode_id": episode_id, "titre": titre, "resume": resume,
@@ -2052,6 +2061,18 @@ def _pipeline_inner(
                     )
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement montage : %s", e)
+
+            # Upload audio vers Object Storage (persistance inter-deploy)
+            try:
+                import persistent_storage
+                preview_path = Path(resultat_montage["chemin_preview"])
+                storage_keys = persistent_storage.upload_episode_audio(
+                    episode_id, Path(chemin_hq), preview_path,
+                )
+                if storage_keys:
+                    rapport["etapes"]["montage"]["object_storage"] = storage_keys
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour audio : %s", e)
 
             sauvegarder_checkpoint(episode_id, "metadonnees", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
@@ -2302,6 +2323,13 @@ def _pipeline_inner(
     chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
     with open(chemin_rapport, "w", encoding="utf-8") as f:
         json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+
+    # Upload rapport vers Object Storage (persistance inter-deploy)
+    try:
+        import persistent_storage
+        persistent_storage.upload_rapport(episode_id, chemin_rapport)
+    except Exception as e:
+        logger.warning("Object Storage indisponible pour rapport : %s", e)
 
     # Ajouter à l'historique
     ajouter_historique(rapport, script)

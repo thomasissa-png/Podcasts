@@ -90,16 +90,29 @@ def serve_artwork(filename):
 
 @app.route("/audio/episodes/<path:filename>")
 def serve_episode_audio(filename):
-    """Sert les fichiers audio des épisodes produits (MP3)."""
+    """Sert les fichiers audio des épisodes produits (MP3).
+
+    Cherche d'abord sur le filesystem local, puis restaure depuis
+    Replit Object Storage si le fichier est absent (après re-deploy).
+    """
     # Security: only allow .mp3 files, no path traversal
     if ".." in filename or "/" in filename or "\\" in filename:
         return jsonify({"error": "Nom de fichier invalide"}), 400
     if not filename.endswith(".mp3"):
         return jsonify({"error": "Format non supporté"}), 400
-    episodes_dir = _THIS_DIR / "output" / "episodes"
+    episodes_dir = config.OUTPUT_DIR
     audio_path = episodes_dir / filename
     if not audio_path.exists():
-        return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
+        # Tenter de restaurer depuis Object Storage
+        try:
+            import persistent_storage
+            storage_key = f"{persistent_storage.PREFIX_AUDIO}{filename}"
+            if persistent_storage.download_file(storage_key, audio_path):
+                logger.info("Audio restauré depuis Object Storage : %s", filename)
+            else:
+                return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
+        except Exception:
+            return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
     return send_from_directory(str(episodes_dir), filename, mimetype="audio/mpeg")
 
 
@@ -627,9 +640,16 @@ def api_episode_detail(episode_id):
     if not episode:
         return jsonify({"error": f"Épisode introuvable : {episode_id}"}), 404
 
-    # Load script content (filesystem first, DB fallback)
+    # Load script content (filesystem → Object Storage → DB)
     script = None
     script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    if not script_path.exists():
+        # Tenter de restaurer depuis Object Storage
+        try:
+            import persistent_storage
+            persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR)
+        except Exception:
+            pass
     if script_path.exists():
         try:
             with open(script_path, "r", encoding="utf-8") as f:
@@ -637,7 +657,7 @@ def api_episode_detail(episode_id):
         except (ValueError, FileNotFoundError):
             pass
     if not script:
-        # Fallback: load validated script from DB (survives re-deploys)
+        # Fallback: load validated script from DB
         try:
             from db_models import ScriptRepo
             db_script = ScriptRepo.charger_valide(episode_id)

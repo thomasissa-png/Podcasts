@@ -90,8 +90,15 @@ def charger_rapport(episode_id: str) -> dict | None:
         except Exception as e:
             logger.debug("DB indisponible pour rapport %s : %s", episode_id, e)
 
-    # 2. Fallback fichier JSON
+    # 2. Fallback fichier JSON (local puis Object Storage)
     rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+    if not rapport_path.exists():
+        # Tenter de restaurer depuis Object Storage
+        try:
+            import persistent_storage
+            persistent_storage.restore_rapport(episode_id, config.LOGS_DIR)
+        except Exception:
+            pass
     if rapport_path.exists():
         try:
             with open(rapport_path, "r", encoding="utf-8") as f:
@@ -172,6 +179,28 @@ def trouver_fichier_audio(episode_id: str) -> dict:
                 candidates = list(episodes_dir.glob(f"{episode_id}*{suffix}"))
                 if candidates:
                     result[key] = candidates[0].name
+
+    # 4. Object Storage: restaurer les fichiers audio manquants
+    if not result["preview"] and not result["hq"]:
+        try:
+            import persistent_storage
+            if persistent_storage.is_available():
+                restored = persistent_storage.restore_episode_audio(
+                    episode_id, config.OUTPUT_DIR,
+                )
+                if restored.get("hq"):
+                    result["hq"] = restored["hq"].name
+                    # Effacer le flag missing puisque le fichier est restauré
+                    result.pop("hq_missing", None)
+                if restored.get("preview"):
+                    result["preview"] = restored["preview"].name
+                    result.pop("preview_missing", None)
+                if restored.get("hq") or restored.get("preview"):
+                    logger.info(
+                        "Audio %s restauré depuis Object Storage.", episode_id,
+                    )
+        except Exception as e:
+            logger.debug("Object Storage indisponible pour audio %s : %s", episode_id, e)
 
     return result
 

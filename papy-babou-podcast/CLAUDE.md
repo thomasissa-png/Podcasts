@@ -395,6 +395,31 @@ Clear visual separation between single-episode and season production workflows:
 - Form inputs use `font-size: 1rem` on mobile to prevent iOS zoom on focus
 - Validation action buttons stack vertically on mobile (`.val-actions-grid` → `flex-direction: column`)
 
+## Persistent Storage (Replit Object Storage)
+
+### Architecture
+- `persistent_storage.py`: Abstraction over Replit Object Storage SDK
+- Lazy client initialization — no-op when Object Storage is unavailable (dev local, tests)
+- Three storage prefixes: `audio/`, `scripts/`, `rapports/`
+
+### Upload (automatic after production)
+- **Audio**: `upload_episode_audio()` after montage (both HQ and preview MP3)
+- **Script**: `upload_script()` after script validation
+- **Rapport**: `upload_rapport()` after rapport final save
+- Storage keys stored in `rapport["etapes"]["montage"]["object_storage"]` and `rapport["etapes"]["script"]["object_storage"]`
+
+### Restore (automatic on access)
+- **`web.py` `/audio/episodes/<file>`**: If local file missing, downloads from Object Storage transparently
+- **`web.py` `/api/episode/<id>`**: Restores script from Object Storage before DB fallback
+- **`dashboard_data.py` `trouver_fichier_audio()`**: Step 4 restores audio from Object Storage
+- **`dashboard_data.py` `charger_rapport()`**: Restores rapport JSON from Object Storage
+
+### Patterns
+- All `persistent_storage` imports are inside try/except blocks — never breaks the pipeline
+- `is_available()` caches availability check (lazy singleton)
+- `restore_*()` functions check local file first, download only if missing
+- `upload_file()` returns bool — caller logs warning on failure but continues
+
 ## Season Production Pipeline Audit Fixes (Session 8)
 
 ### Production Blockers (PostgreSQL + Gunicorn)
