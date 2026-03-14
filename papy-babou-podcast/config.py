@@ -145,6 +145,7 @@ VOICE_IDS = {
     "papy_babou": os.getenv("ELEVENLABS_VOICE_PAPY", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
     "antoine": os.getenv("ELEVENLABS_VOICE_ANTOINE", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
     "noemie": os.getenv("ELEVENLABS_VOICE_NOEMIE", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
+    "mamie_sonia": os.getenv("ELEVENLABS_VOICE_MAMIE_SONIA", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
     "narrateur": os.getenv("ELEVENLABS_VOICE_NARRATEUR", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
 }
 
@@ -165,6 +166,11 @@ VOICE_SETTINGS = {
         "similarity_boost": 0.80,
         "style": 0.35,
     },
+    "mamie_sonia": {
+        "stability": 0.75,
+        "similarity_boost": 0.85,
+        "style": 0.15,
+    },
     "narrateur": {
         "stability": 0.85,
         "similarity_boost": 0.75,
@@ -174,7 +180,7 @@ VOICE_SETTINGS = {
 
 # Ordre de fallback quand un personnage n'a pas de voice_id configuré.
 # Le premier voice_id valide trouvé dans cette liste sera utilisé.
-VOICE_FALLBACK_CHAIN = ["narrateur", "papy_babou", "antoine", "noemie"]
+VOICE_FALLBACK_CHAIN = ["narrateur", "papy_babou", "antoine", "noemie", "mamie_sonia"]
 
 # ── Panoramique stéréo par personnage ────────────────────────────────────────
 # Valeurs de -1.0 (gauche) à 1.0 (droite), 0.0 = centre
@@ -183,6 +189,7 @@ STEREO_PAN = {
     "papy_babou": 0.0,
     "antoine": -0.3,
     "noemie": 0.3,
+    "mamie_sonia": 0.2,
     "narrateur": 0.0,
     "sfx": 0.0,
 }

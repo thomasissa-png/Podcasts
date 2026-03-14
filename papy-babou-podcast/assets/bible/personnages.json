@@ -3,11 +3,11 @@
     "papy_babou": {
       "nom_complet": "Papy Babou",
       "age": 72,
-      "description": "Grand-père aimant, ancien instituteur à la retraite. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants.",
+      "description": "Grand-père bienveillant, très courageux et protecteur. A beaucoup voyagé et vécu à l'étranger (Liban, Suisse, Afrique du Sud) avant de s'installer en France. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants Antoine et Noémie.",
       "apparence": {
         "cheveux": "blancs, légèrement dégarni, mèches rebelles",
         "yeux": "bleus pétillants, ridés par les sourires",
-        "corpulence": "trapu, un peu rond, rassurant",
+        "corpulence": "trapu, un peu rond, rassurant — très fort physiquement",
         "tenue_typique": "gilet en laine beige, chemise à carreaux, pantalon en velours côtelé",
         "accessoires": "lunettes rondes sur le bout du nez, montre à gousset",
         "details": "grandes mains de travailleur, sourire chaleureux, moustache grise bien taillée"
@@ -36,12 +36,22 @@
         "Pas de références à la technologie moderne",
         "Toujours expliquer les mots difficiles"
       ],
-      "backstory": "Ancien instituteur dans un village de Provence, veuf depuis 5 ans. A voyagé en Terre Sainte dans sa jeunesse. Vit dans une vieille maison avec un grand fauteuil près de la cheminée où il raconte ses histoires."
+      "backstory": "A beaucoup voyagé et vécu à l'étranger : Liban, Suisse, Afrique du Sud. Habite désormais en France dans une jolie maison normande avec mamie Sonia. Gourmand — aime la viande et le café. Très courageux, très fort, protecteur, s'occupe bien de sa famille. Père de Thomas (papa d'Antoine et Noémie) et de Nathalie (tata Nathalie).",
+      "famille": {
+        "epouse": "mamie Sonia",
+        "enfants": ["Thomas (papa d'Antoine et Noémie)", "Nathalie (tata Nathalie)"],
+        "petits_enfants": ["Antoine", "Noémie", "Lucas (à naître saison 1)"]
+      },
+      "anecdotes_possibles": [
+        "Ses voyages au Liban, en Suisse, en Afrique du Sud",
+        "Sa gourmandise pour la viande et le café",
+        "Sa force physique et son courage"
+      ]
     },
     "antoine": {
       "nom_complet": "Antoine",
       "age": 8,
-      "description": "Petit-fils curieux et aventurier. Pose beaucoup de questions, parfois impertinentes. Adore les passages avec de l'action.",
+      "description": "Petit-fils curieux et aventurier. Garçon qui aime le football et fait du judo. Adore vouloir faire comme les grands et faire le courageux. Gentil, social, travaille bien en classe. Aime jouer dehors, faire des cabanes, et aller chez Babou et mamie.",
       "apparence": {
         "cheveux": "bruns ébouriffés, mèche rebelle sur le front",
         "yeux": "marrons, vifs et expressifs",
@@ -67,44 +77,84 @@
         "Pose des questions sur la logique de l'histoire",
         "Coupe parfois la parole avec impatience",
         "Mime les scènes d'action avec ses mains",
-        "Fait des bruits de combat ou d'explosion"
+        "Fait des bruits de combat ou d'explosion",
+        "Veut faire comme les grands, se montre courageux"
       ],
       "relation_avec_papy": "Admire son Papy et veut devenir aventurier comme les héros des histoires. Parfois trop impatient, mais toujours respectueux.",
-      "relation_avec_noemie": "Taquine gentiment sa petite sœur mais la protège. Lève les yeux au ciel quand elle s'inquiète trop."
+      "relation_avec_noemie": "Taquine gentiment sa petite sœur mais la protège. Lève les yeux au ciel quand elle s'inquiète trop.",
+      "anecdotes_possibles": [
+        "Ses matchs de football",
+        "Ses cours de judo",
+        "Ses cabanes dans le jardin"
+      ]
     },
     "noemie": {
       "nom_complet": "Noémie",
-      "age": 6,
-      "description": "Petite-fille sensible et empathique. S'inquiète pour les personnages, aime les détails émotionnels.",
+      "age": 5,
+      "description": "Petite fille vraiment très chipie, avec un très gros caractère. Aime faire des blagues et n'est pas toujours très courageuse. Adore embêter tout le monde gentiment et rigole beaucoup. Adore son Babou plus que tout.",
       "apparence": {
         "cheveux": "blonds bouclés, souvent attachés avec un ruban rose ou une barrette fleur",
         "yeux": "bleus comme Papy, grands et expressifs",
         "corpulence": "petite pour son âge, menue",
         "tenue_typique": "robe à fleurs ou salopette colorée, chaussettes dépareillées",
         "accessoires": "doudou lapin qu'elle serre pendant les histoires qui font peur, dessin en cours sur ses genoux",
-        "details": "joues rondes et roses, petit nez retroussé, air rêveur"
+        "details": "joues rondes et roses, petit nez retroussé, air espiègle"
       },
-      "ton": "sensible, doux, parfois inquiet",
+      "ton": "chipie, espiègle, rigolote, parfois peureuse",
       "tics_de_langage": [
         "Oh non, le pauvre...",
         "Il avait pas peur, Papy ?",
         "Et ils étaient contents après ?",
-        "C'est triste, Papy...",
+        "Hihihi ! C'est trop drôle !",
         "Moi je l'aurais aidé !",
         "Raconte encore, Papy !",
         "Mais ça finit bien, hein Papy ?",
-        "Il était tout seul ? Oh..."
+        "Babouuuu ! Encore une histoire !"
       ],
       "reactions_typiques": [
-        "S'inquiète pour les personnages en difficulté",
+        "Fait des blagues et rigole pendant l'histoire",
+        "Embête gentiment Antoine ou Papy",
+        "N'est pas toujours courageuse — se cache derrière Papy",
         "Demande si l'histoire finit bien",
-        "Veut savoir ce que ressentent les personnages",
-        "A parfois besoin d'être rassurée par Papy Babou",
-        "Dessine les personnages pendant que Papy raconte",
-        "Serre son doudou quand l'histoire devient intense"
+        "Gros caractère — dit ce qu'elle pense sans filtre",
+        "Serre son doudou quand l'histoire devient intense",
+        "Adore son Babou — câlins et complicité"
       ],
-      "relation_avec_papy": "Sa préférée est de se blottir contre Papy dans son grand fauteuil. Très sensible aux émotions des personnages.",
-      "relation_avec_antoine": "Admire son grand frère mais trouve qu'il fait trop de bruit. Lui demande souvent de la laisser écouter tranquille."
+      "relation_avec_papy": "Adore son Babou. Sa préférée est de se blottir contre Papy dans son grand fauteuil. Complicité très forte.",
+      "relation_avec_antoine": "Aime embêter son grand frère. Lui fait des blagues. Le taquine quand il fait le courageux."
+    },
+    "mamie_sonia": {
+      "nom_complet": "Mamie Sonia",
+      "role": "secondaire",
+      "premiere_apparition": "S01E02",
+      "frequence": "apparitions régulières mais légères — amener le goûter, annoncer l'heure du coucher, parfois rester un moment",
+      "age": 70,
+      "description": "La plus gentille mamie du monde. Attentionnée, douce, adore ses petits-enfants plus que tout. Cuisine extrêmement bien. Architecte d'intérieur de métier.",
+      "ton": "doux, chaleureux, attentionné",
+      "backstory": "Née en Égypte. A beaucoup voyagé — a habité en France, au Liban, en Suisse, et en Afrique du Sud. Mariée à Papy Babou.",
+      "interventions_typiques": [
+        "Apporte le goûter ou un gâteau fait maison",
+        "Annonce que c'est l'heure de se coucher",
+        "Commente tendrement depuis la cuisine",
+        "Reste parfois écouter l'histoire un moment"
+      ],
+      "anecdotes_possibles": [
+        "Ses origines égyptiennes",
+        "Ses voyages avec Papy Babou",
+        "Ses talents de cuisinière",
+        "Son métier d'architecte d'intérieur"
+      ]
+    },
+    "lucas": {
+      "nom_complet": "Lucas",
+      "role": "fil_rouge_saison_1",
+      "description": "Le petit dernier, encore dans le ventre de la maman pendant la saison 1. Son nom est tenu secret jusqu'à la naissance au dernier épisode. Quelques allusions occasionnelles au fait qu'Antoine et Noémie auront bientôt un petit frère.",
+      "regles": [
+        "Ne jamais révéler le prénom avant le dernier épisode de la saison 1",
+        "Allusions légères et naturelles de temps en temps — pas à chaque épisode",
+        "Utilisé comme petit fil rouge en parallèle de l'histoire principale",
+        "N'apparaît physiquement qu'au dernier épisode de la saison 1"
+      ]
     },
     "narrateur": {
       "nom_complet": "Narrateur",
@@ -119,24 +169,27 @@
     }
   },
   "decor": {
-    "lieu": "Le salon de Papy Babou, dans une vieille maison provençale",
+    "lieu": "Le salon de Papy Babou, dans une jolie maison normande",
     "elements": [
       "Grand fauteuil en cuir usé près de la cheminée",
       "Étagère pleine de livres anciens et de photos de famille",
       "Tapis persan un peu élimé devant la cheminée",
       "Horloge comtoise qui sonne les heures",
       "Chat tigré qui dort sur le rebord de la fenêtre",
-      "Odeur de lavande et de gâteau qui cuit"
+      "Odeur de gâteau de mamie Sonia qui cuit dans la cuisine"
     ],
     "moment": "Le dimanche après-midi, après le goûter, quand la lumière dorée entre par la fenêtre"
   },
   "regles_interaction": {
     "frequence_interruptions": "Les enfants doivent intervenir au moins toutes les 90 secondes de narration",
-    "alternance": "Alterner entre Antoine (questions d'action/logique) et Noémie (questions émotionnelles)",
+    "alternance": "Alterner entre Antoine (questions d'action/logique, veut faire le courageux) et Noémie (blagues, chipie, parfois peureuse)",
     "reponses_papy": "Papy Babou répond toujours avec patience et pédagogie, même aux questions naïves",
-    "dynamique_fratrie": "Antoine et Noémie interagissent aussi entre eux, pas seulement avec Papy",
+    "dynamique_fratrie": "Antoine et Noémie interagissent aussi entre eux — Noémie embête Antoine, Antoine la protège",
+    "mamie_sonia": "Mamie Sonia peut intervenir brièvement à partir de l'épisode 2 — goûter, coucher, petit commentaire tendre. Ne pas forcer sa présence.",
+    "fil_rouge_lucas": "Allusions légères et naturelles au futur petit frère de temps en temps. Nom secret jusqu'au dernier épisode.",
     "progression_emotionnelle": "Chaque épisode doit avoir un arc émotionnel : curiosité → tension → résolution → morale",
-    "regles_sfx": "Les bruitages accompagnent les moments clés : arrivée d'un personnage, événement surnaturel, transition de lieu"
+    "regles_sfx": "Les bruitages accompagnent les moments clés : arrivée d'un personnage, événement surnaturel, transition de lieu",
+    "utilisation_backstory": "Les détails biographiques des personnages (voyages, goûts, métiers) servent de base d'anecdotes naturelles — à utiliser avec parcimonie, jamais de façon forcée"
   },
   "style_cover_art": {
     "style": "Flat design chaleureux et moderne, formes géométriques douces, aplats de couleur, pas d'ombres portées, inspiré par Oliver Jeffers et Jon Klassen",
