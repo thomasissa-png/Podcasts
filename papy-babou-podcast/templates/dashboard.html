@@ -1537,6 +1537,9 @@
             </div>
         </div>
 
+        <!-- Zone de continuation (affichée après validation d'une étape) -->
+        <div id="continue-production-zone" style="display:none; margin-bottom: 1.25rem;"></div>
+
         <!-- Actions de validation -->
         <div class="card" style="margin-bottom: 1.25rem;">
             <div class="card-header">
@@ -2359,20 +2362,14 @@ async function submitProduire(e) {
         });
 
         if (data.status === 'ok') {
-            let msg = epId + ' — <strong>' + escapeHtml(titre) + '</strong> produit avec succès !';
+            let msg = epId + ' — <strong>' + escapeHtml(titre) + '</strong> : script généré !';
             /* Extraire les infos du stdout si disponible */
             const stdout = data.stdout || '';
             const scoreMatch = stdout.match(/score\s+(\d+)\/10/i);
-            const dureeMatch = stdout.match(/(\d+(?:\.\d+)?)\s*s,\s*(\d+(?:\.\d+)?)\s*MB/i);
-            const coutMatch = stdout.match(/\$(\d+\.\d+)/);
-            if (scoreMatch || dureeMatch || coutMatch) {
-                msg += '<br><small style="font-weight: 400;">';
-                if (scoreMatch) msg += 'Score : ' + scoreMatch[1] + '/10';
-                if (dureeMatch) msg += (scoreMatch ? ' • ' : '') + 'Durée : ' + dureeMatch[1] + 's (' + dureeMatch[2] + ' MB)';
-                if (coutMatch) msg += ' • Coût : ' + coutMatch[0];
-                msg += '</small>';
+            if (scoreMatch) {
+                msg += '<br><small style="font-weight: 400;">Score : ' + scoreMatch[1] + '/10</small>';
             }
-            msg += '<br><a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>';
+            msg += '<br>&#9997; <a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\')); loadEpisodeDetail(\'' + epId + '\')" style="color: inherit; text-decoration: underline; font-weight: 700;">Valider le script avant de lancer l\'audio &rarr;</a>';
             showAlert('alert-produire', 'success', msg);
             _dashboardDirty = true;
         } else {
@@ -2950,28 +2947,83 @@ async function loadEpisodeDetail(episodeId) {
         document.getElementById('val-detail-date').textContent = ep.date ? ep.date.substring(0, 10) : '—';
         document.getElementById('val-detail-morale').textContent = ep.morale || '—';
 
-        /* Statut de validation */
+        /* Statut de validation — workflow en étapes */
         const scriptOk = ep.validation_script;
         const montageOk = ep.validation_montage;
-        let statusHtml = '<div style="display: flex; gap: 1rem; flex-wrap: wrap;">';
-        statusHtml += '<span style="color: ' + (scriptOk ? 'var(--vert-prairie)' : 'var(--corail)') + '; font-weight: 800;">'
-            + (scriptOk ? '&#10003;' : '&#9675;') + ' Script</span>';
-        statusHtml += '<span style="color: ' + (montageOk ? 'var(--vert-prairie)' : 'var(--corail)') + '; font-weight: 800;">'
-            + (montageOk ? '&#10003;' : '&#9675;') + ' Montage</span>';
+        const hasScript = !!(ep.script);
+        const hasAudio = !!(ep.audio_preview || ep.audio_hq);
+        let statusHtml = '<div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; font-size: 0.85rem;">';
+        /* Étape 1: Script */
+        const scriptColor = scriptOk ? 'var(--vert-prairie)' : (hasScript ? 'var(--orange-chaud)' : 'var(--texte-dim)');
+        const scriptIcon = scriptOk ? '&#10003;' : (hasScript ? '&#9998;' : '&#9675;');
+        const scriptLabel = scriptOk ? 'Script validé' : (hasScript ? 'Script à valider' : 'Script en attente');
+        statusHtml += '<span style="color: ' + scriptColor + '; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.04);">' + scriptIcon + ' ' + scriptLabel + '</span>';
+        statusHtml += '<span style="color: var(--texte-dim);">→</span>';
+        /* Étape 2: Audio/Montage */
+        const montageColor = montageOk ? 'var(--vert-prairie)' : (hasAudio ? 'var(--orange-chaud)' : 'var(--texte-dim)');
+        const montageIcon = montageOk ? '&#10003;' : (hasAudio ? '&#127911;' : '&#9675;');
+        const montageLabel = montageOk ? 'Montage validé' : (hasAudio ? 'Montage à valider' : 'Audio en attente');
+        statusHtml += '<span style="color: ' + montageColor + '; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.04);">' + montageIcon + ' ' + montageLabel + '</span>';
+        statusHtml += '<span style="color: var(--texte-dim);">→</span>';
+        /* Étape 3: Publication */
+        const pubOk = scriptOk && montageOk;
+        statusHtml += '<span style="color: ' + (pubOk ? 'var(--vert-prairie)' : 'var(--texte-dim)') + '; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.04);">' + (pubOk ? '&#128225;' : '&#9675;') + ' Publication</span>';
         statusHtml += '</div>';
+
+        /* Message d'aide contextuel */
+        if (hasScript && !scriptOk) {
+            statusHtml += '<p style="font-size: 0.82rem; color: var(--orange-chaud); margin-top: 0.5rem; font-weight: 600;">&#9998; Lisez le script ci-dessous puis validez-le pour lancer la production audio.</p>';
+        } else if (scriptOk && !hasAudio) {
+            statusHtml += '<p style="font-size: 0.82rem; color: var(--bleu-doux); margin-top: 0.5rem; font-weight: 600;">&#127911; Cliquez sur "Lancer l\'audio + montage" pour continuer la production.</p>';
+        } else if (hasAudio && !montageOk) {
+            statusHtml += '<p style="font-size: 0.82rem; color: var(--orange-chaud); margin-top: 0.5rem; font-weight: 600;">&#127911; Écoutez l\'audio puis validez le montage pour finaliser.</p>';
+        }
+
         document.getElementById('val-detail-status').innerHTML = statusHtml;
 
-        /* W16: Disable montage validation button when no audio exists */
+        /* Masquer la zone de continuation quand on charge un nouvel épisode */
+        var contZone = document.getElementById('continue-production-zone');
+        if (contZone) contZone.style.display = 'none';
+
+        /* Si le script est validé mais pas d'audio, proposer de continuer */
+        if (scriptOk && !hasAudio && !ep.audio_missing) {
+            showContinueProduction(episodeId, 'audio',
+                'Le script est validé. Lancez la production audio.',
+                'Lancer l\'audio + montage');
+        }
+
+        /* Activer/désactiver les boutons selon l'état du workflow */
         const audioFile = ep.audio_preview || ep.audio_hq;
+        const btnValScript = document.getElementById('btn-val-script');
+        const btnRejScript = document.getElementById('btn-rej-script');
         const btnValMontage = document.getElementById('btn-val-montage');
         const btnRejMontage = document.getElementById('btn-rej-montage');
-        if (!audioFile) {
-            if (btnValMontage) { btnValMontage.disabled = true; btnValMontage.title = 'Pas d\'audio disponible — impossible de valider le montage'; }
-            if (btnRejMontage) { btnRejMontage.disabled = true; btnRejMontage.title = 'Pas d\'audio disponible'; }
-        } else {
-            if (btnValMontage) { btnValMontage.disabled = false; btnValMontage.title = ''; }
-            if (btnRejMontage) { btnRejMontage.disabled = false; btnRejMontage.title = ''; }
+        const btnValMeta = document.getElementById('btn-val-meta');
+        const btnValPublish = document.getElementById('btn-val-publish');
+
+        /* Script: actif seulement si script présent et pas encore validé */
+        if (btnValScript) {
+            btnValScript.disabled = !hasScript || scriptOk;
+            btnValScript.title = scriptOk ? 'Script déjà validé' : (!hasScript ? 'Pas de script disponible' : '');
         }
+        if (btnRejScript) {
+            btnRejScript.disabled = !hasScript || scriptOk;
+        }
+
+        /* Montage: actif seulement si audio présent et script validé */
+        if (!audioFile || !scriptOk) {
+            if (btnValMontage) {
+                btnValMontage.disabled = true;
+                btnValMontage.title = !scriptOk ? 'Validez d\'abord le script' : 'Pas d\'audio disponible — impossible de valider le montage';
+            }
+            if (btnRejMontage) { btnRejMontage.disabled = true; }
+        } else {
+            if (btnValMontage) { btnValMontage.disabled = montageOk; btnValMontage.title = montageOk ? 'Montage déjà validé' : ''; }
+            if (btnRejMontage) { btnRejMontage.disabled = montageOk; }
+        }
+
+        /* Publication: actif seulement si script ET montage validés */
+        if (btnValPublish) { btnValPublish.disabled = !(scriptOk && montageOk); }
 
         /* Audio player */
         if (audioFile) {
@@ -3117,12 +3169,73 @@ async function validateStep(step, action) {
         showAlert('alert-validation', alertType, data.message);
         document.getElementById('val-comment').value = '';
 
+        /* Après validation du script → proposer de lancer l'audio */
+        if (data.next_phase === 'audio' && action === 'validate') {
+            showContinueProduction(_currentEpisodeId, 'audio',
+                'Script validé ! Lancer la production audio ?',
+                'Lancer l\'audio + montage');
+        }
+        /* Après validation du montage → proposer la publication */
+        else if (data.next_phase === 'publication' && action === 'validate') {
+            showContinueProduction(_currentEpisodeId, 'publication',
+                'Montage validé ! Lancer les métadonnées et la publication ?',
+                'Lancer métadonnées + publication');
+        }
+
         /* Recharger le détail et la liste */
         await loadEpisodeDetail(_currentEpisodeId);
         await loadValidationEpisodes();
         _dashboardDirty = true;
     } catch (err) {
         showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+    }
+}
+
+function showContinueProduction(episodeId, phase, message, btnLabel) {
+    /* Affiche un bandeau d'action pour continuer la production */
+    var zone = document.getElementById('continue-production-zone');
+    if (!zone) return;
+    var phaseEmoji = (phase === 'audio') ? '&#127911;' : '&#128225;';
+    zone.innerHTML =
+        '<div class="alert alert-info" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">' +
+        '<span>' + phaseEmoji + ' ' + escapeHtml(message) + '</span>' +
+        '<button class="btn btn-primary" onclick="continueProduction(\'' +
+        escapeHtml(episodeId) + '\', \'' + escapeHtml(phase) + '\')">' +
+        phaseEmoji + ' ' + escapeHtml(btnLabel) + '</button>' +
+        '</div>';
+    zone.style.display = 'block';
+}
+
+async function continueProduction(episodeId, phase) {
+    var zone = document.getElementById('continue-production-zone');
+    if (zone) {
+        zone.innerHTML = '<div class="alert alert-info"><span class="spinner"></span> Production en cours...</div>';
+    }
+
+    try {
+        const launch = await apiCall('/api/episode/' + episodeId + '/continue-production', { phase: phase });
+        if (!launch.job_id) {
+            showAlert('alert-validation', 'error', launch.error || 'Erreur inconnue');
+            if (zone) zone.style.display = 'none';
+            return;
+        }
+        const result = await pollJob(launch.job_id, 1920);
+
+        if (result.status === 'ok') {
+            var phaseLabel = (phase === 'audio') ? 'Audio + montage' : 'Métadonnées + publication';
+            showAlert('alert-validation', 'success', phaseLabel + ' terminé avec succès pour ' + episodeId + '.');
+        } else {
+            var errMsg = result.error || result.stderr || 'Erreur inconnue';
+            showAlert('alert-validation', 'error', phaseLabel + ' échoué : ' + errMsg);
+        }
+
+        if (zone) zone.style.display = 'none';
+        await loadEpisodeDetail(episodeId);
+        await loadValidationEpisodes();
+        _dashboardDirty = true;
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+        if (zone) zone.style.display = 'none';
     }
 }
 

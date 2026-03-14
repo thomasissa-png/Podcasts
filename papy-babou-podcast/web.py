@@ -924,10 +924,66 @@ def api_validate_episode(episode_id):
 
     action_label = "validé" if action == "validate" else "rejeté"
     step_labels = {"script": "Script", "montage": "Montage", "metadonnees": "Métadonnées"}
-    return jsonify({
+
+    # Après validation du script → lancer automatiquement la production audio
+    response = {
         "status": "ok",
         "message": f"{step_labels.get(step, step)} {action_label} pour {episode_id}.",
-    })
+    }
+    if step == "script" and action == "validate":
+        response["next_phase"] = "audio"
+        response["message"] += " Lancez maintenant la production audio."
+    elif step == "montage" and action == "validate":
+        response["next_phase"] = "publication"
+        response["message"] += " L'épisode est prêt pour la publication."
+
+    return jsonify(response)
+
+
+@app.route("/api/episode/<episode_id>/continue-production", methods=["POST"])
+def api_continue_production(episode_id):
+    """Continue la production d'un épisode après validation d'une étape.
+
+    Appelé automatiquement après validation du script (lance audio→montage)
+    ou après validation du montage (lance métadonnées→publication).
+
+    Body JSON:
+        {"phase": "audio"|"publication"}
+    """
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format d'identifiant invalide (attendu: S01E01)"}), 400
+
+    body = request.get_json(force=True)
+    phase = body.get("phase", "").strip()
+
+    if phase not in ("audio", "publication"):
+        return jsonify({"error": "Phase invalide. Valeurs acceptées : audio, publication"}), 400
+
+    # Vérifier qu'un checkpoint existe pour cet épisode
+    checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    if not checkpoint_path.exists():
+        return jsonify({"error": f"Checkpoint introuvable pour {episode_id}. La production initiale doit d'abord être lancée."}), 404
+
+    if phase == "audio":
+        # Reprendre depuis l'étape audio, s'arrêter après le montage
+        cmd = [
+            "reprendre",
+            "-c", str(checkpoint_path),
+            "--auto",
+            "--stop-after", "montage",
+        ]
+        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+        return jsonify({"status": "accepted", "job_id": job_id, "phase": "audio"})
+
+    elif phase == "publication":
+        # Reprendre depuis métadonnées jusqu'à la fin
+        cmd = [
+            "reprendre",
+            "-c", str(checkpoint_path),
+            "--auto",
+        ]
+        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+        return jsonify({"status": "accepted", "job_id": job_id, "phase": "publication"})
 
 
 def _handle_publication(episode_id, comment=""):
@@ -1076,6 +1132,7 @@ def api_produire():
         "-r", resume,
         "-t", type_episode,
         "--auto",
+        "--stop-after", "script",
     ]
     if morale:
         cmd.extend(["-m", morale])
@@ -1083,7 +1140,7 @@ def api_produire():
         cmd.append("--dry-run")
 
     job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
-    return jsonify({"status": "accepted", "job_id": job_id})
+    return jsonify({"status": "accepted", "job_id": job_id, "phase": "script"})
 
 
 @app.route("/api/planifier-saison", methods=["POST"])

@@ -1490,6 +1490,7 @@ def pipeline(
     type_episode: str = "standard",
     pubdate_offset_seconds: int = 0,
     no_publish: bool = False,
+    stop_after: str = "",
     # Contexte d'affichage pour production sérielle
     episode_courant: int = 0,
     total_episodes: int = 0,
@@ -1559,7 +1560,7 @@ def pipeline(
             contexte_saison=contexte_saison, type_episode=type_episode,
             episode_id=episode_id, rapport=rapport,
             pubdate_offset_seconds=pubdate_offset_seconds,
-            no_publish=no_publish,
+            no_publish=no_publish, stop_after=stop_after,
             episode_courant=episode_courant,
             total_episodes=total_episodes,
             saison_theme=saison_theme,
@@ -1592,7 +1593,7 @@ def _pipeline_inner(
     titre, resume, saison, numero, morale, dry_run, auto,
     max_iterations_review, etape_depart, checkpoint_data,
     contexte_saison, type_episode, episode_id, rapport,
-    pubdate_offset_seconds=0, no_publish=False,
+    pubdate_offset_seconds=0, no_publish=False, stop_after="",
     episode_courant=0, total_episodes=0, saison_theme="",
 ):
     """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
@@ -1889,6 +1890,20 @@ def _pipeline_inner(
             scripteur.sauvegarder(script, chemin_valide)
             duree_estimee = reviewer.estimer_duree(script)
             rapport["etapes"]["script"]["validation_humaine"] = True
+
+    # ── Stop après script (mode web : attendre validation avant audio) ────────
+    if stop_after == "script":
+        rapport["stop_after"] = "script"
+        rapport["status"] = "waiting_validation"
+        console.print(
+            f"\n[bold cyan]  Pipeline arrêté après le script — "
+            f"en attente de validation.[/bold cyan]"
+        )
+        # Sauvegarder le rapport partiel
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+            json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        return rapport
 
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 
@@ -2191,6 +2206,19 @@ def _pipeline_inner(
                 })
                 logger.info("Montage validé sans écoute (forcé par le producteur).")
 
+    # ── Stop après montage (mode web : attendre validation avant publication) ─
+    if stop_after == "montage":
+        rapport["stop_after"] = "montage"
+        rapport["status"] = "waiting_validation"
+        console.print(
+            f"\n[bold cyan]  Pipeline arrêté après le montage — "
+            f"en attente de validation.[/bold cyan]"
+        )
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+            json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        return rapport
+
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
     if etape_idx <= 5:
@@ -2430,7 +2458,8 @@ def cli(ctx):
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 @click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
-def produire(episode: str, saison: int, numero: int, resume: str, morale: str, type_episode: str, dry_run: bool, auto: bool, no_publish: bool):
+@click.option("--stop-after", type=click.Choice(["script", "montage", ""]), default="", help="Arreter le pipeline apres l'etape donnee (pour validation web)")
+def produire(episode: str, saison: int, numero: int, resume: str, morale: str, type_episode: str, dry_run: bool, auto: bool, no_publish: bool, stop_after: str):
     """Produit un episode complet du podcast."""
     try:
         pipeline(
@@ -2443,6 +2472,7 @@ def produire(episode: str, saison: int, numero: int, resume: str, morale: str, t
             auto=auto,
             type_episode=type_episode,
             no_publish=no_publish,
+            stop_after=stop_after,
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
@@ -2790,7 +2820,8 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
               help="Chemin du fichier checkpoint")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 @click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
-def reprendre(checkpoint: str, auto: bool, no_publish: bool):
+@click.option("--stop-after", type=click.Choice(["script", "montage", ""]), default="", help="Arreter apres l'etape donnee")
+def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
     """Reprend une production depuis un checkpoint."""
     cp = charger_checkpoint(Path(checkpoint))
     data = cp["data"]
@@ -2817,6 +2848,7 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool):
             checkpoint_data=data.get("rapport"),
             type_episode=data.get("type_episode", "standard"),
             no_publish=no_publish,
+            stop_after=stop_after,
             pubdate_offset_seconds=data.get("pubdate_offset_seconds", 0),
         )
     except ProductionAbandonnee as e:
