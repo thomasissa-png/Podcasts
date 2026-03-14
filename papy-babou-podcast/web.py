@@ -640,11 +640,17 @@ def api_episode_detail(episode_id):
         # Fallback: load validated script from DB (survives re-deploys)
         try:
             from db_models import ScriptRepo
-            script = ScriptRepo.charger_valide(episode_id)
-            if not script:
-                script = ScriptRepo.charger_derniere_version(episode_id)
-        except Exception:
-            pass
+            db_script = ScriptRepo.charger_valide(episode_id)
+            if db_script and db_script.get("episode"):
+                script = db_script
+                logger.info("Script %s chargé depuis la DB (version validée).", episode_id)
+            else:
+                db_script = ScriptRepo.charger_derniere_version(episode_id)
+                if db_script and db_script.get("episode"):
+                    script = db_script
+                    logger.info("Script %s chargé depuis la DB (dernière version).", episode_id)
+        except Exception as e:
+            logger.warning("Échec chargement script DB pour %s : %s", episode_id, e)
 
     # Load rapport for detailed info
     rapport = dashboard_data_mod.charger_rapport(episode_id)
@@ -683,6 +689,102 @@ def api_episode_detail(episode_id):
     return jsonify(result)
 
 
+@app.route("/api/episode/<episode_id>/debug")
+def api_episode_debug(episode_id):
+    """Diagnostic endpoint — montre l'état complet des données d'un épisode."""
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format invalide"}), 400
+
+    diag = {"episode_id": episode_id, "filesystem": {}, "db": {}, "rapport": {}}
+
+    # 1. Filesystem
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    diag["filesystem"]["script_valide"] = str(script_path)
+    diag["filesystem"]["script_exists"] = script_path.exists()
+
+    episodes_dir = config.OUTPUT_DIR
+    diag["filesystem"]["output_dir"] = str(episodes_dir)
+    diag["filesystem"]["output_dir_exists"] = episodes_dir.exists()
+    if episodes_dir.exists():
+        matching = [f.name for f in episodes_dir.glob(f"{episode_id}*")]
+        diag["filesystem"]["matching_files"] = matching
+    else:
+        diag["filesystem"]["matching_files"] = []
+
+    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+    diag["filesystem"]["rapport_json"] = str(rapport_path)
+    diag["filesystem"]["rapport_exists"] = rapport_path.exists()
+
+    # 2. Database
+    try:
+        from database import get_cursor
+        with get_cursor(commit=False) as cur:
+            # Productions
+            cur.execute(
+                "SELECT id, status, etape_courante, created_at, completed_at, "
+                "rapport_json IS NOT NULL AS has_rapport "
+                "FROM productions WHERE episode_id = %s ORDER BY created_at DESC LIMIT 5",
+                (episode_id,),
+            )
+            diag["db"]["productions"] = [
+                {k: (str(v) if hasattr(v, 'isoformat') else v) for k, v in dict(r).items()}
+                for r in cur.fetchall()
+            ]
+
+            # Scripts
+            cur.execute(
+                "SELECT id, version, is_validated, source, nb_mots, created_at "
+                "FROM scripts WHERE episode_id = %s ORDER BY version DESC LIMIT 5",
+                (episode_id,),
+            )
+            diag["db"]["scripts"] = [
+                {k: (str(v) if hasattr(v, 'isoformat') else v) for k, v in dict(r).items()}
+                for r in cur.fetchall()
+            ]
+
+            # Fichiers audio
+            cur.execute(
+                "SELECT id, type_fichier, chemin, duree_secondes, taille_bytes, created_at "
+                "FROM fichiers_audio WHERE episode_id = %s ORDER BY created_at DESC LIMIT 10",
+                (episode_id,),
+            )
+            diag["db"]["fichiers_audio"] = [
+                {k: (str(v) if hasattr(v, 'isoformat') else v) for k, v in dict(r).items()}
+                for r in cur.fetchall()
+            ]
+
+            # Historique
+            cur.execute(
+                "SELECT episode_id, titre, score_review, date_production "
+                "FROM historique_episodes WHERE episode_id = %s",
+                (episode_id,),
+            )
+            row = cur.fetchone()
+            diag["db"]["historique"] = (
+                {k: (str(v) if hasattr(v, 'isoformat') else v) for k, v in dict(row).items()}
+                if row else None
+            )
+    except Exception as e:
+        diag["db"]["error"] = str(e)
+
+    # 3. Rapport (via dashboard_data)
+    rapport = dashboard_data_mod.charger_rapport(episode_id)
+    if rapport:
+        diag["rapport"]["found"] = True
+        etapes = rapport.get("etapes", {})
+        diag["rapport"]["etapes_presentes"] = list(etapes.keys())
+        montage = etapes.get("montage", {})
+        diag["rapport"]["montage_chemin_hq"] = montage.get("chemin_hq")
+        diag["rapport"]["montage_chemin_preview"] = montage.get("chemin_preview")
+        diag["rapport"]["montage_duree"] = montage.get("duree_secondes")
+        script_info = etapes.get("script", {})
+        diag["rapport"]["script_chemin"] = script_info.get("chemin")
+    else:
+        diag["rapport"]["found"] = False
+
+    return jsonify(diag)
+
+
 @app.route("/api/episode/<episode_id>/script")
 def api_episode_script(episode_id):
     """API JSON — Script complet d'un épisode (segments, personnages, tons)."""
@@ -702,11 +804,15 @@ def api_episode_script(episode_id):
     if not script:
         try:
             from db_models import ScriptRepo
-            script = ScriptRepo.charger_valide(episode_id)
-            if not script:
-                script = ScriptRepo.charger_derniere_version(episode_id)
-        except Exception:
-            pass
+            db_script = ScriptRepo.charger_valide(episode_id)
+            if db_script and db_script.get("episode"):
+                script = db_script
+            else:
+                db_script = ScriptRepo.charger_derniere_version(episode_id)
+                if db_script and db_script.get("episode"):
+                    script = db_script
+        except Exception as e:
+            logger.warning("Échec chargement script DB pour %s : %s", episode_id, e)
     if not script:
         return jsonify({"error": f"Script introuvable pour {episode_id}"}), 404
     return jsonify(script)
