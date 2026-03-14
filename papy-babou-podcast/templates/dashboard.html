@@ -1546,64 +1546,78 @@
                 <span class="icon">&#9989;</span> Actions de validation
             </div>
             <div class="card-body">
-                <div class="form-group">
-                    <label>Commentaire (optionnel)</label>
-                    <textarea class="form-textarea" id="val-comment" rows="2" placeholder="Remarques, corrections, retours..."></textarea>
-                </div>
-                <div class="val-actions-grid" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
-                    <button class="btn btn-turquoise" onclick="validateStep('script', 'validate')" id="btn-val-script">
-                        &#10003; Valider le script
-                    </button>
-                    <button class="btn btn-turquoise" onclick="validateStep('montage', 'validate')" id="btn-val-montage">
-                        &#10003; Valider le montage
-                    </button>
-                    <button class="btn btn-turquoise" onclick="validateStep('metadonnees', 'validate')" id="btn-val-meta">
-                        &#10003; Valider les métadonnées
-                    </button>
-                    <button class="btn btn-corail" onclick="validateStep('script', 'reject')" id="btn-rej-script" style="font-size: 0.8rem;">
-                        &#10007; Rejeter le script
-                    </button>
-                    <button class="btn btn-corail" onclick="validateStep('montage', 'reject')" id="btn-rej-montage" style="font-size: 0.8rem;">
-                        &#10007; Rejeter le montage
-                    </button>
-                </div>
-                <hr style="border: none; border-top: 2px solid var(--border); margin: 1.5rem 0;">
-                <div>
-                    <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
-                        La publication n'est possible que si le <strong>script</strong> ET le <strong>montage</strong> sont validés.
-                    </p>
-                    <button class="btn btn-primary" onclick="validateStep('publication', 'publish')" id="btn-val-publish" disabled>
-                        &#128225; Autoriser la publication
-                    </button>
-                </div>
-                <!-- Suppression d'épisode -->
-                <hr style="border: none; border-top: 2px solid var(--border); margin: 1.5rem 0;">
-                <div>
-                    <button class="btn btn-danger" onclick="toggleDeleteConfirm()" id="btn-delete-toggle" style="font-size: 0.82rem;">
-                        &#128465; Supprimer cet épisode
-                    </button>
-                    <div class="delete-confirm-zone" id="delete-confirm-zone">
-                        <p style="font-weight: 700; color: var(--corail); margin-bottom: 0.5rem;">
-                            &#9888; Êtes-vous sûr de vouloir supprimer cet épisode ?
-                        </p>
-                        <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
-                            Les fichiers (script, audio, cover, rapport) seront archivés dans <code>output/archive/</code>.
-                            L'épisode disparaîtra du dashboard et de l'historique.
-                            Cette action est réversible en restaurant les fichiers depuis l'archive.
-                        </p>
-                        <div class="form-group" style="margin-bottom: 0.75rem;">
-                            <label style="font-size: 0.82rem;">Raison (optionnel)</label>
-                            <input type="text" class="form-input" id="delete-raison" placeholder="ex: Pas satisfait du résultat">
-                        </div>
-                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                            <button class="btn btn-danger" onclick="deleteEpisode()">
-                                &#128465; Confirmer la suppression
+                <textarea class="form-textarea" id="val-comment" rows="1" style="display:none;"></textarea>
+                <!-- ── Validation du script ─────────────────────── -->
+                <div id="val-section-script" class="val-step-section" style="margin-top: 1rem;">
+                    <h4 style="margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--texte);">&#9998; Script</h4>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn btn-turquoise" onclick="validateStep('script', 'validate')" id="btn-val-script">
+                            &#10003; Approuver le script
+                        </button>
+                        <button class="btn btn-secondary" onclick="toggleModifyZone('script')" id="btn-mod-script" style="border: 2px solid var(--orange-chaud); color: var(--orange-chaud); background: transparent;">
+                            &#9998; Modifier le script
+                        </button>
+                        <button class="btn btn-corail" onclick="rejectAndArchive('script')" id="btn-rej-script" style="font-size: 0.82rem;">
+                            &#10007; Refuser et archiver
+                        </button>
+                    </div>
+                    <div id="modify-zone-script" style="display: none; margin-top: 0.75rem; padding: 1rem; background: rgba(255,165,0,0.06); border-radius: 8px; border: 1px solid var(--orange-chaud);">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: var(--orange-chaud); display: block; margin-bottom: 0.4rem;">
+                            Instructions de modification
+                        </label>
+                        <textarea class="form-textarea" id="modify-instructions-script" rows="3"
+                            placeholder="Ex: Rends le dialogue plus drôle, ajoute un moment de suspense avant la morale..."></textarea>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                            <button class="btn btn-primary" onclick="regenerateStep('script')">
+                                &#128260; Relancer le script
                             </button>
-                            <button class="btn btn-secondary" onclick="toggleDeleteConfirm()">
+                            <button class="btn btn-secondary" onclick="toggleModifyZone('script')">
                                 Annuler
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- ── Validation du montage ──────────────────────── -->
+                <div id="val-section-montage" class="val-step-section" style="margin-top: 1.25rem;">
+                    <h4 style="margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--texte);">&#127911; Montage audio</h4>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn btn-turquoise" onclick="validateStep('montage', 'validate')" id="btn-val-montage">
+                            &#10003; Approuver le montage
+                        </button>
+                        <button class="btn btn-secondary" onclick="toggleModifyZone('montage')" id="btn-mod-montage" style="border: 2px solid var(--orange-chaud); color: var(--orange-chaud); background: transparent;">
+                            &#9998; Modifier le montage
+                        </button>
+                        <button class="btn btn-corail" onclick="rejectAndArchive('montage')" id="btn-rej-montage" style="font-size: 0.82rem;">
+                            &#10007; Refuser et archiver
+                        </button>
+                    </div>
+                    <div id="modify-zone-montage" style="display: none; margin-top: 0.75rem; padding: 1rem; background: rgba(255,165,0,0.06); border-radius: 8px; border: 1px solid var(--orange-chaud);">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: var(--orange-chaud); display: block; margin-bottom: 0.4rem;">
+                            Instructions de modification
+                        </label>
+                        <textarea class="form-textarea" id="modify-instructions-montage" rows="3"
+                            placeholder="Ex: Le volume du narrateur est trop bas, les bruitages couvrent les voix..."></textarea>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                            <button class="btn btn-primary" onclick="regenerateStep('montage')">
+                                &#128260; Relancer audio + montage
+                            </button>
+                            <button class="btn btn-secondary" onclick="toggleModifyZone('montage')">
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Publication ─────────────────────────────────── -->
+                <hr style="border: none; border-top: 2px solid var(--border); margin: 1.5rem 0;">
+                <div>
+                    <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
+                        La publication n'est possible que si le <strong>script</strong> ET le <strong>montage</strong> sont approuvés.
+                    </p>
+                    <button class="btn btn-primary" onclick="validateStep('publication', 'publish')" id="btn-val-publish" disabled>
+                        &#128225; Publier l'épisode
+                    </button>
                 </div>
             </div>
         </div>
@@ -2995,31 +3009,50 @@ async function loadEpisodeDetail(episodeId) {
         /* Activer/désactiver les boutons selon l'état du workflow */
         const audioFile = ep.audio_preview || ep.audio_hq;
         const btnValScript = document.getElementById('btn-val-script');
+        const btnModScript = document.getElementById('btn-mod-script');
         const btnRejScript = document.getElementById('btn-rej-script');
         const btnValMontage = document.getElementById('btn-val-montage');
+        const btnModMontage = document.getElementById('btn-mod-montage');
         const btnRejMontage = document.getElementById('btn-rej-montage');
-        const btnValMeta = document.getElementById('btn-val-meta');
         const btnValPublish = document.getElementById('btn-val-publish');
+        const sectionScript = document.getElementById('val-section-script');
+        const sectionMontage = document.getElementById('val-section-montage');
 
-        /* Script: actif seulement si script présent et pas encore validé */
+        /* Masquer les zones de modification quand on charge un épisode */
+        var modZoneScript = document.getElementById('modify-zone-script');
+        var modZoneMontage = document.getElementById('modify-zone-montage');
+        if (modZoneScript) modZoneScript.style.display = 'none';
+        if (modZoneMontage) modZoneMontage.style.display = 'none';
+
+        /* Section script: visible seulement si un script existe */
+        if (sectionScript) sectionScript.style.display = hasScript ? 'block' : 'none';
+
+        /* Script: actif si script présent et pas encore validé */
         if (btnValScript) {
             btnValScript.disabled = !hasScript || scriptOk;
-            btnValScript.title = scriptOk ? 'Script déjà validé' : (!hasScript ? 'Pas de script disponible' : '');
+            btnValScript.title = scriptOk ? 'Script déjà validé' : '';
+        }
+        if (btnModScript) {
+            btnModScript.disabled = !hasScript;
+            btnModScript.style.display = scriptOk ? 'none' : '';
         }
         if (btnRejScript) {
-            btnRejScript.disabled = !hasScript || scriptOk;
+            btnRejScript.disabled = !hasScript;
+            btnRejScript.style.display = scriptOk ? 'none' : '';
         }
+
+        /* Section montage: visible seulement si audio existe */
+        if (sectionMontage) sectionMontage.style.display = audioFile ? 'block' : 'none';
 
         /* Montage: actif seulement si audio présent et script validé */
         if (!audioFile || !scriptOk) {
-            if (btnValMontage) {
-                btnValMontage.disabled = true;
-                btnValMontage.title = !scriptOk ? 'Validez d\'abord le script' : 'Pas d\'audio disponible — impossible de valider le montage';
-            }
+            if (btnValMontage) { btnValMontage.disabled = true; }
+            if (btnModMontage) { btnModMontage.disabled = true; }
             if (btnRejMontage) { btnRejMontage.disabled = true; }
         } else {
-            if (btnValMontage) { btnValMontage.disabled = montageOk; btnValMontage.title = montageOk ? 'Montage déjà validé' : ''; }
-            if (btnRejMontage) { btnRejMontage.disabled = montageOk; }
+            if (btnValMontage) { btnValMontage.disabled = montageOk; }
+            if (btnModMontage) { btnModMontage.style.display = montageOk ? 'none' : ''; btnModMontage.disabled = false; }
+            if (btnRejMontage) { btnRejMontage.style.display = montageOk ? 'none' : ''; btnRejMontage.disabled = false; }
         }
 
         /* Publication: actif seulement si script ET montage validés */
@@ -3236,6 +3269,92 @@ async function continueProduction(episodeId, phase) {
     } catch (err) {
         showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
         if (zone) zone.style.display = 'none';
+    }
+}
+
+function toggleModifyZone(step) {
+    var zone = document.getElementById('modify-zone-' + step);
+    if (!zone) return;
+    zone.style.display = (zone.style.display === 'none') ? 'block' : 'none';
+}
+
+async function regenerateStep(step) {
+    if (!_currentEpisodeId) return;
+    var textarea = document.getElementById('modify-instructions-' + step);
+    var instructions = textarea ? textarea.value.trim() : '';
+    if (!instructions) {
+        showAlert('alert-validation', 'error', 'Veuillez entrer vos instructions de modification.');
+        return;
+    }
+
+    /* Masquer la zone de modification */
+    toggleModifyZone(step);
+    showLoading('Régénération du ' + step + ' en cours...');
+
+    try {
+        var launch = await apiCall('/api/episode/' + _currentEpisodeId + '/regenerate', {
+            step: step, instructions: instructions
+        });
+        if (!launch.job_id) {
+            hideLoading();
+            showAlert('alert-validation', 'error', launch.error || 'Erreur inconnue');
+            return;
+        }
+        var result = await pollJob(launch.job_id, 1920);
+
+        if (result.status === 'ok') {
+            var label = (step === 'script') ? 'Script' : 'Audio + montage';
+            showAlert('alert-validation', 'success', label + ' régénéré avec vos instructions. Vérifiez le résultat.');
+            if (textarea) textarea.value = '';
+        } else {
+            showAlert('alert-validation', 'error', 'Erreur : ' + (result.error || result.stderr || 'inconnue'));
+        }
+
+        await loadEpisodeDetail(_currentEpisodeId);
+        await loadValidationEpisodes();
+        _dashboardDirty = true;
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+    } finally {
+        hideLoading();
+    }
+}
+
+async function rejectAndArchive(step) {
+    if (!_currentEpisodeId) return;
+    var label = (step === 'script') ? 'le script' : 'le montage';
+    if (!confirm('Refuser ' + label + ' et archiver l\'épisode ' + _currentEpisodeId + ' ?\n\nLes fichiers seront déplacés dans output/archive/ (récupérable).')) {
+        return;
+    }
+
+    var comment = document.getElementById('val-comment').value.trim();
+    try {
+        /* 1. Marquer comme rejeté dans le rapport */
+        await fetch('/api/episode/' + _currentEpisodeId + '/validate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ step: step, action: 'reject', comment: comment || 'Refusé par le producteur' })
+        });
+
+        /* 2. Archiver l'épisode */
+        var resp = await fetch('/api/episode/' + _currentEpisodeId + '/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ raison: comment || 'Refusé à l\'étape ' + step })
+        });
+        var data = await resp.json();
+
+        if (resp.ok) {
+            showAlert('alert-validation', 'warning', 'Épisode ' + _currentEpisodeId + ' refusé et archivé.');
+            document.getElementById('val-detail').style.display = 'none';
+            _currentEpisodeId = null;
+            await loadValidationEpisodes();
+            _dashboardDirty = true;
+        } else {
+            showAlert('alert-validation', 'error', data.error || 'Erreur lors de l\'archivage.');
+        }
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
     }
 }
 

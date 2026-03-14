@@ -986,6 +986,185 @@ def api_continue_production(episode_id):
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "publication"})
 
 
+@app.route("/api/episode/<episode_id>/regenerate", methods=["POST"])
+def api_regenerate_episode(episode_id):
+    """Relance une étape de production avec les instructions du producteur.
+
+    Permet de modifier le script ou le montage en fournissant des corrections
+    textuelles. L'étape est relancée et le résultat remplace le précédent.
+
+    Body JSON:
+        {"step": "script"|"montage", "instructions": "Rends le dialogue plus drôle..."}
+    """
+    import json as _json
+
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format d'identifiant invalide (attendu: S01E01)"}), 400
+
+    body = request.get_json(force=True)
+    step = body.get("step", "").strip()
+    instructions = body.get("instructions", "").strip()
+
+    if step not in ("script", "montage"):
+        return jsonify({"error": "Étape invalide. Valeurs acceptées : script, montage"}), 400
+    if not instructions:
+        return jsonify({"error": "Instructions requises pour la modification."}), 400
+
+    if step == "script":
+        # Sauvegarder les instructions pour le pipeline
+        corrections_path = config.SCRIPTS_DIR / f"{episode_id}_web_corrections.txt"
+        corrections_path.parent.mkdir(parents=True, exist_ok=True)
+        corrections_path.write_text(instructions, encoding="utf-8")
+
+        # Charger les paramètres originaux depuis le rapport ou checkpoint
+        params = _load_episode_params(episode_id)
+        if not params:
+            corrections_path.unlink(missing_ok=True)
+            return jsonify({"error": f"Paramètres introuvables pour {episode_id}. Relancez la production manuellement."}), 404
+
+        # Réinitialiser le flag de validation script dans le rapport
+        rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        if rapport_path.exists():
+            try:
+                with open(rapport_path, "r", encoding="utf-8") as f:
+                    rapport = _json.load(f)
+                rapport.get("etapes", {}).get("script", {}).pop("validation_humaine", None)
+                rapport.setdefault("decisions_humaines", []).append({
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "regeneration_script_web",
+                    "instructions": instructions,
+                })
+                with open(rapport_path, "w", encoding="utf-8") as f:
+                    _json.dump(rapport, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+        cmd = [
+            "produire",
+            "-e", params["titre"],
+            "-s", str(params["saison"]),
+            "-n", str(params["numero"]),
+            "-r", params["resume"],
+            "-t", params.get("type_episode", "standard"),
+            "--auto",
+            "--stop-after", "script",
+        ]
+        if params.get("morale"):
+            cmd.extend(["-m", params["morale"]])
+
+        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+        return jsonify({"status": "accepted", "job_id": job_id, "phase": "script"})
+
+    elif step == "montage":
+        # Relancer audio+montage depuis le checkpoint
+        checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        if not checkpoint_path.exists():
+            return jsonify({"error": f"Checkpoint introuvable pour {episode_id}."}), 404
+
+        # Sauvegarder les instructions dans le rapport
+        rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        if rapport_path.exists():
+            try:
+                with open(rapport_path, "r", encoding="utf-8") as f:
+                    rapport = _json.load(f)
+                rapport.get("etapes", {}).get("montage", {}).pop("validation_humaine", None)
+                rapport.setdefault("decisions_humaines", []).append({
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "regeneration_montage_web",
+                    "instructions": instructions,
+                })
+                with open(rapport_path, "w", encoding="utf-8") as f:
+                    _json.dump(rapport, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+        # Forcer la reprise depuis l'étape audio en réécrivant le checkpoint
+        try:
+            with open(checkpoint_path, "r", encoding="utf-8") as f:
+                cp = _json.load(f)
+            cp["etape"] = "audio"
+            with open(checkpoint_path, "w", encoding="utf-8") as f:
+                _json.dump(cp, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            return jsonify({"error": f"Erreur lecture checkpoint : {e}"}), 500
+
+        cmd = [
+            "reprendre",
+            "-c", str(checkpoint_path),
+            "--auto",
+            "--stop-after", "montage",
+        ]
+        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE)
+        return jsonify({"status": "accepted", "job_id": job_id, "phase": "montage"})
+
+
+def _load_episode_params(episode_id):
+    """Charge les paramètres de production d'un épisode depuis le checkpoint ou le rapport."""
+    import json as _json
+
+    # 1. Essayer le checkpoint
+    checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    if checkpoint_path.exists():
+        try:
+            with open(checkpoint_path, "r", encoding="utf-8") as f:
+                cp = _json.load(f)
+            data = cp.get("data", {})
+            if data.get("titre"):
+                return data
+        except Exception:
+            pass
+
+    # 2. Essayer le rapport
+    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+    if rapport_path.exists():
+        try:
+            with open(rapport_path, "r", encoding="utf-8") as f:
+                rapport = _json.load(f)
+            if rapport.get("titre"):
+                # Extraire saison/numero depuis episode_id
+                import re as _re
+                m = _re.match(r'S(\d+)E(\d+)', episode_id)
+                saison = int(m.group(1)) if m else 1
+                numero = int(m.group(2)) if m else 1
+                return {
+                    "titre": rapport["titre"],
+                    "resume": rapport.get("resume", ""),
+                    "saison": saison,
+                    "numero": numero,
+                    "morale": rapport.get("morale", ""),
+                    "type_episode": rapport.get("type_episode", "standard"),
+                }
+        except Exception:
+            pass
+
+    # 3. Essayer la DB
+    if _DB_AVAILABLE:
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT titre, resume, type_episode, morale "
+                    "FROM episodes WHERE episode_id = %s LIMIT 1",
+                    (episode_id,),
+                )
+                row = cur.fetchone()
+            if row:
+                import re as _re
+                m = _re.match(r'S(\d+)E(\d+)', episode_id)
+                return {
+                    "titre": row["titre"],
+                    "resume": row.get("resume", ""),
+                    "saison": int(m.group(1)) if m else 1,
+                    "numero": int(m.group(2)) if m else 1,
+                    "morale": row.get("morale", ""),
+                    "type_episode": row.get("type_episode", "standard"),
+                }
+        except Exception:
+            pass
+
+    return None
+
+
 def _handle_publication(episode_id, comment=""):
     """Gère la publication d'un épisode validé via le web."""
     import json as _json

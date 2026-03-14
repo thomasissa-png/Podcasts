@@ -1732,6 +1732,20 @@ def _pipeline_inner(
         scripteur = Scripteur()
         corrections = None
 
+        # Charger les corrections soumises depuis le web (modification demandée)
+        web_corrections_path = config.SCRIPTS_DIR / f"{episode_id}_web_corrections.txt"
+        if web_corrections_path.exists():
+            try:
+                web_text = web_corrections_path.read_text(encoding="utf-8").strip()
+                if web_text:
+                    corrections = web_text
+                    console.print(
+                        f"  [bold cyan]Corrections du producteur :[/bold cyan] {web_text[:200]}"
+                    )
+                web_corrections_path.unlink()  # Usage unique
+            except Exception as e:
+                logger.warning("Erreur lecture corrections web : %s", e)
+
         if max_iterations_review < 1:
             raise ValueError(f"max_iterations_review doit être >= 1, reçu {max_iterations_review}")
 
