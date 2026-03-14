@@ -340,6 +340,16 @@ BEGIN
     END IF;
 END $$;
 
+-- Migration : ajouter deleted_at pour soft-delete (remplace le hard DELETE)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'historique_episodes'
+                   AND column_name = 'deleted_at') THEN
+        ALTER TABLE historique_episodes ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
+    END IF;
+END $$;
+
 -- ══════════════════════════════════════════════════════════════════════════════
 -- Table: preferences_producteur — Mémoire persistante des préférences
 -- ══════════════════════════════════════════════════════════════════════════════

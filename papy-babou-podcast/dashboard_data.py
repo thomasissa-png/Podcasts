@@ -10,6 +10,7 @@ Stratégie de persistance :
 
 import json
 import logging
+import time
 from pathlib import Path
 
 import config
@@ -33,21 +34,36 @@ def _db_disponible() -> bool:
 # ── Historique ─────────────────────────────────────────────────────────────────
 
 def charger_historique_complet() -> list[dict]:
-    """Charge tout l'historique des épisodes (DB prioritaire, JSON fallback)."""
-    try:
-        from database import DATABASE_URL
-        if DATABASE_URL:
-            from db_models import HistoriqueRepo
-            rows = HistoriqueRepo.charger_tout()
-            if rows:
-                return rows
-    except Exception:
-        pass
+    """Charge tout l'historique des épisodes (DB prioritaire, JSON fallback).
 
+    Retente une fois la connexion DB en cas d'échec (Neon scale-to-zero
+    peut mettre quelques secondes à se réveiller après une période d'inactivité).
+    """
+    for attempt in range(2):
+        try:
+            from database import DATABASE_URL
+            if DATABASE_URL:
+                from db_models import HistoriqueRepo
+                rows = HistoriqueRepo.charger_tout()
+                # rows peut être [] légitimement (aucun épisode encore produit)
+                if rows is not None:
+                    return rows
+        except Exception as e:
+            logger.warning(
+                "Échec chargement historique DB (tentative %d/2) : %s",
+                attempt + 1, e,
+            )
+            if attempt == 0:
+                time.sleep(1)  # Laisser Neon se réveiller
+
+    # Fallback JSON (rétrocompatibilité / DB indisponible)
     historique_path = config.HISTORIQUE_DIR / "historique_episodes.json"
     if historique_path.exists():
-        with open(historique_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(historique_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning("Échec chargement historique JSON : %s", e)
     return []
 
 

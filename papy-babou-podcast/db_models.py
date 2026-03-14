@@ -696,13 +696,14 @@ class HistoriqueRepo:
                 prefix = f"S{saison:02d}"
                 cur.execute(
                     "SELECT * FROM historique_episodes "
-                    "WHERE episode_id LIKE %s "
+                    "WHERE episode_id LIKE %s AND deleted_at IS NULL "
                     "ORDER BY date_production ASC",
                     (f"{prefix}%",),
                 )
             else:
                 cur.execute(
                     "SELECT * FROM historique_episodes "
+                    "WHERE deleted_at IS NULL "
                     "ORDER BY date_production ASC"
                 )
             rows = cur.fetchall()

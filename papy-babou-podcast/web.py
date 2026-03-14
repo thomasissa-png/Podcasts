@@ -594,9 +594,10 @@ def api_delete_episode(episode_id):
                 if cur.rowcount > 0:
                     supprime["db"].append("episodes")
 
-                # Soft-delete de l'historique DB
+                # Soft-delete de l'historique DB (récupérable)
                 cur.execute(
-                    "DELETE FROM historique_episodes WHERE episode_id = %s",
+                    "UPDATE historique_episodes SET deleted_at = NOW() "
+                    "WHERE episode_id = %s AND deleted_at IS NULL",
                     (episode_id,),
                 )
                 if cur.rowcount > 0:
