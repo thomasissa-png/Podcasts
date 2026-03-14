@@ -10,3 +10,4 @@ soundfile>=0.12.1
 numpy>=1.24.0
 psycopg2-binary>=2.9.9
 flask>=3.0.0
+gunicorn>=21.2.0

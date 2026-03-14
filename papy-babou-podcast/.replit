@@ -1,4 +1,4 @@
-run = "python web.py"
+run = "gunicorn -c gunicorn.conf.py web:app"
 entrypoint = "web.py"
 language = "python3"
 
@@ -13,4 +13,4 @@ localPort = 5000
 externalPort = 80
 
 [deployment]
-run = ["sh", "-c", "python web.py"]
+run = ["sh", "-c", "gunicorn -c gunicorn.conf.py web:app"]

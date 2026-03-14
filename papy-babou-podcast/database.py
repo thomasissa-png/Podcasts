@@ -40,14 +40,44 @@ def get_pool() -> psycopg2.pool.ThreadedConnectionPool:
                     minconn=2,
                     maxconn=10,
                     dsn=DATABASE_URL,
+                    # TCP keepalives pour détecter les connexions mortes
+                    keepalives=1,
+                    keepalives_idle=30,
+                    keepalives_interval=10,
+                    keepalives_count=5,
                 )
                 logger.info("Pool PostgreSQL initialisé (2-10 connexions)")
     return _pool
 
 
+def _ping_connection(conn) -> bool:
+    """Vérifie qu'une connexion est encore vivante (pre-ping).
+
+    Retourne True si la connexion est utilisable, False sinon.
+    psycopg2 utilise conn.closed == 0 pour une connexion ouverte.
+    """
+    try:
+        # psycopg2: closed est un int (0=ouvert, >0=fermé)
+        closed_attr = getattr(conn, "closed", 0)
+        if isinstance(closed_attr, int) and closed_attr != 0:
+            return False
+        # Exécuter un SELECT 1 léger pour détecter les connexions périmées
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+        # Annuler toute transaction ouverte par le ping
+        conn.rollback()
+        return True
+    except Exception:
+        return False
+
+
 @contextmanager
 def get_conn():
     """Context manager pour obtenir une connexion du pool.
+
+    Vérifie que la connexion est vivante (pre-ping). Si elle est périmée,
+    la ferme, en obtient une nouvelle du pool, et réessaie une fois.
 
     Usage:
         with get_conn() as conn:
@@ -57,13 +87,42 @@ def get_conn():
     """
     pool = get_pool()
     conn = pool.getconn()
+
+    # Pre-ping : vérifier que la connexion n'est pas périmée
+    if not _ping_connection(conn):
+        logger.warning("Connexion PostgreSQL périmée détectée, renouvellement...")
+        try:
+            pool.putconn(conn, close=True)
+        except Exception:
+            # Si putconn échoue aussi, on ignore — on va en chercher une neuve
+            pass
+        conn = pool.getconn()
+        if not _ping_connection(conn):
+            # Deuxième échec : recréer tout le pool
+            logger.error("Pool PostgreSQL corrompu, recréation...")
+            try:
+                pool.putconn(conn, close=True)
+            except Exception:
+                pass
+            _reset_pool()
+            pool = get_pool()
+            conn = pool.getconn()
+
     try:
         yield conn
     except Exception:
         conn.rollback()
         raise
     finally:
-        pool.putconn(conn)
+        try:
+            pool.putconn(conn)
+        except Exception:
+            # Connexion irrécupérable — la fermer silencieusement
+            logger.warning("Impossible de remettre la connexion dans le pool")
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 @contextmanager
@@ -89,6 +148,22 @@ def close_pool() -> None:
         _pool.closeall()
         _pool = None
         logger.info("Pool PostgreSQL fermé")
+
+
+def _reset_pool() -> None:
+    """Ferme le pool existant et force sa recréation au prochain appel.
+
+    Utilisé quand le pool est corrompu (toutes les connexions périmées).
+    """
+    global _pool
+    with _pool_lock:
+        if _pool is not None:
+            try:
+                _pool.closeall()
+            except Exception:
+                pass
+            _pool = None
+            logger.info("Pool PostgreSQL réinitialisé (sera recréé au prochain appel)")
 
 
 # ── Schéma de la base de données ────────────────────────────────────────────────

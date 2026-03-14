@@ -200,6 +200,10 @@ python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 
 ### When modifying database.py
 - Table names in `obtenir_stats_db` use `psycopg2.sql.Identifier` (not f-strings)
+- `get_conn()` has pre-ping: checks connection liveness before returning it from pool
+- Stale connections are automatically replaced; if all connections are dead, pool is reset via `_reset_pool()`
+- Pool uses TCP keepalives (`keepalives_idle=30`) to detect dead connections early
+- `_ping_connection()` runs `SELECT 1` + rollback to test without side effects
 
 ### When modifying planificateur.py
 - Variable season length via `nb_episodes` parameter (default 10)
@@ -371,6 +375,13 @@ Clear visual separation between single-episode and season production workflows:
 - `publisher.py` now imports `time` (for retry sleep) and `fichier_lock` from utils
 - `_mettre_a_jour_rss()` delegates to `_ecrire_rss()` under lock
 - `_upload_buzzsprout()` has retry loop — mock `time.sleep` in tests
+
+## Deployment (Gunicorn)
+- `gunicorn.conf.py`: gthread workers (2 workers × 4 threads = 8 concurrent requests)
+- Timeout: 1800s (30min) because production subprocesses block the thread during `proc.communicate()`
+- `post_fork` hook: resets PostgreSQL pool after fork (psycopg2 pool is not fork-safe)
+- `.replit` uses `gunicorn -c gunicorn.conf.py web:app` (not `python web.py`)
+- Env vars: `GUNICORN_WORKERS`, `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`, `GUNICORN_LOG_LEVEL`
 
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`
