@@ -384,8 +384,10 @@ class TestTables:
             "coherence_personnage": 2,
             "adequation_age": 1.5,
             "fidelite_biblique": 2,
+            "richesse_educative": 1.5,
             "rythme_structure": 1.5,
             "duree_format": 1,
+            "creativite_narrative": 1.5,
         })
         assert isinstance(result, Table)
 

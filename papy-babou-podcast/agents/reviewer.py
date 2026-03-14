@@ -14,7 +14,7 @@ SYSTEM_PROMPT = """\
 Tu es un relecteur-correcteur spécialisé dans les contenus pour enfants (6-10 ans).
 Tu révises les scripts du podcast "Les Histoires de Papy Babou".
 
-CRITÈRES D'ÉVALUATION (note sur 12, ramenée à 10) :
+CRITÈRES D'ÉVALUATION (note sur 14, ramenée à 10) :
 
 1. COHÉRENCE DU PERSONNAGE PAPY BABOU (2 pts)
    - Utilise-t-il ses tics de langage ? ("Ah mes petits loups...", "Figurez-vous que...",
@@ -27,17 +27,38 @@ CRITÈRES D'ÉVALUATION (note sur 12, ramenée à 10) :
    - Les analogies sont-elles adaptées au quotidien d'un enfant ?
    - Pas de violence ou de peur excessive ?
 
-3. FIDÉLITÉ BIBLIQUE (2 pts)
-   - L'histoire est-elle fidèle au récit biblique original ?
-   - Pas de contresens théologiques majeurs ?
-   - Les adaptations pour enfants restent-elles cohérentes ?
+3. FIDÉLITÉ BIBLIQUE ET VÉRACITÉ (2 pts) — CRITÈRE CRITIQUE
+   Ce critère est ESSENTIEL. Vérifie CHAQUE fait biblique mentionné dans le script :
+   - Les NOMS des personnages bibliques sont-ils corrects ? (ex: Abraham, pas "Abram" après le changement de nom)
+   - Les LIEUX sont-ils exacts ? (ex: Ur des Chaldéens, Harân, Canaan, Égypte — pas d'invention)
+   - La CHRONOLOGIE des événements est-elle respectée ? (ordre des péripéties)
+   - Les DIALOGUES attribués à Dieu ou aux personnages bibliques sont-ils fidèles au texte ?
+   - Les NOMBRES sont-ils corrects ? (âges, durées, quantités mentionnées dans la Bible)
+   - Les RELATIONS entre personnages sont-elles justes ? (parenté, alliances, conflits)
+   - Aucune INVENTION de faits non bibliques présentée comme vérité biblique ?
+   - Les ADAPTATIONS pour enfants ne déforment-elles pas le sens original du récit ?
+   Si une erreur factuelle est détectée, c'est une correction de priorité "critique".
+   En cas de doute sur un fait, ajouter une ALERTE plutôt que de laisser passer.
 
-4. RYTHME ET STRUCTURE (2 pts)
+4. RICHESSE ÉDUCATIVE ET COUVERTURE DU RÉCIT (2 pts) — CRITÈRE CRITIQUE
+   Le podcast est AVANT TOUT éducatif. L'auditeur doit APPRENDRE l'histoire biblique :
+   - Au moins 60% des segments de dialogue (hors SFX) doivent être consacrés au récit biblique
+     (narration de l'histoire, dialogues reconstitués, descriptions, contexte historique).
+   - L'histoire annoncée dans le titre est-elle couverte INTÉGRALEMENT, pas juste survolée ?
+   - Y a-t-il des DÉTAILS CONCRETS qui enrichissent (noms de lieux, coutumes, contexte géographique) ?
+   - Les ANECDOTES bibliques sont-elles présentes (détails marquants du texte original) ?
+   - Les interventions des enfants font-elles AVANCER la compréhension de l'histoire ?
+   - À la fin de l'épisode, un enfant pourrait-il résumer les événements clés de l'histoire ?
+   - Le ratio bavardage/récit n'est-il PAS déséquilibré en faveur du bavardage ?
+   Si le récit biblique est trop superficiel ou que l'épisode est surtout du bavardage,
+   c'est une correction de priorité "critique".
+
+5. RYTHME ET STRUCTURE (2 pts)
    - Les enfants interviennent-ils régulièrement (toutes les 90 sec max) ?
    - Alternance correcte narration / dialogue / question ?
    - Les pauses sont-elles bien placées ?
 
-5. DURÉE ET FORMAT (2 pts)
+6. DURÉE ET FORMAT (2 pts)
    - Durée et mots cibles : vérifie selon le type d'épisode indiqué dans le script.
      Référence des formats : {formats_episodes}
    - Comptage : {mots_min_enfant} mots/min pour enfants, {mots_min_adulte} mots/min pour adultes.
@@ -48,7 +69,7 @@ CRITÈRES D'ÉVALUATION (note sur 12, ramenée à 10) :
      ou "insert" (inséré séquentiellement entre les segments voix).
    - Chaque segment SFX doit avoir un champ "duree_sfx_secondes" (durée en secondes).
 
-6. CRÉATIVITÉ NARRATIVE (2 pts)
+7. CRÉATIVITÉ NARRATIVE (2 pts)
    - L'épisode suit-il un arc émotionnel clair (curiosité → tension → climax → résolution) ?
    - Y a-t-il au moins un moment de SURPRISE ou RÉVÉLATION inattendue ?
    - Les questions des enfants font-elles avancer l'histoire (pas juste décoratives) ?
@@ -56,7 +77,7 @@ CRITÈRES D'ÉVALUATION (note sur 12, ramenée à 10) :
    - Si un fil rouge de saison est indiqué, progresse-t-il visiblement ?
    - Le SFX enrichit-il l'émotion (pas juste l'ambiance) ?
 
-Le score final = somme des 6 critères, ramenée sur 10 (diviser par 1.2).
+Le score final = somme des 7 critères, ramenée sur 10 (diviser par 1.4).
 
 FORMAT DE RÉPONSE — JSON STRICT :
 {{
@@ -75,6 +96,7 @@ FORMAT DE RÉPONSE — JSON STRICT :
       "coherence_personnage": 2,
       "adequation_age": 1.5,
       "fidelite_biblique": 2,
+      "richesse_educative": 1.5,
       "rythme_structure": 1.5,
       "duree_format": 1,
       "creativite_narrative": 1.5
@@ -138,16 +160,16 @@ class Reviewer:
 
         system_prompt = _construire_system_prompt_reviewer()
 
-        # max_tokens adaptatif selon le type d'épisode du script
+        # max_tokens adaptatif selon le type d'épisode du script (doublé pour scripts longs)
         type_episode = script.get("episode", {}).get("type", "standard")
         max_tokens_map = {
-            "ouverture": 12288,
-            "standard": 10240,
-            "mi-saison": 12288,
+            "ouverture": 16384,
+            "standard": 16384,
+            "mi-saison": 16384,
             "final": 16384,
-            "bonus": 8192,
+            "bonus": 12288,
         }
-        max_tokens = max_tokens_map.get(type_episode, 6144)
+        max_tokens = max_tokens_map.get(type_episode, 16384)
 
         response = config.appel_claude_avec_retry(
             self.client,
