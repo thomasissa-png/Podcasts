@@ -2410,6 +2410,10 @@ def _pipeline_inner(
             publier = False
             if not auto:
                 publier = _validation_publication(meta, episode_id, rapport=rapport)
+            elif rapport.get("etapes", {}).get("publication", {}).get("validation_humaine"):
+                # Web validation already confirmed — proceed with publication
+                publier = True
+                logger.info("Publication auto-validée (validation_humaine=True dans rapport)")
 
             if publier:
                 # Garde-fou ultime : jamais de publication sans relecture ET écoute

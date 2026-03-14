@@ -983,6 +983,21 @@ def api_continue_production(episode_id):
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "audio"})
 
     elif phase == "publication":
+        # C1: Injecter validation_humaine dans le checkpoint pour que
+        # le pipeline en mode --auto détecte la validation web
+        import json as _json
+        try:
+            with fichier_lock(checkpoint_path):
+                with open(checkpoint_path, "r", encoding="utf-8") as f:
+                    cp_data = _json.load(f)
+                rapport_cp = cp_data.get("data", {}).get("rapport", {})
+                rapport_cp.setdefault("etapes", {}).setdefault("publication", {})
+                rapport_cp["etapes"]["publication"]["validation_humaine"] = True
+                with open(checkpoint_path, "w", encoding="utf-8") as f:
+                    _json.dump(cp_data, f, ensure_ascii=False, indent=2)
+        except (OSError, ValueError) as e:
+            logger.warning("Impossible de mettre à jour le checkpoint pour publication: %s", e)
+
         # Reprendre depuis métadonnées jusqu'à la fin
         cmd = [
             "reprendre",
