@@ -22,12 +22,14 @@ reuse_port = True
 # de polling du dashboard pendant qu'un thread attend un subprocess de production.
 worker_class = "gthread"
 
-# Sur Replit (ressources limitées) : 2 workers suffisent.
-# En local : min(2 * CPU + 1, 4) pour ne pas surcharger.
-workers = int(os.getenv("GUNICORN_WORKERS", "2"))
+# IMPORTANT : 1 seul worker car l'état des jobs (_jobs dict) est en mémoire.
+# Avec 2+ workers (= processus séparés), un job créé dans le worker A
+# est introuvable par le worker B → "Job introuvable" sur le polling.
+# La concurrence est assurée par les threads (4 threads = 4 requêtes simultanées).
+workers = int(os.getenv("GUNICORN_WORKERS", "1"))
 
-# Threads par worker : permet de gérer le polling concurrent.
-# 4 threads = 2 workers × 4 threads = 8 requêtes simultanées.
+# Threads par worker : permet de gérer le polling concurrent pendant
+# qu'un thread attend un subprocess de production (proc.communicate).
 threads = int(os.getenv("GUNICORN_THREADS", "4"))
 
 # ── Timeouts ─────────────────────────────────────────────────────────────────
