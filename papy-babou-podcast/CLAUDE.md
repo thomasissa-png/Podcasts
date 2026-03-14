@@ -395,6 +395,28 @@ Clear visual separation between single-episode and season production workflows:
 - Form inputs use `font-size: 1rem` on mobile to prevent iOS zoom on focus
 - Validation action buttons stack vertically on mobile (`.val-actions-grid` → `flex-direction: column`)
 
+## Season Production Pipeline Audit Fixes (Session 8)
+
+### Production Blockers (PostgreSQL + Gunicorn)
+- **PostgreSQL pre-ping**: `_ping_connection()` tests connection liveness before returning from pool; stale connections auto-replaced
+- **Pool reset**: `_reset_pool()` recreates entire pool when all connections are dead
+- **TCP keepalives**: `keepalives_idle=30` on pool creation to detect dead connections early
+- **Gunicorn gthread**: 2 workers × 4 threads = 8 concurrent requests; 1800s timeout for long production runs
+- **post_fork hook**: Resets psycopg2 pool after fork (not fork-safe)
+
+### Web Dashboard Fixes
+- **W1**: Job result TTL caching — jobs kept 60s after read (was deleted on first poll, causing race conditions)
+- **W4**: Delete route uses `_archiver()` helper that logs failures instead of silent `except: pass`
+- **W7**: Deleted episode guard returns 410 Gone before validation (`_is_episode_deleted()` check)
+- **W16**: Montage validation button disabled in frontend when no audio exists (prevents impossible validation)
+
+### Pipeline Fixes
+- **M5**: Forced montage validation option when no preview file exists (was permanently blocking publication)
+- **M9**: Checkpoint saved after remontage loop (was losing remontage work on crash)
+- **Reviewer type field**: Scripteur now injects `type` into generated script JSON so reviewer uses correct adaptive thresholds (was always falling back to "standard" seuil=7)
+- **Planificateur episode count**: Validates generated episode count matches `nb_episodes` parameter; truncates excess, errors on deficit
+- **Scripteur arc injection**: First episode of season gets character arc starting states injected into prompt (was missing emotional context for opening episode)
+
 ## Deployment (Gunicorn)
 - `gunicorn.conf.py`: gthread workers (2 workers × 4 threads = 8 concurrent requests)
 - Timeout: 1800s (30min) because production subprocesses block the thread during `proc.communicate()`

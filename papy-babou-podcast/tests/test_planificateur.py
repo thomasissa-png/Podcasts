@@ -200,6 +200,7 @@ class TestPlanificateurGeneration:
         plan = planificateur.planifier_saison(
             numero_saison=1,
             theme="Les grands voyages de la Bible",
+            nb_episodes=2,
         )
 
         assert plan["saison"]["theme"] == "Les grands voyages de la Bible"

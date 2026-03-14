@@ -358,6 +358,22 @@ def _construire_structure_narrative(
     if not previously_on:
         previously_on = "Scène d'ouverture directe (premier épisode ou pas de contexte précédent)."
 
+    # Inject character arc starting states for first episode of season
+    if (not historique or len(historique) == 0) and contexte_saison:
+        arcs = contexte_saison.get("saison", {}).get("arcs_personnages", {})
+        if arcs:
+            arc_lines = ["\nÉTATS INITIAUX DES PERSONNAGES (début de saison) :"]
+            for perso, arc in arcs.items():
+                nom = perso.replace("_", " ").title()
+                depart = arc.get("depart", "")
+                if depart:
+                    arc_lines.append(
+                        f"  - {nom} commence cette saison dans l'état : \"{depart}\". "
+                        f"Montre cet état dans ses réactions et dialogues."
+                    )
+            if len(arc_lines) > 1:
+                previously_on += "\n" + "\n".join(arc_lines)
+
     # Teasing
     teasing = ""
     if episode_plan and episode_plan.get("teasing_episode_suivant"):
@@ -639,6 +655,10 @@ class Scripteur:
             texte_brut = response.content[0].text.strip()
             script = parser_json_llm(texte_brut)
         self._valider_structure(script)
+
+        # Inject type_episode into script so reviewer can read it
+        if "type" not in script.get("episode", {}):
+            script.setdefault("episode", {})["type"] = type_episode
 
         nb_mots = self.compter_mots(script)
         mots_cible = format_ep["mots_cible"]

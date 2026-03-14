@@ -2961,8 +2961,19 @@ async function loadEpisodeDetail(episodeId) {
         statusHtml += '</div>';
         document.getElementById('val-detail-status').innerHTML = statusHtml;
 
-        /* Audio player */
+        /* W16: Disable montage validation button when no audio exists */
         const audioFile = ep.audio_preview || ep.audio_hq;
+        const btnValMontage = document.getElementById('btn-val-montage');
+        const btnRejMontage = document.getElementById('btn-rej-montage');
+        if (!audioFile) {
+            if (btnValMontage) { btnValMontage.disabled = true; btnValMontage.title = 'Pas d\'audio disponible — impossible de valider le montage'; }
+            if (btnRejMontage) { btnRejMontage.disabled = true; btnRejMontage.title = 'Pas d\'audio disponible'; }
+        } else {
+            if (btnValMontage) { btnValMontage.disabled = false; btnValMontage.title = ''; }
+            if (btnRejMontage) { btnRejMontage.disabled = false; btnRejMontage.title = ''; }
+        }
+
+        /* Audio player */
         if (audioFile) {
             let audioHtml = '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
                 + '<source src="/audio/episodes/' + escapeHtml(audioFile) + '" type="audio/mpeg">'

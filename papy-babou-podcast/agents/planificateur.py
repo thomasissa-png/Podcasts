@@ -234,6 +234,24 @@ class Planificateur:
             plan = parser_json_llm(texte_brut)
         self._valider_plan(plan)
 
+        # Validate episode count matches requested nb_episodes
+        nb_generes = len(plan["saison"]["episodes"])
+        if nb_generes != nb_episodes:
+            logger.warning(
+                "Le LLM a généré %d épisodes au lieu de %d demandés. "
+                "Auto-correction du plan.",
+                nb_generes, nb_episodes,
+            )
+            if nb_generes > nb_episodes:
+                # Truncate excess episodes
+                plan["saison"]["episodes"] = plan["saison"]["episodes"][:nb_episodes]
+            else:
+                raise ValueError(
+                    f"Le plan ne contient que {nb_generes} épisodes "
+                    f"au lieu de {nb_episodes} demandés. "
+                    f"Relancez la planification."
+                )
+
         logger.info(
             "Saison %d planifiée : %d épisodes, thème '%s'",
             numero_saison,

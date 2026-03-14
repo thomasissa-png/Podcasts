@@ -2113,6 +2113,15 @@ def _pipeline_inner(
                     resultat_montage=resultat_montage,
                     rapport=rapport,
                 )
+
+            # M9: Save checkpoint after remontage loop to preserve remontage work
+            sauvegarder_checkpoint(episode_id, "metadonnees", {
+                "episode_id": episode_id, "titre": titre, "resume": resume,
+                "saison": saison, "numero": numero, "morale": morale,
+                "type_episode": type_episode,
+                "dry_run": dry_run, "rapport": rapport,
+                "pubdate_offset_seconds": pubdate_offset_seconds,
+            })
         else:
             logger.warning(
                 "Pas de fichier preview disponible — validation du montage impossible."
@@ -2123,6 +2132,29 @@ def _pipeline_inner(
                 "[yellow]  La publication sera bloquée tant que le montage "
                 "n'aura pas été écouté et validé.[/yellow]"
             )
+            # M5: Allow forced validation when no preview exists
+            console.print(
+                "\n[bold yellow]  Vous pouvez forcer la validation du montage "
+                "sans écoute (non recommandé).[/bold yellow]\n"
+                "[dim]  Le fichier HQ existe mais aucun preview n'a été généré.[/dim]"
+            )
+            choix_force = Prompt.ask(
+                "  Forcer la validation sans écoute ?",
+                choices=["o", "n"],
+                default="n",
+            )
+            if choix_force == "o":
+                console.print(
+                    f"  [{Palette.ATTENTION}]{Icons.ATTENTION_IC} Montage validé SANS écoute "
+                    f"— vérifiez le fichier HQ manuellement : {chemin_hq}[/]"
+                )
+                rapport["etapes"]["montage"]["validation_humaine"] = True
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "montage",
+                    "action": "validation_forcee_sans_preview",
+                    "raison": "Aucun fichier preview disponible",
+                })
+                logger.info("Montage validé sans écoute (forcé par le producteur).")
 
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 

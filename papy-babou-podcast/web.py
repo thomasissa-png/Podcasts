@@ -133,12 +133,23 @@ _JOB_ID_RE = re.compile(r'^[0-9a-f]{12}$')
 
 
 def _gc_expired_jobs():
-    """Supprime les jobs termines dont le TTL est depasse (appele sous _jobs_lock)."""
+    """Supprime les jobs termines dont le TTL est depasse (appele sous _jobs_lock).
+
+    Les jobs lus par le client sont supprimés après _JOB_RESULT_TTL (60s).
+    Les jobs non lus sont supprimés après _JOB_TTL_SECONDS (1h).
+    """
     now = time.monotonic()
-    expired = [
-        jid for jid, job in _jobs.items()
-        if job["status"] == "done" and now - job.get("created_at", now) > _JOB_TTL_SECONDS
-    ]
+    expired = []
+    for jid, job in _jobs.items():
+        if job["status"] != "done":
+            continue
+        # Jobs lus par le client : TTL court
+        read_at = job.get("read_at")
+        if read_at and now - read_at > _JOB_RESULT_TTL:
+            expired.append(jid)
+        # Jobs non lus : TTL long
+        elif now - job.get("created_at", now) > _JOB_TTL_SECONDS:
+            expired.append(jid)
     for jid in expired:
         _jobs.pop(jid, None)
 
@@ -257,9 +268,16 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None):
     return job_id
 
 
+_JOB_RESULT_TTL = 60  # Garder les résultats de jobs terminés 60 secondes
+
+
 @app.route("/api/job-status/<job_id>")
 def api_job_status(job_id):
-    """Retourne le statut d'un job asynchrone."""
+    """Retourne le statut d'un job asynchrone.
+
+    Les jobs terminés sont gardés en cache pendant 60 secondes pour éviter
+    la perte de résultat si le client ne poll pas assez vite (race condition).
+    """
     if not _JOB_ID_RE.match(job_id):
         return jsonify({"error": "Format de job_id invalide"}), 400
     with _jobs_lock:
@@ -268,9 +286,9 @@ def api_job_status(job_id):
             return jsonify({"error": f"Job introuvable : {job_id}"}), 404
         if job["status"] == "running":
             return jsonify({"status": "running"})
-        # Job termine — copier le resultat et nettoyer atomiquement
+        # Job terminé — marquer comme lu mais garder en cache pour le TTL
         result = job["result"]
-        _jobs.pop(job_id, None)
+        job["read_at"] = time.monotonic()
     return jsonify(result)
 
 
@@ -422,6 +440,31 @@ def api_config():
         return jsonify({"error": str(e)}), 500
 
 
+def _is_episode_deleted(episode_id: str) -> bool:
+    """Vérifie si un épisode a été supprimé (soft-delete DB ou fichiers archivés)."""
+    # 1. Vérifier en DB
+    if _DB_AVAILABLE:
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT deleted_at FROM episodes "
+                    "WHERE episode_id = %s AND deleted_at IS NOT NULL LIMIT 1",
+                    (episode_id,),
+                )
+                if cur.fetchone():
+                    return True
+        except Exception:
+            pass
+
+    # 2. Vérifier si les fichiers ont été archivés
+    archive_dir = _THIS_DIR / "output" / "archive" / episode_id
+    if archive_dir.exists() and any(archive_dir.iterdir()):
+        return True
+
+    return False
+
+
 # ── Routes API — Suppression d'épisodes ──────────────────────────────────────
 
 
@@ -445,7 +488,16 @@ def api_delete_episode(episode_id):
     body = request.get_json(silent=True) or {}
     raison = body.get("raison", "").strip()
 
-    supprime = {"fichiers": [], "db": []}
+    supprime = {"fichiers": [], "echecs": [], "db": []}
+
+    def _archiver(src_path, category):
+        """Déplace un fichier vers l'archive. Log les échecs au lieu de les ignorer."""
+        try:
+            shutil.move(str(src_path), str(archive_dir / src_path.name))
+            supprime["fichiers"].append(f"{category}/{src_path.name}")
+        except Exception as e:
+            logger.warning("Échec archivage %s : %s", src_path, e)
+            supprime["echecs"].append(f"{category}/{src_path.name}: {e}")
 
     # 1. Archiver les fichiers locaux (déplacer vers output/archive/)
     archive_dir = _THIS_DIR / "output" / "archive" / episode_id
@@ -454,64 +506,35 @@ def api_delete_episode(episode_id):
     # Script
     for pattern in [f"{episode_id}_valide.json", f"{episode_id}_script*.json"]:
         for f in config.SCRIPTS_DIR.glob(pattern):
-            try:
-                shutil.move(str(f), str(archive_dir / f.name))
-                supprime["fichiers"].append(f"scripts/{f.name}")
-            except Exception:
-                pass
+            _archiver(f, "scripts")
 
     # Rapport
     rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
     if rapport_path.exists():
-        try:
-            shutil.move(str(rapport_path), str(archive_dir / rapport_path.name))
-            supprime["fichiers"].append(f"logs/{rapport_path.name}")
-        except Exception:
-            pass
-    # Rapport d'échec aussi
+        _archiver(rapport_path, "logs")
     for f in config.LOGS_DIR.glob(f"{episode_id}_rapport_echec*.json"):
-        try:
-            shutil.move(str(f), str(archive_dir / f.name))
-            supprime["fichiers"].append(f"logs/{f.name}")
-        except Exception:
-            pass
+        _archiver(f, "logs")
 
     # Audio (preview + HQ)
     episodes_dir = _THIS_DIR / "output" / "episodes"
     if episodes_dir.exists():
         for f in episodes_dir.glob(f"{episode_id}*"):
-            try:
-                shutil.move(str(f), str(archive_dir / f.name))
-                supprime["fichiers"].append(f"episodes/{f.name}")
-            except Exception:
-                pass
+            _archiver(f, "episodes")
 
     # Cover art
     if hasattr(config, "COVERS_DIR") and config.COVERS_DIR.exists():
         for f in config.COVERS_DIR.glob(f"{episode_id}_cover*"):
-            try:
-                shutil.move(str(f), str(archive_dir / f.name))
-                supprime["fichiers"].append(f"covers/{f.name}")
-            except Exception:
-                pass
+            _archiver(f, "covers")
 
     # Transcript
     if hasattr(config, "TRANSCRIPTS_DIR") and config.TRANSCRIPTS_DIR.exists():
         for f in config.TRANSCRIPTS_DIR.glob(f"{episode_id}_transcript*"):
-            try:
-                shutil.move(str(f), str(archive_dir / f.name))
-                supprime["fichiers"].append(f"transcripts/{f.name}")
-            except Exception:
-                pass
+            _archiver(f, "transcripts")
 
     # Checkpoint
     if hasattr(config, "CHECKPOINTS_DIR"):
         for f in config.CHECKPOINTS_DIR.glob(f"{episode_id}*checkpoint*"):
-            try:
-                shutil.move(str(f), str(archive_dir / f.name))
-                supprime["fichiers"].append(f"checkpoints/{f.name}")
-            except Exception:
-                pass
+            _archiver(f, "checkpoints")
 
     # 2. Supprimer de l'historique JSON
     historique_path = config.HISTORIQUE_DIR / "historique_episodes.json"
@@ -685,6 +708,10 @@ def api_validate_episode(episode_id):
 
     if not re.match(r'^S\d{2}E\d{2}$', episode_id):
         return jsonify({"error": "Format d'identifiant invalide"}), 400
+
+    # Vérifier que l'épisode n'a pas été supprimé
+    if _is_episode_deleted(episode_id):
+        return jsonify({"error": f"Épisode {episode_id} supprimé. Impossible de le valider."}), 410
 
     body = request.get_json(force=True)
     step = body.get("step", "").strip()
