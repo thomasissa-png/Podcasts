@@ -144,6 +144,7 @@ _job_processes = {} # {job_id: subprocess.Popen} — per-job process tracking
 _process_lock = threading.Lock()
 
 _JOB_TTL_SECONDS = 3600  # Supprimer les jobs termines apres 1 heure
+_JOB_RESULT_TTL = 300    # Garder les résultats lus pendant 5 minutes (onglet inactif/sleep)
 
 # Timeouts par type de job (configurables via env)
 _TIMEOUT_PRODUIRE = int(os.getenv("TIMEOUT_PRODUIRE", "1800"))          # 30 min
@@ -185,7 +186,7 @@ def _sync_rapport_to_db(episode_id: str, rapport: dict) -> None:
 def _gc_expired_jobs():
     """Supprime les jobs termines dont le TTL est depasse (appele sous _jobs_lock).
 
-    Les jobs lus par le client sont supprimés après _JOB_RESULT_TTL (60s).
+    Les jobs lus par le client sont supprimés après _JOB_RESULT_TTL (5min).
     Les jobs non lus sont supprimés après _JOB_TTL_SECONDS (1h).
     """
     now = time.monotonic()
@@ -336,8 +337,8 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
     return job_id
 
 
-_JOB_RESULT_TTL = 300  # Garder les résultats de jobs terminés 5 minutes
-# (le client peut être en sleep/onglet inactif — 60s était trop court)
+
+
 
 
 @app.route("/api/job-status/<job_id>")
@@ -1097,7 +1098,10 @@ def api_continue_production(episode_id):
                 with open(checkpoint_path, "w", encoding="utf-8") as f:
                     _json.dump(cp_data, f, ensure_ascii=False, indent=2)
         except (OSError, ValueError) as e:
-            logger.warning("Impossible de mettre à jour le checkpoint pour publication: %s", e)
+            # API-5.2: Retourner une erreur au lieu de continuer silencieusement
+            # (sans le flag, le pipeline refusera la publication)
+            logger.error("Impossible de mettre à jour le checkpoint pour publication: %s", e)
+            return jsonify({"error": f"Erreur mise à jour checkpoint pour publication : {e}"}), 500
 
         # Reprendre depuis métadonnées jusqu'à la fin
         cmd = [
@@ -1147,7 +1151,8 @@ def api_regenerate_episode(episode_id):
         rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
         if rapport:
             try:
-                rapport.get("etapes", {}).get("script", {}).pop("validation_humaine", None)
+                # API-6.1: Utiliser setdefault pour éviter d'opérer sur un dict temporaire
+                rapport.setdefault("etapes", {}).setdefault("script", {}).pop("validation_humaine", None)
                 rapport.setdefault("decisions_humaines", []).append({
                     "timestamp": datetime.now().isoformat(),
                     "type": "regeneration_script_web",
@@ -1224,7 +1229,8 @@ def api_regenerate_episode(episode_id):
         rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
         if rapport:
             try:
-                montage_etape = rapport.get("etapes", {}).get("montage", {})
+                # API-6.1: Utiliser setdefault pour éviter dict détaché
+                montage_etape = rapport.setdefault("etapes", {}).setdefault("montage", {})
                 montage_etape.pop("validation_humaine", None)
                 # W7: Nettoyer les données de montage obsolètes
                 for stale_key in ("chemin_hq", "chemin_preview", "duree_secondes",
@@ -1346,6 +1352,14 @@ def _handle_publication(episode_id, comment=""):
     # B2: Lecture + écriture rapport sous file lock
     try:
         with fichier_lock(rapport_path):
+            # API-4.1: Re-charger le rapport sous le lock pour éviter TOCTOU
+            if rapport_path.exists():
+                try:
+                    with open(rapport_path, "r", encoding="utf-8") as f:
+                        rapport = _json.load(f)
+                except (ValueError, FileNotFoundError):
+                    pass  # Garder le rapport chargé depuis la DB
+
             etapes = rapport.get("etapes", {})
             script_ok = etapes.get("script", {}).get("validation_humaine", False)
             montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
@@ -1660,7 +1674,10 @@ def api_produire_saison():
         etapes = rp.get("etapes", {})
         script_ok = etapes.get("script", {}).get("validation_humaine", False)
         montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
-        if not (script_ok and montage_ok):
+        # API-2.1: Un épisode produit en --auto CLI complet (status=completed)
+        # n'a pas forcément les flags validation_humaine web — le considérer OK
+        is_completed = rp.get("status") == "completed" or etapes.get("publication", {}).get("validation_humaine")
+        if not (script_ok and montage_ok) and not is_completed:
             return jsonify({
                 "error": f"L'épisode {prev_id} n'est pas entièrement validé "
                          f"(script: {'OK' if script_ok else 'en attente'}, "
