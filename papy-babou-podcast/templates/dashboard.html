@@ -2767,7 +2767,7 @@ async function produireProchainEpisode() {
         if (data.status === 'ok') {
             showAlert('alert-produire-saison', 'success',
                 ep.episode_id + ' : script généré. '
-                + '<br><a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\'))" '
+                + '<br><a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\')); loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')" '
                 + 'class="btn btn-turquoise" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#9997; Valider le script &rarr;</a>');
         } else if (data.error) {
             showAlert('alert-produire-saison', 'error', escapeHtml(data.error));
