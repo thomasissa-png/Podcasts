@@ -315,13 +315,26 @@ PERSONNAGES_JSON_PATH = ASSETS_DIR / "bible" / "personnages.json"
 
 
 def _db_disponible() -> bool:
-    """Vérifie si PostgreSQL est disponible (sans crash si non configuré)."""
+    """Vérifie si PostgreSQL est disponible (sans crash si non configuré).
+
+    Retente une fois après 1s en cas d'échec (Neon scale-to-zero peut
+    mettre quelques secondes à se réveiller après une période d'inactivité).
+    """
+    import time as _time
     try:
         from database import DATABASE_URL, verifier_connexion
         if not DATABASE_URL:
             return False
-        return verifier_connexion()
-    except Exception:
+        for attempt in range(2):
+            try:
+                if verifier_connexion():
+                    return True
+            except Exception:
+                pass
+            if attempt == 0:
+                _time.sleep(1)
+        return False
+    except ImportError:
         return False
 
 

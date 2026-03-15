@@ -7,6 +7,7 @@ Usage :
     python web.py                     # Demarre sur le port 5000
 """
 
+import json
 import logging
 import os
 import re
@@ -151,6 +152,27 @@ _TIMEOUT_PRODUIRE_SAISON = int(os.getenv("TIMEOUT_PRODUIRE_SAISON", "7200"))  # 
 _TIMEOUT_REPRENDRE = int(os.getenv("TIMEOUT_REPRENDRE", "1800"))        # 30 min
 _TIMEOUT_BATCH = int(os.getenv("TIMEOUT_BATCH", "7200"))                # 2h
 _JOB_ID_RE = re.compile(r'^[0-9a-f]{12}$')
+
+
+def _sync_rapport_to_db(episode_id: str, rapport: dict) -> None:
+    """Synchronise le rapport de production en DB (mise à jour de la production la plus récente).
+
+    Appelé après chaque modification du rapport (validation, etc.) pour que les données
+    survivent aux redéploiements Replit.
+    """
+    try:
+        from database import DATABASE_URL, get_cursor
+        if not DATABASE_URL:
+            return
+        with get_cursor() as cur:
+            cur.execute(
+                "UPDATE productions SET rapport_json = %s, updated_at = NOW() "
+                "WHERE id = (SELECT id FROM productions WHERE episode_id = %s "
+                "ORDER BY created_at DESC LIMIT 1)",
+                (json.dumps(rapport, ensure_ascii=False, default=str), episode_id),
+            )
+    except Exception as e:
+        logger.warning("Sync rapport DB échoué pour %s : %s", episode_id, e)
 
 
 def _gc_expired_jobs():
@@ -910,18 +932,13 @@ def api_validate_episode(episode_id):
     if action not in ("validate", "reject"):
         return jsonify({"error": "Action invalide. Valeurs acceptées : validate, reject"}), 400
 
-    # Load, update, and save rapport under file lock (BUG #12: race condition)
+    # Load, update, and save rapport (DB + file for resilience)
     rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
     try:
-        with fichier_lock(rapport_path):
-            rapport = {}
-            if rapport_path.exists():
-                try:
-                    with open(rapport_path, "r", encoding="utf-8") as f:
-                        rapport = _json.load(f)
-                except (ValueError, FileNotFoundError):
-                    pass
+        # Charger le rapport depuis la DB d'abord, puis fichier (survit aux redéploiements)
+        rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
 
+        with fichier_lock(rapport_path):
             # Update validation status
             rapport.setdefault("etapes", {})
             rapport["etapes"].setdefault(step, {})
@@ -941,9 +958,12 @@ def api_validate_episode(episode_id):
                 "commentaire": comment or "",
             })
 
-            # Save rapport
+            # Save rapport to file (local cache)
             with open(rapport_path, "w", encoding="utf-8") as f:
                 _json.dump(rapport, f, ensure_ascii=False, indent=2)
+
+        # Sync rapport to DB (survit aux redéploiements)
+        _sync_rapport_to_db(episode_id, rapport)
     except OSError as e:
         return jsonify({"error": f"Erreur sauvegarde rapport : {e}"}), 500
 
@@ -1067,21 +1087,21 @@ def api_regenerate_episode(episode_id):
         corrections_path.parent.mkdir(parents=True, exist_ok=True)
         corrections_path.write_text(instructions, encoding="utf-8")
 
-        # Réinitialiser le flag de validation script dans le rapport (B1: avec file lock)
+        # Réinitialiser le flag de validation script dans le rapport (DB + fichier)
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
-        if rapport_path.exists():
+        rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
+        if rapport:
             try:
+                rapport.get("etapes", {}).get("script", {}).pop("validation_humaine", None)
+                rapport.setdefault("decisions_humaines", []).append({
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "regeneration_script_web",
+                    "instructions": instructions,
+                })
                 with fichier_lock(rapport_path):
-                    with open(rapport_path, "r", encoding="utf-8") as f:
-                        rapport = _json.load(f)
-                    rapport.get("etapes", {}).get("script", {}).pop("validation_humaine", None)
-                    rapport.setdefault("decisions_humaines", []).append({
-                        "timestamp": datetime.now().isoformat(),
-                        "type": "regeneration_script_web",
-                        "instructions": instructions,
-                    })
                     with open(rapport_path, "w", encoding="utf-8") as f:
-                        _json.dump(rapport, f, ensure_ascii=False, indent=2)
+                        json.dump(rapport, f, ensure_ascii=False, indent=2)
+                _sync_rapport_to_db(episode_id, rapport)
             except Exception as e:
                 logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
 
@@ -1143,26 +1163,26 @@ def api_regenerate_episode(episode_id):
         if not checkpoint_path.exists():
             return jsonify({"error": f"Checkpoint introuvable pour {episode_id}."}), 404
 
-        # Sauvegarder les instructions dans le rapport (B1: avec file lock)
+        # Sauvegarder les instructions dans le rapport (DB + fichier)
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
-        if rapport_path.exists():
+        rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
+        if rapport:
             try:
+                montage_etape = rapport.get("etapes", {}).get("montage", {})
+                montage_etape.pop("validation_humaine", None)
+                # W7: Nettoyer les données de montage obsolètes
+                for stale_key in ("chemin_hq", "chemin_preview", "duree_secondes",
+                                  "taille_bytes", "chapitres", "object_storage"):
+                    montage_etape.pop(stale_key, None)
+                rapport.setdefault("decisions_humaines", []).append({
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "regeneration_montage_web",
+                    "instructions": instructions,
+                })
                 with fichier_lock(rapport_path):
-                    with open(rapport_path, "r", encoding="utf-8") as f:
-                        rapport = _json.load(f)
-                    montage_etape = rapport.get("etapes", {}).get("montage", {})
-                    montage_etape.pop("validation_humaine", None)
-                    # W7: Nettoyer les données de montage obsolètes
-                    for stale_key in ("chemin_hq", "chemin_preview", "duree_secondes",
-                                      "taille_bytes", "chapitres", "object_storage"):
-                        montage_etape.pop(stale_key, None)
-                    rapport.setdefault("decisions_humaines", []).append({
-                        "timestamp": datetime.now().isoformat(),
-                        "type": "regeneration_montage_web",
-                        "instructions": instructions,
-                    })
                     with open(rapport_path, "w", encoding="utf-8") as f:
-                        _json.dump(rapport, f, ensure_ascii=False, indent=2)
+                        json.dump(rapport, f, ensure_ascii=False, indent=2)
+                _sync_rapport_to_db(episode_id, rapport)
             except Exception as e:
                 logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
 
@@ -1237,16 +1257,14 @@ def _handle_publication(episode_id, comment=""):
     import json as _json
 
     # Check prerequisites: script AND montage must be validated
-    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
-    if not rapport_path.exists():
+    rapport = dashboard_data_mod.charger_rapport(episode_id)
+    if not rapport:
         return jsonify({"error": "Aucun rapport trouvé. L'épisode doit d'abord être produit."}), 400
 
+    rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
     # B2: Lecture + écriture rapport sous file lock
     try:
         with fichier_lock(rapport_path):
-            with open(rapport_path, "r", encoding="utf-8") as f:
-                rapport = _json.load(f)
-
             etapes = rapport.get("etapes", {})
             script_ok = etapes.get("script", {}).get("validation_humaine", False)
             montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
@@ -1276,7 +1294,8 @@ def _handle_publication(episode_id, comment=""):
             })
 
             with open(rapport_path, "w", encoding="utf-8") as f:
-                _json.dump(rapport, f, ensure_ascii=False, indent=2)
+                json.dump(rapport, f, ensure_ascii=False, indent=2)
+        _sync_rapport_to_db(episode_id, rapport)
     except (ValueError, FileNotFoundError):
         return jsonify({"error": "Rapport illisible."}), 500
     except OSError as e:
