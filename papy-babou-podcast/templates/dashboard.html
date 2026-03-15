@@ -2247,12 +2247,19 @@ function pollJob(jobId, maxTimeoutSec) {
             try {
                 const resp = await fetch('/api/job-status/' + jobId);
                 const data = await resp.json().catch(() => null);
-                consecutiveErrors = 0; /* reset sur succes reseau */
                 if (!resp.ok) {
-                    _activePollTimer = null;
-                    reject(new Error(data && data.error ? data.error : 'Job introuvable'));
+                    /* 404 = job peut avoir été perdu (redémarrage serveur).
+                       Retrier quelques fois avant d'abandonner. */
+                    consecutiveErrors++;
+                    if (consecutiveErrors >= transientRetries) {
+                        _activePollTimer = null;
+                        reject(new Error(data && data.error ? data.error : 'Job introuvable'));
+                        return;
+                    }
+                    schedule();
                     return;
                 }
+                consecutiveErrors = 0; /* reset sur succes */
                 if (data.status === 'running') {
                     schedule(); /* continuer le polling */
                     return;
@@ -3392,9 +3399,9 @@ async function validateStep(step, action) {
         showAlert('alert-validation', alertType, data.message);
         document.getElementById('val-comment').value = '';
 
-        /* Après validation → rediriger vers la section "Lancer la saison"
+        /* Après validation du script ou du montage → rediriger vers Section 2
            pour continuer la production (audio après script, publication après montage) */
-        if (data.next_phase === 'audio' && action === 'validate') {
+        if (step === 'script' && action === 'validate') {
             _dashboardDirty = true;
             showPage('produire-saison', document.querySelector('[data-page=produire-saison]'));
             await loadSaisonProgress();
@@ -3402,7 +3409,7 @@ async function validateStep(step, action) {
                 '&#9989; Script validé ! Vous pouvez maintenant lancer l\'audio.');
             return;
         }
-        else if (data.next_phase === 'publication' && action === 'validate') {
+        else if (step === 'montage' && action === 'validate') {
             _dashboardDirty = true;
             showPage('produire-saison', document.querySelector('[data-page=produire-saison]'));
             await loadSaisonProgress();

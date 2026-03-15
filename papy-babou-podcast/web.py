@@ -735,6 +735,23 @@ def api_episode_detail(episode_id):
     # Load rapport for detailed info
     rapport = dashboard_data_mod.charger_rapport(episode_id)
 
+    # Dernier recours : charger le script depuis le checkpoint
+    if not script:
+        checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        if checkpoint_path.exists():
+            try:
+                with open(checkpoint_path, "r", encoding="utf-8") as f:
+                    cp_data = _json.load(f)
+                script_path_cp = cp_data.get("data", {}).get("script_path")
+                if script_path_cp:
+                    sp = Path(script_path_cp)
+                    if sp.exists():
+                        with open(sp, "r", encoding="utf-8") as f:
+                            script = _json.load(f)
+                        logger.info("Script %s chargé depuis checkpoint.", episode_id)
+            except Exception as e:
+                logger.warning("Échec chargement script checkpoint %s : %s", episode_id, e)
+
     # Load cover art path
     cover_art = None
     for ext in (".png", ".jpg"):
