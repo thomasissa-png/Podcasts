@@ -1125,13 +1125,13 @@ class TestSfxEnAnglais:
 # ── Amélioration 3 : Crossfade 100ms ─────────────────────────────────────────
 
 
-class TestCrossfade100ms:
-    """Le crossfade entre segments voix doit être de 100ms."""
+class TestCrossfade200ms:
+    """Le crossfade entre segments voix doit être de 200ms."""
 
-    def test_crossfade_voix_100ms(self):
-        """CROSSFADE_VOIX_MS doit être 100."""
+    def test_crossfade_voix_200ms(self):
+        """CROSSFADE_VOIX_MS doit être 200."""
         from agents.monteur import CROSSFADE_VOIX_MS
-        assert CROSSFADE_VOIX_MS == 100
+        assert CROSSFADE_VOIX_MS == 200
 
     def test_crossfade_entre_segments(self, tmp_path):
         """Le crossfade doit réduire la durée totale de 100ms."""
@@ -1302,21 +1302,73 @@ class TestMicroRespirations:
         assert len(respiration) <= RESPIRATION_DUREE_MS + 30
 
 
-# ── Amélioration 8 : Effet narrateur ─────────────────────────────────────────
+# ── Amélioration 8 : Ducking voix/SFX + Room tone + Master bus ────────────────
 
 
-class TestEffetNarrateur:
-    """Le narrateur doit avoir un effet audio distinct."""
+class TestDuckingVoixSFX:
+    """Le ducking side-chain doit atténuer la voix pendant un SFX overlay."""
 
-    def test_effet_narrateur_applique_gain(self):
-        """L'effet narrateur doit appliquer un gain négatif."""
-        from agents.monteur import Monteur, NARRATEUR_REVERB_DB
+    def test_ducking_retourne_audio(self):
+        """Le ducking doit retourner un segment audio de même durée."""
+        from agents.monteur import Monteur
+        from pydub import AudioSegment
+
+        voix = AudioSegment.silent(duration=1000)
+        sfx = AudioSegment.silent(duration=500)
+        result = Monteur._appliquer_ducking(voix, sfx)
+        assert len(result) >= len(voix) - 200  # tolérance crossfade ducking
+
+    def test_ducking_sfx_couvre_tout(self):
+        """Si le SFX couvre toute la voix, le résultat reste cohérent."""
+        from agents.monteur import Monteur
+        from pydub import AudioSegment
+
+        voix = AudioSegment.silent(duration=500)
+        sfx = AudioSegment.silent(duration=600)
+        result = Monteur._appliquer_ducking(voix, sfx)
+        assert len(result) == len(voix)
+
+
+class TestRoomTone:
+    """Le room tone doit être chargeable ou généré en fallback."""
+
+    def test_charger_room_tone_fallback(self, monkeypatch):
+        """Sans fichier ni API, le room tone est un bruit de remplacement."""
+        from agents.monteur import Monteur
+        monkeypatch.setattr(config, "ELEVENLABS_API_KEY", "")
+        monteur = Monteur()
+        room = monteur._charger_room_tone()
+        assert len(room) > 0
+
+    def test_room_tone_prompt_exists(self):
+        """Le prompt de room tone doit être défini."""
+        from agents.monteur import ROOM_TONE_PROMPT
+        assert "room" in ROOM_TONE_PROMPT.lower()
+        assert len(ROOM_TONE_PROMPT) > 20
+
+
+class TestMasterBus:
+    """Le traitement master bus doit fonctionner sans crash."""
+
+    def test_master_bus_retourne_audio(self):
+        """Le master bus doit retourner un segment audio de même durée."""
+        from agents.monteur import Monteur
         from pydub import AudioSegment
 
         audio = AudioSegment.silent(duration=1000)
-        result = Monteur._appliquer_effet_narrateur(audio)
+        result = Monteur._appliquer_master_bus(audio)
         assert len(result) == len(audio)
-        assert NARRATEUR_REVERB_DB < 0
+
+
+class TestSFXVolumeContextuel:
+    """Le volume SFX doit varier selon le ton du segment précédent."""
+
+    def test_volume_par_ton_defini(self):
+        """La table SFX_VOLUME_PAR_TON doit contenir les tons principaux."""
+        from agents.monteur import SFX_VOLUME_PAR_TON
+        assert "dramatique" in SFX_VOLUME_PAR_TON
+        assert "calme" in SFX_VOLUME_PAR_TON
+        assert SFX_VOLUME_PAR_TON["dramatique"] > SFX_VOLUME_PAR_TON["calme"]
 
 
 # ── Amélioration 9 : Variation de rythme scénarisée ──────────────────────────

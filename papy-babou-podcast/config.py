@@ -187,9 +187,9 @@ VOICE_FALLBACK_CHAIN = ["narrateur", "papy_babou", "antoine", "noemie", "mamie_s
 
 STEREO_PAN = {
     "papy_babou": 0.0,
-    "antoine": -0.3,
-    "noemie": 0.3,
-    "mamie_sonia": 0.2,
+    "antoine": -0.4,
+    "noemie": 0.4,
+    "mamie_sonia": 0.5,
     "narrateur": 0.0,
     "sfx": 0.0,
 }
@@ -203,7 +203,7 @@ PRODUCTION = {
     "mots_par_minute_adulte": 120,
     "intro_jingle_duree_ms": 10_000,
     "outro_jingle_duree_ms": 8_000,
-    "musique_fond_db": -20,
+    "musique_fond_db": -15,
     "lufs_cible": -16,
     "mp3_bitrate_final": "192k",
     "mp3_bitrate_preview": "128k",

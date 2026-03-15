@@ -476,8 +476,25 @@ Clear visual separation between single-episode and season production workflows:
 - `_mixer_ambiance_dynamique()` splits voix into equal sections per ambiance with 2s crossfade
 - Segment `rythme` field ("rapide"/"normal"/"lent") modulates pause duration in `_assembler_segments()`
 
-### When modifying config.py (Session 9 additions)
+### When modifying monteur.py (Session 10 — Audio Immersion)
+- `_appliquer_effet_narrateur()` has been REMOVED — no more narrateur-specific audio effect
+- `_generer_micro_respiration()` now generates noise (numpy) instead of silence for natural feel
+- `_appliquer_ducking()` new static method — side-chain ducking attenuates voice during SFX overlay
+- `_charger_room_tone()` new method — loads/generates continuous room ambiance (fireplace, clock)
+- `_appliquer_master_bus()` new static method — soft compression + limiter before LUFS normalization
+- `CROSSFADE_VOIX_MS = 200` (was 100) — smoother voice transitions
+- `DUCKING_GAIN_DB = -6`, `DUCKING_FADE_MS = 150` — ducking parameters
+- `SFX_VOLUME_PAR_TON` dict — contextual SFX volume based on previous segment's `ton` field
+- `ROOM_TONE_DB = -28` — very quiet room tone volume
+- Act transitions now trigger on `papy_babou` after 8+ segments (was `narrateur`)
+- Chapter generation also triggers on `papy_babou` (was `narrateur`)
+- Room tone is overlaid on the full voice+fond track before assembler_final
+- Master bus runs after assembler_final, before LUFS normalization
+
+### When modifying config.py (Session 9-10 additions)
 - `jingles_saison(numero)` reads `plan["saison"]["jingles_custom"]` from season JSON — returns dict of `{key: Path}` for existing files only
+- `musique_fond_db: -15` (was -20) — background music more present
+- `STEREO_PAN`: antoine=-0.4, noemie=0.4, mamie_sonia=0.5 (was -0.3/0.3/0.2) — wider stereo image
 
 ## Deployment (Gunicorn)
 - `gunicorn.conf.py`: gthread workers (2 workers × 4 threads = 8 concurrent requests)

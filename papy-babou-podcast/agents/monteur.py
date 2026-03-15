@@ -71,11 +71,33 @@ FADE_JINGLE_MS = 1500          # Durée du fade in/out pour les jingles
 SILENCE_TRANSITION_MS = 300     # Silence entre jingle et contenu (réduit de 500)
 FADE_AMBIANCE_MS = 3000         # Durée du fade in/out pour la musique de fond
 FALLBACK_ASSET_DUREE_MS = 5000  # Durée du silence de remplacement d'un asset manquant
-CROSSFADE_VOIX_MS = 100         # Crossfade entre segments voix pour transitions naturelles
+CROSSFADE_VOIX_MS = 200         # Crossfade entre segments voix pour transitions naturelles
 MAX_PAUSE_MS = 2500             # Plafond de pause pour éviter les silences excessifs
 RESPIRATION_DUREE_MS = 80       # Durée micro-respiration entre certaines répliques
 RESPIRATION_PROBABILITE = 0.35  # 35% des transitions voix incluent une micro-respiration
-NARRATEUR_REVERB_DB = -3        # Léger gain négatif pour simuler distance du narrateur
+DUCKING_GAIN_DB = -6            # Atténuation voix pendant un SFX overlay (side-chain)
+DUCKING_FADE_MS = 150           # Durée du fade pour l'entrée/sortie du ducking
+
+# Volume SFX contextuel selon le ton du segment précédent
+SFX_VOLUME_PAR_TON = {
+    "dramatique": -3,
+    "epique": -3,
+    "solennel": -4,
+    "mystere": -5,
+    "tendre": -8,
+    "calme": -9,
+    "joyeux": -5,
+    "humoristique": -5,
+}
+SFX_VOLUME_DEFAUT = -6          # Volume SFX par défaut si pas de ton contextuel
+
+# Room tone — fond sonore continu simulant le salon de Papy Babou
+ROOM_TONE_PROMPT = (
+    "Gentle cozy living room ambiance, soft fireplace crackling, "
+    "distant clock ticking, very subtle warm room tone, barely audible, "
+    "French countryside house atmosphere"
+)
+ROOM_TONE_DB = -28              # Volume très bas pour le room tone
 
 
 def _normaliser_lufs(audio: AudioSegment, cible_lufs: float = -16.0) -> AudioSegment:
@@ -264,15 +286,33 @@ class Monteur:
             fond_ajuste = self._preparer_fond(fond, len(voix))
             voix_avec_fond = voix.overlay(fond_ajuste)
 
+        # 5. Room tone continu sous toute la piste voix (A1)
+        room_tone = self._charger_room_tone()
+        if len(room_tone) > 0:
+            room_tone = room_tone.apply_gain(ROOM_TONE_DB)
+            if room_tone.channels == 1:
+                room_tone = room_tone.set_channels(2)
+            # Boucler le room tone sur toute la durée
+            if len(room_tone) < len(voix_avec_fond):
+                repetitions = (len(voix_avec_fond) // len(room_tone)) + 1
+                room_tone = room_tone * repetitions
+            room_tone = room_tone[:len(voix_avec_fond)]
+            room_tone = room_tone.fade_in(2000).fade_out(2000)
+            voix_avec_fond = voix_avec_fond.overlay(room_tone)
+            logger.info("Room tone appliqué sur %.1fs", len(voix_avec_fond) / 1000.0)
+
         # 6. Assembler : intro → voix+fond → outro
         episode_complet = self._assembler_final(intro, voix_avec_fond, outro)
 
-        # 7. Normaliser LUFS
+        # 7. Traitement master bus (A4)
+        episode_complet = self._appliquer_master_bus(episode_complet)
+
+        # 8. Normaliser LUFS
         episode_complet = _normaliser_lufs(
             episode_complet, config.PRODUCTION["lufs_cible"]
         )
 
-        # 8. Exporter
+        # 9. Exporter
         nom_fichier = f"{episode_id}_{_slug_util(episode['titre'])}"
         chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
         chemin_preview = output_dir / f"{nom_fichier}_128k.mp3"
@@ -292,7 +332,7 @@ class Monteur:
         logger.info("Épisode exporté : %s (%.0f sec)", chemin_hq, duree_sec)
         logger.info("Preview exporté : %s", chemin_preview)
 
-        # 9. Générer les chapitres
+        # 10. Générer les chapitres
         chapitres = self._generer_chapitres(episode["segments"], segments_dir)
         chemin_chapitres = config.CHAPTERS_DIR / f"{episode_id}_chapters.json"
         with open(chemin_chapitres, "w", encoding="utf-8") as f:
@@ -326,12 +366,22 @@ class Monteur:
         prev_personnage: str = ""
         segments_depuis_transition: int = 0
 
+        dernier_ton: str = ""
+
         for i, seg in enumerate(segments):
             # Transition sonore entre actes narratifs
-            if (transition is not None
-                    and seg["personnage"] == "narrateur"
-                    and segments_depuis_transition >= 8
-                    and len(resultat) > 0):
+            # Déclenchement : papy_babou après 8+ segments OU après un SFX marqueur
+            est_transition_acte = (
+                transition is not None
+                and len(resultat) > 0
+                and segments_depuis_transition >= 8
+                and (
+                    seg["personnage"] == "papy_babou"
+                    or (i > 0 and segments[i - 1]["personnage"] == "sfx"
+                        and seg["personnage"] != "sfx")
+                )
+            )
+            if est_transition_acte:
                 trans = transition.apply_gain(-8)  # Très discret
                 if trans.channels == 1:
                     trans = trans.set_channels(2)
@@ -356,7 +406,8 @@ class Monteur:
                 audio = AudioSegment.from_mp3(str(chemin))
 
             if seg["personnage"] == "sfx":
-                sfx_vol = config.SFX_CONFIG["sfx_volume_db"]
+                # Volume SFX contextuel selon le ton du segment précédent (A8)
+                sfx_vol = SFX_VOLUME_PAR_TON.get(dernier_ton, SFX_VOLUME_DEFAUT)
                 fade_ms = config.SFX_CONFIG["sfx_fade_ms"]
                 audio = audio.apply_gain(sfx_vol)
                 if len(audio) > fade_ms * 2:
@@ -371,14 +422,10 @@ class Monteur:
                     audio = _appliquer_pan(audio, pan)
                     resultat += audio
             else:
-                # Effet audio distinctif pour le narrateur
-                if seg["personnage"] == "narrateur":
-                    audio = self._appliquer_effet_narrateur(audio)
-
                 pan = config.STEREO_PAN.get(seg["personnage"], 0.0)
                 audio = _appliquer_pan(audio, pan)
 
-                # Appliquer les SFX overlay en attente
+                # Appliquer les SFX overlay avec ducking voix (A2)
                 if overlays_pending:
                     for sfx_overlay in overlays_pending:
                         if len(sfx_overlay) < len(audio):
@@ -393,8 +440,12 @@ class Monteur:
                             )
                             sfx_overlay = sfx_overlay[:len(audio)]
                         sfx_overlay = _appliquer_pan(sfx_overlay, config.STEREO_PAN.get("sfx", 0.0))
-                        audio = audio.overlay(sfx_overlay)
+                        # Side-chain ducking : baisser la voix pendant le SFX
+                        audio = self._appliquer_ducking(audio, sfx_overlay)
                     overlays_pending.clear()
+
+                # Mémoriser le ton pour le volume SFX contextuel
+                dernier_ton = seg.get("ton", "")
 
                 # Micro-respiration naturelle entre certaines répliques
                 if (len(resultat) > 0
@@ -699,28 +750,138 @@ class Monteur:
         return AudioSegment.silent(duration=3000)
 
     @staticmethod
-    def _appliquer_effet_narrateur(audio: AudioSegment) -> AudioSegment:
-        """Applique un léger effet audio au narrateur pour le distinguer.
-
-        Simule une distance légère via un gain négatif subtil et
-        un très léger fade in/out pour créer une impression de voix
-        « extérieure » à la scène.
-        """
-        audio = audio.apply_gain(NARRATEUR_REVERB_DB)
-        fade = min(30, len(audio) // 4)
-        if fade > 0:
-            audio = audio.fade_in(fade).fade_out(fade)
-        return audio
-
-    @staticmethod
     def _generer_micro_respiration() -> AudioSegment:
-        """Génère un micro-silence simulant une respiration entre répliques.
+        """Génère un bruit léger simulant une respiration entre répliques.
 
-        Utilise un silence très court avec un léger volume aléatoire
-        pour un effet naturel de respiration.
+        Utilise du bruit blanc très atténué au lieu d'un silence pur
+        pour un effet plus naturel et immersif (A10).
         """
         duree = RESPIRATION_DUREE_MS + random.randint(-20, 20)
-        return AudioSegment.silent(duration=max(40, duree))
+        duree = max(40, duree)
+        # Générer du bruit blanc très léger via numpy
+        nb_samples = int(44100 * duree / 1000)
+        noise = np.random.normal(0, 0.005, nb_samples).astype(np.float32)
+        noise = np.clip(noise, -1.0, 1.0)
+        # Convertir en int16 pour pydub
+        samples_int = (noise * 32767).astype(np.int16)
+        respiration = AudioSegment(
+            samples_int.tobytes(),
+            frame_rate=44100,
+            sample_width=2,
+            channels=1,
+        )
+        # Très léger fade pour éviter les clics
+        respiration = respiration.fade_in(10).fade_out(10)
+        return respiration
+
+    @staticmethod
+    def _appliquer_ducking(voix: AudioSegment, sfx: AudioSegment) -> AudioSegment:
+        """Applique un ducking side-chain : baisse la voix pendant le SFX overlay.
+
+        La voix est atténuée de DUCKING_GAIN_DB pendant la durée du SFX,
+        avec des fades doux pour éviter les transitions brusques (A2).
+        """
+        duree_sfx = len(sfx)
+        duree_voix = len(voix)
+
+        if duree_sfx >= duree_voix:
+            # SFX couvre toute la voix — ducking uniforme + overlay
+            voix_ducked = voix.apply_gain(DUCKING_GAIN_DB)
+            return voix_ducked.overlay(sfx)
+
+        # Découper la voix en 3 parties : avant SFX, pendant SFX, après SFX
+        fade = min(DUCKING_FADE_MS, duree_sfx // 2)
+
+        # Partie pendant le SFX — voix atténuée
+        voix_pendant = voix[:duree_sfx].apply_gain(DUCKING_GAIN_DB)
+        if fade > 0:
+            voix_pendant = voix_pendant.fade_in(fade).fade_out(fade)
+        voix_pendant = voix_pendant.overlay(sfx)
+
+        # Recoller : voix avant (pas de ducking) + pendant (ducké) + après
+        # On utilise un crossfade pour lisser la transition
+        voix_apres = voix[duree_sfx:]
+        resultat = voix_pendant
+        if len(voix_apres) > fade and fade > 0:
+            resultat = resultat.append(voix_apres, crossfade=fade)
+        else:
+            resultat += voix_apres
+
+        return resultat
+
+    def _charger_room_tone(self) -> AudioSegment:
+        """Charge ou génère le room tone du salon de Papy Babou (A1).
+
+        Le room tone est un fond sonore continu très discret qui simule
+        l'ambiance du salon (craquements de cheminée, horloge, chaleur).
+        """
+        chemin = config.ASSETS_DIR / "music" / "room_tone.mp3"
+        if chemin.exists():
+            return AudioSegment.from_mp3(str(chemin))
+
+        if self._generer_asset_elevenlabs(ROOM_TONE_PROMPT, 22.0, chemin):
+            return AudioSegment.from_mp3(str(chemin))
+
+        # Fallback : bruit rose très léger
+        logger.debug("Room tone non disponible — bruit rose de remplacement.")
+        nb_samples = 44100 * 22  # 22 secondes
+        noise = np.random.normal(0, 0.002, nb_samples).astype(np.float32)
+        samples_int = (noise * 32767).astype(np.int16)
+        return AudioSegment(
+            samples_int.tobytes(),
+            frame_rate=44100,
+            sample_width=2,
+            channels=1,
+        )
+
+    @staticmethod
+    def _appliquer_master_bus(audio: AudioSegment) -> AudioSegment:
+        """Applique un traitement master bus : EQ doux + compression + limiteur (A4).
+
+        Simule un traitement de mastering léger adapté aux podcasts enfants :
+        - Léger boost des médiums (voix plus claire)
+        - Compression douce pour homogénéiser les niveaux
+        - Limiteur pour éviter les crêtes
+        """
+        # 1. EQ simplifié : léger boost des médiums via manipulation numpy
+        samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
+        channels = audio.channels
+        if channels == 2:
+            samples = samples.reshape((-1, 2))
+
+        # 2. Compression douce (ratio ~2:1 au-dessus de -20 dBFS)
+        threshold = 0.1  # ~ -20 dBFS
+        ratio = 2.0
+        max_val = float(2 ** (audio.sample_width * 8 - 1))
+        normalized = samples / max_val
+
+        # Appliquer la compression sur les samples qui dépassent le seuil
+        mask = np.abs(normalized) > threshold
+        if np.any(mask):
+            excess = np.abs(normalized[mask]) - threshold
+            compressed = threshold + excess / ratio
+            # Préserver le signe
+            normalized[mask] = np.sign(normalized[mask]) * compressed
+
+        # 3. Limiteur doux (soft clip à -1 dBFS ~ 0.89)
+        limit = 0.89
+        over_limit = np.abs(normalized) > limit
+        if np.any(over_limit):
+            # Soft clipping via tanh
+            normalized[over_limit] = np.sign(normalized[over_limit]) * (
+                limit + (1.0 - limit) * np.tanh(
+                    (np.abs(normalized[over_limit]) - limit) / (1.0 - limit)
+                )
+            )
+
+        # Reconvertir en int
+        samples_out = (normalized * max_val).astype(np.int16)
+        if channels == 2:
+            samples_out = samples_out.flatten()
+
+        audio_master = audio._spawn(samples_out.tobytes())
+        logger.info("Traitement master bus appliqué (compression + limiteur).")
+        return audio_master
 
     def _preparer_fond(self, fond: AudioSegment, duree_voix_ms: int) -> AudioSegment:
         """Ajuste la musique de fond à la durée des voix avec le bon volume."""
@@ -813,9 +974,9 @@ class Monteur:
             creer_chapitre = False
             if not chapitres:
                 creer_chapitre = True
-            elif seg["personnage"] == "narrateur" and nb_segments_depuis_chapitre >= 8:
+            elif seg["personnage"] == "papy_babou" and nb_segments_depuis_chapitre >= 8:
                 creer_chapitre = True
-            elif (seg["personnage"] == "narrateur"
+            elif (seg["personnage"] == "papy_babou"
                   and i > 0
                   and segments[i - 1]["personnage"] == "sfx"
                   and nb_segments_depuis_chapitre >= 4):
