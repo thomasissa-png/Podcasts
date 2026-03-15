@@ -4,7 +4,7 @@
       "nom_complet": "Papy Babou",
       "age": 72,
       "age_par_saison": {"1": 72, "2": 73, "3": 73, "4": 74},
-      "description": "Grand-père bienveillant, très courageux et protecteur. A beaucoup voyagé et vécu à l'étranger (Liban, Suisse, Afrique du Sud) avant de s'installer en France. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants Antoine et Noémie.",
+      "description": "Grand-père bienveillant, très courageux et protecteur. Né à Dakar au Sénégal (vrai prénom : Jean-Pierre). A vécu au Liban, en Afrique du Sud, en Suisse avant de s'installer en France. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants Antoine et Noémie.",
       "apparence": {
         "cheveux": "blancs, légèrement dégarni, mèches rebelles",
         "yeux": "bleus pétillants, ridés par les sourires",
@@ -37,20 +37,36 @@
         "Pas de références à la technologie moderne",
         "Toujours expliquer les mots difficiles"
       ],
-      "backstory": "A beaucoup voyagé et vécu à l'étranger : Liban, Suisse, Afrique du Sud. Habite désormais en France dans une jolie maison normande avec mamie Sonia. Gourmand — aime la viande et le café. Très courageux, très fort, protecteur, s'occupe bien de sa famille. Père de Thomas (papa d'Antoine et Noémie) et de Nathalie (tata Nathalie).",
+      "backstory": "Né à Dakar, au Sénégal. Son vrai prénom est Jean-Pierre. Il est parti au Liban à l'âge de 10 ans. C'est là-bas qu'il a rencontré Sonia — ils habitaient dans le même immeuble et se retrouvaient dans les abris atomiques pendant les bombardements. Ils ont quitté le Liban ensemble à la fin des années 70 à cause de la guerre pour finir leurs études en France et s'y installer. Thomas est né en 1986 puis Nathalie en 1988. La famille a vécu en Afrique du Sud dans les années 90 puis en Suisse dans les années 2000. Habite désormais en France dans une jolie maison normande avec mamie Sonia. Gourmand — aime la viande et le café. Très courageux, très fort, protecteur, s'occupe bien de sa famille.",
+      "prenom_civil": "Jean-Pierre",
+      "lieu_naissance": "Dakar, Sénégal",
+      "parcours_geographique": [
+        {"lieu": "Dakar, Sénégal", "periode": "naissance — 10 ans"},
+        {"lieu": "Liban", "periode": "10 ans — fin des années 70"},
+        {"lieu": "France", "periode": "fin des années 70 — années 90 (études + installation, naissance de Thomas en 1986 et Nathalie en 1988)"},
+        {"lieu": "Afrique du Sud", "periode": "années 90"},
+        {"lieu": "Suisse", "periode": "années 2000"},
+        {"lieu": "France (Normandie)", "periode": "actuel"}
+      ],
       "famille": {
         "epouse": "mamie Sonia",
-        "enfants": ["Thomas (papa d'Antoine et Noémie)", "Nathalie (tata Nathalie)"],
-        "petits_enfants": ["Antoine", "Noémie", "Lucas (à naître saison 1)"]
+        "enfants": ["Thomas (né en 1986, papa d'Antoine et Noémie)", "Nathalie (née en 1988, tata Nathalie)"],
+        "petits_enfants": ["Antoine (né en 2015)", "Noémie (née en 2018)", "Lucas (à naître saison 1)"]
       },
       "anecdotes_possibles": [
-        "Ses voyages au Liban, en Suisse, en Afrique du Sud",
+        "Son enfance à Dakar au Sénégal",
+        "Son arrivée au Liban à 10 ans — découverte d'un nouveau pays",
+        "Les abris atomiques pendant la guerre du Liban — comment il a rencontré Sonia",
+        "La fuite du Liban pendant la guerre à la fin des années 70",
+        "La vie en Afrique du Sud dans les années 90",
+        "La vie en Suisse dans les années 2000",
         "Sa gourmandise pour la viande et le café",
         "Sa force physique et son courage"
       ]
     },
     "antoine": {
       "nom_complet": "Antoine",
+      "annee_naissance": 2015,
       "age": 8,
       "age_par_saison": {"1": 8, "2": 9, "3": 9, "4": 10},
       "description": "Petit-fils curieux et aventurier. Garçon qui aime le football et fait du judo. Adore vouloir faire comme les grands et faire le courageux. Gentil, social, travaille bien en classe. Aime jouer dehors, faire des cabanes, et aller chez Babou et mamie.",
@@ -92,6 +108,7 @@
     },
     "noemie": {
       "nom_complet": "Noémie",
+      "annee_naissance": 2018,
       "age": 5,
       "age_par_saison": {"1": 5, "2": 6, "3": 6, "4": 7},
       "description": "Petite fille vraiment très chipie, avec un très gros caractère. Aime faire des blagues et n'est pas toujours très courageuse. Adore embêter tout le monde gentiment et rigole beaucoup. Adore son Babou plus que tout.",
@@ -135,7 +152,16 @@
       "age_par_saison": {"1": 70, "2": 71, "3": 71, "4": 72},
       "description": "La plus gentille mamie du monde. Attentionnée, douce, adore ses petits-enfants plus que tout. Cuisine extrêmement bien. Architecte d'intérieur de métier.",
       "ton": "doux, chaleureux, attentionné",
-      "backstory": "Née en Égypte. A beaucoup voyagé — a habité en France, au Liban, en Suisse, et en Afrique du Sud. Mariée à Papy Babou.",
+      "lieu_naissance": "Le Caire, Égypte",
+      "backstory": "Née au Caire en Égypte. Elle est partie pour le Liban quand elle avait un an. C'est au Liban qu'elle a rencontré Jean-Pierre (Papy Babou) — ils habitaient dans le même immeuble et se retrouvaient dans les abris atomiques pendant les bombardements de la guerre. Ils sont tous les deux partis pendant la guerre à la fin des années 70 pour finir leurs études en France et s'installer. Thomas est né en 1986 et Nathalie en 1988. La famille a vécu en Afrique du Sud dans les années 90 puis en Suisse dans les années 2000.",
+      "parcours_geographique": [
+        {"lieu": "Le Caire, Égypte", "periode": "naissance — 1 an"},
+        {"lieu": "Liban", "periode": "1 an — fin des années 70"},
+        {"lieu": "France", "periode": "fin des années 70 — années 90 (études + installation)"},
+        {"lieu": "Afrique du Sud", "periode": "années 90"},
+        {"lieu": "Suisse", "periode": "années 2000"},
+        {"lieu": "France (Normandie)", "periode": "actuel"}
+      ],
       "interventions_typiques": [
         "Apporte le goûter ou un gâteau fait maison",
         "Annonce que c'est l'heure de se coucher",
@@ -143,8 +169,12 @@
         "Reste parfois écouter l'histoire un moment"
       ],
       "anecdotes_possibles": [
-        "Ses origines égyptiennes",
-        "Ses voyages avec Papy Babou",
+        "Sa naissance au Caire en Égypte",
+        "Son arrivée au Liban bébé",
+        "Sa rencontre avec Jean-Pierre dans les abris pendant la guerre du Liban",
+        "Leur départ du Liban pour la France à la fin des années 70",
+        "La vie en Afrique du Sud dans les années 90",
+        "La vie en Suisse dans les années 2000",
         "Ses talents de cuisinière",
         "Son métier d'architecte d'intérieur"
       ]
