@@ -3078,7 +3078,26 @@ function _renderMetaInline(meta, containerId) {
 /* ── Validation inline : approuver/refuser une étape ── */
 async function psInlineValidate(step, action) {
     if (!_psInlineEpisodeId || _psInlineRunning) return;
+
+    var stepLabel = step === 'script' ? 'Script' : 'Montage';
+
+    /* UX-2: Confirmation avant rejet */
+    if (action === 'reject') {
+        if (!confirm('Refuser le ' + stepLabel.toLowerCase() + ' de ' + _psInlineEpisodeId + ' ?\n\nVous pourrez ensuite le relancer avec des instructions de modification.')) {
+            return;
+        }
+    }
+
     _psInlineRunning = true;
+
+    /* UX-4: Loading state sur le bouton */
+    var btnId = 'ps-iv-btn-val-' + step;
+    var btn = document.getElementById(btnId);
+    var btnOriginal = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Validation...';
+    }
 
     try {
         var resp = await fetch('/api/episode/' + _psInlineEpisodeId + '/validate', {
@@ -3093,9 +3112,11 @@ async function psInlineValidate(step, action) {
         }
 
         if (action === 'validate') {
-            showAlert('alert-produire-saison', 'success', '&#9989; ' + (step === 'script' ? 'Script' : 'Montage') + ' validé !');
+            showAlert('alert-produire-saison', 'success', '&#9989; ' + stepLabel + ' validé !');
         } else {
-            showAlert('alert-produire-saison', 'warning', '&#10007; ' + (step === 'script' ? 'Script' : 'Montage') + ' refusé.');
+            /* UX-2: Message persistant après rejet avec guidance */
+            showAlert('alert-produire-saison', 'info',
+                '&#10007; ' + stepLabel + ' refusé. Cliquez sur <strong>Modifier le ' + stepLabel.toLowerCase() + '</strong> pour saisir vos instructions, puis relancez.');
         }
 
         /* Recharger pour afficher l'étape suivante */
@@ -3104,6 +3125,10 @@ async function psInlineValidate(step, action) {
     } catch (err) {
         showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(err.message));
     } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = btnOriginal;
+        }
         _psInlineRunning = false;
     }
 }
@@ -3175,15 +3200,20 @@ function psInlineToggleModify(step) {
 /* ── Régénérer un step inline ── */
 async function psInlineRegenerate(step) {
     if (!_psInlineEpisodeId || _psInlineRunning) return;
-    _psInlineRunning = true;
 
     var instructions = document.getElementById('ps-iv-instructions-' + step).value.trim();
     if (!instructions) {
         showAlert('alert-produire-saison', 'warning', 'Veuillez saisir des instructions de modification.');
-        _psInlineRunning = false;
         return;
     }
 
+    /* UX-3: Confirmation avant régénération (opération destructive) */
+    var stepLabel = step === 'script' ? 'script' : 'montage';
+    if (!confirm('Relancer le ' + stepLabel + ' de ' + _psInlineEpisodeId + ' ?\n\nLe ' + stepLabel + ' actuel sera remplacé.\n\nInstructions :\n' + instructions.substring(0, 200))) {
+        return;
+    }
+
+    _psInlineRunning = true;
     showLoading('Régénération du ' + step + '...');
     try {
         var resp = await fetch('/api/episode/' + _psInlineEpisodeId + '/regenerate', {
@@ -3192,8 +3222,23 @@ async function psInlineRegenerate(step) {
             body: JSON.stringify({ step: step, instructions: instructions })
         });
         var data = await resp.json();
-        if (resp.ok && data.status === 'ok') {
-            showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' régénéré !');
+        if (resp.ok && (data.status === 'ok' || data.status === 'accepted')) {
+            showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' en cours de régénération...');
+            /* Si c'est un job async, attendre la fin */
+            if (data.job_id) {
+                try {
+                    var result = await pollJob(data.job_id, 1920);
+                    if (result.status === 'ok') {
+                        showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' régénéré !');
+                    } else {
+                        showAlert('alert-produire-saison', 'error', result.error || 'Erreur régénération');
+                    }
+                } catch (pollErr) {
+                    showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(pollErr.message));
+                }
+            } else {
+                showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' régénéré !');
+            }
         } else {
             showAlert('alert-produire-saison', 'error', data.error || 'Erreur régénération');
         }

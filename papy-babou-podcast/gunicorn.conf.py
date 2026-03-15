@@ -30,7 +30,9 @@ workers = int(os.getenv("GUNICORN_WORKERS", "1"))
 
 # Threads par worker : permet de gérer le polling concurrent pendant
 # qu'un thread attend un subprocess de production (proc.communicate).
-threads = int(os.getenv("GUNICORN_THREADS", "4"))
+# 8 threads = 8 requêtes simultanées. Même si 2 productions longues bloquent
+# 2 threads, il reste 6 threads pour le dashboard/polling/validation.
+threads = int(os.getenv("GUNICORN_THREADS", "8"))
 
 # ── Timeouts ─────────────────────────────────────────────────────────────────
 # Timeout élevé : les productions longues tournent en subprocess (via _run_cli),

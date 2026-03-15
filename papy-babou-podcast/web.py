@@ -168,11 +168,18 @@ def _sync_rapport_to_db(episode_id: str, rapport: dict) -> None:
             cur.execute(
                 "UPDATE productions SET rapport_json = %s, updated_at = NOW() "
                 "WHERE id = (SELECT id FROM productions WHERE episode_id = %s "
-                "ORDER BY created_at DESC LIMIT 1)",
+                "ORDER BY created_at DESC LIMIT 1) "
+                "RETURNING id",
                 (json.dumps(rapport, ensure_ascii=False, default=str), episode_id),
             )
+            row = cur.fetchone()
+            if not row:
+                logger.warning(
+                    "Sync rapport DB : aucune production trouvée pour %s — "
+                    "le rapport n'a pas été persisté en DB.", episode_id,
+                )
     except Exception as e:
-        logger.warning("Sync rapport DB échoué pour %s : %s", episode_id, e)
+        logger.error("Sync rapport DB ÉCHOUÉ pour %s : %s", episode_id, e)
 
 
 def _gc_expired_jobs():
@@ -240,8 +247,12 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
         try:
             stdout, stderr = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.communicate()
+            proc.terminate()  # SIGTERM d'abord (graceful)
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()  # SIGKILL en dernier recours
+                proc.wait(timeout=2)
             return {"error": f"Timeout ({timeout}s)", "status": "error"}
 
         if proc.returncode == -9 or proc.returncode == -15:
@@ -788,7 +799,16 @@ def api_episode_detail(episode_id):
 
 @app.route("/api/episode/<episode_id>/debug")
 def api_episode_debug(episode_id):
-    """Diagnostic endpoint — montre l'état complet des données d'un épisode."""
+    """Diagnostic endpoint — montre l'état complet des données d'un épisode.
+
+    Protégé par un header X-Debug-Key ou le paramètre ?debug_key=...
+    pour éviter l'exposition accidentelle de données internes.
+    """
+    debug_key = os.getenv("DEBUG_KEY", "")
+    if debug_key:
+        provided = request.headers.get("X-Debug-Key") or request.args.get("debug_key", "")
+        if provided != debug_key:
+            return jsonify({"error": "Accès refusé — clé de debug requise."}), 403
     if not re.match(r'^S\d{2}E\d{2}$', episode_id):
         return jsonify({"error": "Format invalide"}), 400
 
@@ -1053,7 +1073,10 @@ def api_continue_production(episode_id):
             with fichier_lock(checkpoint_path):
                 with open(checkpoint_path, "r", encoding="utf-8") as f:
                     cp_data = _json.load(f)
-                rapport_cp = cp_data.get("data", {}).get("rapport", {})
+                # BUG #5: S'assurer que data.rapport existe dans cp_data
+                # (sinon .get({}) crée un dict détaché qui ne sera pas sauvé)
+                cp_data.setdefault("data", {}).setdefault("rapport", {})
+                rapport_cp = cp_data["data"]["rapport"]
                 rapport_cp.setdefault("etapes", {}).setdefault("publication", {})
                 rapport_cp["etapes"]["publication"]["validation_humaine"] = True
                 with open(checkpoint_path, "w", encoding="utf-8") as f:
@@ -1127,12 +1150,13 @@ def api_regenerate_episode(episode_id):
         checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
         if checkpoint_path.exists():
             try:
-                with open(checkpoint_path, "r", encoding="utf-8") as f:
-                    cp = _json.load(f)
-                # B4: Ne modifier QUE l'étape, préserver toutes les données
-                cp["etape"] = "script"
-                with open(checkpoint_path, "w", encoding="utf-8") as f:
-                    _json.dump(cp, f, ensure_ascii=False, indent=2)
+                with fichier_lock(checkpoint_path):
+                    with open(checkpoint_path, "r", encoding="utf-8") as f:
+                        cp = _json.load(f)
+                    # B4: Ne modifier QUE l'étape, préserver toutes les données
+                    cp["etape"] = "script"
+                    with open(checkpoint_path, "w", encoding="utf-8") as f:
+                        _json.dump(cp, f, ensure_ascii=False, indent=2)
             except Exception as e:
                 corrections_path.unlink(missing_ok=True)
                 return jsonify({"error": f"Erreur lecture checkpoint : {e}"}), 500
@@ -1205,11 +1229,12 @@ def api_regenerate_episode(episode_id):
 
         # Forcer la reprise depuis l'étape audio en réécrivant le checkpoint
         try:
-            with open(checkpoint_path, "r", encoding="utf-8") as f:
-                cp = _json.load(f)
-            cp["etape"] = "audio"
-            with open(checkpoint_path, "w", encoding="utf-8") as f:
-                _json.dump(cp, f, ensure_ascii=False, indent=2)
+            with fichier_lock(checkpoint_path):
+                with open(checkpoint_path, "r", encoding="utf-8") as f:
+                    cp = _json.load(f)
+                cp["etape"] = "audio"
+                with open(checkpoint_path, "w", encoding="utf-8") as f:
+                    _json.dump(cp, f, ensure_ascii=False, indent=2)
         except Exception as e:
             return jsonify({"error": f"Erreur lecture checkpoint : {e}"}), 500
 
@@ -1239,8 +1264,8 @@ def _load_episode_params(episode_id):
             data = cp.get("data", {})
             if data.get("titre"):
                 return data
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Échec lecture checkpoint %s : %s", episode_id, e)
 
     # 2. Essayer la DB (source fiable pour titre/resume)
     if _DB_AVAILABLE:
@@ -1263,9 +1288,33 @@ def _load_episode_params(episode_id):
                     "morale": row.get("morale", ""),
                     "type_episode": row.get("type_episode", "standard"),
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Échec lecture DB pour params %s : %s", episode_id, e)
 
+    # 3. Essayer le plan de saison
+    m = re.match(r'S(\d+)E(\d+)', episode_id)
+    if m:
+        saison_num = int(m.group(1))
+        episode_num = int(m.group(2))
+        plan = config.charger_saison(saison_num)
+        if plan:
+            episodes_plan = plan.get("saison", {}).get("episodes", [])
+            ep = next((e for e in episodes_plan if e.get("numero") == episode_num), None)
+            if ep:
+                return {
+                    "titre": ep.get("titre", ""),
+                    "resume": ep.get("resume", ep.get("histoire_biblique", "")),
+                    "saison": saison_num,
+                    "numero": episode_num,
+                    "morale": ep.get("morale", ""),
+                    "type_episode": ep.get("type", "standard"),
+                }
+
+    # BUG #7: Toujours logger quand les paramètres sont introuvables
+    logger.warning(
+        "Paramètres introuvables pour %s (checkpoint: %s, DB: %s)",
+        episode_id, checkpoint_path.exists(), _DB_AVAILABLE,
+    )
     return None
 
 
@@ -1504,7 +1553,10 @@ def api_prochain_episode(saison_num):
                     status = "attente_validation_montage"
                 else:
                     status = "script_valide"
-            elif rapport.get("status") == "waiting_validation":
+            elif etapes.get("script", {}).get("chemin") or rapport.get("status") == "waiting_validation":
+                # Script existe (produit ou rejeté) → en attente de validation
+                # BUG #3: Après rejet, validation_humaine=False mais le script existe
+                # toujours — l'utilisateur doit pouvoir le modifier/régénérer
                 status = "attente_validation_script"
             else:
                 status = "en_cours"
