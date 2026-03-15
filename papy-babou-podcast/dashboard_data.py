@@ -104,9 +104,9 @@ def charger_historique_complet() -> list[dict]:
             if json_date and json_date > str(db_date):
                 merged[eid] = ep
 
-    # Trier par date de production
+    # Trier par date de production DESCENDANT (plus récent en premier)
     result = list(merged.values())
-    result.sort(key=lambda x: str(x.get("date_production", "")))
+    result.sort(key=lambda x: str(x.get("date_production", "")), reverse=True)
     return result
 
 

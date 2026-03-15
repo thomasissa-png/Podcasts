@@ -1395,18 +1395,70 @@ def _handle_publication(episode_id, comment=""):
 
 @app.route("/api/episodes-a-valider")
 def api_episodes_a_valider():
-    """API JSON — Liste des épisodes produits + planifiés (non encore produits).
+    """API JSON — Liste complète : en production + produits + planifiés.
 
-    Fusionne deux sources :
-    1. Épisodes produits (depuis historique) — avec statut de validation
-    2. Épisodes planifiés mais pas encore produits (depuis plans de saison)
-       — affichés avec statut "non produit" pour que l'utilisateur voie le plan complet
+    Fusionne trois sources (dans cet ordre de priorité) :
+    1. Épisodes en cours de production (depuis table productions) — statut waiting_*
+    2. Épisodes produits (depuis historique) — avec statut de validation
+    3. Épisodes planifiés mais pas encore produits (depuis plans de saison)
+
+    Tri : en production d'abord, puis produits (plus récent en premier), puis planifiés.
     """
     data = get_dashboard_data(0)
     episodes = []
-    produced_ids = set()
+    known_ids = set()
 
+    # 1. Épisodes en cours de production (DB : productions avec status != completed/failed)
+    #    Ces épisodes sont prioritaires car ils nécessitent une action immédiate
+    if _DB_AVAILABLE:
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT episode_id, etape_courante, status, started_at, rapport_json "
+                    "FROM productions "
+                    "WHERE status NOT IN ('completed', 'failed') "
+                    "ORDER BY started_at DESC"
+                )
+                in_prod_rows = cur.fetchall()
+            for row in in_prod_rows:
+                ep_id = row["episode_id"]
+                if ep_id in known_ids:
+                    continue
+                known_ids.add(ep_id)
+                rapport = row.get("rapport_json") or {}
+                etapes = rapport.get("etapes", {})
+                episodes.append({
+                    "episode_id": ep_id,
+                    "titre": rapport.get("titre", ep_id),
+                    "type_episode": rapport.get("type_episode", "standard"),
+                    "score": 0,
+                    "ambiance": "",
+                    "date": row["started_at"].isoformat() if hasattr(row["started_at"], "isoformat") else str(row.get("started_at", "")),
+                    "morale": rapport.get("morale", ""),
+                    "personnages": [],
+                    "retours_humains": "",
+                    "audio_preview": None,
+                    "audio_hq": None,
+                    "duree_secondes": None,
+                    "taille_mb": None,
+                    "validation_script": etapes.get("script", {}).get("validation_humaine", False),
+                    "validation_montage": etapes.get("montage", {}).get("validation_humaine", False),
+                    "audio_missing": False,
+                    "needs_validation": True,
+                    "has_audio": bool(etapes.get("montage", {}).get("chemin_hq")),
+                    "status": "in_production",
+                    "etape_courante": row.get("etape_courante", "script"),
+                })
+        except Exception as e:
+            logger.debug("DB indisponible pour productions en cours : %s", e)
+
+    # 2. Épisodes produits (depuis historique — plus récent en premier)
     for ep in data["episodes"]:
+        ep_id = ep.get("episode_id", "")
+        if ep_id in known_ids:
+            continue
+        known_ids.add(ep_id)
         needs_validation = (
             not ep.get("validation_script", False)
             or not ep.get("validation_montage", False)
@@ -1417,9 +1469,8 @@ def api_episodes_a_valider():
             "has_audio": bool(ep.get("audio_preview") or ep.get("audio_hq")),
             "status": "produced",
         })
-        produced_ids.add(ep.get("episode_id", ""))
 
-    # Ajouter les épisodes planifiés mais pas encore produits
+    # 3. Épisodes planifiés mais pas encore produits
     for num_saison in data.get("saisons_dispo", []):
         plan = config.charger_saison(num_saison)
         if not plan:
@@ -1427,31 +1478,39 @@ def api_episodes_a_valider():
         saison_data = plan.get("saison", {})
         for ep_plan in saison_data.get("episodes", []):
             ep_id = f"S{num_saison:02d}E{ep_plan.get('numero', 0):02d}"
-            if ep_id not in produced_ids:
-                episodes.append({
-                    "episode_id": ep_id,
-                    "titre": ep_plan.get("titre", "?"),
-                    "type_episode": ep_plan.get("type", "standard"),
-                    "score": 0,
-                    "ambiance": ep_plan.get("ambiance", ""),
-                    "date": "",
-                    "morale": ep_plan.get("morale", ""),
-                    "personnages": ep_plan.get("personnages", []),
-                    "retours_humains": "",
-                    "audio_preview": None,
-                    "audio_hq": None,
-                    "duree_secondes": None,
-                    "taille_mb": None,
-                    "validation_script": False,
-                    "validation_montage": False,
-                    "audio_missing": False,
-                    "needs_validation": True,
-                    "has_audio": False,
-                    "status": "planned",
-                })
+            if ep_id in known_ids:
+                continue
+            known_ids.add(ep_id)
+            episodes.append({
+                "episode_id": ep_id,
+                "titre": ep_plan.get("titre", "?"),
+                "type_episode": ep_plan.get("type", "standard"),
+                "score": 0,
+                "ambiance": ep_plan.get("ambiance", ""),
+                "date": "",
+                "morale": ep_plan.get("morale", ""),
+                "personnages": ep_plan.get("personnages", []),
+                "retours_humains": "",
+                "audio_preview": None,
+                "audio_hq": None,
+                "duree_secondes": None,
+                "taille_mb": None,
+                "validation_script": False,
+                "validation_montage": False,
+                "audio_missing": False,
+                "needs_validation": True,
+                "has_audio": False,
+                "status": "planned",
+            })
 
-    # Trier : épisodes planifiés d'abord (pas encore produits), puis par ID
-    episodes.sort(key=lambda e: (0 if e.get("status") == "planned" else 1, e.get("episode_id", "")))
+    # Tri : en production d'abord, puis produits (déjà triés par date DESC),
+    # puis planifiés par ID croissant
+    _status_order = {"in_production": 0, "produced": 1, "planned": 2}
+    episodes.sort(key=lambda e: (
+        _status_order.get(e.get("status"), 9),
+        "" if e.get("status") == "in_production" else (e.get("date", "") or ""),
+        e.get("episode_id", ""),
+    ))
 
     return jsonify(episodes)
 

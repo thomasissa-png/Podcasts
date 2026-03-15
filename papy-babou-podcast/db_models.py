@@ -689,7 +689,7 @@ class HistoriqueRepo:
             saison: Numéro de saison pour filtrer (None = tout).
 
         Returns:
-            Liste des entrées d'historique ordonnées chronologiquement.
+            Liste des entrées d'historique (plus récent en premier).
         """
         with get_cursor(commit=False) as cur:
             if saison:
@@ -697,14 +697,14 @@ class HistoriqueRepo:
                 cur.execute(
                     "SELECT * FROM historique_episodes "
                     "WHERE episode_id LIKE %s AND deleted_at IS NULL "
-                    "ORDER BY date_production ASC",
+                    "ORDER BY date_production DESC",
                     (f"{prefix}%",),
                 )
             else:
                 cur.execute(
                     "SELECT * FROM historique_episodes "
                     "WHERE deleted_at IS NULL "
-                    "ORDER BY date_production ASC"
+                    "ORDER BY date_production DESC"
                 )
             rows = cur.fetchall()
 

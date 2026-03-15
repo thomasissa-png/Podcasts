@@ -1095,7 +1095,7 @@
                 Cliquez sur une saison pour voir son avancement dans l'onglet Suivi.
             </p>
             <div class="perso-grid">
-                {% for s in saisons_dispo %}
+                {% for s in saisons_dispo|reverse %}
                 <div class="perso-chip" style="cursor: pointer;" onclick="loadPlanDetail({{ s }})">
                     <span class="name" style="color: var(--orange-chaud);">Saison {{ s }}</span>
                     <span class="count" style="font-size: 0.7rem;">{% if s in saisons_info %}{{ saisons_info[s].theme[:30] }} ({{ saisons_info[s].nb_episodes }} ép.){% else %}Voir le plan{% endif %}</span>
@@ -1200,7 +1200,7 @@
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label for="ps-saison">Saison</label>
                 <select id="ps-saison" class="form-input" required style="max-width: 500px;" onchange="loadSaisonProgress()">
-                    {% for num in saisons_dispo %}
+                    {% for num in saisons_dispo|reverse %}
                     <option value="{{ num }}" {% if num == saisons_dispo[-1] %}selected{% endif %}>
                         Saison {{ num }}{% if num in saisons_info %} — {{ saisons_info[num].theme }} ({{ saisons_info[num].nb_episodes }} ép.){% endif %}
                     </option>
@@ -1591,10 +1591,22 @@
 
     <div id="alert-validation" class="alert"></div>
 
+    <!-- Filtre par saison (validation) -->
+    {% if saisons_dispo %}
+    <div class="btn-group" style="margin-bottom: 1rem;">
+        <button class="btn btn-saison-filter active" onclick="filterValidationSaison(0, this)">Tout</button>
+        {% for s in saisons_dispo|reverse %}
+        <button class="btn btn-saison-filter" onclick="filterValidationSaison({{ s }}, this)">
+            Saison {{ s }}
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Liste des épisodes à valider -->
     <div class="card" style="margin-bottom: 1.25rem;">
         <div class="card-header">
-            <span class="icon">&#128221;</span> Épisodes produits
+            <span class="icon">&#128221;</span> Épisodes
             <span class="count" id="val-count">...</span>
         </div>
         <div class="card-body" id="val-episodes-list">
@@ -1852,7 +1864,7 @@
     <!-- Filtre par saison -->
     <div class="btn-group">
         <a href="/" class="btn btn-saison-filter {{ 'active' if saison_filtre == 0 }}">Tout</a>
-        {% for s in saisons_dispo %}
+        {% for s in saisons_dispo|reverse %}
         <a href="/?saison={{ s }}" class="btn btn-saison-filter {{ 'active' if saison_filtre == s }}">
             Saison {{ s }}
         </a>
@@ -3498,57 +3510,97 @@ async function loadConfig() {
 /* ── Validation : chargement et interactions ───────────────────────────── */
 let _currentEpisodeId = null;
 let _valLoaded = false;
+let _valSaisonFilter = 0;  /* 0 = toutes les saisons */
+let _allValEpisodes = [];   /* Cache de tous les épisodes pour le filtre client-side */
 
 function toggleSection(id) {
     const el = document.getElementById(id);
     if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+function filterValidationSaison(saison, btnEl) {
+    _valSaisonFilter = saison;
+    /* Mettre à jour les boutons actifs */
+    document.querySelectorAll('#page-validation .btn-saison-filter').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    /* Re-render avec le filtre */
+    _renderValidationEpisodes(_allValEpisodes);
+}
+
 async function loadValidationEpisodes() {
     try {
         const resp = await fetch('/api/episodes-a-valider');
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const episodes = await resp.json();
+        _allValEpisodes = await resp.json();
+        _renderValidationEpisodes(_allValEpisodes);
+        _valLoaded = true;
+    } catch (err) {
+        document.getElementById('val-episodes-list').innerHTML =
+            '<div class="empty"><p>Erreur : ' + escapeHtml(err.message) + '</p></div>';
+    }
+}
 
-        const nbProduits = episodes.filter(e => e.status !== 'planned').length;
-        const nbPlanifies = episodes.filter(e => e.status === 'planned').length;
-        const countText = nbPlanifies > 0
-            ? nbProduits + ' produit' + (nbProduits > 1 ? 's' : '') + ' + ' + nbPlanifies + ' planifié' + (nbPlanifies > 1 ? 's' : '')
-            : String(nbProduits);
-        document.getElementById('val-count').textContent = countText;
+function _renderValidationEpisodes(allEpisodes) {
+    /* Appliquer le filtre de saison */
+    let episodes = allEpisodes;
+    if (_valSaisonFilter > 0) {
+        const prefix = 'S' + String(_valSaisonFilter).padStart(2, '0');
+        episodes = allEpisodes.filter(e => e.episode_id && e.episode_id.startsWith(prefix));
+    }
 
-        if (episodes.length === 0) {
+    const nbProduits = episodes.filter(e => e.status !== 'planned').length;
+    const nbPlanifies = episodes.filter(e => e.status === 'planned').length;
+    const nbEnCours = episodes.filter(e => e.status === 'in_production').length;
+    let countParts = [];
+    if (nbProduits > 0) countParts.push(nbProduits + ' produit' + (nbProduits > 1 ? 's' : ''));
+    if (nbEnCours > 0) countParts.push(nbEnCours + ' en cours');
+    if (nbPlanifies > 0) countParts.push(nbPlanifies + ' planifié' + (nbPlanifies > 1 ? 's' : ''));
+    document.getElementById('val-count').textContent = countParts.join(' + ') || '0';
+
+    if (episodes.length === 0) {
             document.getElementById('val-episodes-list').innerHTML =
                 '<div class="empty"><div class="icon">&#9989;</div>'
-                + '<p>Aucun épisode produit ou planifié pour le moment.</p>'
+                + '<p>Aucun épisode produit ou planifié' + (_valSaisonFilter > 0 ? ' pour la saison ' + _valSaisonFilter : '') + '.</p>'
                 + '<p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">'
                 + 'Planifiez une saison ou produisez un épisode pour commencer.</p></div>';
             return;
         }
 
         let html = '<table class="val-table"><thead><tr>'
-            + '<th>ID</th><th>Titre</th><th class="hide-mobile">Type</th><th class="hide-mobile">Audio</th>'
+            + '<th>ID</th><th>Titre</th><th class="hide-mobile">Type</th><th class="hide-mobile">Statut</th>'
             + '<th class="hide-mobile">Script</th><th class="hide-mobile">Montage</th><th>Action</th>'
             + '</tr></thead><tbody>';
 
         for (const ep of episodes) {
             const isPlanned = (ep.status === 'planned');
+            const isInProd = (ep.status === 'in_production');
             const hasAudio = ep.has_audio;
-            const audioBadge = isPlanned
-                ? '<span style="color: var(--texte-dim);">—</span>'
-                : hasAudio
-                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Oui</span>'
-                    : '<span style="color: var(--corail); font-weight: 800;">&#10007; Non</span>';
-            const scriptBadge = isPlanned
+
+            /* Badge de statut global */
+            let statusBadge;
+            if (isPlanned) {
+                statusBadge = '<span style="color: var(--texte-dim); font-size: 0.78rem;">&#128203; Planifié</span>';
+            } else if (isInProd) {
+                const etape = ep.etape_courante || 'script';
+                statusBadge = '<span style="color: var(--orange-chaud); font-weight: 700; font-size: 0.78rem;">&#9881; ' + escapeHtml(etape) + '</span>';
+            } else if (ep.validation_script && ep.validation_montage) {
+                statusBadge = '<span style="color: var(--vert-prairie); font-weight: 800; font-size: 0.78rem;">&#10003; Prêt</span>';
+            } else if (hasAudio) {
+                statusBadge = '<span style="color: var(--turquoise); font-size: 0.78rem;">&#127911; Audio prêt</span>';
+            } else {
+                statusBadge = '<span style="color: var(--texte-light); font-size: 0.78rem;">&#9675; En attente</span>';
+            }
+
+            const scriptBadge = (isPlanned || isInProd)
                 ? '<span style="color: var(--texte-dim);">—</span>'
                 : ep.validation_script
-                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
-                    : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
-            const montageBadge = isPlanned
+                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003;</span>'
+                    : '<span style="color: var(--texte-light);">&#9675;</span>';
+            const montageBadge = (isPlanned || isInProd)
                 ? '<span style="color: var(--texte-dim);">—</span>'
                 : ep.validation_montage
-                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
-                    : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
+                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003;</span>'
+                    : '<span style="color: var(--texte-light);">&#9675;</span>';
 
             const rowStyle = isPlanned
                 ? ' style="opacity: 0.5; font-style: italic;"'
@@ -3556,14 +3608,14 @@ async function loadValidationEpisodes() {
                     ? ' style="opacity: 0.6;"' : '';
 
             const actionBtn = isPlanned
-                ? '<span style="color: var(--texte-dim); font-size: 0.8rem;">&#128203; Planifié</span>'
+                ? ''
                 : '<button class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; min-height: 44px;" onclick="loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')">&#128269; Voir</button>';
 
             html += '<tr' + rowStyle + '>'
                 + '<td class="ep-id">' + escapeHtml(ep.episode_id) + '</td>'
                 + '<td class="ep-titre">' + escapeHtml(ep.titre) + '</td>'
                 + '<td class="hide-mobile"><span class="ep-type type-' + (ep.type_episode || 'standard') + '">' + escapeHtml(ep.type_episode || 'standard') + '</span></td>'
-                + '<td class="hide-mobile">' + audioBadge + '</td>'
+                + '<td class="hide-mobile">' + statusBadge + '</td>'
                 + '<td class="hide-mobile">' + scriptBadge + '</td>'
                 + '<td class="hide-mobile">' + montageBadge + '</td>'
                 + '<td>' + actionBtn + '</td>'
@@ -3571,11 +3623,6 @@ async function loadValidationEpisodes() {
         }
         html += '</tbody></table>';
         document.getElementById('val-episodes-list').innerHTML = html;
-        _valLoaded = true;
-    } catch (err) {
-        document.getElementById('val-episodes-list').innerHTML =
-            '<div class="empty"><p>Erreur : ' + escapeHtml(err.message) + '</p></div>';
-    }
 }
 
 async function loadEpisodeDetail(episodeId) {
