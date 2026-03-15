@@ -182,6 +182,133 @@ def _sync_rapport_to_db(episode_id: str, rapport: dict) -> None:
         logger.error("Sync rapport DB ÉCHOUÉ pour %s : %s", episode_id, e)
 
 
+def _sync_script_validated_to_db(episode_id: str) -> None:
+    """Marque le script le plus récent comme validé en DB.
+
+    Appelé lors de la validation web du script pour que le script validé
+    survive aux redéploiements Replit (le fichier _valide.json est éphémère).
+    """
+    try:
+        from database import DATABASE_URL, get_cursor
+        if not DATABASE_URL:
+            return
+        with get_cursor() as cur:
+            # Charger le script le plus récent
+            cur.execute(
+                "UPDATE scripts SET is_validated = TRUE "
+                "WHERE id = (SELECT id FROM scripts WHERE episode_id = %s "
+                "ORDER BY version DESC LIMIT 1) "
+                "RETURNING id",
+                (episode_id,),
+            )
+            row = cur.fetchone()
+            if row:
+                logger.info("Script %s marqué validé en DB (id=%d)", episode_id, row["id"])
+            else:
+                # Pas de script en DB → sauvegarder depuis le fichier
+                import json as _json
+                script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+                if script_path.exists():
+                    with open(script_path, "r", encoding="utf-8") as f:
+                        script = _json.load(f)
+                    from db_models import ScriptRepo
+                    nb_mots = sum(
+                        len(s.get("texte", "").split())
+                        for s in script.get("episode", {}).get("segments", [])
+                        if s.get("personnage") != "sfx"
+                    )
+                    ScriptRepo.sauvegarder(
+                        episode_id=episode_id,
+                        script=script,
+                        nb_mots=nb_mots,
+                        is_validated=True,
+                        source="validation_web",
+                    )
+                    logger.info("Script %s sauvegardé + validé en DB depuis fichier", episode_id)
+    except Exception as e:
+        logger.error("Sync script validé DB ÉCHOUÉ pour %s : %s", episode_id, e)
+
+
+def _sync_checkpoint_to_db(episode_id: str) -> None:
+    """Synchronise le checkpoint en DB pour survie au redéploiement.
+
+    Sauvegarde le contenu du checkpoint dans le champ checkpoint_data
+    de la production la plus récente. Permet de reprendre la production
+    audio après un redéploiement même si le fichier checkpoint est perdu.
+    """
+    try:
+        from database import DATABASE_URL, get_cursor
+        if not DATABASE_URL:
+            return
+        import json as _json
+        checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        if not checkpoint_path.exists():
+            return
+        with open(checkpoint_path, "r", encoding="utf-8") as f:
+            cp_data = _json.load(f)
+        with get_cursor() as cur:
+            cur.execute(
+                "UPDATE productions SET checkpoint_data = %s, updated_at = NOW() "
+                "WHERE id = (SELECT id FROM productions WHERE episode_id = %s "
+                "ORDER BY created_at DESC LIMIT 1) "
+                "RETURNING id",
+                (_json.dumps(cp_data, ensure_ascii=False, default=str), episode_id),
+            )
+            row = cur.fetchone()
+            if row:
+                logger.info("Checkpoint %s synchronisé en DB (production id=%d)", episode_id, row["id"])
+    except Exception as e:
+        logger.error("Sync checkpoint DB ÉCHOUÉ pour %s : %s", episode_id, e)
+
+
+def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
+    """Restaure un checkpoint depuis la DB si le fichier local n'existe pas.
+
+    Après un redéploiement Replit, les fichiers checkpoint sont perdus.
+    Cette fonction les restaure depuis le champ checkpoint_data de la
+    production la plus récente en DB.
+    """
+    try:
+        from database import DATABASE_URL, get_cursor
+        if not DATABASE_URL:
+            return
+        import json as _json
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                "SELECT checkpoint_data FROM productions "
+                "WHERE episode_id = %s AND checkpoint_data IS NOT NULL "
+                "AND checkpoint_data != '{}' "
+                "ORDER BY created_at DESC LIMIT 1",
+                (episode_id,),
+            )
+            row = cur.fetchone()
+        if row and row["checkpoint_data"]:
+            cp_data = row["checkpoint_data"]
+            # S'assurer que le répertoire existe
+            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(checkpoint_path, "w", encoding="utf-8") as f:
+                _json.dump(cp_data, f, ensure_ascii=False, indent=2)
+            logger.info("Checkpoint %s restauré depuis la DB", episode_id)
+
+            # Restaurer aussi le script validé si absent
+            script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+            if not script_path.exists():
+                try:
+                    from db_models import ScriptRepo
+                    db_script = ScriptRepo.charger_valide(episode_id)
+                    if not db_script or not db_script.get("episode"):
+                        db_script = ScriptRepo.charger_derniere_version(episode_id)
+                    if db_script and db_script.get("episode"):
+                        script_path.parent.mkdir(parents=True, exist_ok=True)
+                        with open(script_path, "w", encoding="utf-8") as f:
+                            _json.dump(db_script, f, ensure_ascii=False, indent=2)
+                        logger.info("Script validé %s restauré depuis la DB", episode_id)
+                except Exception as e:
+                    logger.warning("Restauration script %s depuis DB échouée : %s", episode_id, e)
+    except Exception as e:
+        logger.warning("Restauration checkpoint %s depuis DB échouée : %s", episode_id, e)
+
+
 def _gc_expired_jobs():
     """Supprime les jobs termines dont le TTL est depasse (appele sous _jobs_lock).
 
@@ -1021,6 +1148,13 @@ def api_validate_episode(episode_id):
 
         # Sync rapport to DB (survit aux redéploiements)
         _sync_rapport_to_db(episode_id, rapport)
+
+        # Si validation du script → marquer le script comme validé en DB
+        # et sauvegarder le checkpoint en DB pour survie au redéploiement
+        if step == "script" and action == "validate":
+            _sync_script_validated_to_db(episode_id)
+            _sync_checkpoint_to_db(episode_id)
+
     except OSError as e:
         return jsonify({"error": f"Erreur sauvegarde rapport : {e}"}), 500
 
@@ -1067,7 +1201,10 @@ def api_continue_production(episode_id):
         return jsonify({"error": "Phase invalide. Valeurs acceptées : audio, publication"}), 400
 
     # Vérifier qu'un checkpoint existe pour cet épisode
+    # Si le fichier n'existe pas (redéploiement), tenter de le restaurer depuis la DB
     checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    if not checkpoint_path.exists():
+        _restore_checkpoint_from_db(episode_id, checkpoint_path)
     if not checkpoint_path.exists():
         return jsonify({"error": f"Checkpoint introuvable pour {episode_id}. La production initiale doit d'abord être lancée."}), 404
 
