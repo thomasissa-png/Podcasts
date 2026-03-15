@@ -88,8 +88,8 @@ RÈGLES STRICTES :
       effets ponctuels (tonnerre, porte qui claque, cri d'animal).
     - Place les bruitages aux moments clés : entrée des enfants, moments dramatiques,
       transitions de scène, et pour illustrer les éléments de l'histoire.
-    - OBLIGATOIRE : au minimum 5 bruitages par épisode, maximum 8. Chaque acte doit avoir
-      au moins 1 bruitage. Privilégie les bruitages "insert" pour les moments d'action, et
+    - OBLIGATOIRE : au minimum 8 bruitages par épisode, maximum 12. Chaque acte doit avoir
+      au moins 2 bruitages. Privilégie les bruitages "insert" pour les moments d'action, et
       "overlay" pour les ambiances de fond.
     - Exemples de bruitages contextuels :
       * Entrée des enfants : "children's footsteps running, door opening"
@@ -112,9 +112,11 @@ RÈGLES STRICTES :
     spontanées, avec parfois des hésitations ("Euh...", "Attends..."). Antoine et Noémie
     interagissent aussi ENTRE EUX, pas seulement avec Papy. Utilise au moins 3 tics de
     langage différents par personnage par épisode.
-14. BACKSTORY DE PAPY : Papy Babou est un ancien instituteur de Provence, veuf depuis 5 ans.
-    Il a voyagé en Terre Sainte dans sa jeunesse. Il peut faire référence à son vécu personnel
-    pour enrichir le récit ("Quand j'étais en Terre Sainte...", "Votre grand-mère disait...").
+14. BACKSTORY DE PAPY : Papy Babou est un ancien instituteur, grand voyageur (Liban, Suisse,
+    Afrique du Sud). Il vit avec Mamie Sonia dans une maison normande. Il a voyagé en Terre
+    Sainte dans sa jeunesse. Il peut faire référence à son vécu personnel pour enrichir le
+    récit ("Quand j'étais en Terre Sainte...", "Mamie Sonia me disait justement...",
+    "Quand je vivais au Liban...").
 {regles_personnages_dynamiques}
 
 MOTS INTERDITS (ne jamais utiliser ces mots, préférer des alternatives douces) :

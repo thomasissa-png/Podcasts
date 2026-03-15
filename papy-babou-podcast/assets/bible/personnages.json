@@ -159,17 +159,6 @@
         "Utilisé comme petit fil rouge en parallèle de l'histoire principale",
         "N'apparaît physiquement qu'au dernier épisode de la saison 1"
       ]
-    },
-    "narrateur": {
-      "nom_complet": "Narrateur",
-      "description": "Voix neutre qui assure les transitions entre les scènes et fournit le contexte historique.",
-      "ton": "neutre, clair, posé",
-      "usage": [
-        "Transitions entre scènes",
-        "Contexte historique ou géographique",
-        "Introduction et conclusion de l'épisode",
-        "Descriptions de lieux et d'ambiances"
-      ]
     }
   },
   "decor": {

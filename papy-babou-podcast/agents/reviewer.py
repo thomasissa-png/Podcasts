@@ -64,7 +64,7 @@ CRITÈRES D'ÉVALUATION (note sur 14, ramenée à 10) :
    - Comptage : {mots_min_enfant} mots/min pour enfants, {mots_min_adulte} mots/min pour adultes.
    - Format JSON correct et complet ?
    - Les segments SFX (personnage "sfx") sont-ils bien placés et pertinents ?
-   - Les bruitages enrichissent-ils l'histoire sans surcharger ? (3-8 SFX max)
+   - Les bruitages enrichissent-ils l'histoire sans surcharger ? (8-12 SFX pour un épisode de 25 min)
    - Chaque segment SFX doit avoir un champ "mode" : "overlay" (superposé aux voix)
      ou "insert" (inséré séquentiellement entre les segments voix).
    - Chaque segment SFX doit avoir un champ "duree_sfx_secondes" (durée en secondes).
