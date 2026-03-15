@@ -274,73 +274,102 @@ class Planificateur:
 
         max_tokens = 12000
         max_retry_truncated = 2
-        for attempt in range(1, max_retry_truncated + 1):
-            response = config.appel_claude_avec_retry(
-                self.client,
-                model=config.CLAUDE_MODEL,
-                max_tokens=max_tokens,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}],
-            )
 
-            if response.stop_reason == "max_tokens":
-                if attempt < max_retry_truncated:
-                    max_tokens = min(int(max_tokens * 1.5), 16384)
-                    logger.warning(
-                        "Plan tronqué (max_tokens atteint). "
-                        "Retry %d/%d avec max_tokens=%d",
-                        attempt, max_retry_truncated, max_tokens,
-                    )
-                    continue
-                else:
-                    raise ValueError(
-                        f"Le plan de saison dépasse la limite de tokens "
-                        f"({max_tokens}) même après {max_retry_truncated} "
-                        f"tentatives. Essayez avec moins d'épisodes."
-                    )
-            break
-
-        texte_brut = response.content[0].text.strip()
-        try:
-            plan = parser_json_llm(texte_brut)
-        except json.JSONDecodeError as e:
-            logger.warning(
-                "JSON malformé dans le plan LLM (%s). "
-                "Retry avec une nouvelle génération...", e,
-            )
-            response = config.appel_claude_avec_retry(
-                self.client,
-                model=config.CLAUDE_MODEL,
-                max_tokens=max_tokens,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            if response.stop_reason == "max_tokens":
-                raise ValueError(
-                    f"Le plan de saison dépasse la limite de tokens "
-                    f"({max_tokens}). Le JSON est tronqué et inutilisable."
+        # Boucle de validation avec retry automatique :
+        # Si le plan généré ne passe pas la validation (doublons, ordre chrono,
+        # nombre d'épisodes insuffisant...), on re-génère en injectant l'erreur
+        # dans le prompt pour que Claude corrige.
+        max_validation_retries = 3
+        derniere_erreur = ""
+        for validation_attempt in range(1, max_validation_retries + 1):
+            # Si retry après erreur de validation, enrichir le prompt
+            prompt_effectif = prompt
+            if derniere_erreur:
+                prompt_effectif = (
+                    f"{prompt}\n\n"
+                    f"⚠️ ERREUR DE VALIDATION (tentative {validation_attempt}/{max_validation_retries}) :\n"
+                    f"Le plan précédent a été REJETÉ pour la raison suivante :\n"
+                    f"  {derniere_erreur}\n\n"
+                    f"Corrige ce problème et génère un nouveau plan valide."
                 )
+                logger.warning(
+                    "Retry validation %d/%d — erreur précédente : %s",
+                    validation_attempt, max_validation_retries, derniere_erreur,
+                )
+
+            # Génération avec retry sur max_tokens
+            for attempt in range(1, max_retry_truncated + 1):
+                response = config.appel_claude_avec_retry(
+                    self.client,
+                    model=config.CLAUDE_MODEL,
+                    max_tokens=max_tokens,
+                    system=SYSTEM_PROMPT,
+                    messages=[{"role": "user", "content": prompt_effectif}],
+                )
+                if response.stop_reason == "max_tokens":
+                    if attempt < max_retry_truncated:
+                        max_tokens = min(int(max_tokens * 1.5), 16384)
+                        logger.warning(
+                            "Plan tronqué (max_tokens atteint). "
+                            "Retry %d/%d avec max_tokens=%d",
+                            attempt, max_retry_truncated, max_tokens,
+                        )
+                        continue
+                    else:
+                        raise ValueError(
+                            f"Le plan de saison dépasse la limite de tokens "
+                            f"({max_tokens}) même après {max_retry_truncated} "
+                            f"tentatives. Essayez avec moins d'épisodes."
+                        )
+                break
+
             texte_brut = response.content[0].text.strip()
-            plan = parser_json_llm(texte_brut)
-        self._valider_plan(plan)
-
-        # Validate episode count matches requested nb_episodes
-        nb_generes = len(plan["saison"]["episodes"])
-        if nb_generes != nb_episodes:
-            logger.warning(
-                "Le LLM a généré %d épisodes au lieu de %d demandés. "
-                "Auto-correction du plan.",
-                nb_generes, nb_episodes,
-            )
-            if nb_generes > nb_episodes:
-                # Truncate excess episodes
-                plan["saison"]["episodes"] = plan["saison"]["episodes"][:nb_episodes]
-            else:
+            try:
+                plan = parser_json_llm(texte_brut)
+            except json.JSONDecodeError as e:
+                derniere_erreur = f"JSON malformé : {e}"
+                if validation_attempt < max_validation_retries:
+                    continue
                 raise ValueError(
-                    f"Le plan ne contient que {nb_generes} épisodes "
-                    f"au lieu de {nb_episodes} demandés. "
-                    f"Relancez la planification."
+                    f"Le plan de saison n'est pas du JSON valide "
+                    f"après {max_validation_retries} tentatives : {e}"
                 )
+
+            # Validation structurelle et chronologique
+            try:
+                self._valider_plan(plan)
+            except ValueError as e:
+                derniere_erreur = str(e)
+                if validation_attempt < max_validation_retries:
+                    continue
+                raise
+
+            # Validate episode count matches requested nb_episodes
+            nb_generes = len(plan["saison"]["episodes"])
+            if nb_generes != nb_episodes:
+                logger.warning(
+                    "Le LLM a généré %d épisodes au lieu de %d demandés. "
+                    "Auto-correction du plan.",
+                    nb_generes, nb_episodes,
+                )
+                if nb_generes > nb_episodes:
+                    plan["saison"]["episodes"] = plan["saison"]["episodes"][:nb_episodes]
+                else:
+                    derniere_erreur = (
+                        f"Le plan ne contient que {nb_generes} épisodes "
+                        f"au lieu de {nb_episodes} demandés."
+                    )
+                    if validation_attempt < max_validation_retries:
+                        continue
+                    raise ValueError(derniere_erreur)
+
+            # Plan valide — sortir de la boucle
+            if derniere_erreur:
+                logger.info(
+                    "Plan corrigé après %d tentative(s) de validation.",
+                    validation_attempt,
+                )
+            break
 
         logger.info(
             "Saison %d planifiée : %d épisodes, thème '%s'",

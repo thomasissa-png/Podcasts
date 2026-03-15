@@ -892,80 +892,99 @@ class Scripteur:
 
         # max_tokens adaptatif selon le type d'épisode
         max_tokens = 12000 if type_episode == "bonus" else 16384
-
-        # Tentative avec retry automatique si la réponse est tronquée
         max_retry_truncated = 2
-        for attempt in range(1, max_retry_truncated + 1):
-            response = config.appel_claude_avec_retry(
-                self.client,
-                model=config.CLAUDE_MODEL,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                messages=[{"role": "user", "content": prompt}],
-            )
 
-            if response.stop_reason == "max_tokens":
-                if attempt < max_retry_truncated:
-                    max_tokens = min(int(max_tokens * 1.5), 32768)
-                    logger.warning(
-                        "Réponse tronquée (max_tokens atteint). "
-                        "Retry %d/%d avec max_tokens=%d",
-                        attempt, max_retry_truncated, max_tokens,
-                    )
-                    continue
-                else:
-                    raise ValueError(
-                        f"Le script généré dépasse la limite de tokens "
-                        f"({max_tokens} tokens) même après {max_retry_truncated} "
-                        f"tentatives. Le JSON est tronqué et inutilisable."
-                    )
-            break
-
-        # Protection contre une réponse vide
-        if not response.content:
-            raise ValueError(
-                "La réponse de l'API Claude est vide (aucun bloc de contenu). "
-                "Vérifiez la configuration de l'appel API."
-            )
-
-        texte_brut = response.content[0].text.strip()
-        try:
-            script = parser_json_llm(texte_brut)
-        except json.JSONDecodeError as e:
-            logger.warning(
-                "JSON malformé dans la réponse LLM (%s). "
-                "Retry avec instruction JSON explicite...", e,
-            )
-            # Retry avec un message supplémentaire pour guider le LLM
-            response = config.appel_claude_avec_retry(
-                self.client,
-                model=config.CLAUDE_MODEL,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                messages=[
-                    {"role": "user", "content": prompt},
-                    {"role": "assistant", "content": "Je vais générer le script en JSON valide."},
-                    {"role": "user", "content": "Réponds UNIQUEMENT en JSON valide, sans texte avant ni après. Commence directement par {"},
-                ],
-            )
-            if response.stop_reason == "max_tokens":
-                raise ValueError(
-                    f"Le script généré dépasse la limite de tokens "
-                    f"({max_tokens} tokens). Le JSON est tronqué et inutilisable."
+        # Boucle de validation avec retry automatique :
+        # Si le script généré ne passe pas la validation (structure, personnage
+        # inconnu...), on re-génère en injectant l'erreur dans le prompt.
+        max_validation_retries = 3
+        derniere_erreur = ""
+        for validation_attempt in range(1, max_validation_retries + 1):
+            prompt_effectif = prompt
+            if derniere_erreur:
+                prompt_effectif = (
+                    f"{prompt}\n\n"
+                    f"⚠️ ERREUR DE VALIDATION (tentative {validation_attempt}/{max_validation_retries}) :\n"
+                    f"Le script précédent a été REJETÉ pour la raison suivante :\n"
+                    f"  {derniere_erreur}\n\n"
+                    f"Corrige ce problème et génère un nouveau script valide."
                 )
+                logger.warning(
+                    "Retry validation script %d/%d — erreur précédente : %s",
+                    validation_attempt, max_validation_retries, derniere_erreur,
+                )
+
+            # Génération avec retry sur max_tokens
+            for attempt in range(1, max_retry_truncated + 1):
+                response = config.appel_claude_avec_retry(
+                    self.client,
+                    model=config.CLAUDE_MODEL,
+                    max_tokens=max_tokens,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": prompt_effectif}],
+                )
+                if response.stop_reason == "max_tokens":
+                    if attempt < max_retry_truncated:
+                        max_tokens = min(int(max_tokens * 1.5), 32768)
+                        logger.warning(
+                            "Réponse tronquée (max_tokens atteint). "
+                            "Retry %d/%d avec max_tokens=%d",
+                            attempt, max_retry_truncated, max_tokens,
+                        )
+                        continue
+                    else:
+                        raise ValueError(
+                            f"Le script généré dépasse la limite de tokens "
+                            f"({max_tokens} tokens) même après {max_retry_truncated} "
+                            f"tentatives. Le JSON est tronqué et inutilisable."
+                        )
+                break
+
+            # Protection contre une réponse vide
             if not response.content:
-                raise ValueError("La réponse de l'API Claude est vide après retry JSON.")
+                raise ValueError(
+                    "La réponse de l'API Claude est vide (aucun bloc de contenu). "
+                    "Vérifiez la configuration de l'appel API."
+                )
+
             texte_brut = response.content[0].text.strip()
-            script = parser_json_llm(texte_brut)
+            try:
+                script = parser_json_llm(texte_brut)
+            except json.JSONDecodeError as e:
+                derniere_erreur = f"JSON malformé : {e}"
+                if validation_attempt < max_validation_retries:
+                    continue
+                raise ValueError(
+                    f"Le script n'est pas du JSON valide "
+                    f"après {max_validation_retries} tentatives : {e}"
+                )
 
-        # Type-check : le LLM doit retourner un dict, pas une liste ou un scalaire
-        if not isinstance(script, dict):
-            raise ValueError(
-                f"Le JSON retourné par le LLM n'est pas un objet (type: {type(script).__name__}). "
-                f"Attendu : un dictionnaire avec une clé 'episode'."
-            )
+            # Type-check : le LLM doit retourner un dict, pas une liste ou un scalaire
+            if not isinstance(script, dict):
+                derniere_erreur = (
+                    f"Le JSON retourné n'est pas un objet (type: {type(script).__name__}). "
+                    f"Attendu : un dictionnaire avec une clé 'episode'."
+                )
+                if validation_attempt < max_validation_retries:
+                    continue
+                raise ValueError(derniere_erreur)
 
-        self._valider_structure(script)
+            # Validation structurelle
+            try:
+                self._valider_structure(script)
+            except ValueError as e:
+                derniere_erreur = str(e)
+                if validation_attempt < max_validation_retries:
+                    continue
+                raise
+
+            # Script valide — sortir de la boucle
+            if derniere_erreur:
+                logger.info(
+                    "Script corrigé après %d tentative(s) de validation.",
+                    validation_attempt,
+                )
+            break
 
         # Inject type_episode into script so reviewer can read it
         # Valider et auto-corriger le type si le LLM a généré un type invalide
