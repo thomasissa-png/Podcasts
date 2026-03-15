@@ -141,6 +141,9 @@ if _PLACEHOLDERS_CONFIG:
 
 # ── Voix ElevenLabs ───────────────────────────────────────────────────────────
 
+# Verrou pour les modifications dynamiques des dicts globaux (thread-safety Gunicorn)
+_voice_config_lock = threading.Lock()
+
 VOICE_IDS = {
     "papy_babou": os.getenv("ELEVENLABS_VOICE_PAPY", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
     "antoine": os.getenv("ELEVENLABS_VOICE_ANTOINE", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
@@ -397,16 +400,17 @@ def ajouter_personnage(
     with open(PERSONNAGES_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(bible, f, ensure_ascii=False, indent=2)
 
-    # Enregistrer la voix et le pan dynamiquement
-    if voice_id:
-        VOICE_IDS[personnage_id] = voice_id
-    if personnage_id not in VOICE_SETTINGS:
-        VOICE_SETTINGS[personnage_id] = {
-            "stability": 0.70,
-            "similarity_boost": 0.80,
-            "style": 0.2,
-        }
-    STEREO_PAN[personnage_id] = pan
+    # Enregistrer la voix et le pan dynamiquement (thread-safe)
+    with _voice_config_lock:
+        if voice_id:
+            VOICE_IDS[personnage_id] = voice_id
+        if personnage_id not in VOICE_SETTINGS:
+            VOICE_SETTINGS[personnage_id] = {
+                "stability": 0.70,
+                "similarity_boost": 0.80,
+                "style": 0.2,
+            }
+        STEREO_PAN[personnage_id] = pan
 
 
 def configurer_voix(
@@ -430,24 +434,25 @@ def configurer_voix(
         similarity_boost: Paramètre TTS similarity_boost (0.0–1.0).
         style: Paramètre TTS style (0.0–1.0).
     """
-    if voice_id:
-        VOICE_IDS[personnage_id] = voice_id
-    if pan is not None:
-        STEREO_PAN[personnage_id] = pan
+    with _voice_config_lock:
+        if voice_id:
+            VOICE_IDS[personnage_id] = voice_id
+        if pan is not None:
+            STEREO_PAN[personnage_id] = pan
 
-    # Mettre à jour les VOICE_SETTINGS si des paramètres TTS sont fournis
-    if any(v is not None for v in (stability, similarity_boost, style)):
-        settings = VOICE_SETTINGS.setdefault(personnage_id, {
-            "stability": 0.70,
-            "similarity_boost": 0.80,
-            "style": 0.2,
-        })
-        if stability is not None:
-            settings["stability"] = stability
-        if similarity_boost is not None:
-            settings["similarity_boost"] = similarity_boost
-        if style is not None:
-            settings["style"] = style
+        # Mettre à jour les VOICE_SETTINGS si des paramètres TTS sont fournis
+        if any(v is not None for v in (stability, similarity_boost, style)):
+            settings = VOICE_SETTINGS.setdefault(personnage_id, {
+                "stability": 0.70,
+                "similarity_boost": 0.80,
+                "style": 0.2,
+            })
+            if stability is not None:
+                settings["stability"] = stability
+            if similarity_boost is not None:
+                settings["similarity_boost"] = similarity_boost
+            if style is not None:
+                settings["style"] = style
 
     # Persister dans le JSON de la bible des personnages
     bible = {}

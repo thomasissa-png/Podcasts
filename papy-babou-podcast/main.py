@@ -15,7 +15,9 @@ Usage:
 
 import json
 import logging
+import os
 import sys
+import tempfile
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -134,9 +136,16 @@ def charger_historique() -> list[dict]:
 
 
 def sauvegarder_historique(historique: list[dict]) -> None:
-    """Sauvegarde l'historique des épisodes (JSON — rétrocompatibilité)."""
-    with open(HISTORIQUE_PATH, "w", encoding="utf-8") as f:
-        json.dump(historique, f, ensure_ascii=False, indent=2)
+    """Sauvegarde l'historique des épisodes (JSON — rétrocompatibilité).
+
+    Utilise une écriture atomique pour éviter la corruption si crash mid-write.
+    """
+    with tempfile.NamedTemporaryFile(
+        mode="w", dir=HISTORIQUE_PATH.parent, delete=False, suffix=".tmp", encoding="utf-8"
+    ) as tmp:
+        json.dump(historique, tmp, ensure_ascii=False, indent=2)
+        tmp_path = tmp.name
+    os.replace(tmp_path, HISTORIQUE_PATH)
 
 
 # ── Préférences producteur (mémoire persistante) ────────────────────────────
@@ -399,8 +408,13 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
         "timestamp": datetime.now().isoformat(),
         "data": data,
     }
-    with open(chemin, "w", encoding="utf-8") as f:
-        json.dump(checkpoint, f, ensure_ascii=False, indent=2)
+    # Écriture atomique pour éviter la corruption si crash mid-write
+    with tempfile.NamedTemporaryFile(
+        mode="w", dir=chemin.parent, delete=False, suffix=".tmp", encoding="utf-8"
+    ) as tmp:
+        json.dump(checkpoint, tmp, ensure_ascii=False, indent=2)
+        tmp_path = tmp.name
+    os.replace(tmp_path, chemin)
     logger.info("Checkpoint sauvegardé : %s (étape: %s)", chemin, etape)
     return chemin
 
@@ -1388,8 +1402,9 @@ def _validation_montage(
                     console.print(f"[red]  Structure invalide : {e}[/red]")
                     console.print("[yellow]  Les données précédentes sont conservées. Retour au menu.[/yellow]")
             else:
-                console.print("[yellow]  Fichier script introuvable — relance sans modification.[/yellow]")
-                reload_ok = True
+                console.print("[red]  Fichier script introuvable — édition impossible.[/red]")
+                console.print("[yellow]  Retour au menu de validation.[/yellow]")
+                reload_ok = False
 
             if reload_ok:
                 if rapport is not None:
@@ -1527,6 +1542,9 @@ def _validation_metadonnees(
             return meta
 
         elif choix in ("c", "corrections"):
+            if not script:
+                console.print("[yellow]  Script non disponible — régénération impossible.[/yellow]")
+                continue
             console.print(
                 "\n[yellow]  Décrivez ce que vous souhaitez changer dans les métadonnées "
                 "(terminez par une ligne vide) :[/yellow]"
@@ -1537,7 +1555,7 @@ def _validation_metadonnees(
                 if not ligne.strip():
                     break
                 lignes.append(ligne)
-            if lignes and script:
+            if lignes:
                 console.print("[cyan]  Régénération des métadonnées...[/cyan]")
                 metadonnees_agent = Metadonnees()
                 instructions = "\n".join(lignes)
@@ -1558,8 +1576,6 @@ def _validation_metadonnees(
                         "instructions": lignes,
                         "timestamp": datetime.now().isoformat(),
                     })
-            elif not script:
-                console.print("[yellow]  Script non disponible — régénération impossible.[/yellow]")
 
         elif choix in ("m", "modifier"):
             console.print(
@@ -1696,16 +1712,18 @@ def _validation_publication(
             return False
 
         elif choix in ("a", "abandonner"):
+            console.print(
+                f"[{Palette.ATTENTION}]  Publication annulée. "
+                f"L'audio et les métadonnées sont conservés. "
+                f"Le rapport final sera tout de même généré.[/]"
+            )
             if rapport is not None:
                 rapport.setdefault("decisions_humaines", []).append({
                     "etape": "publication",
                     "action": "abandonne",
                     "timestamp": datetime.now().isoformat(),
                 })
-            raise ProductionAbandonnee(
-                "Production arrêtée avant publication. "
-                "L'audio et les métadonnées sont conservés."
-            )
+            return False  # Ne pas publier mais continuer vers le rapport final
 
         else:
             console.print("[red]  Choix non reconnu. Tapez p, s ou a.[/red]")
@@ -2034,6 +2052,24 @@ def _pipeline_inner(
 
         # Charger l'arc state de l'épisode précédent pour injection N→N+1
         arc_state_precedent = None
+        if numero == 1 and saison > 1:
+            # Continuité inter-saisons : charger l'arc state du dernier épisode de la saison précédente
+            plan_prec = config.charger_saison(saison - 1)
+            if plan_prec:
+                nb_eps_prec = len(plan_prec.get("saison", {}).get("episodes", []))
+                if nb_eps_prec > 0:
+                    ep_prec_id = f"S{saison - 1:02d}E{nb_eps_prec:02d}"
+                    chemin_arc_prec = config.SCRIPTS_DIR / f"{ep_prec_id}_arc_state.json"
+                    if chemin_arc_prec.exists():
+                        try:
+                            with open(chemin_arc_prec, "r", encoding="utf-8") as f:
+                                arc_state_precedent = json.load(f)
+                            console.print(
+                                f"  [bold cyan]Arc state inter-saison :[/bold cyan] "
+                                f"{ep_prec_id} (fin S{saison - 1:02d})"
+                            )
+                        except (json.JSONDecodeError, OSError) as e:
+                            logger.warning("Arc state inter-saison %s illisible : %s", ep_prec_id, e)
         if numero > 1:
             ep_prec_id = f"S{saison:02d}E{numero - 1:02d}"
             chemin_arc_prec = config.SCRIPTS_DIR / f"{ep_prec_id}_arc_state.json"
@@ -2113,12 +2149,13 @@ def _pipeline_inner(
                 except Exception as e:
                     logger.warning("DB indisponible pour sauvegarde review : %s", e)
 
-            if reviewer.est_valide(resultat_review):
+            seuil_effectif = Reviewer.SEUILS_PAR_TYPE.get(type_episode, 7)
+            if reviewer.est_valide(resultat_review, seuil=seuil_effectif):
                 script = {"episode": resultat_review["episode"]}
-                console.print(f"[{Palette.SUCCES}]  Script validé (score {score}/10).[/]")
+                console.print(f"[{Palette.SUCCES}]  Script validé (score {score}/10, seuil {seuil_effectif}).[/]")
                 break
 
-            console.print(f"[yellow]  Score insuffisant ({score}/10 < 7) — relance du scripteur[/yellow]")
+            console.print(f"[yellow]  Score insuffisant ({score}/10 < {seuil_effectif}) — relance du scripteur[/yellow]")
             corrections = reviewer.extraire_corrections(resultat_review)
 
         else:
@@ -2297,9 +2334,17 @@ def _pipeline_inner(
                 fichiers_audio = producteur.produire_episode(script)
                 progress.update(task, completed=len(segments_voix))
 
-            console.print(f"  {len(fichiers_audio)} segments voix générés")
+            nb_attendus = len(segments_voix)
+            nb_recus = len(fichiers_audio)
+            console.print(f"  {nb_recus} segments voix générés")
+            if nb_recus < nb_attendus:
+                console.print(
+                    f"  [{Palette.ATTENTION}]{Icons.ATTENTION_IC} {nb_attendus - nb_recus} "
+                    f"segment(s) manquant(s) — sera(ont) remplacé(s) par du silence au montage.[/]"
+                )
             rapport["etapes"]["audio"] = {
-                "nb_segments": len(fichiers_audio),
+                "nb_segments": nb_recus,
+                "nb_segments_attendus": nb_attendus,
                 "caracteres": dict(producteur.caracteres_utilises),
             }
 
@@ -2718,6 +2763,14 @@ def _pipeline_inner(
                         "status": "blocked (prerequis manquants)",
                         "prerequis_manquants": manquants,
                     }
+                elif not chemin_hq or not Path(str(chemin_hq)).exists():
+                    console.print(
+                        "[bold red]  BLOQUÉ — fichier audio HQ introuvable. "
+                        "Relancez le montage ou reprenez depuis un checkpoint.[/bold red]"
+                    )
+                    rapport["etapes"]["publication"] = {
+                        "status": "blocked (audio HQ manquant)",
+                    }
                 else:
                     console.print(f"\n{Typo.etape(7, 8, 'Publication')}")
                     publisher = Publisher()
@@ -2954,18 +3007,21 @@ def _interactif_saison(saisons_existantes: list[int]):
         saison_num = saisons_existantes[0]
         console.print(f"  [{Palette.SUCCES}]Saison {saison_num} sélectionnée automatiquement.[/]")
     else:
-        try:
-            saison_num = int(console.input(
-                f"  [{Palette.MIEL}]Numéro de saison ({', '.join(str(s) for s in saisons_existantes)}) :[/] "
-            ).strip())
-        except ValueError:
-            console.print("[red]Numéro de saison invalide.[/red]")
-            sys.exit(1)
+        while True:
+            try:
+                saison_num = int(console.input(
+                    f"  [{Palette.MIEL}]Numéro de saison ({', '.join(str(s) for s in saisons_existantes)}) :[/] "
+                ).strip())
+                if saison_num in saisons_existantes:
+                    break
+                console.print(f"[red]  Saison {saison_num} non trouvée. Réessayez.[/red]")
+            except ValueError:
+                console.print("[red]  Numéro invalide. Réessayez.[/red]")
 
     plan = config.charger_saison(saison_num)
     if not plan:
         console.print(f"[red]Plan de saison {saison_num} introuvable.[/red]")
-        sys.exit(1)
+        return
 
     if "saison" not in plan or "episodes" not in plan.get("saison", {}):
         console.print("[red]Plan de saison invalide : clés 'saison' ou 'episodes' manquantes.[/red]")
@@ -3041,8 +3097,8 @@ def _interactif_saison(saisons_existantes: list[int]):
                 contexte_saison=plan,
                 type_episode=ep.get("type", "standard"),
                 pubdate_offset_seconds=ep["numero"] * 3600,
-                episode_courant=1,
-                total_episodes=1,
+                episode_courant=ep["numero"],
+                total_episodes=len(episodes_plan),
                 saison_theme=saison_data.get("theme", ""),
             )
         except ProductionAbandonnee as e:
@@ -3054,6 +3110,26 @@ def _interactif_saison(saisons_existantes: list[int]):
     else:
         # Produire tous les épisodes restants
         nb_restants = len(episodes_restants)
+
+        # Confirmation avant de lancer la production en série
+        console.print(
+            f"\n  [{Palette.BLEU_CIEL}]Vous allez produire {nb_restants} épisode(s) "
+            f"en mode {'DRY RUN' if dry_run else 'PRODUCTION'}.[/]"
+        )
+        console.print(panel_validation([
+            ("v", "Valider — lancer la production"),
+            ("a", "Abandonner"),
+        ], titre="Confirmation — Production en série"))
+        while True:
+            choix_conf = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+            if choix_conf in ("v", "valider"):
+                break
+            elif choix_conf in ("a", "abandonner"):
+                console.print(f"[{Palette.ATTENTION}]Production annulée.[/]")
+                return
+            else:
+                console.print("[red]  Choix non reconnu. Tapez v ou a.[/red]")
+
         console.print(
             f"\n  [{Palette.BLEU_CIEL}]Lancement de la production de "
             f"{nb_restants} épisode(s)...[/]"
@@ -3083,8 +3159,8 @@ def _interactif_saison(saisons_existantes: list[int]):
                     contexte_saison=plan,
                     type_episode=ep.get("type", "standard"),
                     pubdate_offset_seconds=ep["numero"] * 3600,
-                    episode_courant=i,
-                    total_episodes=nb_restants,
+                    episode_courant=ep["numero"],
+                    total_episodes=len(episodes_plan),
                     saison_theme=saison_data.get("theme", ""),
                 )
                 resultats.append({"status": "ok", "episode": ep["titre"]})
@@ -3125,6 +3201,14 @@ def _interactif_episode_unique():
     resume = console.input(f"  [{Palette.MIEL}]Résumé de l'histoire biblique :[/] ")
     morale = console.input(f"  [{Palette.MIEL}]Leçon de vie / morale (optionnel) :[/] ")
 
+    type_episode_str = console.input(
+        f"  [{Palette.MIEL}]Type d'épisode (standard/ouverture/mi-saison/final/bonus) :[/] "
+    ).strip().lower() or "standard"
+    types_valides = {"ouverture", "standard", "mi-saison", "final", "bonus"}
+    if type_episode_str not in types_valides:
+        console.print(f"[yellow]  Type '{type_episode_str}' non reconnu — 'standard' utilisé.[/yellow]")
+        type_episode_str = "standard"
+
     dry_run_str = console.input(f"  [{Palette.MIEL}]Mode dry-run ? (o/n) :[/] ").strip().lower()
     dry_run = dry_run_str in ("o", "oui", "y", "yes")
 
@@ -3138,6 +3222,7 @@ def _interactif_episode_unique():
             morale=morale,
             dry_run=dry_run,
             auto=False,
+            type_episode=type_episode_str,
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
@@ -3350,6 +3435,16 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
             except (json.JSONDecodeError, OSError) as e:
                 logger.warning("Archive saison %d illisible : %s", num, e)
 
+    # Avertir si l'archive de la saison précédente est absente
+    if saison > 1:
+        archive_prec = config.ARCHIVES_DIR / f"archive_saison_{saison - 1:02d}.json"
+        if not archive_prec.exists():
+            console.print(
+                f"[bold yellow]{Icons.ATTENTION_IC} Archive de la saison {saison - 1} "
+                f"non trouvée. La continuité inter-saisons sera limitée.\n"
+                f"  Terminez la saison {saison - 1} pour générer l'archive automatiquement.[/bold yellow]"
+            )
+
     personnages_list = [p.strip() for p in personnages.split(",") if p.strip()] if personnages else None
 
     try:
@@ -3537,19 +3632,22 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
     if not auto:
         _afficher_plan_saison(plan)
         console.print(panel_validation([
-            ("g", "Go — lancer la production"),
+            ("v", "Valider — lancer la production"),
             ("a", "Abandonner"),
         ], titre="Go / No-Go — Plan de saison"))
 
-        choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
-        if choix in ("a", "abandonner"):
-            console.print(
-                "[bold yellow]Production annulee. "
-                "Modifiez le plan avec planifier-saison si nécessaire.[/bold yellow]"
-            )
-            return
-        elif choix not in ("g", "go"):
-            console.print("[yellow]  Choix non reconnu — lancement par défaut.[/yellow]")
+        while True:
+            choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+            if choix in ("v", "g", "go", "valider"):
+                break
+            elif choix in ("a", "abandonner"):
+                console.print(
+                    "[bold yellow]Production annulée. "
+                    "Modifiez le plan avec planifier-saison si nécessaire.[/bold yellow]"
+                )
+                return
+            else:
+                console.print("[red]  Choix non reconnu. Tapez v pour valider ou a pour abandonner.[/red]")
 
     resultats = []
     # Ajouter les episodes skippés au rapport
@@ -3596,6 +3694,9 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
         except Exception as e:
             logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
             resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+            console.print(
+                f"  [bold red]{Icons.ERREUR} Épisode '{ep['titre']}' échoué : {e}[/bold red]"
+            )
             # Proposer de continuer ou d'arrêter la production
             if not auto and nb_a_produire - i > 0:
                 choix = console.input(

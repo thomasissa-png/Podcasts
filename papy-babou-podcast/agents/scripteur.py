@@ -727,6 +727,11 @@ class Scripteur:
                     f"- Personnages secondaires présents : "
                     f"{', '.join(episode_plan['personnages_secondaires_presents'])}\n"
                 )
+            if episode_plan.get("pretexte"):
+                prompt += (
+                    f"- Prétexte de l'épisode (contexte de départ planifié) : "
+                    f"{episode_plan['pretexte']}\n"
+                )
             if episode_plan.get("lien_episode_precedent"):
                 prompt += f"- Lien avec l'épisode précédent : {episode_plan['lien_episode_precedent']}\n"
             if episode_plan.get("questions_ouvertes"):
