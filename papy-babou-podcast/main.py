@@ -2251,6 +2251,9 @@ def _pipeline_inner(
         with fichier_lock(chemin_rapport):
             with open(chemin_rapport, "w", encoding="utf-8") as f_out:
                 json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        # Ajouter à l'historique dès maintenant pour que la page de validation
+        # web affiche l'épisode avec les données à jour (titre, résumé, score, etc.)
+        ajouter_historique(rapport, script)
         # Marquer la production DB comme en attente (pas "in_progress" indéfiniment)
         _pid = getattr(_production_local, 'production_id', None)
         if _use_db() and _pid:
@@ -2585,6 +2588,8 @@ def _pipeline_inner(
         with fichier_lock(chemin_rapport):
             with open(chemin_rapport, "w", encoding="utf-8") as f_out:
                 json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        # Mettre à jour l'historique pour que la page de validation web soit à jour
+        ajouter_historique(rapport, script)
         _pid = getattr(_production_local, 'production_id', None)
         if _use_db() and _pid:
             try:
