@@ -573,6 +573,13 @@ Comprehensive audit of the entire production pipeline: season preparation, episo
 - `generer_archive_saison(plan, historique)` is a `@staticmethod` — returns dict
 - `integrer_evenements_speciaux(plan)` is a `@staticmethod` — mutates and returns plan
 - `planifier_saison()` accepts optional `archives_saisons: list[dict]` for inter-season context
+- Archive rituels injection: when archives have `rituels`, a "ÉVOLUTION DES RITUELS" directive is added to prompt
+- Character ages injected via `config.age_personnage(key, numero_saison)` in bible section of prompt
+
+### When modifying config.py (Session 12 additions)
+- `age_personnage(personnage_id, saison)` returns age for a specific season
+- Uses `age_par_saison` dict if defined, extrapolates (+1 every 2 seasons) otherwise
+- Returns `None` for unknown characters
 
 ### When modifying main.py (Session 11 additions)
 - Arc state saved after `ajouter_historique()` in `_pipeline_inner()`
@@ -581,9 +588,29 @@ Comprehensive audit of the entire production pipeline: season preparation, episo
 - Post-generation validations (ratio biblique, ratio enfants, teasing, pauses) run after script review
 - Metrics stored in `rapport.setdefault("metriques", {})`
 
-### Tests (Session 11)
-- `tests/test_phase2_improvements.py` — 24 tests covering all Phase 2 improvements
-- Total: 510 tests pass, 3 pre-existing flaky (TestHistorique test isolation), 3 skipped (ffmpeg)
+## Final Audit Fixes (Session 12)
+Three residual issues from the re-audit (9.9/10 → 10/10):
+
+### Character Age Auto-Resolution
+- `config.age_personnage(personnage_id, saison)` centralizes age resolution
+- Uses `age_par_saison` from personnages.json when available
+- Extrapolates missing seasons: `age_base + (saison - 1) // 2` (1 year per 2 seasons)
+- Injected into both planificateur and scripteur prompts
+
+### Rituels Evolution Directive
+- When `archives_saisons` contain `rituels`, the planificateur prompt now includes an explicit directive:
+  "ÉVOLUTION DES RITUELS : la nouvelle saison DOIT faire évoluer les rituels existants"
+- Previous season's rituels are listed for reference
+- Prevents ritual stagnation across seasons
+
+### Scripteur Age Integration
+- `_construire_bible_personnages()` now uses `config.age_personnage()` instead of manual dict lookup
+- Ensures consistent age resolution with extrapolation support
+
+### Tests (Session 12)
+- 9 new tests: TestAgePersonnage (5), TestPlanificateurAgeInjection (1), TestPlanificateurRituelsEvolution (2), TestScripteurAgePersonnage (1)
+- Total: 33 tests in test_phase2_improvements.py
+- Full suite: 519 passed, 3 pre-existing flaky (TestHistorique), 3 skipped (ffmpeg)
 
 ## Git Workflow
 - Branch: `claude/fix-postgres-gunicorn-SV32c`

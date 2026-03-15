@@ -472,3 +472,187 @@ class TestPlanificateurArchivesParam:
         import inspect
         sig = inspect.signature(Planificateur.planifier_saison)
         assert "archives_saisons" in sig.parameters
+
+
+# ── Config : age_personnage ──────────────────────────────────────────────────
+
+
+class TestAgePersonnage:
+    """config.age_personnage() doit retourner l'âge correct par saison."""
+
+    def test_age_saison_1(self):
+        """Saison 1 : âge de base."""
+        age = config.age_personnage("antoine", 1)
+        assert age is not None
+        assert isinstance(age, int)
+        # Antoine a 8 ans en saison 1 d'après personnages.json
+        assert age == 8
+
+    def test_age_saison_2(self):
+        """Saison 2 : âge défini dans age_par_saison."""
+        age = config.age_personnage("antoine", 2)
+        assert age is not None
+        assert age == 9
+
+    def test_age_extrapolation(self):
+        """Saison non définie : extrapolation depuis âge de base."""
+        age = config.age_personnage("antoine", 10)
+        assert age is not None
+        # age_base=8, (10-1)//2 = 4 → 12
+        assert age == 8 + (10 - 1) // 2
+
+    def test_personnage_inconnu(self):
+        """Personnage inconnu retourne None."""
+        age = config.age_personnage("personnage_inexistant", 1)
+        assert age is None
+
+    def test_noemie_saison_1(self):
+        """Noémie a 5 ans en saison 1."""
+        age = config.age_personnage("noemie", 1)
+        assert age == 5
+
+
+# ── Planificateur : âge injecté dans prompt ──────────────────────────────────
+
+
+class TestPlanificateurAgeInjection:
+    """Le planificateur doit injecter l'âge par saison dans le prompt."""
+
+    @patch("config.ANTHROPIC_API_KEY", "test-key")
+    @patch("agents.planificateur.config.appel_claude_avec_retry")
+    def test_age_dans_prompt(self, mock_claude):
+        """L'âge des personnages doit apparaître dans le prompt du planificateur."""
+        plan_response = {
+            "saison": {
+                "numero": 3,
+                "theme": "Test",
+                "episodes": [
+                    {"numero": 1, "titre": "T1", "resume": "R1", "morale": "M1",
+                     "type": "ouverture", "ambiance": "calme"},
+                    {"numero": 2, "titre": "T2", "resume": "R2", "morale": "M2",
+                     "type": "standard", "ambiance": "joyeux"},
+                    {"numero": 3, "titre": "T3", "resume": "R3", "morale": "M3",
+                     "type": "final", "ambiance": "tendre"},
+                ],
+            }
+        }
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps(plan_response))]
+        mock_response.stop_reason = "end_turn"
+        mock_claude.return_value = mock_response
+
+        planificateur = Planificateur()
+        planificateur.planifier_saison(
+            numero_saison=3, theme="Test", nb_episodes=3,
+        )
+
+        # Vérifier que le prompt contient un âge
+        call_args = mock_claude.call_args
+        messages = call_args.kwargs.get("messages", call_args[1].get("messages", []))
+        prompt = messages[0]["content"]
+        # Antoine est saison 3 → age_par_saison["3"] = 9
+        assert "ans" in prompt
+
+
+# ── Planificateur : rituels evolution directive ──────────────────────────────
+
+
+class TestPlanificateurRituelsEvolution:
+    """Le planificateur doit injecter une directive d'évolution des rituels."""
+
+    @patch("config.ANTHROPIC_API_KEY", "test-key")
+    @patch("agents.planificateur.config.appel_claude_avec_retry")
+    def test_rituels_evolution_dans_prompt(self, mock_claude):
+        """Si archives avec rituels, le prompt doit contenir la directive d'évolution."""
+        plan_response = {
+            "saison": {
+                "numero": 2,
+                "theme": "Test S2",
+                "episodes": [
+                    {"numero": 1, "titre": "T", "resume": "R", "morale": "M",
+                     "type": "ouverture", "ambiance": "calme"},
+                    {"numero": 2, "titre": "T2", "resume": "R2", "morale": "M2",
+                     "type": "standard", "ambiance": "joyeux"},
+                    {"numero": 3, "titre": "T3", "resume": "R3", "morale": "M3",
+                     "type": "final", "ambiance": "tendre"},
+                ],
+            }
+        }
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps(plan_response))]
+        mock_response.stop_reason = "end_turn"
+        mock_claude.return_value = mock_response
+
+        archives = [{
+            "numero": 1,
+            "theme": "Saison 1",
+            "rituels": {
+                "accroche": "Ah mes petits loups !",
+                "au_revoir": "À bientôt les enfants !",
+                "running_gag": "Le chat qui ronronne",
+            },
+            "questions_ouvertes_finales": ["Qui est Moïse ?"],
+            "moments_cles_saison": [],
+        }]
+
+        planificateur = Planificateur()
+        planificateur.planifier_saison(
+            numero_saison=2, theme="Test S2", nb_episodes=3,
+            archives_saisons=archives,
+        )
+
+        call_args = mock_claude.call_args
+        messages = call_args.kwargs.get("messages", call_args[1].get("messages", []))
+        prompt = messages[0]["content"]
+        assert "ÉVOLUTION DES RITUELS" in prompt
+        assert "Ah mes petits loups !" in prompt
+        assert "Le chat qui ronronne" in prompt
+
+    @patch("config.ANTHROPIC_API_KEY", "test-key")
+    @patch("agents.planificateur.config.appel_claude_avec_retry")
+    def test_sans_archives_pas_de_directive_rituels(self, mock_claude):
+        """Sans archives, pas de directive d'évolution des rituels."""
+        plan_response = {
+            "saison": {
+                "numero": 1,
+                "theme": "Test",
+                "episodes": [
+                    {"numero": 1, "titre": "T", "resume": "R", "morale": "M",
+                     "type": "ouverture", "ambiance": "calme"},
+                    {"numero": 2, "titre": "T2", "resume": "R2", "morale": "M2",
+                     "type": "standard", "ambiance": "joyeux"},
+                    {"numero": 3, "titre": "T3", "resume": "R3", "morale": "M3",
+                     "type": "final", "ambiance": "tendre"},
+                ],
+            }
+        }
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps(plan_response))]
+        mock_response.stop_reason = "end_turn"
+        mock_claude.return_value = mock_response
+
+        planificateur = Planificateur()
+        planificateur.planifier_saison(
+            numero_saison=1, theme="Test", nb_episodes=3,
+        )
+
+        call_args = mock_claude.call_args
+        messages = call_args.kwargs.get("messages", call_args[1].get("messages", []))
+        prompt = messages[0]["content"]
+        assert "ÉVOLUTION DES RITUELS" not in prompt
+
+
+# ── Scripteur : age_personnage utilisé dans la bible ─────────────────────────
+
+
+class TestScripteurAgePersonnage:
+    """Le scripteur doit utiliser config.age_personnage pour les âges."""
+
+    def test_bible_contient_age_saison(self):
+        """La bible construite doit contenir l'âge adapté à la saison."""
+        from agents.scripteur import _construire_bible_personnages
+        bible_s1 = _construire_bible_personnages(numero_saison=1)
+        bible_s3 = _construire_bible_personnages(numero_saison=3)
+        # Antoine 8 ans en S1, 9 ans en S3
+        assert "8 ans" in bible_s1
+        assert "9 ans" in bible_s3

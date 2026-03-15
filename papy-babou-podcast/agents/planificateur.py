@@ -189,7 +189,10 @@ class Planificateur:
                 nom = perso.get("nom_complet", key)
                 desc = perso.get("description", "")
                 role = perso.get("role", "principal")
-                line = f"  - {nom} ({role}) : {desc}"
+                # Utiliser l'âge spécifique à la saison
+                age = config.age_personnage(key, numero_saison)
+                age_str = f", {age} ans" if age is not None else ""
+                line = f"  - {nom} ({role}{age_str}) : {desc}"
                 backstory = perso.get("backstory", "")
                 if backstory:
                     line += f"\n    Backstory : {backstory}"
@@ -218,6 +221,18 @@ class Planificateur:
                     prompt += "    Moments clés :\n"
                     for m in moments[-3:]:
                         prompt += f"      - {m.get('episode', '')}: {', '.join(m.get('moments', [])[:3])}\n"
+                # Rituels de la saison précédente — directive d'évolution
+                rituels = archive.get("rituels", {})
+                if rituels:
+                    prompt += "    Rituels de la saison précédente :\n"
+                    for cle, val in rituels.items():
+                        prompt += f"      - {cle} : {val}\n"
+                    prompt += (
+                        "    → ÉVOLUTION DES RITUELS : la nouvelle saison DOIT faire évoluer "
+                        "les rituels existants (nouvelle accroche, nouveau running gag, "
+                        "ou variation de l'ancien). Ne PAS réutiliser les mêmes rituels "
+                        "à l'identique — les personnages grandissent et changent.\n"
+                    )
                 prompt += (
                     "    → La nouvelle saison DOIT faire référence aux questions "
                     "ouvertes et aux moments clés quand c'est naturel.\n"

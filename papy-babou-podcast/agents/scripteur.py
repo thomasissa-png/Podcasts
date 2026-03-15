@@ -316,11 +316,8 @@ def _construire_bible_personnages(numero_saison: int = 1) -> str:
         if key == "narrateur":
             continue
         nom = perso.get("nom_complet", key)
-        # Progression d'âge : age_par_saison ou age de base
-        age = perso.get("age", "")
-        age_par_saison = perso.get("age_par_saison", {})
-        if age_par_saison and str(numero_saison) in age_par_saison:
-            age = age_par_saison[str(numero_saison)]
+        # Progression d'âge via config.age_personnage (extrapolation si absent)
+        age = config.age_personnage(key, numero_saison) or perso.get("age", "")
         desc = perso.get("description", "")
         ton = perso.get("ton", "")
         role = perso.get("role", "principal")

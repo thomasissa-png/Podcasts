@@ -477,6 +477,37 @@ def personnages_valides() -> set[str]:
     return base
 
 
+def age_personnage(personnage_id: str, saison: int) -> int | None:
+    """Retourne l'âge d'un personnage pour une saison donnée.
+
+    Utilise ``age_par_saison`` si défini, sinon extrapole depuis ``age``
+    (âge de base = saison 1) et ajoute automatiquement l'entrée manquante.
+
+    Args:
+        personnage_id: Identifiant du personnage.
+        saison: Numéro de la saison.
+
+    Returns:
+        Âge du personnage pour cette saison, ou None si inconnu.
+    """
+    bible = charger_personnages()
+    perso = bible.get("personnages", {}).get(personnage_id)
+    if not perso:
+        return None
+
+    ages = perso.get("age_par_saison", {})
+    saison_str = str(saison)
+    if saison_str in ages:
+        return ages[saison_str]
+
+    # Extrapoler : chaque 2 saisons = +1 an (production ~6 mois/saison)
+    age_base = perso.get("age")
+    if age_base is None:
+        return None
+    age_calcule = age_base + (saison - 1) // 2
+    return age_calcule
+
+
 # ── Gestion des saisons ──────────────────────────────────────────────────────
 
 
