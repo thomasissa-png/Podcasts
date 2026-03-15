@@ -456,7 +456,9 @@ class Planificateur:
                 )
             # Doublons par sujet principal (même personnage biblique dominant)
             # On extrait le premier NOM PROPRE (mot capitalisé) comme sujet principal.
-            # Fallback: premier mot significatif si aucun nom propre trouvé.
+            # NOTE : un même personnage (ex: Abraham, Moïse) peut apparaître dans
+            # plusieurs épisodes SI les histoires bibliques sont différentes.
+            # On avertit mais on ne rejette pas.
             import re as _re
             _MOTS_NON_SUJETS = {
                 # Articles et prépositions
@@ -492,15 +494,17 @@ class Planificateur:
             compteur = Counter(_sujets_principaux)
             repetitions = {s: c for s, c in compteur.items() if c > 1}
             if repetitions:
-                episodes_concernes = []
+                # Vérifier si ce sont des histoires réellement identiques ou
+                # des histoires différentes impliquant le même personnage.
+                # Ex: "Abraham quitte son pays" et "Le sacrifice d'Isaac" sont
+                # deux histoires distinctes même si Abraham est le personnage dominant.
                 for sujet, count in repetitions.items():
                     eps = [histoires[i] for i, s in enumerate(_sujets_principaux) if s == sujet]
-                    episodes_concernes.append(f"'{sujet}' x{count} : {eps}")
-                raise ValueError(
-                    f"Même personnage/sujet biblique sur plusieurs épisodes : "
-                    f"{', '.join(episodes_concernes)}. "
-                    f"Chaque épisode doit traiter un sujet DIFFÉRENT de A à Z."
-                )
+                    logger.warning(
+                        "Personnage '%s' apparaît dans %d épisodes : %s. "
+                        "Vérifiez que ce sont bien des histoires bibliques DIFFÉRENTES.",
+                        sujet, count, eps,
+                    )
 
         # Vérifier l'ordre chronologique des histoires bibliques
         # Dictionnaire de personnages/événements bibliques → ordre approximatif

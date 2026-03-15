@@ -917,16 +917,20 @@ class TestPlanificateurUnSujetParEpisode:
         with pytest.raises(ValueError, match="doublon"):
             Planificateur._valider_plan(plan)
 
-    def test_doublon_meme_personnage_rejete(self):
-        """Plusieurs épisodes sur le même personnage biblique sont rejetés."""
+    def test_doublon_meme_personnage_avertissement(self):
+        """Plusieurs épisodes sur le même personnage émettent un avertissement (pas une erreur).
+
+        Un même personnage biblique (ex: Abraham, Moïse) peut légitimement apparaître
+        dans plusieurs épisodes s'il s'agit d'histoires différentes.
+        """
         plan = self._plan([
-            "Abraham et Isaac",
-            "Abraham et le sacrifice",
+            "Abraham quitte son pays",
             "Moïse et le buisson ardent",
+            "Moïse traverse la mer Rouge",
             "Jonas et la baleine",
         ])
-        with pytest.raises(ValueError, match="[Mm]ême personnage|sujet"):
-            Planificateur._valider_plan(plan)
+        # Ne doit plus lever d'erreur — juste un warning (Moïse x2 mais histoires différentes)
+        Planificateur._valider_plan(plan)
 
     def test_ordre_chronologique_inverse_rejete(self):
         """Un plan avec des histoires dans le mauvais ordre chronologique est rejeté."""
