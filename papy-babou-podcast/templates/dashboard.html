@@ -3137,7 +3137,7 @@ async function loadEpisodeDetail(episodeId) {
         if (hasScript && !scriptOk) {
             statusHtml += '<p style="font-size: 0.82rem; color: var(--orange-chaud); margin-top: 0.5rem; font-weight: 600;">&#9998; Lisez le script ci-dessous puis validez-le pour lancer la production audio.</p>';
         } else if (scriptOk && !hasAudio) {
-            statusHtml += '<p style="font-size: 0.82rem; color: var(--bleu-doux); margin-top: 0.5rem; font-weight: 600;">&#127911; Cliquez sur "Lancer l\'audio + montage" pour continuer la production.</p>';
+            statusHtml += '<p style="font-size: 0.82rem; color: var(--bleu-doux); margin-top: 0.5rem; font-weight: 600;">&#127911; Script validé — retournez dans "Lancer la saison" pour produire l\'audio.</p>';
         } else if (hasAudio && !montageOk) {
             statusHtml += '<p style="font-size: 0.82rem; color: var(--orange-chaud); margin-top: 0.5rem; font-weight: 600;">&#127911; Écoutez l\'audio puis validez le montage pour finaliser.</p>';
         }
@@ -3148,11 +3148,18 @@ async function loadEpisodeDetail(episodeId) {
         var contZone = document.getElementById('continue-production-zone');
         if (contZone) contZone.style.display = 'none';
 
-        /* Si le script est validé mais pas d'audio, proposer de continuer */
+        /* Si le script est validé mais pas d'audio, renvoyer vers Section 2 */
         if (scriptOk && !hasAudio && !ep.audio_missing) {
-            showContinueProduction(episodeId, 'audio',
-                'Le script est validé. Lancez la production audio.',
-                'Lancer l\'audio + montage');
+            var contZone2 = document.getElementById('continue-production-zone');
+            if (contZone2) {
+                contZone2.innerHTML =
+                    '<div class="alert alert-info" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">' +
+                    '<span>&#127911; Le script est validé. Lancez la production audio depuis l\'onglet Saison.</span>' +
+                    '<a href="javascript:void(0)" onclick="showPage(\'produire-saison\', document.querySelector(\'[data-page=produire-saison]\')); loadSaisonProgress();" ' +
+                    'class="btn btn-primary" style="text-decoration: none;">&#127916; Aller à Lancer la saison</a>' +
+                    '</div>';
+                contZone2.style.display = 'block';
+            }
         }
 
         /* Activer/désactiver les boutons selon l'état du workflow */
@@ -3385,17 +3392,23 @@ async function validateStep(step, action) {
         showAlert('alert-validation', alertType, data.message);
         document.getElementById('val-comment').value = '';
 
-        /* Après validation du script → proposer de lancer l'audio */
+        /* Après validation → rediriger vers la section "Lancer la saison"
+           pour continuer la production (audio après script, publication après montage) */
         if (data.next_phase === 'audio' && action === 'validate') {
-            showContinueProduction(_currentEpisodeId, 'audio',
-                'Script validé ! Lancer la production audio ?',
-                'Lancer l\'audio + montage');
+            _dashboardDirty = true;
+            showPage('produire-saison', document.querySelector('[data-page=produire-saison]'));
+            await loadSaisonProgress();
+            showAlert('alert-produire-saison', 'success',
+                '&#9989; Script validé ! Vous pouvez maintenant lancer l\'audio.');
+            return;
         }
-        /* Après validation du montage → proposer la publication */
         else if (data.next_phase === 'publication' && action === 'validate') {
-            showContinueProduction(_currentEpisodeId, 'publication',
-                'Montage validé ! Lancer les métadonnées et la publication ?',
-                'Lancer métadonnées + publication');
+            _dashboardDirty = true;
+            showPage('produire-saison', document.querySelector('[data-page=produire-saison]'));
+            await loadSaisonProgress();
+            showAlert('alert-produire-saison', 'success',
+                '&#9989; Montage validé ! Vous pouvez maintenant publier l\'épisode.');
+            return;
         }
 
         /* Recharger le détail et la liste */
