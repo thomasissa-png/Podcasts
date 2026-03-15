@@ -40,7 +40,16 @@ except ImportError:
     _DB_AVAILABLE = False
 
 app = Flask(__name__, template_folder=str(_THIS_DIR / "templates"))
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "papy-babou-dev-key")
+
+logger = logging.getLogger(__name__)
+
+_default_secret = "papy-babou-dev-key"
+app.secret_key = os.getenv("FLASK_SECRET_KEY", _default_secret)
+if app.secret_key == _default_secret:
+    logger.warning(
+        "FLASK_SECRET_KEY non configurée — clé par défaut utilisée. "
+        "Configurez FLASK_SECRET_KEY en production."
+    )
 
 
 def _init_db_if_available():
@@ -55,8 +64,6 @@ def _init_db_if_available():
     except Exception as e:
         logger.warning("PostgreSQL indisponible au demarrage : %s", e)
         return False
-
-logger = logging.getLogger(__name__)
 
 
 @app.errorhandler(500)

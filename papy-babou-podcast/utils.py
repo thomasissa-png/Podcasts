@@ -176,7 +176,7 @@ def ouvrir_fichier(chemin: Path) -> bool:
         if systeme == "Darwin":
             subprocess.Popen(["open", str(chemin)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         elif systeme == "Windows":
-            subprocess.Popen(["start", "", str(chemin)], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            os.startfile(str(chemin))
         else:
             # Linux / autres
             subprocess.Popen(["xdg-open", str(chemin)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

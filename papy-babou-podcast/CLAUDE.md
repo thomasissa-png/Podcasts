@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 394 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 537 passed, 3 skipped (integration tests requiring ffmpeg), 3 pre-existing flaky (TestHistorique)
 
 ## Critical Patterns to Remember
 
@@ -611,6 +611,43 @@ Three residual issues from the re-audit (9.9/10 → 10/10):
 - 9 new tests: TestAgePersonnage (5), TestPlanificateurAgeInjection (1), TestPlanificateurRituelsEvolution (2), TestScripteurAgePersonnage (1)
 - Total: 33 tests in test_phase2_improvements.py
 - Full suite: 519 passed, 3 pre-existing flaky (TestHistorique), 3 skipped (ffmpeg)
+
+## Pre-Launch Audit Fixes (Session 13)
+Comprehensive 8-agent audit followed by full implementation of all fixes before production launch.
+
+### Character Bible Completeness
+- Antoine: added `vocabulaire_typique`, `interdictions`, `backstory`, `famille`, `relation_avec_mamie_sonia`, `anecdotes_possibles`; fixed `annee_naissance` 2015→2016, `age_par_saison` S3 9→10
+- Noémie: added same enrichment fields; fixed `annee_naissance` 2018→2019
+- Papy Babou: added `relation_avec_antoine`, `relation_avec_noemie`, `relation_avec_mamie_sonia`
+- Mamie Sonia: added `relation_avec_antoine`, `relation_avec_noemie`
+- Added `_meta` block with `annee_reference: 2024`
+
+### Audio Config Fixes
+- `STEREO_PAN["mamie_sonia"]`: 0.5 → 0.3 (less extreme panning)
+- `VOICE_SETTINGS["mamie_sonia"]["style"]`: 0.15 → 0.25 (more expressive)
+- Added `EVENEMENTS_SPECIAUX[(1, 10)]` for Lucas birth event
+
+### Scripteur Fixes
+- SFX minimum threshold: 5 → 8 (recommended range 8-12)
+- Mots interdits: substring match → word boundary regex (`\b` pattern) to avoid false positives (e.g. "mort" no longer matches "immortel")
+
+### Reviewer Fixes
+- `evaluer()` accepts `max_retry: int = 3` parameter for configurable JSON retry
+
+### Security Fixes
+- `web.py`: Secret key from `FLASK_SECRET_KEY` env var with warning on default
+- `web.py`: `_JOB_RESULT_TTL = 60` — keep job results 60s after read (prevents race conditions)
+- `dashboard.html`: `encodeURIComponent(saison)` in `goToSuivi()` to prevent XSS
+
+### Infrastructure Fixes
+- `utils.py`: Windows `ouvrir_fichier()` uses `os.startfile()` instead of `shell=True` Popen
+- `main.py`: `_production_id_courante` replaced with `threading.local()` for Gunicorn thread safety
+- `main.py`: Historique JSON UPSERT — deduplicates by `episode_id` before appending
+
+### Tests (Session 13)
+- 18 new tests: TestPersonnagesBibleCompletude (5), TestConfigAuditFixes (3), TestScripteurSFXSeuil (1), TestScripteurMotsInterditsRegex (2), TestReviewerMaxRetry (1), TestThreadingLocal (1), TestHistoriqueUpsert (1), TestWebSecurityFixes (2), TestXSSProtection (1), TestUtilsWindowsFix (1)
+- Total: 51 tests in test_phase2_improvements.py
+- Full suite: 537 passed, 3 pre-existing flaky (TestHistorique), 3 skipped (ffmpeg)
 
 ## Git Workflow
 - Branch: `claude/fix-postgres-gunicorn-SV32c`

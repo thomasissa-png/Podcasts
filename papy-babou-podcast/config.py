@@ -169,7 +169,7 @@ VOICE_SETTINGS = {
     "mamie_sonia": {
         "stability": 0.75,
         "similarity_boost": 0.85,
-        "style": 0.15,
+        "style": 0.25,
     },
     "narrateur": {
         "stability": 0.85,
@@ -189,7 +189,7 @@ STEREO_PAN = {
     "papy_babou": 0.0,
     "antoine": -0.4,
     "noemie": 0.4,
-    "mamie_sonia": 0.5,
+    "mamie_sonia": 0.3,
     "narrateur": 0.0,
     "sfx": 0.0,
 }
@@ -602,6 +602,16 @@ EVENEMENTS_SPECIAUX = {
             "Il se sent grand et veut une histoire de 'grand' pour son anniversaire. "
             "Intègre la fête comme prétexte naturel : Antoine est fier d'avoir 10 ans, "
             "il veut une histoire plus épique que d'habitude. Gâteau de mamie Sonia."
+        ),
+    },
+    (1, 10): {
+        "type": "naissance",
+        "personnage": "lucas",
+        "details": (
+            "Lucas est né ! C'est le dernier épisode de la saison 1. "
+            "Le prénom de Lucas est enfin révélé. Les enfants sont surexcités "
+            "d'avoir un petit frère. Papy Babou est ému. C'est un moment "
+            "de grande joie familiale qui clôture la saison."
         ),
     },
 }

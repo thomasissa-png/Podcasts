@@ -2130,7 +2130,7 @@ function showPage(pageId, tabEl) {
 
 /* ── Helper : naviguer vers le suivi d'une saison ──────────────────────── */
 function goToSuivi(saison) {
-    window.location.href = '/?saison=' + saison;
+    window.location.href = '/?saison=' + encodeURIComponent(saison);
 }
 
 /* ── Helper : echapper le HTML (anti-XSS) ──────────────────────────────── */

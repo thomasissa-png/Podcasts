@@ -6,6 +6,7 @@ teasing, rituels, personnages dynamiques, et types d'épisodes variables.
 
 import json
 import logging
+import re
 from pathlib import Path
 
 import anthropic
@@ -1077,7 +1078,10 @@ class Scripteur:
         texte_lower = texte_complet.lower()
         trouves = []
         for mot in mots_interdits:
-            if mot.lower() in texte_lower:
+            # Utiliser word boundary regex pour éviter faux positifs
+            # (ex: "mort" ne doit pas matcher "immortel")
+            pattern = r"\b" + re.escape(mot.lower()) + r"\b"
+            if re.search(pattern, texte_lower):
                 trouves.append(mot)
 
         if trouves:
@@ -1193,8 +1197,8 @@ class Scripteur:
 
         if sfx_count > 15:
             logger.warning("Trop de bruitages : %d (recommandé 8-12).", sfx_count)
-        elif sfx_count < 5:
-            logger.warning("Pas assez de bruitages : %d (recommandé 8-12).", sfx_count)
+        elif sfx_count < 8:
+            logger.warning("Pas assez de bruitages : %d (minimum 8, recommandé 8-12).", sfx_count)
 
         # Vérifier que evolutions_personnages est présent et non vide
         evolutions = ep.get("evolutions_personnages", "")

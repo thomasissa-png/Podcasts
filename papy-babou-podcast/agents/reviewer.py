@@ -135,11 +135,12 @@ class Reviewer:
             )
         self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
-    def evaluer(self, script: dict) -> dict:
+    def evaluer(self, script: dict, *, max_retry: int = 3) -> dict:
         """Évalue et corrige un script.
 
         Args:
             script: Script JSON structuré (sortie du Scripteur).
+            max_retry: Nombre maximum de tentatives en cas de JSON malformé.
 
         Returns:
             Dictionnaire contenant la review et le script corrigé.
@@ -193,20 +194,30 @@ class Reviewer:
                 "JSON malformé dans la review LLM (%s). "
                 "Retry avec une nouvelle génération...", e,
             )
-            response = config.appel_claude_avec_retry(
-                self.client,
-                model=config.CLAUDE_MODEL,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            if response.stop_reason == "max_tokens":
-                raise ValueError(
-                    f"La review a été tronquée (max_tokens={max_tokens} atteint). "
-                    f"Le JSON est incomplet."
+            for tentative in range(1, max_retry):
+                response = config.appel_claude_avec_retry(
+                    self.client,
+                    model=config.CLAUDE_MODEL,
+                    max_tokens=max_tokens,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": prompt}],
                 )
-            texte_brut = response.content[0].text.strip()
-            resultat = parser_json_llm(texte_brut)
+                if response.stop_reason == "max_tokens":
+                    raise ValueError(
+                        f"La review a été tronquée (max_tokens={max_tokens} atteint). "
+                        f"Le JSON est incomplet."
+                    )
+                texte_brut = response.content[0].text.strip()
+                try:
+                    resultat = parser_json_llm(texte_brut)
+                    break
+                except json.JSONDecodeError:
+                    if tentative == max_retry - 1:
+                        raise
+                    logger.warning(
+                        "JSON malformé tentative %d/%d — retry...",
+                        tentative + 1, max_retry,
+                    )
         self._valider_review(resultat)
 
         # Vérifier la cohérence structurelle du script corrigé vs original (BUG 6)

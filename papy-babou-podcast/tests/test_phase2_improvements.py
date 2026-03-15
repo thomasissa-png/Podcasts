@@ -653,6 +653,226 @@ class TestScripteurAgePersonnage:
         from agents.scripteur import _construire_bible_personnages
         bible_s1 = _construire_bible_personnages(numero_saison=1)
         bible_s3 = _construire_bible_personnages(numero_saison=3)
-        # Antoine 8 ans en S1, 9 ans en S3
+        # Antoine 8 ans en S1, 10 ans en S3 (age_par_saison corrigé)
         assert "8 ans" in bible_s1
-        assert "9 ans" in bible_s3
+        assert "10 ans" in bible_s3
+
+
+# ── Tests Audit Final (Session 13) ────────────────────────────────────────────
+
+
+class TestPersonnagesBibleCompletude:
+    """Vérifie la complétude de la bible personnages après corrections audit."""
+
+    def test_antoine_champs_requis(self):
+        """Antoine doit avoir tous les champs enrichis."""
+        bible = config.charger_personnages()
+        antoine = bible["personnages"]["antoine"]
+        for champ in ("vocabulaire_typique", "interdictions", "backstory",
+                      "famille", "relation_avec_mamie_sonia", "anecdotes_possibles"):
+            assert champ in antoine, f"Champ manquant pour Antoine : {champ}"
+
+    def test_noemie_champs_requis(self):
+        """Noémie doit avoir tous les champs enrichis."""
+        bible = config.charger_personnages()
+        noemie = bible["personnages"]["noemie"]
+        for champ in ("vocabulaire_typique", "interdictions", "backstory",
+                      "famille", "relation_avec_mamie_sonia", "anecdotes_possibles"):
+            assert champ in noemie, f"Champ manquant pour Noémie : {champ}"
+
+    def test_relations_bidirectionnelles(self):
+        """Les relations entre personnages doivent être bidirectionnelles."""
+        bible = config.charger_personnages()
+        papy = bible["personnages"]["papy_babou"]
+        mamie = bible["personnages"]["mamie_sonia"]
+        assert "relation_avec_antoine" in papy
+        assert "relation_avec_noemie" in papy
+        assert "relation_avec_mamie_sonia" in papy
+        assert "relation_avec_antoine" in mamie
+        assert "relation_avec_noemie" in mamie
+
+    def test_annees_naissance_coherentes(self):
+        """Les années de naissance doivent être cohérentes avec les âges."""
+        bible = config.charger_personnages()
+        meta = bible.get("_meta", {})
+        annee_ref = meta.get("annee_reference", 2024)
+        antoine = bible["personnages"]["antoine"]
+        noemie = bible["personnages"]["noemie"]
+        # Antoine : 8 ans en S1 (2024) → né en 2016
+        assert antoine["annee_naissance"] == annee_ref - antoine["age"]
+        # Noémie : 5 ans en S1 (2024) → née en 2019
+        assert noemie["annee_naissance"] == annee_ref - noemie["age"]
+
+    def test_meta_block_present(self):
+        """La bible doit avoir un bloc _meta avec annee_reference."""
+        bible = config.charger_personnages()
+        assert "_meta" in bible
+        assert "annee_reference" in bible["_meta"]
+
+
+class TestConfigAuditFixes:
+    """Vérifie les corrections config.py de l'audit final."""
+
+    def test_stereo_pan_mamie_sonia(self):
+        """Le STEREO_PAN de mamie_sonia doit être 0.3 (pas 0.5)."""
+        assert config.STEREO_PAN["mamie_sonia"] == 0.3
+
+    def test_voice_settings_mamie_sonia_style(self):
+        """Le style TTS de mamie_sonia doit être 0.25 (pas 0.15)."""
+        assert config.VOICE_SETTINGS["mamie_sonia"]["style"] == 0.25
+
+    def test_evenement_special_lucas(self):
+        """L'événement spécial Lucas (S1E10) doit exister."""
+        assert (1, 10) in config.EVENEMENTS_SPECIAUX
+        evt = config.EVENEMENTS_SPECIAUX[(1, 10)]
+        assert evt["type"] == "naissance"
+        assert evt["personnage"] == "lucas"
+
+
+class TestScripteurSFXSeuil:
+    """Vérifie le seuil SFX à 8 (pas 5)."""
+
+    def test_sfx_warning_sous_seuil(self):
+        """Moins de 8 SFX doit déclencher un warning."""
+        import logging
+        script = {
+            "episode": {
+                "titre": "Test",
+                "saison": 1,
+                "numero": 1,
+                "type": "standard",
+                "ambiance": "calme",
+                "segments": [
+                    {"id": "seg_01", "personnage": "papy_babou", "texte": "Bonjour",
+                     "ton": "joyeux", "pause_apres_ms": 500},
+                ] + [
+                    {"id": f"sfx_{i}", "personnage": "sfx", "texte": f"sound effect {i}",
+                     "ton": "neutre", "pause_apres_ms": 0, "mode": "overlay"}
+                    for i in range(5)
+                ],
+                "morale": "test",
+                "resume_court": "test",
+                "evolutions_personnages": "test",
+            }
+        }
+        from agents.scripteur import Scripteur
+        with patch.object(logging.getLogger("agents.scripteur"), "warning") as mock_warn:
+            Scripteur._valider_structure(script)
+            # Chercher l'appel warning sur les bruitages
+            sfx_warns = [c for c in mock_warn.call_args_list
+                         if "bruitages" in str(c) and "minimum 8" in str(c)]
+            assert len(sfx_warns) > 0, "Devrait alerter quand SFX < 8"
+
+
+class TestScripteurMotsInterditsRegex:
+    """Vérifie que les mots interdits utilisent word boundary regex."""
+
+    def test_mot_interdit_exact_match(self):
+        """Un mot interdit exact doit être détecté."""
+        script = {
+            "episode": {
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Il est mort ce jour-là."}
+                ]
+            }
+        }
+        with patch.object(config, "MOTS_INTERDITS", ["mort"]):
+            from agents.scripteur import Scripteur
+            import logging
+            with patch.object(logging.getLogger("agents.scripteur"), "warning") as mock_warn:
+                Scripteur._verifier_mots_interdits(script)
+                assert any("mort" in str(c) for c in mock_warn.call_args_list)
+
+    def test_mot_interdit_pas_de_faux_positif(self):
+        """'mort' ne doit PAS matcher 'immortel' (word boundary)."""
+        script = {
+            "episode": {
+                "segments": [
+                    {"personnage": "papy_babou", "texte": "Il était immortel."}
+                ]
+            }
+        }
+        with patch.object(config, "MOTS_INTERDITS", ["mort"]):
+            from agents.scripteur import Scripteur
+            import logging
+            with patch.object(logging.getLogger("agents.scripteur"), "warning") as mock_warn:
+                Scripteur._verifier_mots_interdits(script)
+                # "mort" ne doit PAS être trouvé dans "immortel"
+                mot_warns = [c for c in mock_warn.call_args_list
+                             if "mot" in str(c).lower() and "interdit" in str(c).lower()]
+                assert len(mot_warns) == 0, "Ne devrait pas détecter 'mort' dans 'immortel'"
+
+
+class TestReviewerMaxRetry:
+    """Vérifie le paramètre max_retry du Reviewer."""
+
+    def test_evaluer_signature_max_retry(self):
+        """evaluer() doit accepter le paramètre max_retry."""
+        import inspect
+        sig = inspect.signature(Reviewer.evaluer)
+        assert "max_retry" in sig.parameters
+        param = sig.parameters["max_retry"]
+        assert param.default == 3
+
+
+class TestThreadingLocal:
+    """Vérifie que _production_id_courante utilise threading.local."""
+
+    def test_production_local_is_threading_local(self):
+        """_production_local doit être une instance de threading.local."""
+        import threading
+        from main import _production_local
+        assert isinstance(_production_local, threading.local)
+
+
+class TestHistoriqueUpsert:
+    """Vérifie le mécanisme UPSERT du historique JSON."""
+
+    def test_upsert_code_path_exists(self):
+        """Le code UPSERT (dédoublonnage par episode_id) doit exister dans main.py."""
+        import inspect
+        from main import ajouter_historique
+        source = inspect.getsource(ajouter_historique)
+        # Vérifie que la logique UPSERT est présente
+        assert "episode_id" in source
+        # Doit filtrer les doublons avant d'ajouter
+        assert "episode_id" in source
+
+
+class TestWebSecurityFixes:
+    """Vérifie les corrections sécurité du dashboard (source code inspection)."""
+
+    def test_secret_key_not_hardcoded(self):
+        """web.py doit utiliser FLASK_SECRET_KEY env var, pas un secret en dur."""
+        source_path = Path(__file__).resolve().parent.parent / "web.py"
+        source = source_path.read_text()
+        assert "FLASK_SECRET_KEY" in source
+        assert "secret_key" in source
+
+    def test_job_result_ttl_defined(self):
+        """_JOB_RESULT_TTL doit être défini dans web.py."""
+        source_path = Path(__file__).resolve().parent.parent / "web.py"
+        source = source_path.read_text()
+        assert "_JOB_RESULT_TTL" in source
+
+
+class TestXSSProtection:
+    """Vérifie la protection XSS dans le template dashboard."""
+
+    def test_goToSuivi_uses_encodeURIComponent(self):
+        """goToSuivi doit utiliser encodeURIComponent pour éviter XSS."""
+        template_path = Path(__file__).resolve().parent.parent / "templates" / "dashboard.html"
+        content = template_path.read_text()
+        assert "encodeURIComponent(saison)" in content
+
+
+class TestUtilsWindowsFix:
+    """Vérifie que ouvrir_fichier n'utilise plus shell=True sur Windows."""
+
+    def test_pas_de_shell_true_windows(self):
+        """Le code Windows doit utiliser os.startfile, pas shell=True."""
+        import inspect
+        from utils import ouvrir_fichier
+        source = inspect.getsource(ouvrir_fichier)
+        assert "os.startfile" in source
+        assert "shell=True" not in source

@@ -16,6 +16,7 @@ Usage:
 import json
 import logging
 import sys
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -349,14 +350,16 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         if HISTORIQUE_PATH.exists():
             with open(HISTORIQUE_PATH, "r", encoding="utf-8") as f:
                 historique = json.load(f)
+        # UPSERT : remplace l'entrée si episode_id existe déjà
+        historique = [h for h in historique if h.get("episode_id") != entree["episode_id"]]
         historique.append(entree)
         sauvegarder_historique(historique)
 
 
 # ── Système de checkpoints ───────────────────────────────────────────────────
 
-# Variable globale pour l'ID de production courante (DB)
-_production_id_courante: int | None = None
+# Thread-local pour l'ID de production courante (DB)
+_production_local = threading.local()
 
 
 def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
@@ -373,13 +376,13 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
     Returns:
         Chemin du fichier checkpoint.
     """
-    global _production_id_courante
+    _pid = getattr(_production_local, 'production_id', None)
 
     # Sauvegarder en DB si disponible
-    if _use_db() and _production_id_courante:
+    if _use_db() and _pid:
         try:
             ProductionRepo.maj_etape(
-                _production_id_courante,
+                _pid,
                 etape=etape,
                 rapport=data.get("rapport"),
                 checkpoint_data=data,
@@ -430,10 +433,10 @@ def archiver_checkpoint(episode_id: str) -> None:
     En DB, il est marqué 'completed'. Le fichier JSON est renommé avec un
     suffixe _done pour conservation.
     """
-    global _production_id_courante
+    _pid = getattr(_production_local, 'production_id', None)
 
     # En DB : marquer terminé (jamais supprimé)
-    if _use_db() and _production_id_courante:
+    if _use_db() and _pid:
         try:
             # Le statut sera mis à jour par ProductionRepo.terminer()
             pass
@@ -1746,8 +1749,7 @@ def pipeline(
     Returns:
         Rapport de production complet.
     """
-    global _production_id_courante
-    _production_id_courante = None  # Reset au début de chaque pipeline
+    _production_local.production_id = None  # Reset au début de chaque pipeline
 
     episode_id = f"S{saison:02d}E{numero:02d}"
     rapport = checkpoint_data if checkpoint_data is not None else {
@@ -1761,7 +1763,7 @@ def pipeline(
     # Créer une production en DB si disponible
     if _use_db():
         try:
-            _production_id_courante = ProductionRepo.creer(
+            _production_local.production_id = ProductionRepo.creer(
                 episode_id=episode_id,
                 dry_run=dry_run,
                 auto_mode=auto,
@@ -1776,10 +1778,10 @@ def pipeline(
                 morale=morale,
                 status="in_progress",
             )
-            logger.info("Production DB #%d créée pour %s", _production_id_courante, episode_id)
+            logger.info("Production DB #%d créée pour %s", getattr(_production_local, 'production_id', None), episode_id)
         except Exception as e:
             logger.warning("DB indisponible pour création production : %s", e)
-            _production_id_courante = None
+            _production_local.production_id = None
 
     try:
         return _pipeline_inner(
@@ -1800,9 +1802,10 @@ def pipeline(
     except Exception as e:
         # Marquer la production comme échouée en DB (BUG 29)
         logger.error("Pipeline échoué pour %s : %s", episode_id, e)
-        if _use_db() and _production_id_courante:
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
             try:
-                ProductionRepo.echouer(_production_id_courante, str(e))
+                ProductionRepo.echouer(_pid, str(e))
                 EpisodeRepo.maj_status(episode_id, "failed")
             except Exception as db_err:
                 logger.warning("DB indisponible pour marquage échec : %s", db_err)
@@ -1847,8 +1850,6 @@ def _pipeline_inner(
     episode_courant=0, total_episodes=0, saison_theme="",
 ):
     """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
-    global _production_id_courante
-
     # Charger le contexte de saison automatiquement si pas fourni
     if not contexte_saison:
         contexte_saison = config.charger_saison(saison) or None
@@ -2251,10 +2252,11 @@ def _pipeline_inner(
             with open(chemin_rapport, "w", encoding="utf-8") as f_out:
                 json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
         # Marquer la production DB comme en attente (pas "in_progress" indéfiniment)
-        if _use_db() and _production_id_courante:
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
             try:
                 ProductionRepo.maj_etape(
-                    _production_id_courante, etape="waiting_script",
+                    _pid, etape="waiting_script",
                     rapport=rapport,
                 )
             except Exception:
@@ -2304,7 +2306,7 @@ def _pipeline_inner(
                             episode_id=episode_id,
                             type_fichier="segment_voix",
                             chemin=str(chemin_seg),
-                            production_id=_production_id_courante,
+                            production_id=getattr(_production_local, 'production_id', None),
                             segment_id=seg_audio["id"],
                             personnage=seg_audio["personnage"],
                             source="elevenlabs",
@@ -2318,7 +2320,7 @@ def _pipeline_inner(
                         service="elevenlabs_tts",
                         cout_estime=cout_tts,
                         detail={"caracteres": dict(producteur.caracteres_utilises)},
-                        production_id=_production_id_courante,
+                        production_id=getattr(_production_local, 'production_id', None),
                     )
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement audio : %s", e)
@@ -2365,7 +2367,7 @@ def _pipeline_inner(
                             episode_id=episode_id,
                             type_fichier="segment_sfx",
                             chemin=str(chemin_sfx),
-                            production_id=_production_id_courante,
+                            production_id=getattr(_production_local, 'production_id', None),
                             segment_id=seg_id,
                             personnage="sfx",
                             source=source,
@@ -2378,7 +2380,7 @@ def _pipeline_inner(
                             service="elevenlabs_sfx",
                             cout_estime=nb_sfx_el * config.COUTS["elevenlabs_sfx_par_generation"],
                             detail={"nb_sfx_elevenlabs": nb_sfx_el},
-                            production_id=_production_id_courante,
+                            production_id=getattr(_production_local, 'production_id', None),
                         )
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement SFX : %s", e)
@@ -2428,7 +2430,7 @@ def _pipeline_inner(
                         episode_id=episode_id,
                         type_fichier="episode_hq",
                         chemin=str(chemin_hq),
-                        production_id=_production_id_courante,
+                        production_id=getattr(_production_local, 'production_id', None),
                         taille_bytes=taille_bytes,
                         duree_secondes=duree_secondes,
                     )
@@ -2436,7 +2438,7 @@ def _pipeline_inner(
                         episode_id=episode_id,
                         type_fichier="episode_preview",
                         chemin=str(resultat_montage["chemin_preview"]),
-                        production_id=_production_id_courante,
+                        production_id=getattr(_production_local, 'production_id', None),
                         duree_secondes=duree_secondes,
                     )
                 except Exception as e:
@@ -2583,10 +2585,11 @@ def _pipeline_inner(
         with fichier_lock(chemin_rapport):
             with open(chemin_rapport, "w", encoding="utf-8") as f_out:
                 json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
-        if _use_db() and _production_id_courante:
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
             try:
                 ProductionRepo.maj_etape(
-                    _production_id_courante, etape="waiting_montage",
+                    _pid, etape="waiting_montage",
                     rapport=rapport,
                 )
             except Exception:
@@ -2623,7 +2626,7 @@ def _pipeline_inner(
                 MetadonneesRepo.sauvegarder(
                     episode_id=episode_id,
                     meta=meta,
-                    production_id=_production_id_courante,
+                    production_id=getattr(_production_local, 'production_id', None),
                 )
                 # Coût Claude pour métadonnées
                 if not dry_run:
@@ -2636,7 +2639,7 @@ def _pipeline_inner(
                         service="anthropic_claude",
                         cout_estime=cout_claude_meta,
                         detail={"operation": "metadonnees"},
-                        production_id=_production_id_courante,
+                        production_id=getattr(_production_local, 'production_id', None),
                     )
             except Exception as e:
                 logger.warning("DB indisponible pour métadonnées : %s", e)
@@ -2722,7 +2725,7 @@ def _pipeline_inner(
                             PublicationRepo.enregistrer(
                                 episode_id=episode_id,
                                 rapport_pub=rapport_pub,
-                                production_id=_production_id_courante,
+                                production_id=getattr(_production_local, 'production_id', None),
                             )
                             EpisodeRepo.maj_status(episode_id, "published")
                         except Exception as e:
@@ -2799,10 +2802,11 @@ def _pipeline_inner(
     archiver_checkpoint(episode_id)
 
     # Finaliser la production en DB
-    if _use_db() and _production_id_courante:
+    _pid = getattr(_production_local, 'production_id', None)
+    if _use_db() and _pid:
         try:
             ProductionRepo.terminer(
-                _production_id_courante,
+                _pid,
                 rapport=rapport,
                 couts=rapport.get("couts", {}),
             )

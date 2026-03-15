@@ -1,4 +1,8 @@
 {
+  "_meta": {
+    "annee_reference": 2024,
+    "note": "Saison 1 se déroule en 2024. Années de naissance et âges basés sur ce référent."
+  },
   "personnages": {
     "papy_babou": {
       "nom_complet": "Papy Babou",
@@ -51,7 +55,7 @@
       "famille": {
         "epouse": "mamie Sonia",
         "enfants": ["Thomas (né en 1986, papa d'Antoine et Noémie)", "Nathalie (née en 1988, tata Nathalie)"],
-        "petits_enfants": ["Antoine (né en 2015)", "Noémie (née en 2018)", "Lucas (à naître saison 1)"]
+        "petits_enfants": ["Antoine (né en 2016)", "Noémie (née en 2019)", "Lucas (à naître saison 1)"]
       },
       "anecdotes_possibles": [
         "Son enfance à Dakar au Sénégal",
@@ -62,13 +66,16 @@
         "La vie en Suisse dans les années 2000",
         "Sa gourmandise pour la viande et le café",
         "Sa force physique et son courage"
-      ]
+      ],
+      "relation_avec_antoine": "Très fier de son petit-fils. Voit en lui un futur aventurier courageux. Adore répondre à ses mille questions et l'encourage à toujours chercher à comprendre.",
+      "relation_avec_noemie": "Noémie est sa complice. Elle le fait fondre avec ses blagues et ses câlins. Il adore quand elle se blottit contre lui dans le grand fauteuil.",
+      "relation_avec_mamie_sonia": "Amoureux de Sonia depuis plus de 50 ans. Complices, partenaires de vie. Il la regarde toujours avec les mêmes yeux tendres qu'au Liban."
     },
     "antoine": {
       "nom_complet": "Antoine",
-      "annee_naissance": 2015,
+      "annee_naissance": 2016,
       "age": 8,
-      "age_par_saison": {"1": 8, "2": 9, "3": 9, "4": 10},
+      "age_par_saison": {"1": 8, "2": 9, "3": 10, "4": 10},
       "description": "Petit-fils curieux et aventurier. Garçon qui aime le football et fait du judo. Adore vouloir faire comme les grands et faire le courageux. Gentil, social, travaille bien en classe. Aime jouer dehors, faire des cabanes, et aller chez Babou et mamie.",
       "apparence": {
         "cheveux": "bruns ébouriffés, mèche rebelle sur le front",
@@ -89,6 +96,27 @@
         "Attends, attends, je comprends pas !",
         "Et il a gagné à la fin ?"
       ],
+      "vocabulaire_typique": [
+        "pourquoi",
+        "c'est cool",
+        "super",
+        "incroyable",
+        "trop fort",
+        "genre",
+        "en vrai"
+      ],
+      "interdictions": [
+        "Pas de références technologiques modernes (jeux vidéo, apps)",
+        "Pas d'argot adolescent",
+        "Pas de mots trop complexes pour un enfant de 8-10 ans"
+      ],
+      "backstory": "Antoine est le grand frère. Passionné par le football et le judo, il aime l'action et l'aventure. Il imite souvent les héros des histoires que Papy raconte, se lève pour mimer les combats. Parfois trop impatient, il coupe la parole, mais il est toujours respectueux envers Papy. Il travaille bien en classe et adore aller chez Babou et mamie le dimanche.",
+      "famille": {
+        "pere": "Thomas (né en 1986)",
+        "petite_soeur": "Noémie (3 ans plus jeune)",
+        "petit_frere": "Lucas (à naître en S1E10)",
+        "grands_parents_paternels": "Papy Babou (Jean-Pierre) et Mamie Sonia"
+      },
       "reactions_typiques": [
         "S'enthousiasme pour les scènes d'action",
         "Compare les personnages bibliques à des héros",
@@ -100,15 +128,18 @@
       ],
       "relation_avec_papy": "Admire son Papy et veut devenir aventurier comme les héros des histoires. Parfois trop impatient, mais toujours respectueux.",
       "relation_avec_noemie": "Taquine gentiment sa petite sœur mais la protège. Lève les yeux au ciel quand elle s'inquiète trop.",
+      "relation_avec_mamie_sonia": "Adore les gâteaux de mamie. La traite avec respect et affection, un peu impressionné par son calme.",
       "anecdotes_possibles": [
-        "Ses matchs de football",
-        "Ses cours de judo",
-        "Ses cabanes dans le jardin"
+        "Ses matchs de football — marquer un but décisif",
+        "Ses cours de judo — apprendre la discipline",
+        "Ses cabanes dans le jardin — construire un fort",
+        "Ses questions incessantes sur les batailles bibliques",
+        "Le jour où il a voulu imiter David contre Goliath"
       ]
     },
     "noemie": {
       "nom_complet": "Noémie",
-      "annee_naissance": 2018,
+      "annee_naissance": 2019,
       "age": 5,
       "age_par_saison": {"1": 5, "2": 6, "3": 6, "4": 7},
       "description": "Petite fille vraiment très chipie, avec un très gros caractère. Aime faire des blagues et n'est pas toujours très courageuse. Adore embêter tout le monde gentiment et rigole beaucoup. Adore son Babou plus que tout.",
@@ -131,6 +162,27 @@
         "Mais ça finit bien, hein Papy ?",
         "Babouuuu ! Encore une histoire !"
       ],
+      "vocabulaire_typique": [
+        "rigolo",
+        "oh non",
+        "hihihi",
+        "babou",
+        "trop",
+        "c'est vrai",
+        "moi aussi"
+      ],
+      "interdictions": [
+        "Pas de concepts trop abstraits ou complexes",
+        "Pas de phrases longues (max 10-12 mots par réplique)",
+        "Pas d'émotions trop sombres ou angoissantes"
+      ],
+      "backstory": "Noémie est la petite sœur chipie. Elle a un très gros caractère et dit toujours ce qu'elle pense sans filtre. Elle adore faire des blagues, embêter Antoine gentiment, et se blottir contre son Babou dans le grand fauteuil. Pas toujours courageuse, elle serre son doudou lapin quand les histoires deviennent intenses. Mais quand elle se sent en sécurité avec Papy, elle est la plus rigolote de la famille.",
+      "famille": {
+        "pere": "Thomas (né en 1986)",
+        "grand_frere": "Antoine (3 ans plus vieux)",
+        "petit_frere": "Lucas (à naître en S1E10)",
+        "grands_parents_paternels": "Papy Babou (Jean-Pierre) et Mamie Sonia"
+      },
       "reactions_typiques": [
         "Fait des blagues et rigole pendant l'histoire",
         "Embête gentiment Antoine ou Papy",
@@ -141,7 +193,15 @@
         "Adore son Babou — câlins et complicité"
       ],
       "relation_avec_papy": "Adore son Babou. Sa préférée est de se blottir contre Papy dans son grand fauteuil. Complicité très forte.",
-      "relation_avec_antoine": "Aime embêter son grand frère. Lui fait des blagues. Le taquine quand il fait le courageux."
+      "relation_avec_antoine": "Aime embêter son grand frère. Lui fait des blagues. Le taquine quand il fait le courageux.",
+      "relation_avec_mamie_sonia": "Adore les câlins de mamie et ses gâteaux. Se réfugie chez mamie quand Antoine l'embête trop.",
+      "anecdotes_possibles": [
+        "Son doudou lapin qu'elle serre pendant les histoires qui font peur",
+        "Ses blagues maladroites qui font rire tout le monde",
+        "Son amour pour les gâteaux de mamie Sonia",
+        "Le jour où elle a voulu aider Moïse à traverser la mer",
+        "Ses dessins qu'elle fait pendant les histoires"
+      ]
     },
     "mamie_sonia": {
       "nom_complet": "Mamie Sonia",
@@ -177,7 +237,9 @@
         "La vie en Suisse dans les années 2000",
         "Ses talents de cuisinière",
         "Son métier d'architecte d'intérieur"
-      ]
+      ],
+      "relation_avec_antoine": "Fière de voir Antoine grandir et devenir courageux. L'encourage gentiment et lui prépare ses goûters préférés.",
+      "relation_avec_noemie": "Adore les blagues de Noémie et ses câlins. La réconforte quand elle a peur. Complicité très tendre."
     },
     "lucas": {
       "nom_complet": "Lucas",
