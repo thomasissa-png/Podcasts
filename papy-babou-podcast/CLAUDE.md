@@ -686,6 +686,13 @@ The planificateur was generating multi-part episodes (e.g., 3 episodes on Abraha
 - Always use `dashboard_data_mod.charger_rapport()` instead of reading rapport files directly from `config.LOGS_DIR`
 - This ensures DB + filesystem + Object Storage fallback chain is used consistently
 
+### Web Dashboard DB Resilience (Session 14)
+After Replit redeploy, local files are lost but PostgreSQL data survives. All rapport reads/writes in web.py now go through DB first:
+- **`_sync_rapport_to_db()`**: New helper in web.py that updates the most recent production's rapport_json in DB. Called after every validation action.
+- **Validate/Regenerate/Publication routes**: Load rapport via `dashboard_data_mod.charger_rapport()` (DB → file → Object Storage), save to both file AND DB.
+- **`config._db_disponible()`**: Neon scale-to-zero retry (1 retry after 1s) for cold starts.
+- **Pattern**: Never read rapports from `config.LOGS_DIR` directly in web.py — always use `dashboard_data_mod.charger_rapport()`.
+
 ### When modifying planificateur.py (Session 14 additions)
 - `_valider_plan()` now raises `ValueError` (not just warning) on duplicate `histoire_biblique`
 - Subject-similarity detection extracts dominant biblical character name from each `histoire_biblique` and rejects if same character appears in multiple episodes
