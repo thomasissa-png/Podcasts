@@ -2,8 +2,8 @@
   "personnages": {
     "papy_babou": {
       "nom_complet": "Papy Babou",
-      "age": 72,
-      "age_par_saison": {"1": 72, "2": 73, "3": 73, "4": 74},
+      "age": 66,
+      "age_par_saison": {"1": 66, "2": 67, "3": 67, "4": 68},
       "description": "Grand-père bienveillant, très courageux et protecteur. Né à Dakar au Sénégal (vrai prénom : Jean-Pierre). A vécu au Liban, en Afrique du Sud, en Suisse avant de s'installer en France. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants Antoine et Noémie.",
       "apparence": {
         "cheveux": "blancs, légèrement dégarni, mèches rebelles",
@@ -148,8 +148,8 @@
       "role": "secondaire",
       "premiere_apparition": "S01E02",
       "frequence": "apparitions régulières mais légères — amener le goûter, annoncer l'heure du coucher, parfois rester un moment",
-      "age": 70,
-      "age_par_saison": {"1": 70, "2": 71, "3": 71, "4": 72},
+      "age": 65,
+      "age_par_saison": {"1": 65, "2": 66, "3": 66, "4": 67},
       "description": "La plus gentille mamie du monde. Attentionnée, douce, adore ses petits-enfants plus que tout. Cuisine extrêmement bien. Architecte d'intérieur de métier.",
       "ton": "doux, chaleureux, attentionné",
       "lieu_naissance": "Le Caire, Égypte",

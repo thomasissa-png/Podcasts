@@ -549,6 +549,32 @@ def liste_saisons() -> list[int]:
 
 # ── Formats d'épisodes ───────────────────────────────────────────────────────
 
+# ── Événements spéciaux par saison/épisode ────────────────────────────────
+# Clé : (saison, numéro_épisode) → événement spécial à intégrer dans le script
+EVENEMENTS_SPECIAUX = {
+    (1, 6): {
+        "type": "anniversaire",
+        "personnage": "noemie",
+        "details": (
+            "C'est l'anniversaire de Noémie ! Elle a 6 ans aujourd'hui. "
+            "Elle demande à Babou une histoire spéciale pour son anniversaire. "
+            "Intègre la fête d'anniversaire comme prétexte naturel de l'épisode : "
+            "gâteau fait par mamie Sonia, bougies, cadeaux, et Noémie qui demande "
+            "une histoire comme cadeau d'anniversaire. Les enfants sont surexcités."
+        ),
+    },
+    (2, 4): {
+        "type": "anniversaire",
+        "personnage": "antoine",
+        "details": (
+            "C'est l'anniversaire d'Antoine ! Il a 10 ans aujourd'hui. "
+            "Il se sent grand et veut une histoire de 'grand' pour son anniversaire. "
+            "Intègre la fête comme prétexte naturel : Antoine est fier d'avoir 10 ans, "
+            "il veut une histoire plus épique que d'habitude. Gâteau de mamie Sonia."
+        ),
+    },
+}
+
 FORMATS_EPISODES = {
     "ouverture": {
         "duree_cible_minutes": 30,
