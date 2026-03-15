@@ -697,6 +697,14 @@ class Scripteur:
         if morale:
             prompt += f"- Leçon de vie / morale à transmettre : {morale}\n"
 
+        # Périmètre biblique de la saison
+        perimetre = config.PERIMETRES_SAISONS.get(saison)
+        if perimetre:
+            prompt += (
+                f"\n⚠️ PÉRIMÈTRE BIBLIQUE (saison {saison}) : {perimetre['perimetre']}\n"
+                f"  {perimetre['description']}\n"
+            )
+
         # Événement spécial (anniversaire, etc.)
         evenement = config.EVENEMENTS_SPECIAUX.get((saison, numero), {})
         if evenement:

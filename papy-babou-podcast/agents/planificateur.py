@@ -165,6 +165,16 @@ class Planificateur:
         if description:
             prompt += f"- Description / vision du producteur : {description}\n"
 
+        # Injecter le périmètre biblique de la saison (si défini)
+        perimetre = config.PERIMETRES_SAISONS.get(numero_saison)
+        if perimetre:
+            prompt += (
+                f"\n⚠️ PÉRIMÈTRE BIBLIQUE OBLIGATOIRE pour la saison {numero_saison} :\n"
+                f"  {perimetre['perimetre']}\n"
+                f"  {perimetre['description']}\n"
+                f"  Toute histoire hors de ce périmètre sera REJETÉE.\n\n"
+            )
+
         if personnages_secondaires:
             prompt += (
                 f"- Personnages secondaires à introduire : "

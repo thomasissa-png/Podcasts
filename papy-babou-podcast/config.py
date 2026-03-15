@@ -593,6 +593,48 @@ def liste_saisons() -> list[int]:
 
 # ── Formats d'épisodes ───────────────────────────────────────────────────────
 
+# ── Périmètre biblique par saison ─────────────────────────────────────────
+# Définit le corpus d'histoires autorisées pour chaque saison.
+# Injecté automatiquement dans le prompt du planificateur.
+PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
+    1: {
+        "perimetre": "Ancien Testament uniquement",
+        "description": (
+            "Histoires de l'Ancien Testament exclusivement : Genèse, Exode, "
+            "les Patriarches (Abraham, Isaac, Jacob, Joseph), Moïse, Josué, "
+            "les Juges (Samson, Gédéon), les Rois (David, Salomon, Saül), "
+            "les Prophètes (Élie, Élisée, Jonas, Daniel), Noé, Ruth, Esther, etc. "
+            "AUCUNE histoire du Nouveau Testament."
+        ),
+    },
+    2: {
+        "perimetre": "Jésus — de la naissance à la mort",
+        "description": (
+            "La vie de Jésus-Christ de A à Z : l'Annonciation, la Nativité, "
+            "la fuite en Égypte, l'enfance à Nazareth, le baptême par Jean-Baptiste, "
+            "les miracles (noces de Cana, multiplication des pains, marche sur l'eau, "
+            "guérisons, résurrection de Lazare), les paraboles majeures "
+            "(le bon Samaritain, le fils prodigue, les talents), "
+            "l'entrée à Jérusalem, la Cène, la Passion, la Crucifixion. "
+            "Chaque épisode = un moment clé de la vie de Jésus."
+        ),
+    },
+    3: {
+        "perimetre": "Nouveau Testament (après Jésus) et grands saints chrétiens",
+        "description": (
+            "Les Actes des Apôtres et les grands saints : la Résurrection et l'Ascension, "
+            "la Pentecôte, les voyages de Paul (conversion, missions, naufrage), "
+            "Pierre et la première Église, Étienne le premier martyr, "
+            "Philippe et l'eunuque éthiopien, l'Apocalypse de Jean. "
+            "Puis les grands saints chrétiens : Saint François d'Assise, "
+            "Sainte Thérèse de Lisieux, Saint Martin, Sainte Jeanne d'Arc, "
+            "Saint Nicolas, Saint Patrick, etc. "
+            "Chaque épisode = un apôtre, un événement des Actes, ou un grand saint."
+        ),
+    },
+}
+
+
 # ── Événements spéciaux par saison/épisode ────────────────────────────────
 # Clé : (saison, numéro_épisode) → événement spécial à intégrer dans le script
 EVENEMENTS_SPECIAUX = {
