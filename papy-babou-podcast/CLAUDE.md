@@ -667,6 +667,11 @@ The planificateur was generating multi-part episodes (e.g., 3 episodes on Abraha
 - **Producer preferences** stored in `data/preferences_producteur.json`: two rules about one topic per episode and maximum topic variety
 - The season's narrative arc comes from the RECURRING CHARACTERS (Papy, Antoine, Noémie) and the season THEME, not from repeating the same biblical subject
 
+### Validation Page Stale Data Fix (Session 14)
+- **Bug**: When producing via web dashboard with `--stop-after script`, `ajouter_historique()` was never called because it runs at the end of the full pipeline. The validation page reads from historique, so it showed old episode data.
+- **Fix**: `ajouter_historique(rapport, script)` now called in both `stop_after == "script"` and `stop_after == "montage"` blocks in `_pipeline_inner()`. The UPSERT logic handles duplicates.
+- **Pattern**: Any new `stop_after` block must also call `ajouter_historique()` before returning.
+
 ### When modifying planificateur.py (Session 14 additions)
 - `_valider_plan()` now raises `ValueError` (not just warning) on duplicate `histoire_biblique`
 - Subject-similarity detection extracts dominant biblical character name from each `histoire_biblique` and rejects if same character appears in multiple episodes
