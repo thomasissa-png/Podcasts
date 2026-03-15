@@ -279,7 +279,7 @@ AMBIANCES_VALIDES = tuple(k for k in AMBIANCES_MUSICALES if k != "fond_doux")
 # ── Configuration SFX (bruitages) ────────────────────────────────────────────
 
 SFX_CONFIG = {
-    "sfx_volume_db": -6,
+    "sfx_volume_db": -6,  # Legacy — monteur utilise SFX_VOLUME_PAR_TON (contextuel)
     "sfx_duree_defaut_secondes": 5.0,
     "sfx_duree_max_secondes": 22.0,
     "sfx_fade_ms": 300,

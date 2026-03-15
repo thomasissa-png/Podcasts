@@ -398,8 +398,8 @@ class Monteur:
         - "insert" : le SFX est inséré séquentiellement (ancien comportement).
         - "overlay" : le SFX est superposé aux segments voix suivants.
 
-        Insère des transitions sonores entre actes (quand un narrateur suit
-        un bloc de 8+ segments ou un SFX marqueur).
+        Insère des transitions sonores entre actes (quand papy_babou reprend
+        après un bloc de 8+ segments ou un SFX marqueur).
         """
         resultat = AudioSegment.empty()
         overlays_pending: list[AudioSegment] = []
@@ -1071,8 +1071,8 @@ class Monteur:
 
             # Créer un chapitre si :
             # - C'est le premier segment
-            # - C'est un narrateur ET il y a eu 8+ segments depuis le dernier chapitre
-            # - Il y a eu un SFX juste avant ce narrateur
+            # - C'est papy_babou ET il y a eu 8+ segments depuis le dernier chapitre
+            # - Il y a eu un SFX juste avant papy_babou
             creer_chapitre = False
             if not chapitres:
                 creer_chapitre = True
