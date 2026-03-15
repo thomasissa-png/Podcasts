@@ -509,7 +509,83 @@ Clear visual separation between single-episode and season production workflows:
 - `.replit` uses `gunicorn -c gunicorn.conf.py web:app` (not `python web.py`)
 - Env vars: `GUNICORN_WORKERS`, `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`, `GUNICORN_LOG_LEVEL`
 
+## Full Pipeline Audit Improvements (Session 11)
+Comprehensive audit of the entire production pipeline: season preparation, episode production, next episode continuity, full season production, and S2 preparation.
+
+### Arc State Final Tracking (CRITICAL)
+- After each episode production, `arc_state_final` is extracted and saved to `{episode_id}_arc_state.json`
+- Contains: `moments_cles`, `questions_ouvertes`, `evolutions_personnages`, `fil_rouge`, `ambiance`
+- Automatically loaded and injected into scripteur prompt for episode N+1
+- Scripteur `generer()` accepts `arc_state_precedent` parameter
+- `_construire_user_prompt()` injects arc state with "continuité obligatoire" directive
+- Pipeline loads arc state from `config.SCRIPTS_DIR / f"{ep_prec_id}_arc_state.json"`
+
+### Season Archive System (CRITICAL)
+- `Planificateur.generer_archive_saison(plan, historique)` generates comprehensive archive after final episode
+- Archive includes: arcs finaux, questions ouvertes non résolues, moments clés, évolutions personnages, fil rouge
+- Saved to `config.ARCHIVES_DIR / f"archive_saison_{saison:02d}.json"`
+- Auto-triggered in `_pipeline_inner()` when `numero == dernier_ep` of season
+- `planifier_saison()` accepts `archives_saisons` parameter for inter-season continuity
+- Archives loaded in `planifier_saison` CLI command and passed to planificateur
+
+### Post-Generation Validation (CRITICAL)
+- **Biblical ratio**: `Reviewer.verifier_ratio_biblique()` — counts Papy mots / total mots, alerts if < 60%
+- **Papy/enfants ratio**: `Reviewer.verifier_ratio_papy_enfants()` — enfants should be 25-45% of segments
+- **Teasing validation**: `Reviewer.verifier_teasing()` — detects meta-language ("prochain épisode", "abonnez-vous")
+- **Pause validation**: `Reviewer.verifier_pauses()` — detects >3s pauses (max 3/episode) and 0ms pauses
+- All validations run in pipeline after script review, results stored in `rapport["metriques"]` and `rapport["alertes_post_generation"]`
+
+### Publisher Safety
+- `Publisher.publier()` verifies audio file exists before upload — raises `FileNotFoundError` if missing
+- Check happens before any upload/RSS operation
+
+### Planificateur Enhancements
+- `Planificateur.integrer_evenements_speciaux(plan)` — reads `config.EVENEMENTS_SPECIAUX` and enriches episodes with `evenement_special` field
+- Called automatically after plan generation in `planifier_saison` CLI command
+- Season archive injection into planning prompt with questions ouvertes and moments clés
+
+### Metadonnees Enrichment
+- `source_biblique` field added from `episode.get("histoire_biblique")`
+- `ambiance` field added from `episode.get("ambiance")`
+
+### Scripteur Enhancements
+- `ambiance_par_acte` changed from "optionnel" to "FORTEMENT RECOMMANDÉ" in prompt
+- Arc state precedent injection in user prompt for N→N+1 continuity
+
+### Historique Enrichment
+- `ratio_biblique` and `ratio_enfants` metrics added to historique entries
+- `elements_fil_rouge` field added for season tracking
+
+### Config Additions
+- `RATIO_BIBLIQUE_MINIMUM = 0.60` — minimum Papy content ratio
+- `RATIO_ENFANTS_MIN = 0.25` — minimum children intervention ratio
+- `RATIO_ENFANTS_MAX = 0.45` — maximum children intervention ratio
+- `MAX_PAUSES_EXCESSIVES = 3` — max pauses >3s per episode
+- `ARCHIVES_DIR = HISTORIQUE_DIR / "archives"` — season archives storage
+
+### When modifying reviewer.py (Session 11 additions)
+- `verifier_teasing(script)` checks last 5 non-SFX segments for meta-language
+- `verifier_ratio_biblique(script)` returns `tuple[float, list[str]]` — (ratio, alertes)
+- `verifier_ratio_papy_enfants(script)` returns `tuple[float, list[str]]` — (ratio_enfants, alertes)
+- `verifier_pauses(script)` returns `list[str]` — alerts for excessive/missing pauses
+
+### When modifying planificateur.py (Session 11 additions)
+- `generer_archive_saison(plan, historique)` is a `@staticmethod` — returns dict
+- `integrer_evenements_speciaux(plan)` is a `@staticmethod` — mutates and returns plan
+- `planifier_saison()` accepts optional `archives_saisons: list[dict]` for inter-season context
+
+### When modifying main.py (Session 11 additions)
+- Arc state saved after `ajouter_historique()` in `_pipeline_inner()`
+- Season archive generated when `numero == dernier_ep` of season
+- `planifier_saison` CLI loads archives from `config.ARCHIVES_DIR` and passes to planificateur
+- Post-generation validations (ratio biblique, ratio enfants, teasing, pauses) run after script review
+- Metrics stored in `rapport.setdefault("metriques", {})`
+
+### Tests (Session 11)
+- `tests/test_phase2_improvements.py` — 24 tests covering all Phase 2 improvements
+- Total: 510 tests pass, 3 pre-existing flaky (TestHistorique test isolation), 3 skipped (ffmpeg)
+
 ## Git Workflow
-- Branch: `claude/podcast-production-system-YkngW`
-- Push: `git push -u origin claude/podcast-production-system-YkngW`
+- Branch: `claude/fix-postgres-gunicorn-SV32c`
+- Push: `git push -u origin claude/fix-postgres-gunicorn-SV32c`
 - Retry on network failure: 4 times with exponential backoff (2s, 4s, 8s, 16s)
