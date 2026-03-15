@@ -2767,7 +2767,7 @@ async function loadSaisonProgress() {
         const resp = await fetch('/api/saison/' + saison + '/prochain-episode');
         const data = await resp.json();
         if (!resp.ok) {
-            zone.innerHTML = '<em style="color: var(--rouge-doux);">' + escapeHtml(data.error || 'Erreur') + '</em>';
+            zone.innerHTML = '<em style="color: var(--corail);">' + escapeHtml(data.error || 'Erreur') + '</em>';
             return;
         }
         _saisonProgressData = data;
@@ -2783,12 +2783,12 @@ async function loadSaisonProgress() {
             'a_faire': 'À faire'
         };
         var statusColors = {
-            'termine': 'var(--vert-doux)',
+            'termine': 'var(--vert-prairie)',
             'montage_valide': 'var(--turquoise)',
             'attente_validation_montage': 'var(--orange-chaud)',
             'script_valide': 'var(--turquoise)',
             'attente_validation_script': 'var(--orange-chaud)',
-            'en_cours': 'var(--miel)',
+            'en_cours': 'var(--soleil)',
             'a_faire': 'var(--border)'
         };
 
@@ -2804,7 +2804,7 @@ async function loadSaisonProgress() {
             var label = statusLabels[ep.status] || ep.status;
             var isNext = data.prochain && ep.episode_id === data.prochain.episode_id;
             var border = isNext ? '3px solid var(--turquoise)' : '1px solid ' + color;
-            html += '<div style="border: ' + border + '; border-radius: 8px; padding: 0.5rem 0.75rem; min-width: 120px; background: var(--fond-sidebar); text-align: center;">';
+            html += '<div style="border: ' + border + '; border-radius: 8px; padding: 0.5rem 0.75rem; min-width: 120px; background: var(--sable); text-align: center;">';
             html += '<div style="font-weight: 700; font-size: 0.9rem;">' + escapeHtml(ep.episode_id) + '</div>';
             html += '<div style="font-size: 0.78rem; color: var(--texte-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" title="' + escapeHtml(ep.titre) + '">' + escapeHtml(ep.titre) + '</div>';
             html += '<div style="font-size: 0.72rem; margin-top: 0.25rem; color: ' + color + '; font-weight: 600;">' + label + '</div>';
@@ -2866,6 +2866,12 @@ async function loadSaisonProgress() {
             if (needsInline) {
                 btn.style.display = 'none';
                 psInlineLoadEpisode(ep.episode_id);
+            } else if (ep.status === 'en_cours') {
+                /* Production en cours — désactiver le bouton pour éviter double lancement */
+                btn.style.display = '';
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> Production en cours...';
+                document.getElementById('ps-inline-validation').style.display = 'none';
             } else {
                 btn.style.display = '';
                 btn.disabled = false;
@@ -2875,7 +2881,7 @@ async function loadSaisonProgress() {
             }
         }
     } catch (err) {
-        zone.innerHTML = '<em style="color: var(--rouge-doux);">Erreur : ' + escapeHtml(err.message) + '</em>';
+        zone.innerHTML = '<em style="color: var(--corail);">Erreur : ' + escapeHtml(err.message) + '</em>';
     }
 }
 
@@ -2912,7 +2918,10 @@ async function produireProchainEpisode() {
     } finally {
         hideLoading();
         /* Recharger la progression — affichera la zone de validation inline */
-        await loadSaisonProgress();
+        try { await loadSaisonProgress(); } catch (_e) {
+            var _btn = document.getElementById('btn-produire-saison');
+            if (_btn) { _btn.disabled = false; _btn.innerHTML = '&#127908; Lancer le script'; }
+        }
     }
 }
 
@@ -3040,8 +3049,9 @@ function _renderAudioInline(ep, containerId) {
     var el = document.getElementById(containerId);
     var audioFile = ep.audio_preview || ep.audio_hq;
     if (!audioFile) { el.innerHTML = '<p style="color: var(--texte-light);">Pas d\'audio disponible.</p>'; return; }
+    var cacheBust = '?t=' + Date.now();
     var html = '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
-        + '<source src="/audio/episodes/' + escapeHtml(audioFile) + '" type="audio/mpeg"></audio>';
+        + '<source src="/audio/episodes/' + escapeHtml(audioFile) + cacheBust + '" type="audio/mpeg"></audio>';
     if (ep.duree_secondes) {
         var min = Math.floor(ep.duree_secondes / 60);
         var sec = Math.round(ep.duree_secondes % 60);
@@ -3107,7 +3117,7 @@ async function psInlineValidate(step, action) {
         });
         var data = await resp.json();
         if (!resp.ok) {
-            showAlert('alert-produire-saison', 'error', data.error || 'Erreur validation');
+            showAlert('alert-produire-saison', 'error', escapeHtml(data.error || 'Erreur validation'));
             return;
         }
 
@@ -3136,6 +3146,11 @@ async function psInlineValidate(step, action) {
 /* ── Lancer l'audio depuis la zone inline ── */
 async function psInlineLaunchAudio() {
     if (!_psInlineEpisodeId || _psInlineRunning) return;
+
+    if (!confirm('Lancer la production audio de ' + _psInlineEpisodeId + ' ?\n\nCette opération utilise des crédits API (ElevenLabs).')) {
+        return;
+    }
+
     _psInlineRunning = true;
 
     var btn = document.getElementById('ps-iv-btn-launch-audio');
@@ -3158,13 +3173,20 @@ async function psInlineLaunchAudio() {
     } finally {
         hideLoading();
         _psInlineRunning = false;
-        await loadSaisonProgress();
+        btn.disabled = false;
+        btn.innerHTML = '&#127911; Lancer l\'audio + montage';
+        try { await loadSaisonProgress(); } catch (_e) { /* UI already restored */ }
     }
 }
 
 /* ── Publication inline ── */
 async function psInlinePublish() {
     if (!_psInlineEpisodeId || _psInlineRunning) return;
+
+    if (!confirm('Publier ' + _psInlineEpisodeId + ' ?\n\nCette action est irréversible (publication RSS).')) {
+        return;
+    }
+
     _psInlineRunning = true;
 
     var btn = document.getElementById('ps-iv-btn-publish');
@@ -3187,7 +3209,9 @@ async function psInlinePublish() {
     } finally {
         hideLoading();
         _psInlineRunning = false;
-        await loadSaisonProgress();
+        btn.disabled = false;
+        btn.innerHTML = '&#128225; Publier';
+        try { await loadSaisonProgress(); } catch (_e) { /* UI already restored */ }
     }
 }
 
@@ -3231,7 +3255,7 @@ async function psInlineRegenerate(step) {
                     if (result.status === 'ok') {
                         showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' régénéré !');
                     } else {
-                        showAlert('alert-produire-saison', 'error', result.error || 'Erreur régénération');
+                        showAlert('alert-produire-saison', 'error', escapeHtml(result.error || 'Erreur régénération'));
                     }
                 } catch (pollErr) {
                     showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(pollErr.message));
@@ -3240,7 +3264,7 @@ async function psInlineRegenerate(step) {
                 showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' régénéré !');
             }
         } else {
-            showAlert('alert-produire-saison', 'error', data.error || 'Erreur régénération');
+            showAlert('alert-produire-saison', 'error', escapeHtml(data.error || 'Erreur régénération'));
         }
     } catch (err) {
         showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(err.message));
@@ -3248,7 +3272,7 @@ async function psInlineRegenerate(step) {
         hideLoading();
         _psInlineRunning = false;
         psInlineToggleModify(step);
-        await loadSaisonProgress();
+        try { await loadSaisonProgress(); } catch (_e) { /* UI already restored */ }
     }
 }
 
@@ -3840,12 +3864,12 @@ async function validateStep(step, action) {
         const data = await resp.json();
 
         if (!resp.ok) {
-            showAlert('alert-validation', 'error', data.error || 'Erreur inconnue');
+            showAlert('alert-validation', 'error', escapeHtml(data.error || 'Erreur inconnue'));
             return;
         }
 
         const alertType = (action === 'reject') ? 'warning' : 'success';
-        showAlert('alert-validation', alertType, data.message);
+        showAlert('alert-validation', alertType, escapeHtml(data.message));
         document.getElementById('val-comment').value = '';
 
         /* Recharger le détail et la liste */
@@ -3889,17 +3913,17 @@ async function continueProduction(episodeId, phase) {
     try {
         const launch = await apiCall('/api/episode/' + episodeId + '/continue-production', { phase: phase });
         if (!launch.job_id) {
-            showAlert('alert-validation', 'error', launch.error || 'Erreur inconnue');
+            showAlert('alert-validation', 'error', escapeHtml(launch.error || 'Erreur inconnue'));
             if (zone) zone.style.display = 'none';
             return;
         }
         const result = await pollJob(launch.job_id, 1920);
 
         if (result.status === 'ok') {
-            showAlert('alert-validation', 'success', phaseLabel + ' terminé avec succès pour ' + episodeId + '.');
+            showAlert('alert-validation', 'success', phaseLabel + ' terminé avec succès pour ' + escapeHtml(episodeId) + '.');
         } else {
             var errMsg = result.error || result.stderr || 'Erreur inconnue';
-            showAlert('alert-validation', 'error', phaseLabel + ' échoué : ' + errMsg);
+            showAlert('alert-validation', 'error', phaseLabel + ' échoué : ' + escapeHtml(errMsg));
         }
 
         if (zone) zone.style.display = 'none';
@@ -3943,7 +3967,7 @@ async function regenerateStep(step) {
         });
         if (!launch.job_id) {
             hideLoading();
-            showAlert('alert-validation', 'error', launch.error || 'Erreur inconnue');
+            showAlert('alert-validation', 'error', escapeHtml(launch.error || 'Erreur inconnue'));
             return;
         }
         var result = await pollJob(launch.job_id, 1920);
@@ -3953,7 +3977,7 @@ async function regenerateStep(step) {
             showAlert('alert-validation', 'success', label + ' régénéré avec vos instructions. Vérifiez le résultat.');
             if (textarea) textarea.value = '';
         } else {
-            showAlert('alert-validation', 'error', 'Erreur : ' + (result.error || result.stderr || 'inconnue'));
+            showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(result.error || result.stderr || 'inconnue'));
         }
 
         await loadEpisodeDetail(_currentEpisodeId);
@@ -3984,7 +4008,7 @@ async function rejectAndArchive(step) {
         });
         if (!rejectResp.ok) {
             var rejectData = await rejectResp.json();
-            showAlert('alert-validation', 'error', 'Erreur rejet : ' + (rejectData.error || 'inconnue'));
+            showAlert('alert-validation', 'error', 'Erreur rejet : ' + escapeHtml(rejectData.error || 'inconnue'));
             return;
         }
 
@@ -4003,7 +4027,7 @@ async function rejectAndArchive(step) {
             await loadValidationEpisodes();
             _dashboardDirty = true;
         } else {
-            showAlert('alert-validation', 'error', data.error || 'Erreur lors de l\'archivage.');
+            showAlert('alert-validation', 'error', escapeHtml(data.error || 'Erreur lors de l\'archivage.'));
         }
     } catch (err) {
         showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
@@ -4032,11 +4056,11 @@ async function deleteEpisode() {
         const data = await resp.json();
 
         if (!resp.ok) {
-            showAlert('alert-validation', 'error', data.error || 'Erreur lors de la suppression');
+            showAlert('alert-validation', 'error', escapeHtml(data.error || 'Erreur lors de la suppression'));
             return;
         }
 
-        showAlert('alert-validation', 'success', data.message);
+        showAlert('alert-validation', 'success', escapeHtml(data.message));
 
         /* Masquer le détail et recharger la liste */
         document.getElementById('val-detail').style.display = 'none';

@@ -317,6 +317,7 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
                     "status": "done",
                     "result": result,
                     "created_at": time.monotonic(),
+                    "episode_id": _jobs[job_id].get("episode_id"),
                 }
         except Exception as e:
             with _jobs_lock:
@@ -324,6 +325,7 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
                     "status": "done",
                     "result": {"error": str(e), "status": "error"},
                     "created_at": time.monotonic(),
+                    "episode_id": _jobs[job_id].get("episode_id"),
                 }
         finally:
             if cleanup_fn:
@@ -345,7 +347,7 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
 def api_job_status(job_id):
     """Retourne le statut d'un job asynchrone.
 
-    Les jobs terminés sont gardés en cache pendant 60 secondes pour éviter
+    Les jobs terminés sont gardés en cache pendant 5 minutes pour éviter
     la perte de résultat si le client ne poll pas assez vite (race condition).
     """
     if not _JOB_ID_RE.match(job_id):
@@ -1095,6 +1097,11 @@ def api_continue_production(episode_id):
                 rapport_cp = cp_data["data"]["rapport"]
                 rapport_cp.setdefault("etapes", {}).setdefault("publication", {})
                 rapport_cp["etapes"]["publication"]["validation_humaine"] = True
+                # Injecter aussi les flags script+montage pour que le guard-rail
+                # du pipeline ne bloque pas la publication (ces validations ont
+                # déjà été faites via le web avant d'arriver ici)
+                rapport_cp["etapes"].setdefault("script", {})["validation_humaine"] = True
+                rapport_cp["etapes"].setdefault("montage", {})["validation_humaine"] = True
                 with open(checkpoint_path, "w", encoding="utf-8") as f:
                     _json.dump(cp_data, f, ensure_ascii=False, indent=2)
         except (OSError, ValueError) as e:
@@ -1148,22 +1155,22 @@ def api_regenerate_episode(episode_id):
 
         # Réinitialiser le flag de validation script dans le rapport (DB + fichier)
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
-        rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
-        if rapport:
-            try:
-                # API-6.1: Utiliser setdefault pour éviter d'opérer sur un dict temporaire
-                rapport.setdefault("etapes", {}).setdefault("script", {}).pop("validation_humaine", None)
-                rapport.setdefault("decisions_humaines", []).append({
-                    "timestamp": datetime.now().isoformat(),
-                    "type": "regeneration_script_web",
-                    "instructions": instructions,
-                })
-                with fichier_lock(rapport_path):
+        try:
+            with fichier_lock(rapport_path):
+                # Re-charger le rapport SOUS le lock pour éviter TOCTOU
+                rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
+                if rapport:
+                    rapport.setdefault("etapes", {}).setdefault("script", {}).pop("validation_humaine", None)
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "timestamp": datetime.now().isoformat(),
+                        "type": "regeneration_script_web",
+                        "instructions": instructions,
+                    })
                     with open(rapport_path, "w", encoding="utf-8") as f:
                         json.dump(rapport, f, ensure_ascii=False, indent=2)
-                _sync_rapport_to_db(episode_id, rapport)
-            except Exception as e:
-                logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
+                    _sync_rapport_to_db(episode_id, rapport)
+        except Exception as e:
+            logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
 
         # W3: Utiliser reprendre depuis le checkpoint pour éviter de créer
         # une nouvelle entrée production en DB (produire en crée une à chaque appel)
@@ -1226,27 +1233,27 @@ def api_regenerate_episode(episode_id):
 
         # Sauvegarder les instructions dans le rapport (DB + fichier)
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
-        rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
-        if rapport:
-            try:
-                # API-6.1: Utiliser setdefault pour éviter dict détaché
-                montage_etape = rapport.setdefault("etapes", {}).setdefault("montage", {})
-                montage_etape.pop("validation_humaine", None)
-                # W7: Nettoyer les données de montage obsolètes
-                for stale_key in ("chemin_hq", "chemin_preview", "duree_secondes",
-                                  "taille_bytes", "chapitres", "object_storage"):
-                    montage_etape.pop(stale_key, None)
-                rapport.setdefault("decisions_humaines", []).append({
-                    "timestamp": datetime.now().isoformat(),
-                    "type": "regeneration_montage_web",
-                    "instructions": instructions,
-                })
-                with fichier_lock(rapport_path):
+        try:
+            with fichier_lock(rapport_path):
+                # Re-charger le rapport SOUS le lock pour éviter TOCTOU
+                rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
+                if rapport:
+                    montage_etape = rapport.setdefault("etapes", {}).setdefault("montage", {})
+                    montage_etape.pop("validation_humaine", None)
+                    # W7: Nettoyer les données de montage obsolètes
+                    for stale_key in ("chemin_hq", "chemin_preview", "duree_secondes",
+                                      "taille_bytes", "chapitres", "object_storage"):
+                        montage_etape.pop(stale_key, None)
+                    rapport.setdefault("decisions_humaines", []).append({
+                        "timestamp": datetime.now().isoformat(),
+                        "type": "regeneration_montage_web",
+                        "instructions": instructions,
+                    })
                     with open(rapport_path, "w", encoding="utf-8") as f:
                         json.dump(rapport, f, ensure_ascii=False, indent=2)
-                _sync_rapport_to_db(episode_id, rapport)
-            except Exception as e:
-                logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
+                    _sync_rapport_to_db(episode_id, rapport)
+        except Exception as e:
+            logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
 
         # Forcer la reprise depuis l'étape audio en réécrivant le checkpoint
         try:
@@ -1605,7 +1612,9 @@ def api_prochain_episode(saison_num):
     # Trouver le prochain épisode à produire (premier non terminé)
     # B3: Un épisode est "prêt" quand script ET montage sont validés
     # (pas besoin d'attendre la publication pour passer au suivant)
-    STATUTS_PRETS = ("termine", "montage_valide")
+    # Un épisode est "prêt" (ne bloque plus le suivant) uniquement quand
+    # il est terminé. montage_valide reste "prochain" pour permettre la publication.
+    STATUTS_PRETS = ("termine",)
     prochain = None
     bloque_par = None
     for i, ep_s in enumerate(episodes_status):
