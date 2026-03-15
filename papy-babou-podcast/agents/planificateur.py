@@ -50,6 +50,14 @@ RÈGLES DE PLANIFICATION :
     Le fil rouge et l'arc narratif de la saison passent par les PERSONNAGES RÉCURRENTS
     (Papy, Antoine, Noémie) et le THÈME de la saison, PAS par la répétition du même
     sujet biblique.
+12. ORDRE CHRONOLOGIQUE — RÈGLE ABSOLUE : Les histoires bibliques DOIVENT être
+    présentées dans l'ordre chronologique de la Bible / de l'Histoire. C'est un
+    podcast éducatif pour enfants : on suit le fil de l'Histoire de manière
+    progressive. Exemples pour l'Ancien Testament : Création → Noé → Abraham →
+    Isaac → Jacob → Joseph → Moïse → Josué → Juges → David → Salomon → Prophètes.
+    Exemples pour la vie de Jésus : Annonciation → Nativité → Fuite en Égypte →
+    Baptême → Premiers miracles → Paraboles → Entrée à Jérusalem → Cène → Passion.
+    JAMAIS un épisode tardif de la saison sur un événement antérieur à l'épisode 1.
 
 FORMAT DE SORTIE — JSON STRICT :
 {
@@ -464,6 +472,76 @@ class Planificateur:
                     f"{', '.join(episodes_concernes)}. "
                     f"Chaque épisode doit traiter un sujet DIFFÉRENT de A à Z."
                 )
+
+        # Vérifier l'ordre chronologique des histoires bibliques
+        # Dictionnaire de personnages/événements bibliques → ordre approximatif
+        _ORDRE_CHRONOLOGIQUE: dict[str, int] = {
+            # Ancien Testament (0-99)
+            "création": 1, "adam": 2, "ève": 2, "eve": 2, "caïn": 3, "cain": 3,
+            "abel": 3, "noé": 5, "noe": 5, "déluge": 5, "babel": 6,
+            "abraham": 10, "sara": 10, "sarah": 10, "isaac": 12,
+            "jacob": 14, "ésaü": 14, "esau": 14, "rachel": 14,
+            "joseph": 16, "égypte": 16,
+            "moïse": 20, "moise": 20, "pharaon": 20, "exode": 21,
+            "mer rouge": 21, "sinaï": 22, "sinai": 22, "commandements": 22,
+            "josué": 25, "josue": 25, "jéricho": 25, "jericho": 25,
+            "gédéon": 28, "gedeon": 28, "samson": 30, "dalila": 30,
+            "ruth": 32, "samuel": 34,
+            "saül": 36, "saul": 36, "david": 38, "goliath": 38,
+            "salomon": 40, "temple": 40,
+            "élie": 45, "elie": 45, "élisée": 46, "elisee": 46,
+            "jonas": 48, "daniel": 50, "esther": 52,
+            # Nouveau Testament — Jésus (100-199)
+            "annonciation": 100, "nativité": 101, "nativite": 101,
+            "mages": 102, "bethléem": 101, "bethleem": 101,
+            "hérode": 103, "herode": 103, "nazareth": 105,
+            "jean-baptiste": 110, "baptême": 110, "bapteme": 110,
+            "cana": 112, "béatitudes": 114, "beatitudes": 114,
+            "samaritain": 116, "lazare": 120,
+            "multiplication": 118, "transfiguration": 122,
+            "jérusalem": 125, "jerusalem": 125, "cène": 128, "cene": 128,
+            "passion": 130, "crucifixion": 132, "golgotha": 132,
+            # Nouveau Testament — après Jésus (200-299)
+            "résurrection": 200, "resurrection": 200,
+            "ascension": 202, "pentecôte": 204, "pentecote": 204,
+            "pierre": 206, "étienne": 208, "etienne": 208,
+            "paul": 210, "philippe": 212, "apocalypse": 220,
+            # Saints chrétiens (300+)
+            "martin": 310, "patrick": 320, "françois": 330, "francois": 330,
+            "jeanne": 340, "thérèse": 350, "therese": 350, "nicolas": 325,
+        }
+        if histoires:
+            ordres_detectes: list[tuple[int, int, str]] = []  # (ep_num, ordre, histoire)
+            for ep in episodes:
+                h = ep.get("histoire_biblique", "")
+                if not h:
+                    continue
+                # Chercher le meilleur match dans le dictionnaire
+                h_lower = h.lower()
+                meilleur_ordre = -1
+                for cle, ordre in _ORDRE_CHRONOLOGIQUE.items():
+                    if cle in h_lower:
+                        if ordre > meilleur_ordre:
+                            meilleur_ordre = ordre
+                if meilleur_ordre >= 0:
+                    ordres_detectes.append((ep.get("numero", 0), meilleur_ordre, h))
+
+            # Vérifier que l'ordre est croissant
+            if len(ordres_detectes) >= 2:
+                inversions = []
+                for i in range(len(ordres_detectes) - 1):
+                    ep_num_a, ordre_a, hist_a = ordres_detectes[i]
+                    ep_num_b, ordre_b, hist_b = ordres_detectes[i + 1]
+                    if ordre_b < ordre_a:
+                        inversions.append(
+                            f"Ep{ep_num_a} ({hist_a[:40]}) → Ep{ep_num_b} ({hist_b[:40]})"
+                        )
+                if inversions:
+                    raise ValueError(
+                        f"Les histoires bibliques ne sont PAS dans l'ordre chronologique. "
+                        f"Inversions détectées : {'; '.join(inversions)}. "
+                        f"Les épisodes doivent suivre l'ordre de la Bible / de l'Histoire."
+                    )
 
     @staticmethod
     def generer_archive_saison(plan: dict, historique: list[dict]) -> dict:

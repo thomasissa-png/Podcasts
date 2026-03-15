@@ -897,14 +897,14 @@ class TestPlanificateurUnSujetParEpisode:
         return {"saison": {"numero": 1, "theme": "Test", "episodes": episodes}}
 
     def test_histoires_toutes_differentes_passe(self):
-        """Un plan avec des histoires toutes différentes doit passer."""
+        """Un plan avec des histoires toutes différentes en ordre chrono doit passer."""
         plan = self._plan([
-            "David contre Goliath",
             "Abraham et Isaac",
             "Moïse et le buisson ardent",
+            "David contre Goliath",
             "Jonas et la baleine",
         ])
-        # Ne doit pas lever d'erreur
+        # Ne doit pas lever d'erreur (ordre chronologique respecté)
         Planificateur._valider_plan(plan)
 
     def test_doublon_exact_rejete(self):
@@ -928,9 +928,34 @@ class TestPlanificateurUnSujetParEpisode:
         with pytest.raises(ValueError, match="[Mm]ême personnage|sujet"):
             Planificateur._valider_plan(plan)
 
+    def test_ordre_chronologique_inverse_rejete(self):
+        """Un plan avec des histoires dans le mauvais ordre chronologique est rejeté."""
+        plan = self._plan([
+            "David contre Goliath",
+            "Abraham et Isaac",
+            "Jonas et la baleine",
+        ])
+        with pytest.raises(ValueError, match="chronologique"):
+            Planificateur._valider_plan(plan)
+
+    def test_ordre_chronologique_correct_passe(self):
+        """Un plan avec des histoires en ordre chronologique passe."""
+        plan = self._plan([
+            "Noé et le Déluge",
+            "Abraham et Isaac",
+            "Moïse et le buisson ardent",
+            "Salomon et le temple",
+        ])
+        Planificateur._valider_plan(plan)
+
     def test_prompt_contient_regle_un_sujet(self):
         """Le system prompt doit contenir la règle un sujet par épisode."""
         from agents.planificateur import SYSTEM_PROMPT
         assert "UN SUJET PAR ÉPISODE" in SYSTEM_PROMPT
         assert "JAMAIS" in SYSTEM_PROMPT
         assert "partie 1" in SYSTEM_PROMPT
+
+    def test_prompt_contient_regle_chronologique(self):
+        """Le system prompt doit contenir la règle d'ordre chronologique."""
+        from agents.planificateur import SYSTEM_PROMPT
+        assert "ORDRE CHRONOLOGIQUE" in SYSTEM_PROMPT

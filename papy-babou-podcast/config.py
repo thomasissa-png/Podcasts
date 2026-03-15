@@ -598,37 +598,47 @@ def liste_saisons() -> list[int]:
 # Injecté automatiquement dans le prompt du planificateur.
 PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
     1: {
-        "perimetre": "Ancien Testament uniquement",
+        "perimetre": "Ancien Testament uniquement — ordre chronologique",
         "description": (
-            "Histoires de l'Ancien Testament exclusivement : Genèse, Exode, "
-            "les Patriarches (Abraham, Isaac, Jacob, Joseph), Moïse, Josué, "
-            "les Juges (Samson, Gédéon), les Rois (David, Salomon, Saül), "
-            "les Prophètes (Élie, Élisée, Jonas, Daniel), Noé, Ruth, Esther, etc. "
-            "AUCUNE histoire du Nouveau Testament."
+            "Histoires de l'Ancien Testament exclusivement, dans l'ORDRE "
+            "CHRONOLOGIQUE de la Bible : Création du monde → Noé et le Déluge → "
+            "Abraham (sacrifice d'Isaac) → Jacob (échelle de Jacob) → "
+            "Joseph (vendu par ses frères, en Égypte) → Moïse (buisson ardent, "
+            "Exode, mer Rouge, dix commandements) → Josué (Jéricho) → "
+            "les Juges (Samson, Gédéon) → Samuel → les Rois (David contre Goliath, "
+            "Salomon et le temple) → les Prophètes (Élie, Élisée, Jonas, Daniel). "
+            "AUCUNE histoire du Nouveau Testament. "
+            "L'épisode 1 DOIT commencer au début (Genèse) et le dernier "
+            "DOIT se situer chronologiquement après tous les précédents."
         ),
     },
     2: {
-        "perimetre": "Jésus — de la naissance à la mort",
+        "perimetre": "Jésus — de la naissance à la mort — ordre chronologique",
         "description": (
-            "La vie de Jésus-Christ de A à Z : l'Annonciation, la Nativité, "
-            "la fuite en Égypte, l'enfance à Nazareth, le baptême par Jean-Baptiste, "
-            "les miracles (noces de Cana, multiplication des pains, marche sur l'eau, "
-            "guérisons, résurrection de Lazare), les paraboles majeures "
-            "(le bon Samaritain, le fils prodigue, les talents), "
-            "l'entrée à Jérusalem, la Cène, la Passion, la Crucifixion. "
-            "Chaque épisode = un moment clé de la vie de Jésus."
+            "La vie de Jésus-Christ dans l'ORDRE CHRONOLOGIQUE : "
+            "l'Annonciation → la Nativité → la fuite en Égypte → "
+            "l'enfance à Nazareth (Jésus au Temple à 12 ans) → "
+            "le baptême par Jean-Baptiste → les premiers disciples → "
+            "les miracles (noces de Cana, multiplication des pains, marche sur "
+            "l'eau, guérisons, résurrection de Lazare) → les paraboles majeures "
+            "(le bon Samaritain, le fils prodigue, les talents) → "
+            "l'entrée triomphale à Jérusalem → la Cène → la Passion → "
+            "la Crucifixion. "
+            "Chaque épisode = un moment clé de la vie de Jésus, "
+            "dans l'ordre où il s'est produit."
         ),
     },
     3: {
-        "perimetre": "Nouveau Testament (après Jésus) et grands saints chrétiens",
+        "perimetre": "Nouveau Testament (après Jésus) et grands saints — ordre chronologique",
         "description": (
-            "Les Actes des Apôtres et les grands saints : la Résurrection et l'Ascension, "
-            "la Pentecôte, les voyages de Paul (conversion, missions, naufrage), "
-            "Pierre et la première Église, Étienne le premier martyr, "
-            "Philippe et l'eunuque éthiopien, l'Apocalypse de Jean. "
-            "Puis les grands saints chrétiens : Saint François d'Assise, "
-            "Sainte Thérèse de Lisieux, Saint Martin, Sainte Jeanne d'Arc, "
-            "Saint Nicolas, Saint Patrick, etc. "
+            "Dans l'ORDRE CHRONOLOGIQUE : la Résurrection et l'Ascension → "
+            "la Pentecôte → Pierre et la première Église → Étienne le premier "
+            "martyr → la conversion de Paul → les voyages missionnaires de Paul → "
+            "Philippe et l'eunuque éthiopien → l'Apocalypse de Jean. "
+            "Puis les grands saints chrétiens par ordre historique : "
+            "Saint Martin (316) → Saint Patrick (385) → Saint François d'Assise "
+            "(1181) → Sainte Jeanne d'Arc (1412) → Sainte Thérèse de Lisieux "
+            "(1873) → Saint Nicolas, etc. "
             "Chaque épisode = un apôtre, un événement des Actes, ou un grand saint."
         ),
     },

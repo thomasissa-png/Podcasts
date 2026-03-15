@@ -986,6 +986,7 @@ def _validation_plan_saison(
     personnages_list: list[str] | None = None,
     saisons_prec: list[dict] | None = None,
     nb_episodes: int = 10,
+    archives_saisons: list[dict] | None = None,
 ) -> dict:
     """Point de validation humaine du plan de saison (go/no-go).
 
@@ -1001,6 +1002,8 @@ def _validation_plan_saison(
         description: Description du producteur.
         personnages_list: Personnages secondaires.
         saisons_prec: Saisons precedentes pour contexte.
+        nb_episodes: Nombre d'episodes.
+        archives_saisons: Archives des saisons precedentes pour continuite.
 
     Returns:
         Le plan (potentiellement modifie ou regenere).
@@ -1074,6 +1077,7 @@ def _validation_plan_saison(
                 saisons_precedentes=saisons_prec or None,
                 nb_episodes=nb_episodes,
                 preferences_producteur=_construire_bloc_preferences(),
+                archives_saisons=archives_saisons or None,
             )
             planificateur.sauvegarder(plan, chemin_json)
             console.print(f"[{Palette.SUCCES}]  Nouveau plan généré et sauvegardé.[/]")
@@ -1111,6 +1115,7 @@ def _validation_plan_saison(
                     saisons_precedentes=saisons_prec or None,
                     nb_episodes=nb_episodes,
                     preferences_producteur=_construire_bloc_preferences(),
+                    archives_saisons=archives_saisons or None,
                 )
                 # Stocker les instructions dans le plan pour reference future (A5)
                 plan["saison"].setdefault("instructions_producteur", []).append({
@@ -3395,6 +3400,7 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 personnages_list=personnages_list,
                 saisons_prec=saisons_prec,
                 nb_episodes=nb_episodes,
+                archives_saisons=archives_saisons,
             )
         else:
             plan["saison"].setdefault("decisions_humaines", []).append({
