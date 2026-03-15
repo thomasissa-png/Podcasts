@@ -34,20 +34,25 @@ def _db_disponible() -> bool:
 # ── Historique ─────────────────────────────────────────────────────────────────
 
 def charger_historique_complet() -> list[dict]:
-    """Charge tout l'historique des épisodes (DB prioritaire, JSON fallback).
+    """Charge tout l'historique des épisodes (fusion DB + JSON).
 
-    Retente une fois la connexion DB en cas d'échec (Neon scale-to-zero
-    peut mettre quelques secondes à se réveiller après une période d'inactivité).
+    Fusionne les deux sources pour ne jamais perdre d'épisodes :
+    - DB peut avoir des entrées absentes du JSON (épisodes produits via web)
+    - JSON peut avoir des entrées absentes de la DB (sync DB échouée)
+
+    En cas de doublon (même episode_id), l'entrée la plus récente gagne.
+    Retente une fois la connexion DB en cas d'échec (Neon scale-to-zero).
     """
+    historique_db: list[dict] = []
     for attempt in range(2):
         try:
             from database import DATABASE_URL
             if DATABASE_URL:
                 from db_models import HistoriqueRepo
                 rows = HistoriqueRepo.charger_tout()
-                # rows peut être [] légitimement (aucun épisode encore produit)
                 if rows is not None:
-                    return rows
+                    historique_db = rows
+                    break
         except Exception as e:
             logger.warning(
                 "Échec chargement historique DB (tentative %d/2) : %s",
@@ -56,15 +61,53 @@ def charger_historique_complet() -> list[dict]:
             if attempt == 0:
                 time.sleep(1)  # Laisser Neon se réveiller
 
-    # Fallback JSON (rétrocompatibilité / DB indisponible)
+    # Charger aussi le JSON (toujours, pas seulement en fallback)
+    historique_json: list[dict] = []
     historique_path = config.HISTORIQUE_DIR / "historique_episodes.json"
     if historique_path.exists():
         try:
             with open(historique_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                historique_json = json.load(f)
         except Exception as e:
             logger.warning("Échec chargement historique JSON : %s", e)
-    return []
+
+    # Si une seule source, retourner directement
+    if not historique_db:
+        return historique_json
+    if not historique_json:
+        return historique_db
+
+    # Fusionner : indexer par episode_id, préférer l'entrée la plus récente
+    merged: dict[str, dict] = {}
+    for ep in historique_db:
+        eid = ep.get("episode_id", "")
+        if eid:
+            merged[eid] = ep
+
+    for ep in historique_json:
+        eid = ep.get("episode_id", "")
+        if not eid:
+            continue
+        if eid not in merged:
+            # Épisode absent de la DB → l'ajouter
+            merged[eid] = ep
+        else:
+            # Doublon : comparer les dates de production
+            db_date = merged[eid].get("date_production", "")
+            json_date = ep.get("date_production", "")
+            # Convertir en string pour comparaison
+            if hasattr(db_date, "isoformat"):
+                db_date = db_date.isoformat()
+            if hasattr(json_date, "isoformat"):
+                json_date = json_date.isoformat()
+            # L'entrée JSON plus récente remplace la DB
+            if json_date and json_date > str(db_date):
+                merged[eid] = ep
+
+    # Trier par date de production
+    result = list(merged.values())
+    result.sort(key=lambda x: str(x.get("date_production", "")))
+    return result
 
 
 # ── Rapports de production ─────────────────────────────────────────────────────

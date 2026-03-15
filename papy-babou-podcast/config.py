@@ -7,6 +7,7 @@ import shutil
 import sys
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -530,7 +531,11 @@ def age_personnage(personnage_id: str, saison: int) -> int | None:
 
 
 def charger_saison(numero: int) -> dict:
-    """Charge le plan d'une saison (PostgreSQL prioritaire, JSON fallback).
+    """Charge le plan d'une saison (le plus récent entre DB et fichier JSON).
+
+    Vérifie les deux sources et retourne la plus récente pour éviter que des
+    données stale en DB ne masquent un plan fraîchement créé sur le filesystem
+    (ou inversement).
 
     Args:
         numero: Numéro de la saison.
@@ -538,21 +543,61 @@ def charger_saison(numero: int) -> dict:
     Returns:
         Plan de saison ou dictionnaire vide si inexistant.
     """
+    plan_db = {}
+    db_updated_at = None
+
     if _db_disponible():
         try:
             from db_models import SaisonRepo
-            plan = SaisonRepo.charger(numero)
-            if plan:
-                return plan
+            from database import get_cursor
+            # Charger plan + timestamp de la dernière version
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT plan_json, updated_at FROM saisons "
+                    "WHERE numero = %s AND deleted_at IS NULL "
+                    "ORDER BY version DESC LIMIT 1",
+                    (numero,),
+                )
+                row = cur.fetchone()
+            if row and row["plan_json"]:
+                plan_db = row["plan_json"]
+                db_updated_at = row["updated_at"]
         except Exception as e:
             _config_logger.warning("DB indisponible pour saison %d : %s", numero, e)
 
-    # Fallback fichier JSON
+    # Fichier JSON
+    plan_fichier = {}
+    fichier_mtime = None
     chemin = SAISONS_DIR / f"saison_{numero:02d}.json"
     if chemin.exists():
-        with open(chemin, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+        try:
+            import os
+            fichier_mtime = datetime.fromtimestamp(
+                os.path.getmtime(chemin),
+                tz=datetime.now().astimezone().tzinfo,
+            )
+            with open(chemin, "r", encoding="utf-8") as f:
+                plan_fichier = json.load(f)
+        except Exception as e:
+            _config_logger.warning("Erreur lecture fichier saison %d : %s", numero, e)
+
+    # Si les deux sources existent, retourner la plus récente
+    if plan_db and plan_fichier:
+        if db_updated_at and fichier_mtime:
+            # Comparer les timestamps — fichier plus récent = fraîchement régénéré
+            try:
+                if fichier_mtime > db_updated_at:
+                    _config_logger.info(
+                        "Saison %d : fichier JSON plus récent que DB, utilisation du fichier",
+                        numero,
+                    )
+                    return plan_fichier
+            except TypeError:
+                pass  # Comparaison impossible (timezone mismatch) → DB par défaut
+        return plan_db
+
+    # Une seule source disponible
+    return plan_db or plan_fichier or {}
 
 
 def charger_episode_saison(saison: int, numero: int) -> dict:
@@ -575,24 +620,31 @@ def charger_episode_saison(saison: int, numero: int) -> dict:
 
 
 def liste_saisons() -> list[int]:
-    """Retourne la liste des numéros de saisons existantes."""
+    """Retourne la liste des numéros de saisons existantes.
+
+    Fusionne les saisons trouvées en DB ET sur le filesystem pour ne jamais
+    perdre une saison créée localement mais pas encore synchronisée en DB.
+    """
+    numeros: set[int] = set()
+
+    # 1. DB
     if _db_disponible():
         try:
             from db_models import SaisonRepo
             nums = SaisonRepo.liste_saisons()
             if nums:
-                return nums
+                numeros.update(nums)
         except Exception as e:
             _config_logger.warning("DB indisponible pour liste saisons : %s", e)
 
-    # Fallback fichier JSON
-    numeros = []
+    # 2. Fichiers JSON (toujours vérifiés, pas seulement en fallback)
     for f in SAISONS_DIR.glob("saison_*.json"):
         try:
             num = int(f.stem.split("_")[1])
-            numeros.append(num)
+            numeros.add(num)
         except (IndexError, ValueError):
             pass
+
     return sorted(numeros)
 
 
