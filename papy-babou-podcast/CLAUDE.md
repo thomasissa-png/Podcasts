@@ -653,3 +653,21 @@ Comprehensive 8-agent audit followed by full implementation of all fixes before 
 - Branch: `claude/fix-postgres-gunicorn-SV32c`
 - Push: `git push -u origin claude/fix-postgres-gunicorn-SV32c`
 - Retry on network failure: 4 times with exponential backoff (2s, 4s, 8s, 16s)
+
+## One Topic Per Episode Rule (Session 14)
+**ABSOLUTE RULE**: Each episode must cover ONE biblical story completely, from A to Z.
+
+### Problem solved
+The planificateur was generating multi-part episodes (e.g., 3 episodes on Abraham, 3 on Jacob), reducing topic variety in a season.
+
+### Implementation
+- **Rule 11** added to `SYSTEM_PROMPT` in `planificateur.py`: explicit prohibition of multi-part episodes with good/bad examples
+- **JSON template** reinforced: `histoire_biblique` and `resume` fields emphasize uniqueness and completeness
+- **Hard validation** in `_valider_plan()`: rejects plans with duplicate biblical stories (exact match AND same-subject detection by dominant biblical character)
+- **Producer preferences** stored in `data/preferences_producteur.json`: two rules about one topic per episode and maximum topic variety
+- The season's narrative arc comes from the RECURRING CHARACTERS (Papy, Antoine, Noémie) and the season THEME, not from repeating the same biblical subject
+
+### When modifying planificateur.py (Session 14 additions)
+- `_valider_plan()` now raises `ValueError` (not just warning) on duplicate `histoire_biblique`
+- Subject-similarity detection extracts dominant biblical character name from each `histoire_biblique` and rejects if same character appears in multiple episodes
+- Uses `collections.Counter` for subject frequency analysis
