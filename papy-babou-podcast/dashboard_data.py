@@ -641,6 +641,21 @@ def get_dashboard_data(saison: int = 0) -> dict:
     # Publications
     publications = charger_publications()
 
+    # Vérifier la persistance
+    persistence_warning = None
+    has_db = _db_disponible()
+    has_os = False
+    try:
+        import persistent_storage
+        has_os = persistent_storage.is_available()
+    except Exception:
+        pass
+    if not has_db and not has_os:
+        persistence_warning = (
+            "Aucun système de persistance actif (ni PostgreSQL ni Object Storage). "
+            "Les données seront perdues au prochain redéploiement !"
+        )
+
     return {
         "saison_filtre": saison,
         "episodes": episodes,
@@ -654,4 +669,5 @@ def get_dashboard_data(saison: int = 0) -> dict:
         "couts": couts,
         "checkpoints": checkpoints,
         "publications": publications,
+        "persistence_warning": persistence_warning,
     }

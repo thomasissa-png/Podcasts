@@ -71,6 +71,8 @@ def _get_client():
 PREFIX_AUDIO = "audio/"
 PREFIX_SCRIPT = "scripts/"
 PREFIX_RAPPORT = "rapports/"
+PREFIX_SAISON = "saisons/"
+PREFIX_CHECKPOINT = "checkpoints/"
 
 
 def _storage_key(prefix: str, filename: str) -> str:
@@ -322,6 +324,88 @@ def restore_rapport(episode_id: str, dest_dir: Path) -> Path | None:
     """
     key = _storage_key(PREFIX_RAPPORT, f"{episode_id}_rapport.json")
     dest = dest_dir / f"{episode_id}_rapport.json"
+    if dest.exists():
+        return dest
+    if download_file(key, dest):
+        return dest
+    return None
+
+
+def upload_saison(numero: int, saison_path: Path) -> str | None:
+    """Upload le plan de saison vers Object Storage.
+
+    Returns:
+        Clé de stockage, ou None si échec.
+    """
+    if not saison_path or not saison_path.exists():
+        return None
+    key = _storage_key(PREFIX_SAISON, saison_path.name)
+    if upload_file(key, saison_path):
+        return key
+    return None
+
+
+def restore_saison(numero: int, dest_dir: Path) -> Path | None:
+    """Restaure le plan de saison depuis Object Storage.
+
+    Returns:
+        Chemin du fichier restauré, ou None si indisponible.
+    """
+    filename = f"saison_{numero:02d}.json"
+    key = _storage_key(PREFIX_SAISON, filename)
+    dest = dest_dir / filename
+    if dest.exists():
+        return dest
+    if download_file(key, dest):
+        return dest
+    return None
+
+
+def restore_all_saisons(dest_dir: Path) -> list[Path]:
+    """Restaure tous les plans de saisons depuis Object Storage.
+
+    Returns:
+        Liste des chemins de fichiers restaurés.
+    """
+    keys = list_files(PREFIX_SAISON)
+    restored = []
+    for key in keys:
+        filename = key.removeprefix(PREFIX_SAISON)
+        if not filename.startswith("saison_") or not filename.endswith(".json"):
+            continue
+        dest = dest_dir / filename
+        if dest.exists():
+            restored.append(dest)
+            continue
+        if download_file(key, dest):
+            restored.append(dest)
+            logger.info("Saison restaurée : %s", dest)
+    return restored
+
+
+def upload_checkpoint(episode_id: str, checkpoint_path: Path) -> str | None:
+    """Upload un checkpoint vers Object Storage.
+
+    Returns:
+        Clé de stockage, ou None si échec.
+    """
+    if not checkpoint_path or not checkpoint_path.exists():
+        return None
+    key = _storage_key(PREFIX_CHECKPOINT, checkpoint_path.name)
+    if upload_file(key, checkpoint_path):
+        return key
+    return None
+
+
+def restore_checkpoint(episode_id: str, dest_dir: Path) -> Path | None:
+    """Restaure un checkpoint depuis Object Storage.
+
+    Returns:
+        Chemin du fichier restauré, ou None si indisponible.
+    """
+    filename = f"{episode_id}_checkpoint.json"
+    key = _storage_key(PREFIX_CHECKPOINT, filename)
+    dest = dest_dir / filename
     if dest.exists():
         return dest
     if download_file(key, dest):

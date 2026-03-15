@@ -498,6 +498,63 @@ def healthz():
     return "ok", 200
 
 
+@app.route("/api/storage-status")
+def api_storage_status():
+    """Diagnostic de l'état des systèmes de persistance.
+
+    Vérifie PostgreSQL, Object Storage, et les données disponibles.
+    """
+    status = {
+        "postgresql": {"available": False, "url_configured": False},
+        "object_storage": {"available": False},
+        "saisons_fichiers": [],
+        "persistence_ok": False,
+    }
+
+    # PostgreSQL
+    try:
+        from database import DATABASE_URL
+        status["postgresql"]["url_configured"] = bool(DATABASE_URL)
+        if DATABASE_URL:
+            from database import verifier_connexion
+            status["postgresql"]["available"] = verifier_connexion()
+    except Exception as e:
+        status["postgresql"]["error"] = str(e)
+
+    # Object Storage
+    try:
+        import persistent_storage
+        status["object_storage"]["available"] = persistent_storage.is_available()
+        if persistent_storage.is_available():
+            status["object_storage"]["saisons"] = persistent_storage.list_files("saisons/")
+            status["object_storage"]["scripts"] = len(persistent_storage.list_files("scripts/"))
+            status["object_storage"]["rapports"] = len(persistent_storage.list_files("rapports/"))
+            status["object_storage"]["checkpoints"] = len(persistent_storage.list_files("checkpoints/"))
+    except Exception as e:
+        status["object_storage"]["error"] = str(e)
+
+    # Fichiers locaux
+    try:
+        for f in config.SAISONS_DIR.glob("saison_*.json"):
+            status["saisons_fichiers"].append(f.name)
+    except Exception:
+        pass
+
+    # Résumé
+    status["persistence_ok"] = (
+        status["postgresql"]["available"]
+        or status["object_storage"]["available"]
+    )
+    if not status["persistence_ok"]:
+        status["warning"] = (
+            "AUCUN système de persistance actif ! "
+            "Les données seront perdues au prochain redéploiement. "
+            "Configurez DATABASE_URL ou activez Replit Object Storage."
+        )
+
+    return jsonify(status)
+
+
 @app.route("/")
 def index():
     """Page principale — Dashboard complet avec navigation."""
@@ -1045,6 +1102,13 @@ def api_episode_script(episode_id):
 
     script = None
     script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    # Restaurer depuis Object Storage si absent (post-redéploiement)
+    if not script_path.exists():
+        try:
+            import persistent_storage
+            persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR)
+        except Exception:
+            pass
     if script_path.exists():
         try:
             with open(script_path, "r", encoding="utf-8") as f:
@@ -1149,11 +1213,29 @@ def api_validate_episode(episode_id):
         # Sync rapport to DB (survit aux redéploiements)
         _sync_rapport_to_db(episode_id, rapport)
 
+        # Persister rapport en Object Storage (survit aux redéploiements Replit)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, rapport_path)
+        except Exception as e:
+            logger.debug("Object Storage indisponible pour rapport : %s", e)
+
         # Si validation du script → marquer le script comme validé en DB
-        # et sauvegarder le checkpoint en DB pour survie au redéploiement
+        # et sauvegarder le checkpoint/script en Object Storage
         if step == "script" and action == "validate":
             _sync_script_validated_to_db(episode_id)
             _sync_checkpoint_to_db(episode_id)
+            # Upload script validé et checkpoint en Object Storage
+            try:
+                import persistent_storage
+                script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+                if script_path.exists():
+                    persistent_storage.upload_script(episode_id, script_path)
+                checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+                if checkpoint_path.exists():
+                    persistent_storage.upload_checkpoint(episode_id, checkpoint_path)
+            except Exception as e:
+                logger.debug("Object Storage indisponible pour script/checkpoint : %s", e)
 
     except OSError as e:
         return jsonify({"error": f"Erreur sauvegarde rapport : {e}"}), 500
@@ -1201,8 +1283,14 @@ def api_continue_production(episode_id):
         return jsonify({"error": "Phase invalide. Valeurs acceptées : audio, publication"}), 400
 
     # Vérifier qu'un checkpoint existe pour cet épisode
-    # Si le fichier n'existe pas (redéploiement), tenter de le restaurer depuis la DB
+    # Si le fichier n'existe pas (redéploiement), restaurer depuis Object Storage ou DB
     checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    if not checkpoint_path.exists():
+        try:
+            import persistent_storage
+            persistent_storage.restore_checkpoint(episode_id, config.CHECKPOINTS_DIR)
+        except Exception:
+            pass
     if not checkpoint_path.exists():
         _restore_checkpoint_from_db(episode_id, checkpoint_path)
     if not checkpoint_path.exists():

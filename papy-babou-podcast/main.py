@@ -416,6 +416,14 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
         tmp_path = tmp.name
     os.replace(tmp_path, chemin)
     logger.info("Checkpoint sauvegardé : %s (étape: %s)", chemin, etape)
+
+    # Persister en Object Storage (survit aux redéploiements Replit)
+    try:
+        import persistent_storage
+        persistent_storage.upload_checkpoint(episode_id, chemin)
+    except Exception as e:
+        logger.debug("Object Storage indisponible pour checkpoint : %s", e)
+
     return chemin
 
 
@@ -3532,6 +3540,15 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 console.print(f"  Plan sauvegardé en PostgreSQL (id={db_id})")
             except Exception as e:
                 console.print(f"  [yellow]DB indisponible pour plan : {e}[/yellow]")
+
+        # Persister en Object Storage (survit aux redéploiements Replit)
+        try:
+            import persistent_storage
+            key = persistent_storage.upload_saison(saison, chemin_json)
+            if key:
+                console.print(f"  Plan sauvegardé dans Object Storage ({key})")
+        except Exception as e:
+            logger.debug("Object Storage indisponible pour plan : %s", e)
 
         # Exporter en CSV et Markdown
         chemin_csv = config.SAISONS_DIR / f"saison_{saison:02d}.csv"

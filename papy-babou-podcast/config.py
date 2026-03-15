@@ -565,10 +565,16 @@ def charger_saison(numero: int) -> dict:
         except Exception as e:
             _config_logger.warning("DB indisponible pour saison %d : %s", numero, e)
 
-    # Fichier JSON
+    # Fichier JSON (restaurer depuis Object Storage si absent)
     plan_fichier = {}
     fichier_mtime = None
     chemin = SAISONS_DIR / f"saison_{numero:02d}.json"
+    if not chemin.exists():
+        try:
+            import persistent_storage
+            persistent_storage.restore_saison(numero, SAISONS_DIR)
+        except Exception:
+            pass
     if chemin.exists():
         try:
             import os
@@ -637,7 +643,15 @@ def liste_saisons() -> list[int]:
         except Exception as e:
             _config_logger.warning("DB indisponible pour liste saisons : %s", e)
 
-    # 2. Fichiers JSON (toujours vérifiés, pas seulement en fallback)
+    # 2. Object Storage (restaure les fichiers perdus après redéploiement Replit)
+    try:
+        import persistent_storage
+        if persistent_storage.is_available():
+            persistent_storage.restore_all_saisons(SAISONS_DIR)
+    except Exception as e:
+        _config_logger.debug("Object Storage indisponible pour saisons : %s", e)
+
+    # 3. Fichiers JSON (toujours vérifiés, inclut ceux restaurés depuis Object Storage)
     for f in SAISONS_DIR.glob("saison_*.json"):
         try:
             num = int(f.stem.split("_")[1])
