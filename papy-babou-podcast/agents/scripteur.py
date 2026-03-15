@@ -105,9 +105,10 @@ RÈGLES STRICTES :
     Indique-la dans le champ "ambiance" de l'épisode.
     Guide : "epique" pour les batailles et exodes, "tendre" pour les moments familiaux,
     "humoristique" pour les épisodes légers, "solennel" pour les scènes sacrées.
-    AMBIANCE DYNAMIQUE : tu peux aussi fournir un champ optionnel "ambiance_par_acte" (liste)
-    pour varier la musique de fond selon l'acte. Ex : ["calme", "dramatique", "tendre"].
-    Si absent, l'ambiance principale s'applique à tout l'épisode.
+    AMBIANCE DYNAMIQUE : fournis le champ "ambiance_par_acte" (liste de 3 ambiances) pour
+    varier la musique de fond selon l'acte. Ex : ["calme", "dramatique", "tendre"].
+    C'est FORTEMENT RECOMMANDÉ pour enrichir l'expérience sonore.
+    Si absent, l'ambiance principale s'applique uniformément à tout l'épisode.
 12. ARC ÉMOTIONNEL : chaque épisode doit suivre une courbe émotionnelle claire :
     curiosité → montée en tension → climax → résolution → morale apaisante.
     Varie l'intensité des émotions. Place au moins un moment de SURPRISE ou RÉVÉLATION.
@@ -655,6 +656,7 @@ class Scripteur:
         type_episode: str = "standard",
         format_ep: dict | None = None,
         scripts_precedents: list[dict] | None = None,
+        arc_state_precedent: dict | None = None,
     ) -> str:
         """Construit le user prompt pour la génération de script.
 
@@ -671,6 +673,7 @@ class Scripteur:
             type_episode: Type d'épisode.
             format_ep: Format de l'épisode (durée, mots cible).
             scripts_precedents: Dialogues des scripts précédents (optionnel).
+            arc_state_precedent: État narratif de l'épisode N-1 (optionnel).
 
         Returns:
             Texte du user prompt.
@@ -724,6 +727,28 @@ class Scripteur:
                 questions = episode_plan["questions_ouvertes"]
                 if isinstance(questions, list):
                     prompt += f"- Questions ouvertes à laisser en suspens : {'; '.join(questions)}\n"
+
+        # Arc state de l'épisode précédent (continuité N→N+1) — CRITIQUE
+        if arc_state_precedent:
+            prompt += "\n🔗 ÉTAT NARRATIF DE L'ÉPISODE PRÉCÉDENT (continuité obligatoire) :\n"
+            moments = arc_state_precedent.get("moments_cles", [])
+            if moments:
+                prompt += f"  Moments clés : {', '.join(moments[:5])}\n"
+            questions = arc_state_precedent.get("questions_ouvertes", [])
+            if questions:
+                prompt += "  Questions ouvertes à reprendre naturellement :\n"
+                for q in questions[:3]:
+                    prompt += f"    - {q}\n"
+            evolution = arc_state_precedent.get("evolutions_personnages", "")
+            if evolution:
+                prompt += f"  Évolutions des personnages : {evolution}\n"
+            fil_rouge = arc_state_precedent.get("fil_rouge", "")
+            if fil_rouge:
+                prompt += f"  Fil rouge : {fil_rouge}\n"
+            prompt += (
+                "  → Tu DOIS faire référence à au moins un de ces éléments dans les "
+                "premières minutes de l'épisode pour assurer la continuité narrative.\n"
+            )
 
         if historique:
             # Pour les épisodes finaux/mi-saison, inclure tout l'historique de la saison
@@ -797,6 +822,7 @@ class Scripteur:
         type_episode: str = "standard",
         preferences_producteur: str = "",
         scripts_precedents: list[dict] | None = None,
+        arc_state_precedent: dict | None = None,
     ) -> dict:
         """Génère un script JSON structuré pour un épisode.
 
@@ -815,6 +841,8 @@ class Scripteur:
             scripts_precedents: Dialogues des scripts précédents de la saison pour
                 assurer la continuité (optionnel). Chaque élément contient episode_id,
                 titre, ambiance, nb_segments et dialogues (liste de lignes).
+            arc_state_precedent: État narratif de l'épisode précédent (moments clés,
+                questions ouvertes, évolutions) pour assurer la continuité N→N+1.
 
         Returns:
             Dictionnaire JSON du script structuré.
@@ -838,6 +866,7 @@ class Scripteur:
             type_episode=type_episode,
             format_ep=format_ep,
             scripts_precedents=scripts_precedents,
+            arc_state_precedent=arc_state_precedent,
         )
 
         logger.info(

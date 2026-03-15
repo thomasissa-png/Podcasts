@@ -123,6 +123,10 @@ class Metadonnees:
         meta["langue"] = config.PODCAST_CONFIG["langue"]
         meta["explicit"] = config.PODCAST_CONFIG["explicit"]
 
+        # Ajouter la source biblique et l'ambiance (enrichissement)
+        meta["source_biblique"] = episode.get("histoire_biblique", "")
+        meta["ambiance"] = episode.get("ambiance", "")
+
         # Générer le transcript
         meta["transcript"] = self._generer_transcript(episode)
 

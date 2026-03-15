@@ -346,6 +346,148 @@ class Reviewer:
         return alertes
 
     @staticmethod
+    def verifier_teasing(script: dict) -> list[str]:
+        """Vérifie que le teasing de fin d'épisode est naturel (pas de langage méta).
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Liste d'alertes (vide si OK).
+        """
+        alertes = []
+        segments = script["episode"]["segments"]
+        if not segments:
+            return alertes
+
+        # Chercher dans les 5 derniers segments non-SFX
+        derniers = [s for s in segments if s["personnage"] != "sfx"][-5:]
+        texte_fin = " ".join(s["texte"].lower() for s in derniers)
+
+        mots_meta = [
+            "prochain épisode", "prochaine saison", "la semaine prochaine",
+            "dans le prochain", "au prochain épisode", "restez à l'écoute",
+            "abonnez-vous", "n'oubliez pas de",
+        ]
+        for mot in mots_meta:
+            if mot in texte_fin:
+                alertes.append(
+                    f"Teasing non naturel : '{mot}' détecté dans la fin de l'épisode. "
+                    f"Utiliser un langage naturel de Papy Babou (ex: 'La prochaine fois "
+                    f"que vous viendrez...')."
+                )
+        return alertes
+
+    @staticmethod
+    def verifier_ratio_biblique(script: dict) -> tuple[float, list[str]]:
+        """Vérifie que le ratio de contenu biblique est suffisant (≥ 60%).
+
+        Compte les segments de dialogue de papy_babou comme contenu biblique
+        (il est le narrateur de l'histoire) et les segments des enfants comme
+        interactions. Le ratio est segments_papy / segments_non_sfx.
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Tuple (ratio, alertes). ratio est entre 0.0 et 1.0.
+        """
+        alertes = []
+        segments = script["episode"]["segments"]
+        non_sfx = [s for s in segments if s["personnage"] != "sfx"]
+        if not non_sfx:
+            return 0.0, ["Aucun segment de dialogue trouvé."]
+
+        # Compter les mots par personnage
+        mots_papy = sum(
+            len(s["texte"].split()) for s in non_sfx
+            if s["personnage"] == "papy_babou"
+        )
+        mots_total = sum(len(s["texte"].split()) for s in non_sfx)
+
+        if mots_total == 0:
+            return 0.0, ["Aucun mot dans les segments."]
+
+        ratio = mots_papy / mots_total
+        if ratio < 0.60:
+            alertes.append(
+                f"Ratio contenu biblique insuffisant : {ratio:.0%} "
+                f"(minimum 60%). Papy Babou ({mots_papy} mots) devrait "
+                f"raconter davantage l'histoire biblique par rapport au "
+                f"bavardage ({mots_total - mots_papy} mots enfants/autres)."
+            )
+        return ratio, alertes
+
+    @staticmethod
+    def verifier_ratio_papy_enfants(script: dict) -> tuple[float, list[str]]:
+        """Vérifie l'équilibre Papy/enfants dans les segments.
+
+        Les enfants doivent avoir au moins 25% des segments pour maintenir
+        l'interactivité, mais pas plus de 45% pour laisser place au récit.
+
+        Returns:
+            Tuple (ratio_enfants, alertes).
+        """
+        alertes = []
+        segments = script["episode"]["segments"]
+        non_sfx = [s for s in segments if s["personnage"] != "sfx"]
+        if not non_sfx:
+            return 0.0, []
+
+        nb_enfants = sum(
+            1 for s in non_sfx
+            if s["personnage"] in ("antoine", "noemie")
+        )
+        ratio = nb_enfants / len(non_sfx)
+
+        if ratio < 0.25:
+            alertes.append(
+                f"Les enfants n'interviennent que dans {ratio:.0%} des segments "
+                f"({nb_enfants}/{len(non_sfx)}). Minimum recommandé : 25%."
+            )
+        elif ratio > 0.45:
+            alertes.append(
+                f"Les enfants occupent {ratio:.0%} des segments "
+                f"({nb_enfants}/{len(non_sfx)}). Maximum recommandé : 45%. "
+                f"Le récit biblique risque d'être insuffisant."
+            )
+        return ratio, alertes
+
+    @staticmethod
+    def verifier_pauses(script: dict) -> list[str]:
+        """Vérifie que les pauses sont dans des plages raisonnables.
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Liste d'alertes.
+        """
+        alertes = []
+        segments = script["episode"]["segments"]
+        pauses_excessives = 0
+        pauses_nulles = 0
+
+        for seg in segments:
+            pause = seg.get("pause_apres_ms", 0)
+            if pause > 3000:
+                pauses_excessives += 1
+            elif pause == 0 and seg["personnage"] != "sfx":
+                pauses_nulles += 1
+
+        if pauses_excessives > 3:
+            alertes.append(
+                f"{pauses_excessives} segments ont des pauses > 3 secondes. "
+                f"Maximum recommandé : 3 par épisode."
+            )
+        if pauses_nulles > len(segments) * 0.5:
+            alertes.append(
+                f"{pauses_nulles} segments n'ont aucune pause (0ms). "
+                f"Le rythme risque d'être trop rapide."
+            )
+        return alertes
+
+    @staticmethod
     def estimer_duree(script: dict) -> float:
         """Estime la durée en minutes du script.
 

@@ -606,6 +606,16 @@ FORMATS_EPISODES = {
 
 # ── Modèle Claude ─────────────────────────────────────────────────────────────
 
+# ── Seuils de validation post-génération ───────────────────────────────────
+RATIO_BIBLIQUE_MINIMUM = 0.60   # Papy Babou doit avoir ≥60% des mots
+RATIO_ENFANTS_MIN = 0.25        # Les enfants doivent intervenir dans ≥25% des segments
+RATIO_ENFANTS_MAX = 0.45        # Les enfants ne doivent pas dépasser 45% des segments
+MAX_PAUSES_EXCESSIVES = 3       # Maximum de pauses > 3s par épisode
+
+# ── Archives de saison ──────────────────────────────────────────────────────
+ARCHIVES_DIR = HISTORIQUE_DIR / "archives"
+ARCHIVES_DIR.mkdir(parents=True, exist_ok=True)
+
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 
 # ── Coûts estimés (pour le suivi budgétaire) ─────────────────────────────────

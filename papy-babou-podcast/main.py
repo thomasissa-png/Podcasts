@@ -315,6 +315,11 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         "type_episode": episode.get("type", "standard"),
         # Retours humains pour la memoire inter-episodes (A2)
         "retours_humains": retours_humains,
+        # Métriques de validation post-génération
+        "ratio_biblique": rapport.get("metriques", {}).get("ratio_biblique", 0),
+        "ratio_enfants": rapport.get("metriques", {}).get("ratio_enfants", 0),
+        # Fil rouge
+        "elements_fil_rouge": episode.get("elements_fil_rouge", ""),
     }
 
     # Sauvegarder en DB si disponible
@@ -2020,6 +2025,24 @@ def _pipeline_inner(
                 f"({', '.join(s['episode_id'] for s in scripts_precedents)})"
             )
 
+        # Charger l'arc state de l'épisode précédent pour injection N→N+1
+        arc_state_precedent = None
+        if numero > 1:
+            ep_prec_id = f"S{saison:02d}E{numero - 1:02d}"
+            chemin_arc_prec = config.SCRIPTS_DIR / f"{ep_prec_id}_arc_state.json"
+            if chemin_arc_prec.exists():
+                try:
+                    with open(chemin_arc_prec, "r", encoding="utf-8") as f:
+                        arc_state_precedent = json.load(f)
+                    console.print(
+                        f"  [bold cyan]Arc state précédent :[/bold cyan] "
+                        f"{ep_prec_id} — {len(arc_state_precedent.get('moments_cles', []))} "
+                        f"moments clés, {len(arc_state_precedent.get('questions_ouvertes', []))} "
+                        f"questions ouvertes"
+                    )
+                except (json.JSONDecodeError, OSError) as e:
+                    logger.warning("Arc state %s illisible : %s", ep_prec_id, e)
+
         for iteration in range(1, max_iterations_review + 1):
             console.print(f"  Iteration {iteration}/{max_iterations_review}...")
 
@@ -2030,6 +2053,7 @@ def _pipeline_inner(
                 type_episode=type_episode,
                 preferences_producteur=_construire_bloc_preferences(),
                 scripts_precedents=scripts_precedents,
+                arc_state_precedent=arc_state_precedent,
             )
 
             chemin_script = config.SCRIPTS_DIR / f"{episode_id}_v{iteration}.json"
@@ -2113,6 +2137,42 @@ def _pipeline_inner(
             for a in alertes_questions:
                 console.print(f"    ! {a}")
             rapport.setdefault("alertes_post_generation", []).extend(alertes_questions)
+
+        # Validation ratio biblique (≥60%) — CRITIQUE
+        ratio_bib, alertes_bib = Reviewer.verifier_ratio_biblique(script)
+        if alertes_bib:
+            console.print(f"[red]  Ratio biblique : {ratio_bib:.0%} (minimum 60%) :[/red]")
+            for a in alertes_bib:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_bib)
+        else:
+            console.print(f"  Ratio biblique : {ratio_bib:.0%} {Icons.OK}")
+        rapport.setdefault("metriques", {})["ratio_biblique"] = round(ratio_bib, 2)
+
+        # Validation ratio Papy/enfants
+        ratio_enf, alertes_enf = Reviewer.verifier_ratio_papy_enfants(script)
+        if alertes_enf:
+            console.print("[yellow]  Ratio Papy/enfants :[/yellow]")
+            for a in alertes_enf:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_enf)
+        rapport.setdefault("metriques", {})["ratio_enfants"] = round(ratio_enf, 2)
+
+        # Validation teasing naturel
+        alertes_teasing = Reviewer.verifier_teasing(script)
+        if alertes_teasing:
+            console.print("[yellow]  Alertes teasing :[/yellow]")
+            for a in alertes_teasing:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_teasing)
+
+        # Validation pauses
+        alertes_pauses = Reviewer.verifier_pauses(script)
+        if alertes_pauses:
+            console.print("[yellow]  Alertes pauses :[/yellow]")
+            for a in alertes_pauses:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_pauses)
 
         # Marquer comme validé en DB
         if _use_db():
@@ -2697,6 +2757,44 @@ def _pipeline_inner(
     # Ajouter à l'historique
     ajouter_historique(rapport, script)
 
+    # ── Arc state final : sauvegarder l'état narratif pour l'épisode suivant ──
+    # Extraire arc_state_final du script et le sauvegarder pour injection N→N+1
+    arc_state = {
+        "episode_id": episode_id,
+        "moments_cles": script["episode"].get("moments_cles", []),
+        "questions_ouvertes": script["episode"].get("questions_ouvertes", []),
+        "evolutions_personnages": script["episode"].get("evolutions_personnages", ""),
+        "ambiance": script["episode"].get("ambiance", ""),
+        "fil_rouge": script["episode"].get("elements_fil_rouge", ""),
+    }
+    chemin_arc = config.SCRIPTS_DIR / f"{episode_id}_arc_state.json"
+    with open(chemin_arc, "w", encoding="utf-8") as f:
+        json.dump(arc_state, f, ensure_ascii=False, indent=2)
+    logger.info("Arc state sauvegardé : %s", chemin_arc)
+
+    # ── Season Archive : générer après le dernier épisode de la saison ──
+    if contexte_saison and episode_plan:
+        episodes_saison = contexte_saison.get("saison", {}).get("episodes", [])
+        dernier_ep = max((ep.get("numero", 0) for ep in episodes_saison), default=0)
+        if numero == dernier_ep:
+            try:
+                historique_saison = [
+                    h for h in charger_historique()
+                    if h.get("episode_id", "").startswith(f"S{saison:02d}")
+                ]
+                archive = Planificateur.generer_archive_saison(
+                    contexte_saison, historique_saison
+                )
+                chemin_archive = config.ARCHIVES_DIR / f"archive_saison_{saison:02d}.json"
+                with open(chemin_archive, "w", encoding="utf-8") as f:
+                    json.dump(archive, f, ensure_ascii=False, indent=2)
+                console.print(
+                    f"  [{Palette.SUCCES}]Archive de saison {saison} générée : {chemin_archive}[/]"
+                )
+                logger.info("Archive de saison %d sauvegardée : %s", saison, chemin_archive)
+            except Exception as e:
+                logger.warning("Erreur lors de la génération de l'archive de saison : %s", e)
+
     # Archiver le checkpoint (JAMAIS supprimer — conservation des données)
     archiver_checkpoint(episode_id)
 
@@ -3207,14 +3305,26 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
     # Charger les saisons précédentes pour continuité
     saisons_prec = []
     for num in config.liste_saisons():
-        plan = config.charger_saison(num)
-        if plan:
-            saison_data = plan.get("saison", {})
+        plan_prec = config.charger_saison(num)
+        if plan_prec:
+            saison_data_prec = plan_prec.get("saison", {})
             saisons_prec.append({
-                "numero": saison_data.get("numero", num),
-                "theme": saison_data.get("theme", "?"),
-                "description": saison_data.get("description", ""),
+                "numero": saison_data_prec.get("numero", num),
+                "theme": saison_data_prec.get("theme", "?"),
+                "description": saison_data_prec.get("description", ""),
+                "saison": saison_data_prec,
             })
+
+    # Charger les archives de saisons précédentes pour continuité renforcée
+    archives_saisons = []
+    for num in config.liste_saisons():
+        chemin_archive = config.ARCHIVES_DIR / f"archive_saison_{num:02d}.json"
+        if chemin_archive.exists():
+            try:
+                with open(chemin_archive, "r", encoding="utf-8") as f:
+                    archives_saisons.append(json.load(f))
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning("Archive saison %d illisible : %s", num, e)
 
     personnages_list = [p.strip() for p in personnages.split(",") if p.strip()] if personnages else None
 
@@ -3228,7 +3338,11 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
             saisons_precedentes=saisons_prec or None,
             preferences_producteur=_construire_bloc_preferences(),
             nb_episodes=nb_episodes,
+            archives_saisons=archives_saisons or None,
         )
+
+        # Intégrer les événements spéciaux dans le plan
+        plan = Planificateur.integrer_evenements_speciaux(plan)
 
         # Valider les types d'épisodes retournés par le LLM
         types_valides = {"ouverture", "standard", "mi-saison", "final", "bonus"}

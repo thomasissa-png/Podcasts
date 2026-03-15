@@ -130,6 +130,7 @@ class Planificateur:
         saisons_precedentes: list[dict] | None = None,
         nb_episodes: int = 10,
         preferences_producteur: str = "",
+        archives_saisons: list[dict] | None = None,
     ) -> dict:
         """Génère le plan complet d'une saison.
 
@@ -199,6 +200,28 @@ class Planificateur:
                 if regles_perso:
                     line += f"\n    Règles : {'; '.join(regles_perso)}"
                 prompt += line + "\n"
+
+        # Injecter les archives de saisons précédentes (continuité renforcée)
+        if archives_saisons:
+            prompt += "\nARCHIVES DE SAISONS PRÉCÉDENTES (continuité narrative) :\n"
+            for archive in archives_saisons:
+                prompt += f"\n  Saison {archive.get('numero', '?')} — {archive.get('theme', '?')} :\n"
+                # Questions ouvertes non résolues
+                questions = archive.get("questions_ouvertes_finales", [])
+                if questions:
+                    prompt += "    Questions ouvertes à reprendre :\n"
+                    for q in questions[:5]:
+                        prompt += f"      - {q}\n"
+                # Moments clés
+                moments = archive.get("moments_cles_saison", [])
+                if moments:
+                    prompt += "    Moments clés :\n"
+                    for m in moments[-3:]:
+                        prompt += f"      - {m.get('episode', '')}: {', '.join(m.get('moments', [])[:3])}\n"
+                prompt += (
+                    "    → La nouvelle saison DOIT faire référence aux questions "
+                    "ouvertes et aux moments clés quand c'est naturel.\n"
+                )
 
         if preferences_producteur:
             prompt += f"\n{preferences_producteur}\n"
@@ -356,6 +379,91 @@ class Planificateur:
                 "Histoires bibliques en doublon dans la saison : %s",
                 doublons,
             )
+
+    @staticmethod
+    def generer_archive_saison(plan: dict, historique: list[dict]) -> dict:
+        """Génère une archive de fin de saison pour la continuité inter-saisons.
+
+        L'archive contient :
+        - Les arcs finaux des personnages (état d'arrivée)
+        - Les questions ouvertes non résolues
+        - Les moments clés de la saison
+        - Le fil rouge et son état final
+        - Les personnages secondaires introduits
+
+        Args:
+            plan: Plan de la saison terminée.
+            historique: Historique des épisodes de cette saison.
+
+        Returns:
+            Archive structurée pour injection dans la saison suivante.
+        """
+        saison = plan.get("saison", {})
+        archive = {
+            "numero": saison.get("numero", 0),
+            "theme": saison.get("theme", ""),
+            "fil_rouge": saison.get("fil_rouge", ""),
+            "arcs_personnages": saison.get("arcs_personnages", {}),
+            "personnages_secondaires": saison.get("personnages_secondaires", []),
+            "rituels": saison.get("rituels", {}),
+            # Collecter les questions ouvertes non résolues de toute la saison
+            "questions_ouvertes_finales": [],
+            # Collecter les moments clés de chaque épisode
+            "moments_cles_saison": [],
+            # Collecter les évolutions de personnages
+            "evolutions_personnages": [],
+        }
+
+        for ep in historique:
+            questions = ep.get("questions_ouvertes", [])
+            if questions:
+                archive["questions_ouvertes_finales"].extend(questions)
+            moments = ep.get("moments_cles", [])
+            if moments:
+                archive["moments_cles_saison"].append({
+                    "episode": ep.get("episode_id", ""),
+                    "moments": moments,
+                })
+            evolution = ep.get("evolutions_personnages", "")
+            if evolution:
+                archive["evolutions_personnages"].append({
+                    "episode": ep.get("episode_id", ""),
+                    "evolution": evolution,
+                })
+
+        # Dédupliquer les questions ouvertes
+        archive["questions_ouvertes_finales"] = list(
+            dict.fromkeys(archive["questions_ouvertes_finales"])
+        )
+
+        return archive
+
+    @staticmethod
+    def integrer_evenements_speciaux(plan: dict) -> dict:
+        """Intègre les événements spéciaux (anniversaires, etc.) dans le plan.
+
+        Lit config.EVENEMENTS_SPECIAUX et enrichit les épisodes concernés
+        avec les détails de l'événement.
+
+        Args:
+            plan: Plan de saison à enrichir.
+
+        Returns:
+            Plan enrichi.
+        """
+        saison_num = plan.get("saison", {}).get("numero", 0)
+        for ep in plan.get("saison", {}).get("episodes", []):
+            cle = (saison_num, ep.get("numero", 0))
+            evenement = config.EVENEMENTS_SPECIAUX.get(cle)
+            if evenement:
+                ep["evenement_special"] = evenement
+                logger.info(
+                    "Événement spécial intégré : S%02dE%02d — %s (%s)",
+                    saison_num, ep["numero"],
+                    evenement.get("type", ""),
+                    evenement.get("personnage", ""),
+                )
+        return plan
 
     def exporter_csv(self, plan: dict, chemin: Path) -> Path:
         """Exporte le planning en CSV pour partage éditorial."""
