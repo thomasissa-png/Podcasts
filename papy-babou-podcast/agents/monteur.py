@@ -861,15 +861,15 @@ class Monteur:
         variante = AMBIANCE_ROOM_TONE.get(ambiance, "defaut")
         chemin = config.ASSETS_DIR / "music" / f"room_tone_{variante}.mp3"
 
-        # Fallback vers le room tone générique
-        if not chemin.exists():
-            chemin_generique = config.ASSETS_DIR / "music" / "room_tone.mp3"
-            if chemin_generique.exists():
-                return AudioSegment.from_mp3(str(chemin_generique))
-
+        # Charger le room tone variant en priorité, puis fallback vers générique
         if chemin.exists():
             logger.info("Room tone chargé : %s (%s)", variante, ambiance)
             return AudioSegment.from_mp3(str(chemin))
+
+        chemin_generique = config.ASSETS_DIR / "music" / "room_tone.mp3"
+        if chemin_generique.exists():
+            logger.info("Room tone générique utilisé (variante '%s' indisponible)", variante)
+            return AudioSegment.from_mp3(str(chemin_generique))
 
         # Générer via ElevenLabs avec le prompt adapté
         prompt = ROOM_TONE_PROMPTS.get(variante, ROOM_TONE_PROMPTS["defaut"])
@@ -1049,9 +1049,10 @@ class Monteur:
         plutôt que du texte tronqué.
         """
         chapitres = []
-        # Offset initial : intro jingle + silence transition
+        # Offset initial : signature + silence + intro jingle + silence transition
+        signature_ms = 5000  # Durée signature jingle (cf. _charger_signature: 5s)
         intro_ms = config.PRODUCTION["intro_jingle_duree_ms"]
-        temps_courant_ms = intro_ms + SILENCE_TRANSITION_MS
+        temps_courant_ms = signature_ms + SILENCE_TRANSITION_MS + intro_ms + SILENCE_TRANSITION_MS
 
         # Identifier les chapitres logiques (max 5-7 chapitres)
         nb_segments_depuis_chapitre = 0

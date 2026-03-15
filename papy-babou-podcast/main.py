@@ -26,6 +26,7 @@ from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+from rich.prompt import Prompt
 from rich.style import Style
 
 import config
@@ -2475,7 +2476,8 @@ def _pipeline_inner(
 
     # ── Validation humaine : montage ─────────────────────────────────────────
 
-    if not auto and not dry_run and chemin_hq and resultat_montage:
+    montage_deja_valide = rapport.get("etapes", {}).get("montage", {}).get("validation_humaine", False)
+    if not auto and not dry_run and chemin_hq and resultat_montage and not montage_deja_valide:
         preview_chemin = (
             resultat_montage.get("chemin_preview")
             if isinstance(resultat_montage, dict)
@@ -3215,6 +3217,14 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
         except Exception as e:
             logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
             resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+            if not auto:
+                choix_cont = console.input(
+                    f"  [{Palette.ATTENTION}]Épisode en erreur. "
+                    f"(c)ontinuer / (a)rrêter ? [/] "
+                ).strip().lower()
+                if choix_cont == "a":
+                    console.print(f"  [{Palette.ATTENTION}]Production batch arrêtée par le producteur.[/]")
+                    break
 
     # Rapport batch
     console.print(f"\n[bold]{'='*60}[/bold]")
@@ -3360,7 +3370,8 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
 
         # Valider les types d'épisodes retournés par le LLM
         types_valides = {"ouverture", "standard", "mi-saison", "final", "bonus"}
-        for ep in plan.get("episodes", []):
+        plan_episodes = plan.get("saison", {}).get("episodes", [])
+        for ep in plan_episodes:
             t = ep.get("type", "standard")
             if t not in types_valides:
                 logger.warning(
@@ -3370,14 +3381,14 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 ep["type"] = "standard"
 
         # Valider la séquence des numéros d'épisodes
-        numeros = [ep.get("numero") for ep in plan.get("episodes", [])]
+        numeros = [ep.get("numero") for ep in plan_episodes]
         attendus = list(range(1, len(numeros) + 1))
         if numeros != attendus:
             logger.warning(
                 "Numéros d'épisodes non séquentiels (%s) — renumérotation automatique",
                 numeros,
             )
-            for idx, ep in enumerate(plan.get("episodes", []), 1):
+            for idx, ep in enumerate(plan_episodes, 1):
                 ep["numero"] = idx
 
         # Sauvegarder le plan (brouillon)

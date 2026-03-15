@@ -196,10 +196,6 @@ class ProducteurAudio:
         }
 
         nb_chars = len(segment["texte"])
-        with self._compteur_lock:
-            self.caracteres_utilises[personnage] = (
-                self.caracteres_utilises.get(personnage, 0) + nb_chars
-            )
 
         max_tentatives = config.PRODUCTION["max_retry_tts"]
         for tentative in range(1, max_tentatives + 1):
@@ -212,6 +208,12 @@ class ProducteurAudio:
 
                 with open(chemin_sortie, "wb") as f:
                     f.write(response.content)
+
+                # Compter les caractères après succès uniquement
+                with self._compteur_lock:
+                    self.caracteres_utilises[personnage] = (
+                        self.caracteres_utilises.get(personnage, 0) + nb_chars
+                    )
 
                 logger.info(
                     "  → Segment %s généré (%d caractères, %.1f KB)",
@@ -249,4 +251,5 @@ class ProducteurAudio:
 
     def reset_compteur(self) -> None:
         """Remet à zéro le compteur de caractères."""
-        self.caracteres_utilises.clear()
+        with self._compteur_lock:
+            self.caracteres_utilises.clear()

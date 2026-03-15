@@ -367,7 +367,7 @@ def _construire_bible_personnages(numero_saison: int = 1) -> str:
 
         # Relations entre personnages
         for rel_key in ("relation_avec_papy", "relation_avec_noemie",
-                        "relation_avec_antoine"):
+                        "relation_avec_antoine", "relation_avec_mamie_sonia"):
             rel = perso.get(rel_key, "")
             if rel:
                 qui = rel_key.replace("relation_avec_", "").replace("_", " ").title()
@@ -891,7 +891,14 @@ class Scripteur:
         )
 
         # max_tokens adaptatif selon le type d'épisode
-        max_tokens = 12000 if type_episode == "bonus" else 16384
+        max_tokens_map = {
+            "final": 16384,
+            "ouverture": 12288,
+            "mi-saison": 12288,
+            "standard": 10240,
+            "bonus": 8192,
+        }
+        max_tokens = max_tokens_map.get(type_episode, 10240)
         max_retry_truncated = 2
 
         # Boucle de validation avec retry automatique :

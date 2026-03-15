@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 
 import anthropic
 
@@ -324,7 +325,6 @@ class Reviewer:
             texte_lower = seg["texte"].lower()
             for mot in config.MOTS_INTERDITS:
                 # Chercher le mot comme mot complet (pas en sous-chaîne)
-                import re
                 if re.search(r"\b" + re.escape(mot) + r"\b", texte_lower):
                     violations.append(
                         f"Mot interdit '{mot}' dans segment {seg['id']} "

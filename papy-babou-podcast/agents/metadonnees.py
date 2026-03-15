@@ -190,6 +190,8 @@ class Metadonnees:
             "langue": config.PODCAST_CONFIG["langue"],
             "explicit": config.PODCAST_CONFIG["explicit"],
             "transcript": self._generer_transcript(episode),
+            "source_biblique": episode.get("histoire_biblique", ""),
+            "ambiance": episode.get("ambiance", ""),
         }
 
         # Vérifier si un cover art existe (PNG ou JPG)
