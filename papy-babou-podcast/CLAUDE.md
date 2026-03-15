@@ -730,3 +730,42 @@ Comprehensive 6-agent audit of the entire episode creation workflow. 14 fixes (2
 
 ### Tests (Session 15)
 - Full suite: 541 passed, 3 skipped (ffmpeg), 3 pre-existing flaky (TestHistorique)
+
+## Triple Audit UX + Infrastructure + Auditeur (Session 15b)
+3-agent audit of the full season production workflow. 25 fixes (2 CRITICAL, 8 HIGH, 15 MEDIUM).
+
+### CRITICAL fixes
+- **Go/No-Go fallback**: Unrecognized input in `produire-saison` Go/No-Go used to launch production by default — now loops until valid choice ("v" or "a")
+- **Atomic checkpoints**: `sauvegarder_checkpoint()` and `sauvegarder_historique()` now use `tempfile + os.replace()` for crash-safe writes
+
+### HIGH fixes
+- **Publication abandon**: "a" in `_validation_publication()` now returns `False` (continues to rapport) instead of raising `ProductionAbandonnee` (which lost rapport/historique/arc state)
+- **Go/No-Go option**: Changed from "g" (Go) to "v" (Valider) for consistency with all other validation menus
+- **Montage edit guard**: No longer relaunches remontage when script file is missing — shows error and returns to menu
+- **Interactif confirmation**: Added Go/No-Go before "produire tous les épisodes restants" in interactive season mode
+- **Reviewer seuil**: Pipeline now passes `seuil=SEUILS_PAR_TYPE[type_episode]` explicitly instead of relying on LLM response field
+- **chemin_hq None guard**: Publication blocked with explicit message when audio HQ file is missing (prevents TypeError crash on checkpoint resume)
+- **Voice config thread safety**: `_voice_config_lock` protects `VOICE_IDS`, `VOICE_SETTINGS`, `STEREO_PAN` mutations in `ajouter_personnage()` and `configurer_voix()`
+- **Atomic writes**: Both `sauvegarder_checkpoint()` and `sauvegarder_historique()` now use atomic write pattern
+
+### MEDIUM fixes
+- **Auto mode error display**: Explicit error message when episode fails in `--auto` mode (was silent)
+- **total_episodes accuracy**: Interactive season mode now shows episode's position in full season (not just remaining count)
+- **Metadonnees "c" guard**: Script availability checked before asking for instructions (was checked after, losing input)
+- **type_episode in interactif**: Episode unique mode now prompts for type (standard/ouverture/mi-saison/final/bonus)
+- **Saison input loop**: Invalid season number in interactive mode now loops instead of `sys.exit(1)`
+- **Prétexte injection**: `episode_plan["pretexte"]` now injected into scripteur prompt
+- **Archive warning**: Warning displayed when planning season N if archive of season N-1 is missing
+- **Audio segments check**: Warning displayed if audio segments are missing before montage
+- **Inter-season arc state**: S(N+1)E01 now loads arc state from last episode of season N
+
+### When modifying main.py (Session 15b patterns)
+- `sauvegarder_checkpoint()` uses atomic write: `tempfile.NamedTemporaryFile` + `os.replace()`
+- `sauvegarder_historique()` uses atomic write
+- `_validation_publication()` "a" option returns `False` (not `ProductionAbandonnee`)
+- Go/No-Go uses "v" (not "g") and loops on invalid input (never falls through)
+- `reviewer.est_valide()` called with explicit `seuil=` parameter from pipeline
+- Arc state for S(N+1)E01 loaded from last episode of previous season
+
+### When modifying config.py (Session 15b)
+- `_voice_config_lock` must be acquired before modifying `VOICE_IDS`, `VOICE_SETTINGS`, or `STEREO_PAN`
