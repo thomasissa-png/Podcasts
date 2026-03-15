@@ -486,6 +486,12 @@ Clear visual separation between single-episode and season production workflows:
 - `DUCKING_GAIN_DB = -6`, `DUCKING_FADE_MS = 150` — ducking parameters
 - `SFX_VOLUME_PAR_TON` dict — contextual SFX volume based on previous segment's `ton` field
 - `ROOM_TONE_DB = -28` — very quiet room tone volume
+- `ROOM_TONE_PROMPTS` dict — 4 variants: defaut, soir, jour, orage
+- `AMBIANCE_ROOM_TONE` dict — maps ambiance name to room tone variant
+- `_charger_room_tone(ambiance)` accepts ambiance param for adaptive room tone
+- `EQ_VOICE_BOOST_*` constants — 2-5 kHz boost at +2.5 dB via scipy bandpass filter
+- `TRUE_PEAK_OVERSAMPLE = 4` — 4x oversampling for inter-sample peak detection via scipy
+- Master bus now has 3 stages: EQ boost → compression → true peak limiter (with scipy fallback)
 - Act transitions now trigger on `papy_babou` after 8+ segments (was `narrateur`)
 - Chapter generation also triggers on `papy_babou` (was `narrateur`)
 - Room tone is overlaid on the full voice+fond track before assembler_final

@@ -92,12 +92,52 @@ SFX_VOLUME_PAR_TON = {
 SFX_VOLUME_DEFAUT = -6          # Volume SFX par défaut si pas de ton contextuel
 
 # Room tone — fond sonore continu simulant le salon de Papy Babou
-ROOM_TONE_PROMPT = (
-    "Gentle cozy living room ambiance, soft fireplace crackling, "
-    "distant clock ticking, very subtle warm room tone, barely audible, "
-    "French countryside house atmosphere"
-)
+ROOM_TONE_PROMPTS = {
+    "defaut": (
+        "Gentle cozy living room ambiance, soft fireplace crackling, "
+        "distant clock ticking, very subtle warm room tone, barely audible, "
+        "French countryside house atmosphere"
+    ),
+    "soir": (
+        "Evening cozy living room ambiance, warm fireplace crackling louder, "
+        "soft rain on windows, distant clock ticking, very subtle, "
+        "French countryside house at night"
+    ),
+    "jour": (
+        "Daytime cozy living room ambiance, distant birds singing softly, "
+        "gentle breeze through open window, very subtle warm room tone, "
+        "French countryside house in the morning"
+    ),
+    "orage": (
+        "Cozy living room during a storm, distant thunder rumbles, "
+        "rain on windows, fireplace crackling warmly, very subtle, "
+        "safe and warm French countryside house"
+    ),
+}
+# Keep backward-compatible alias
+ROOM_TONE_PROMPT = ROOM_TONE_PROMPTS["defaut"]
 ROOM_TONE_DB = -28              # Volume très bas pour le room tone
+
+# Mapping ambiance → type de room tone
+AMBIANCE_ROOM_TONE = {
+    "calme": "soir",
+    "tendre": "soir",
+    "solennel": "soir",
+    "dramatique": "orage",
+    "epique": "jour",
+    "joyeux": "jour",
+    "humoristique": "jour",
+    "mystere": "soir",
+    "fond_doux": "defaut",
+}
+
+# EQ boost médiums — fréquences de coupure pour le filtre passe-bande (Hz)
+EQ_VOICE_BOOST_LOW_HZ = 2000    # Borne basse du boost voix
+EQ_VOICE_BOOST_HIGH_HZ = 5000   # Borne haute du boost voix
+EQ_VOICE_BOOST_DB = 2.5         # Gain du boost en dB
+
+# True peak limiter — facteur d'oversampling
+TRUE_PEAK_OVERSAMPLE = 4        # 4x oversampling pour détection inter-sample
 
 
 def _normaliser_lufs(audio: AudioSegment, cible_lufs: float = -16.0) -> AudioSegment:
@@ -286,8 +326,8 @@ class Monteur:
             fond_ajuste = self._preparer_fond(fond, len(voix))
             voix_avec_fond = voix.overlay(fond_ajuste)
 
-        # 5. Room tone continu sous toute la piste voix (A1)
-        room_tone = self._charger_room_tone()
+        # 5. Room tone continu adapté à l'ambiance (A1 + adaptatif)
+        room_tone = self._charger_room_tone(ambiance_principale)
         if len(room_tone) > 0:
             room_tone = room_tone.apply_gain(ROOM_TONE_DB)
             if room_tone.channels == 1:
@@ -809,17 +849,32 @@ class Monteur:
 
         return resultat
 
-    def _charger_room_tone(self) -> AudioSegment:
-        """Charge ou génère le room tone du salon de Papy Babou (A1).
+    def _charger_room_tone(self, ambiance: str = "fond_doux") -> AudioSegment:
+        """Charge ou génère le room tone adapté à l'ambiance (A1 + adaptatif).
 
-        Le room tone est un fond sonore continu très discret qui simule
-        l'ambiance du salon (craquements de cheminée, horloge, chaleur).
+        Le room tone varie selon l'ambiance de l'épisode :
+        - soir : cheminée + pluie (calme, tendre, solennel, mystère)
+        - jour : oiseaux + brise (épique, joyeux, humoristique)
+        - orage : tonnerre + pluie (dramatique)
+        - defaut : cheminée + horloge
         """
-        chemin = config.ASSETS_DIR / "music" / "room_tone.mp3"
+        variante = AMBIANCE_ROOM_TONE.get(ambiance, "defaut")
+        chemin = config.ASSETS_DIR / "music" / f"room_tone_{variante}.mp3"
+
+        # Fallback vers le room tone générique
+        if not chemin.exists():
+            chemin_generique = config.ASSETS_DIR / "music" / "room_tone.mp3"
+            if chemin_generique.exists():
+                return AudioSegment.from_mp3(str(chemin_generique))
+
         if chemin.exists():
+            logger.info("Room tone chargé : %s (%s)", variante, ambiance)
             return AudioSegment.from_mp3(str(chemin))
 
-        if self._generer_asset_elevenlabs(ROOM_TONE_PROMPT, 22.0, chemin):
+        # Générer via ElevenLabs avec le prompt adapté
+        prompt = ROOM_TONE_PROMPTS.get(variante, ROOM_TONE_PROMPTS["defaut"])
+        if self._generer_asset_elevenlabs(prompt, 22.0, chemin):
+            logger.info("Room tone '%s' généré via ElevenLabs", variante)
             return AudioSegment.from_mp3(str(chemin))
 
         # Fallback : bruit rose très léger
@@ -836,43 +891,90 @@ class Monteur:
 
     @staticmethod
     def _appliquer_master_bus(audio: AudioSegment) -> AudioSegment:
-        """Applique un traitement master bus : EQ doux + compression + limiteur (A4).
+        """Applique un traitement master bus : EQ + compression + true peak limiter.
 
-        Simule un traitement de mastering léger adapté aux podcasts enfants :
-        - Léger boost des médiums (voix plus claire)
-        - Compression douce pour homogénéiser les niveaux
-        - Limiteur pour éviter les crêtes
+        Pipeline de mastering léger adapté aux podcasts enfants :
+        1. EQ : boost 2-5 kHz (+2.5 dB) pour clarifier les voix enfantines
+        2. Compression douce (ratio 2:1 au-dessus de -20 dBFS)
+        3. True peak limiter avec oversampling 4x
         """
-        # 1. EQ simplifié : léger boost des médiums via manipulation numpy
+        sample_rate = audio.frame_rate
         samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
         channels = audio.channels
         if channels == 2:
             samples = samples.reshape((-1, 2))
 
-        # 2. Compression douce (ratio ~2:1 au-dessus de -20 dBFS)
-        threshold = 0.1  # ~ -20 dBFS
-        ratio = 2.0
         max_val = float(2 ** (audio.sample_width * 8 - 1))
         normalized = samples / max_val
 
-        # Appliquer la compression sur les samples qui dépassent le seuil
+        # 1. EQ : boost des médiums 2-5 kHz via filtre passe-bande simple
+        # Utiliser un filtre biquad IIR simplifié (résonance douce)
+        try:
+            from scipy.signal import butter, sosfilt
+            nyquist = sample_rate / 2.0
+            low = EQ_VOICE_BOOST_LOW_HZ / nyquist
+            high = min(EQ_VOICE_BOOST_HIGH_HZ / nyquist, 0.99)
+            if low < high:
+                sos = butter(2, [low, high], btype="band", output="sos")
+                boost_linear = 10 ** (EQ_VOICE_BOOST_DB / 20.0) - 1.0
+                if channels == 2:
+                    for ch in range(2):
+                        band = sosfilt(sos, normalized[:, ch])
+                        normalized[:, ch] += boost_linear * band
+                else:
+                    band = sosfilt(sos, normalized.flatten())
+                    normalized = (normalized.flatten() + boost_linear * band).reshape(-1, 1)
+                logger.info(
+                    "EQ master : boost +%.1f dB sur %d-%d Hz",
+                    EQ_VOICE_BOOST_DB, EQ_VOICE_BOOST_LOW_HZ, EQ_VOICE_BOOST_HIGH_HZ,
+                )
+        except ImportError:
+            logger.warning("scipy non disponible — EQ master ignoré.")
+
+        # 2. Compression douce (ratio ~2:1 au-dessus de -20 dBFS)
+        threshold = 0.1  # ~ -20 dBFS
+        ratio = 2.0
         mask = np.abs(normalized) > threshold
         if np.any(mask):
             excess = np.abs(normalized[mask]) - threshold
             compressed = threshold + excess / ratio
-            # Préserver le signe
             normalized[mask] = np.sign(normalized[mask]) * compressed
 
-        # 3. Limiteur doux (soft clip à -1 dBFS ~ 0.89)
-        limit = 0.89
-        over_limit = np.abs(normalized) > limit
-        if np.any(over_limit):
-            # Soft clipping via tanh
-            normalized[over_limit] = np.sign(normalized[over_limit]) * (
-                limit + (1.0 - limit) * np.tanh(
-                    (np.abs(normalized[over_limit]) - limit) / (1.0 - limit)
+        # 3. True peak limiter avec oversampling
+        limit = 0.89  # ~ -1 dBFS
+        try:
+            from scipy.signal import resample_poly
+            # Suréchantillonner pour détecter les crêtes inter-sample
+            if channels == 2:
+                upsampled = resample_poly(normalized, TRUE_PEAK_OVERSAMPLE, 1, axis=0)
+            else:
+                flat = normalized.flatten()
+                upsampled = resample_poly(flat, TRUE_PEAK_OVERSAMPLE, 1)
+
+            true_peak = np.max(np.abs(upsampled))
+            if true_peak > limit:
+                # Atténuer proportionnellement pour que le true peak = limit
+                reduction = limit / true_peak
+                normalized *= reduction
+                logger.info(
+                    "True peak limiter : crête %.3f réduite à %.3f (×%.3f)",
+                    true_peak, limit, reduction,
                 )
-            )
+            else:
+                logger.debug("True peak %.3f sous le seuil %.3f — pas de limiting.", true_peak, limit)
+        except ImportError:
+            # Fallback : soft clip sans oversampling
+            logger.warning("scipy non disponible — fallback soft clip sans oversampling.")
+            over_limit = np.abs(normalized) > limit
+            if np.any(over_limit):
+                normalized[over_limit] = np.sign(normalized[over_limit]) * (
+                    limit + (1.0 - limit) * np.tanh(
+                        (np.abs(normalized[over_limit]) - limit) / (1.0 - limit)
+                    )
+                )
+
+        # Clamp final pour sécurité
+        normalized = np.clip(normalized, -1.0, 1.0)
 
         # Reconvertir en int
         samples_out = (normalized * max_val).astype(np.int16)
@@ -880,7 +982,7 @@ class Monteur:
             samples_out = samples_out.flatten()
 
         audio_master = audio._spawn(samples_out.tobytes())
-        logger.info("Traitement master bus appliqué (compression + limiteur).")
+        logger.info("Traitement master bus appliqué (EQ + compression + true peak limiter).")
         return audio_master
 
     def _preparer_fond(self, fond: AudioSegment, duree_voix_ms: int) -> AudioSegment:

@@ -1346,9 +1346,33 @@ class TestRoomTone:
         assert "room" in ROOM_TONE_PROMPT.lower()
         assert len(ROOM_TONE_PROMPT) > 20
 
+    def test_room_tone_adaptatif_prompts(self):
+        """Plusieurs variantes de room tone doivent exister."""
+        from agents.monteur import ROOM_TONE_PROMPTS
+        assert "defaut" in ROOM_TONE_PROMPTS
+        assert "soir" in ROOM_TONE_PROMPTS
+        assert "jour" in ROOM_TONE_PROMPTS
+        assert "orage" in ROOM_TONE_PROMPTS
+
+    def test_room_tone_mapping_ambiance(self):
+        """Le mapping ambiance → room tone doit couvrir les ambiances principales."""
+        from agents.monteur import AMBIANCE_ROOM_TONE
+        assert AMBIANCE_ROOM_TONE["dramatique"] == "orage"
+        assert AMBIANCE_ROOM_TONE["calme"] == "soir"
+        assert AMBIANCE_ROOM_TONE["joyeux"] == "jour"
+
+    def test_charger_room_tone_avec_ambiance(self, monkeypatch):
+        """Le room tone doit varier selon l'ambiance passée."""
+        from agents.monteur import Monteur
+        monkeypatch.setattr(config, "ELEVENLABS_API_KEY", "")
+        monteur = Monteur()
+        # Doit retourner un audio même avec une ambiance spécifique
+        room = monteur._charger_room_tone("dramatique")
+        assert len(room) > 0
+
 
 class TestMasterBus:
-    """Le traitement master bus doit fonctionner sans crash."""
+    """Le traitement master bus avec EQ + compression + true peak limiter."""
 
     def test_master_bus_retourne_audio(self):
         """Le master bus doit retourner un segment audio de même durée."""
@@ -1358,6 +1382,18 @@ class TestMasterBus:
         audio = AudioSegment.silent(duration=1000)
         result = Monteur._appliquer_master_bus(audio)
         assert len(result) == len(audio)
+
+    def test_eq_constants_definies(self):
+        """Les constantes EQ doivent être définies."""
+        from agents.monteur import EQ_VOICE_BOOST_LOW_HZ, EQ_VOICE_BOOST_HIGH_HZ, EQ_VOICE_BOOST_DB
+        assert EQ_VOICE_BOOST_LOW_HZ == 2000
+        assert EQ_VOICE_BOOST_HIGH_HZ == 5000
+        assert EQ_VOICE_BOOST_DB > 0
+
+    def test_true_peak_oversample_defini(self):
+        """Le facteur d'oversampling true peak doit être défini."""
+        from agents.monteur import TRUE_PEAK_OVERSAMPLE
+        assert TRUE_PEAK_OVERSAMPLE >= 2
 
 
 class TestSFXVolumeContextuel:
