@@ -408,14 +408,39 @@ class Planificateur:
                     f"Chaque épisode DOIT traiter une histoire biblique DIFFÉRENTE."
                 )
             # Doublons par sujet principal (même personnage biblique dominant)
+            # On extrait le premier NOM PROPRE (mot capitalisé) comme sujet principal.
+            # Fallback: premier mot significatif si aucun nom propre trouvé.
+            import re as _re
+            _MOTS_NON_SUJETS = {
+                # Articles et prépositions
+                "le", "la", "les", "l", "de", "du", "des", "un", "une",
+                "et", "ou", "au", "aux", "à", "en", "par", "pour", "sur",
+                "dans", "avec", "vers", "son", "sa", "ses",
+                # Mots descriptifs courants dans les titres bibliques
+                "histoire", "récit", "partie", "suite", "grand", "grande",
+                "grands", "grandes", "petit", "petite", "premier", "première",
+                "dernier", "dernière", "nouveau", "nouvelle",
+                # Mots d'action/description (NE SONT PAS des sujets bibliques)
+                "voyage", "combat", "sacrifice", "création", "construction",
+                "destruction", "traversée", "conquête", "fuite", "chute",
+                "naissance", "mort", "appel", "épreuve", "miracle",
+                "prophétie", "promesse", "alliance", "exil", "retour",
+                "jugement", "bénédiction", "malédiction", "trahison",
+                "résurrection", "ascension", "vision", "songe", "rêve",
+                "prière", "offrande", "guerre", "paix", "règne",
+            }
             _sujets_principaux: list[str] = []
             for h in histoires:
-                # Extraire le premier mot significatif (nom du personnage biblique)
-                mots = [m for m in h.lower().replace("'", " ").replace("'", " ").split()
-                        if m not in ("le", "la", "les", "l", "de", "du", "des",
-                                     "un", "une", "et", "ou", "au", "aux",
-                                     "histoire", "récit", "partie", "suite")]
-                _sujets_principaux.append(mots[0] if mots else h.lower())
+                # Chercher le premier nom propre (capitalisé, > 2 lettres)
+                noms_propres = [m for m in _re.findall(r"\b[A-ZÀ-Ü][a-zà-ü]{2,}", h)
+                                if m.lower() not in _MOTS_NON_SUJETS]
+                if noms_propres:
+                    _sujets_principaux.append(noms_propres[0].lower())
+                else:
+                    # Fallback: premier mot significatif
+                    mots = [m for m in h.lower().replace("\u2019", " ").replace("'", " ").split()
+                            if m not in _MOTS_NON_SUJETS]
+                    _sujets_principaux.append(mots[0] if mots else h.lower())
             from collections import Counter
             compteur = Counter(_sujets_principaux)
             repetitions = {s: c for s, c in compteur.items() if c > 1}
