@@ -876,3 +876,61 @@ class TestUtilsWindowsFix:
         source = inspect.getsource(ouvrir_fichier)
         assert "os.startfile" in source
         assert "shell=True" not in source
+
+
+class TestPlanificateurUnSujetParEpisode:
+    """Vérifie que le planificateur rejette les doublons d'histoires bibliques."""
+
+    def _plan(self, histoires: list[str]) -> dict:
+        """Construit un plan minimal avec les histoires bibliques données."""
+        episodes = []
+        for i, h in enumerate(histoires, 1):
+            episodes.append({
+                "numero": i,
+                "titre": f"Épisode {i}",
+                "resume": f"Résumé {i}",
+                "morale": f"Morale {i}",
+                "histoire_biblique": h,
+                "ambiance": ["joyeux", "calme", "mystere", "dramatique"][i % 4],
+                "type": "ouverture" if i == 1 else ("final" if i == len(histoires) else "standard"),
+            })
+        return {"saison": {"numero": 1, "theme": "Test", "episodes": episodes}}
+
+    def test_histoires_toutes_differentes_passe(self):
+        """Un plan avec des histoires toutes différentes doit passer."""
+        plan = self._plan([
+            "David contre Goliath",
+            "Abraham et Isaac",
+            "Moïse et le buisson ardent",
+            "Jonas et la baleine",
+        ])
+        # Ne doit pas lever d'erreur
+        Planificateur._valider_plan(plan)
+
+    def test_doublon_exact_rejete(self):
+        """Un plan avec la même histoire biblique exacte doit être rejeté."""
+        plan = self._plan([
+            "Abraham et Isaac",
+            "David contre Goliath",
+            "Abraham et Isaac",
+        ])
+        with pytest.raises(ValueError, match="doublon"):
+            Planificateur._valider_plan(plan)
+
+    def test_doublon_meme_personnage_rejete(self):
+        """Plusieurs épisodes sur le même personnage biblique sont rejetés."""
+        plan = self._plan([
+            "Abraham et Isaac",
+            "Abraham et le sacrifice",
+            "Moïse et le buisson ardent",
+            "Jonas et la baleine",
+        ])
+        with pytest.raises(ValueError, match="[Mm]ême personnage|sujet"):
+            Planificateur._valider_plan(plan)
+
+    def test_prompt_contient_regle_un_sujet(self):
+        """Le system prompt doit contenir la règle un sujet par épisode."""
+        from agents.planificateur import SYSTEM_PROMPT
+        assert "UN SUJET PAR ÉPISODE" in SYSTEM_PROMPT
+        assert "JAMAIS" in SYSTEM_PROMPT
+        assert "partie 1" in SYSTEM_PROMPT

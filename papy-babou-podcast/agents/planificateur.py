@@ -39,6 +39,17 @@ RÈGLES DE PLANIFICATION :
    Varier les prétextes d'un épisode à l'autre.
 10. DURÉES par type : ouverture ~30 min, standard ~25 min, mi-saison ~30 min,
     final ~35 min, bonus ~20 min. Indiquer la durée correspondante au type.
+11. UN SUJET PAR ÉPISODE — RÈGLE ABSOLUE : Chaque épisode doit traiter UNE SEULE
+    histoire biblique de manière COMPLÈTE, de A à Z. JAMAIS de "partie 1 / partie 2".
+    JAMAIS le même personnage biblique sur plusieurs épisodes consécutifs.
+    Les épisodes sont longs (25-35 min), donc il y a largement le temps de couvrir
+    une histoire entière. Exemples de BONNE planification : Épisode 1 = David contre
+    Goliath (complet), Épisode 2 = Abraham et Isaac (complet), Épisode 3 = Moïse et
+    le buisson ardent (complet). Exemples de MAUVAISE planification : Épisode 1 =
+    Abraham partie 1, Épisode 2 = Abraham partie 2, Épisode 3 = Abraham partie 3.
+    Le fil rouge et l'arc narratif de la saison passent par les PERSONNAGES RÉCURRENTS
+    (Papy, Antoine, Noémie) et le THÈME de la saison, PAS par la répétition du même
+    sujet biblique.
 
 FORMAT DE SORTIE — JSON STRICT :
 {
@@ -86,8 +97,8 @@ FORMAT DE SORTIE — JSON STRICT :
         "numero": 1,
         "titre": "Titre de l'épisode",
         "type": "ouverture",
-        "histoire_biblique": "Le récit biblique de base",
-        "resume": "Résumé de ce qui sera raconté — doit couvrir l'INTÉGRALITÉ de l'histoire, pas juste une introduction",
+        "histoire_biblique": "UNE histoire biblique UNIQUE et DISTINCTE des autres épisodes (ex: 'David contre Goliath', 'Jonas et la baleine')",
+        "resume": "Résumé COMPLET de l'histoire de A à Z — début, milieu et fin. L'histoire doit être TERMINÉE dans cet épisode, jamais reportée au suivant.",
         "morale": "La leçon de vie",
         "ambiance": "joyeux|dramatique|calme|mystere",
         "duree_cible_minutes": 30,
@@ -386,14 +397,38 @@ class Planificateur:
                     set(ambiances),
                 )
 
-        # Vérifier la variété des histoires bibliques
+        # Vérifier la variété des histoires bibliques — STRICT
         histoires = [ep.get("histoire_biblique", "") for ep in episodes if ep.get("histoire_biblique")]
-        if histoires and len(set(histoires)) < len(histoires):
-            doublons = [h for h in set(histoires) if histoires.count(h) > 1]
-            logger.warning(
-                "Histoires bibliques en doublon dans la saison : %s",
-                doublons,
-            )
+        if histoires:
+            # Doublons exacts
+            if len(set(histoires)) < len(histoires):
+                doublons = [h for h in set(histoires) if histoires.count(h) > 1]
+                raise ValueError(
+                    f"Histoires bibliques en doublon : {doublons}. "
+                    f"Chaque épisode DOIT traiter une histoire biblique DIFFÉRENTE."
+                )
+            # Doublons par sujet principal (même personnage biblique dominant)
+            _sujets_principaux: list[str] = []
+            for h in histoires:
+                # Extraire le premier mot significatif (nom du personnage biblique)
+                mots = [m for m in h.lower().replace("'", " ").replace("'", " ").split()
+                        if m not in ("le", "la", "les", "l", "de", "du", "des",
+                                     "un", "une", "et", "ou", "au", "aux",
+                                     "histoire", "récit", "partie", "suite")]
+                _sujets_principaux.append(mots[0] if mots else h.lower())
+            from collections import Counter
+            compteur = Counter(_sujets_principaux)
+            repetitions = {s: c for s, c in compteur.items() if c > 1}
+            if repetitions:
+                episodes_concernes = []
+                for sujet, count in repetitions.items():
+                    eps = [histoires[i] for i, s in enumerate(_sujets_principaux) if s == sujet]
+                    episodes_concernes.append(f"'{sujet}' x{count} : {eps}")
+                raise ValueError(
+                    f"Même personnage/sujet biblique sur plusieurs épisodes : "
+                    f"{', '.join(episodes_concernes)}. "
+                    f"Chaque épisode doit traiter un sujet DIFFÉRENT de A à Z."
+                )
 
     @staticmethod
     def generer_archive_saison(plan: dict, historique: list[dict]) -> dict:
