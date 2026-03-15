@@ -1545,6 +1545,17 @@
             </div>
         </div>
 
+        <!-- Métadonnées -->
+        <div class="card" style="margin-bottom: 1.25rem; display: none;" id="val-meta-card">
+            <div class="card-header" style="cursor: pointer;" onclick="toggleSection('val-meta-body')">
+                <span class="icon">&#128196;</span> Métadonnées
+                <span style="margin-left: auto; font-size: 0.8rem; color: var(--texte-dim);">cliquer pour ouvrir/fermer</span>
+            </div>
+            <div class="card-body" id="val-meta-body" style="max-height: 400px; overflow-y: auto;">
+                <p style="color: var(--texte-light);">Pas de métadonnées disponibles.</p>
+            </div>
+        </div>
+
         <!-- Zone de continuation (affichée après validation d'une étape) -->
         <div id="continue-production-zone" style="display:none; margin-bottom: 1.25rem;"></div>
 
@@ -2391,7 +2402,7 @@ async function submitProduire(e) {
             if (scoreMatch) {
                 msg += '<br><small style="font-weight: 400;">Score : ' + scoreMatch[1] + '/10</small>';
             }
-            msg += '<br>&#9997; <a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\')); loadEpisodeDetail(\'' + epId + '\')" style="color: inherit; text-decoration: underline; font-weight: 700;">Valider le script avant de lancer l\'audio &rarr;</a>';
+            msg += '<br><a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\')); loadEpisodeDetail(\'' + epId + '\')" class="btn btn-turquoise" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#9997; Valider le script avant de lancer l\'audio &rarr;</a>';
             showAlert('alert-produire', 'success', msg);
             _dashboardDirty = true;
         } else {
@@ -2516,8 +2527,9 @@ async function submitPlanifier(e) {
             saison, theme, description, personnages, nb_episodes
         });
         handleCliResponse(data, 'alert-planifier', 'console-planifier',
-            'Saison ' + saison + ' planifiée ! <a href="javascript:void(0)" onclick="loadPlanDetail(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le plan détaillé &rarr;</a>'
-            + ' &bull; <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Suivi &rarr;</a>');
+            'Saison ' + saison + ' planifiée !'
+            + '<br><a href="javascript:void(0)" onclick="loadPlanDetail(' + saison + ')" class="btn btn-secondary" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#128214; Voir le plan détaillé</a>'
+            + ' <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" class="btn btn-turquoise" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#127916; Lancer la production &rarr;</a>');
         if (data.status === 'ok') {
             loadPlanDetail(saison);
         }
@@ -2688,7 +2700,7 @@ async function loadSaisonProgress() {
                 + '</strong> (' + escapeHtml(statusLabels[data.bloque_par.status] || data.bloque_par.status) + ') '
                 + 'doit être terminé avant de produire <strong>' + escapeHtml(data.prochain.episode_id) + '</strong>. ';
             if (data.bloque_par.status.includes('attente_validation') || data.bloque_par.status.includes('valide')) {
-                msg += '<a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\'))" style="color: var(--turquoise); font-weight: 700;">Aller à la validation &rarr;</a>';
+                msg += '<br><a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\'))" class="btn btn-turquoise" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#9989; Aller à la validation &rarr;</a>';
             }
             document.getElementById('ps-blocked-msg').innerHTML = msg;
             /* Quand même afficher le prochain pour info (mais bouton désactivé) */
@@ -2755,8 +2767,8 @@ async function produireProchainEpisode() {
         if (data.status === 'ok') {
             showAlert('alert-produire-saison', 'success',
                 ep.episode_id + ' : script généré. '
-                + '<a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\'))" '
-                + 'style="color: inherit; text-decoration: underline;">Valider le script &rarr;</a>');
+                + '<br><a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\'))" '
+                + 'class="btn btn-turquoise" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#9997; Valider le script &rarr;</a>');
         } else if (data.error) {
             showAlert('alert-produire-saison', 'error', escapeHtml(data.error));
         } else {
@@ -3277,6 +3289,36 @@ async function loadEpisodeDetail(episodeId) {
                 '<img src="/audio/covers/' + escapeHtml(ep.cover_art) + '" alt="Couverture" style="max-width: 300px; border-radius: var(--radius-sm); box-shadow: var(--ombre);">';
         } else {
             coverCard.style.display = 'none';
+        }
+
+        /* Métadonnées */
+        const metaCard = document.getElementById('val-meta-card');
+        const meta = ep.metadonnees;
+        if (meta && Object.keys(meta).length > 0) {
+            metaCard.style.display = 'block';
+            let metaHtml = '<div style="font-size: 0.85rem; line-height: 1.7;">';
+            const metaFields = [
+                {key: 'titre', label: 'Titre', icon: '&#127908;'},
+                {key: 'description_courte', label: 'Description courte', icon: '&#128196;'},
+                {key: 'description_longue', label: 'Description longue', icon: '&#128221;'},
+                {key: 'source_biblique', label: 'Source biblique', icon: '&#128214;'},
+                {key: 'ambiance', label: 'Ambiance', icon: '&#127926;'},
+                {key: 'mots_cles', label: 'Mots-clés', icon: '&#127991;'},
+                {key: 'public_cible', label: 'Public cible', icon: '&#128118;'},
+            ];
+            for (const f of metaFields) {
+                let val = meta[f.key];
+                if (val === undefined || val === null || val === '') continue;
+                if (Array.isArray(val)) val = val.join(', ');
+                metaHtml += '<div style="margin-bottom: 0.5rem; padding: 0.4rem 0.6rem; border-left: 3px solid var(--turquoise); background: rgba(0,0,0,0.02); border-radius: 0 6px 6px 0;">';
+                metaHtml += '<strong style="color: var(--turquoise);">' + f.icon + ' ' + escapeHtml(f.label) + ' :</strong> ';
+                metaHtml += escapeHtml(String(val));
+                metaHtml += '</div>';
+            }
+            metaHtml += '</div>';
+            document.getElementById('val-meta-body').innerHTML = metaHtml;
+        } else {
+            metaCard.style.display = 'none';
         }
 
         /* Update buttons state */

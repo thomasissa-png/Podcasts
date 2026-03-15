@@ -172,56 +172,76 @@ class Reviewer:
         }
         max_tokens = max_tokens_map.get(type_episode, 16384)
 
-        response = config.appel_claude_avec_retry(
-            self.client,
-            model=config.CLAUDE_MODEL,
-            max_tokens=max_tokens,
-            system=system_prompt,
-            messages=[{"role": "user", "content": prompt}],
-        )
-
-        if response.stop_reason == "max_tokens":
-            raise ValueError(
-                f"La review a été tronquée (max_tokens={max_tokens} atteint). "
-                f"Le JSON est incomplet."
-            )
-
-        texte_brut = response.content[0].text.strip()
-        try:
-            resultat = parser_json_llm(texte_brut)
-        except json.JSONDecodeError as e:
-            logger.warning(
-                "JSON malformé dans la review LLM (%s). "
-                "Retry avec une nouvelle génération...", e,
-            )
-            for tentative in range(1, max_retry):
-                response = config.appel_claude_avec_retry(
-                    self.client,
-                    model=config.CLAUDE_MODEL,
-                    max_tokens=max_tokens,
-                    system=system_prompt,
-                    messages=[{"role": "user", "content": prompt}],
+        # Boucle de validation avec retry automatique :
+        # Si la review ne passe pas la validation (JSON malformé, structure
+        # invalide...), on re-génère en injectant l'erreur dans le prompt.
+        derniere_erreur = ""
+        for validation_attempt in range(1, max_retry + 1):
+            prompt_effectif = prompt
+            if derniere_erreur:
+                prompt_effectif = (
+                    f"{prompt}\n\n"
+                    f"⚠️ ERREUR DE VALIDATION (tentative {validation_attempt}/{max_retry}) :\n"
+                    f"Ta review précédente a été REJETÉE pour la raison suivante :\n"
+                    f"  {derniere_erreur}\n\n"
+                    f"Corrige ce problème et renvoie une review valide."
                 )
-                if response.stop_reason == "max_tokens":
-                    raise ValueError(
-                        f"La review a été tronquée (max_tokens={max_tokens} atteint). "
-                        f"Le JSON est incomplet."
-                    )
-                texte_brut = response.content[0].text.strip()
-                try:
-                    resultat = parser_json_llm(texte_brut)
-                    break
-                except json.JSONDecodeError:
-                    if tentative == max_retry - 1:
-                        raise
-                    logger.warning(
-                        "JSON malformé tentative %d/%d — retry...",
-                        tentative + 1, max_retry,
-                    )
-        self._valider_review(resultat)
+                logger.warning(
+                    "Retry validation review %d/%d — erreur précédente : %s",
+                    validation_attempt, max_retry, derniere_erreur,
+                )
 
-        # Vérifier la cohérence structurelle du script corrigé vs original (BUG 6)
-        self._verifier_coherence(script, resultat)
+            response = config.appel_claude_avec_retry(
+                self.client,
+                model=config.CLAUDE_MODEL,
+                max_tokens=max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": prompt_effectif}],
+            )
+
+            if response.stop_reason == "max_tokens":
+                derniere_erreur = f"Review tronquée (max_tokens={max_tokens} atteint). Le JSON est incomplet."
+                if validation_attempt < max_retry:
+                    max_tokens = min(int(max_tokens * 1.5), 32768)
+                    continue
+                raise ValueError(derniere_erreur)
+
+            texte_brut = response.content[0].text.strip()
+            try:
+                resultat = parser_json_llm(texte_brut)
+            except json.JSONDecodeError as e:
+                derniere_erreur = f"JSON malformé : {e}"
+                if validation_attempt < max_retry:
+                    continue
+                raise ValueError(
+                    f"La review n'est pas du JSON valide "
+                    f"après {max_retry} tentatives : {e}"
+                )
+
+            try:
+                self._valider_review(resultat)
+            except ValueError as e:
+                derniere_erreur = str(e)
+                if validation_attempt < max_retry:
+                    continue
+                raise
+
+            # Vérifier la cohérence structurelle du script corrigé vs original (BUG 6)
+            try:
+                self._verifier_coherence(script, resultat)
+            except ValueError as e:
+                derniere_erreur = str(e)
+                if validation_attempt < max_retry:
+                    continue
+                raise
+
+            # Review valide
+            if derniere_erreur:
+                logger.info(
+                    "Review corrigée après %d tentative(s) de validation.",
+                    validation_attempt,
+                )
+            break
 
         score = resultat["review"]["score"]
         nb_corrections = len(resultat["review"]["corrections"])
