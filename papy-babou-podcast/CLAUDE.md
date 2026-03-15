@@ -697,3 +697,36 @@ After Replit redeploy, local files are lost but PostgreSQL data survives. All ra
 - `_valider_plan()` now raises `ValueError` (not just warning) on duplicate `histoire_biblique`
 - Subject-similarity detection extracts dominant biblical character name from each `histoire_biblique` and rejects if same character appears in multiple episodes
 - Uses `collections.Counter` for subject frequency analysis
+
+## Episode Workflow Audit (Session 15)
+Comprehensive 6-agent audit of the entire episode creation workflow. 14 fixes (2 CRITICAL, 1 HIGH, 11 MEDIUM).
+
+### CRITICAL fixes
+- **Prompt import**: `from rich.prompt import Prompt` was missing — `Prompt.ask()` in M5 forced montage validation would crash with `NameError`
+- **Plan validation dead code**: `plan.get("episodes", [])` always returned `[]` — must be `plan.get("saison", {}).get("episodes", [])`. Episode type validation and auto-renumbering in `planifier-saison` were completely non-functional
+
+### HIGH fix
+- **Montage re-validation on resume**: Montage validation block had no `etape_idx` guard — on checkpoint resume at step 5+, montage was re-prompted even though already validated. Fixed by checking `rapport["etapes"]["montage"]["validation_humaine"]`
+
+### MEDIUM fixes
+- **max_tokens adaptatif**: Was flat 16384/12000 — now graduated: final=16384, ouverture/mi-saison=12288, standard=10240, bonus=8192
+- **relation_avec_mamie_sonia**: Missing from scripteur's relations loop — Papy's key relationship never reached the LLM prompt
+- **import re in loop**: reviewer.py had `import re` inside a for loop — moved to module level
+- **generer_dry_run() incomplete**: Missing `source_biblique` and `ambiance` fields (present in `generer()`)
+- **Chapter timestamp offset**: Missing signature jingle duration (~5s) — all chapter markers were shifted
+- **Room tone fallback order**: Generic file was checked before variant, preventing variant auto-generation
+- **Character counter timing**: Incremented before TTS success — inflated cost tracking on failure
+- **reset_compteur thread safety**: `.clear()` not protected by `_compteur_lock`
+- **Batch error handling**: No continue/stop prompt on error (inconsistent with `produire-saison`)
+
+### When modifying main.py (Session 15 patterns)
+- Plan episode access: always use `plan.get("saison", {}).get("episodes", [])`, never `plan.get("episodes", [])`
+- Montage validation guard: check `not montage_deja_valide` before prompting (prevents re-validation on resume)
+- `Prompt` import from `rich.prompt` is required for `Prompt.ask()` calls
+
+### When modifying scripteur.py (Session 15)
+- `max_tokens` uses a graduated dict by episode type (not flat value)
+- Relations loop includes `relation_avec_mamie_sonia`
+
+### Tests (Session 15)
+- Full suite: 541 passed, 3 skipped (ffmpeg), 3 pre-existing flaky (TestHistorique)
