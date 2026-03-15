@@ -1441,42 +1441,37 @@ def api_prochain_episode(saison_num):
     if not episodes_plan:
         return jsonify({"error": "Le plan de saison ne contient aucun épisode."}), 400
 
-    # Charger l'état de chaque épisode
+    # Charger l'état de chaque épisode (DB + fichier + Object Storage)
     episodes_status = []
     for ep in sorted(episodes_plan, key=lambda e: e.get("numero", 0)):
         ep_id = f"S{saison_num:02d}E{ep['numero']:02d}"
-        rapport_path = config.LOGS_DIR / f"{ep_id}_rapport.json"
         checkpoint_path = config.CHECKPOINTS_DIR / f"{ep_id}_checkpoint.json"
 
         status = "a_faire"  # Par défaut : pas encore commencé
         validation_script = False
         validation_montage = False
 
-        if rapport_path.exists():
-            try:
-                with open(rapport_path, "r", encoding="utf-8") as f:
-                    rapport = _json.load(f)
-                etapes = rapport.get("etapes", {})
-                validation_script = etapes.get("script", {}).get("validation_humaine", False)
-                validation_montage = etapes.get("montage", {}).get("validation_humaine", False)
-                pub = etapes.get("publication", {})
+        rapport = dashboard_data_mod.charger_rapport(ep_id)
+        if rapport:
+            etapes = rapport.get("etapes", {})
+            validation_script = etapes.get("script", {}).get("validation_humaine", False)
+            validation_montage = etapes.get("montage", {}).get("validation_humaine", False)
+            pub = etapes.get("publication", {})
 
-                if pub.get("validation_humaine") or rapport.get("status") == "completed":
-                    status = "termine"
-                elif validation_montage:
-                    status = "montage_valide"
-                elif validation_script:
-                    # Script validé : vérifier si audio est en cours/terminé
-                    if etapes.get("montage", {}).get("chemin_hq"):
-                        status = "attente_validation_montage"
-                    else:
-                        status = "script_valide"
-                elif rapport.get("status") == "waiting_validation":
-                    status = "attente_validation_script"
+            if pub.get("validation_humaine") or rapport.get("status") == "completed":
+                status = "termine"
+            elif validation_montage:
+                status = "montage_valide"
+            elif validation_script:
+                # Script validé : vérifier si audio est en cours/terminé
+                if etapes.get("montage", {}).get("chemin_hq"):
+                    status = "attente_validation_montage"
                 else:
-                    status = "en_cours"
-            except (ValueError, OSError):
-                pass
+                    status = "script_valide"
+            elif rapport.get("status") == "waiting_validation":
+                status = "attente_validation_script"
+            else:
+                status = "en_cours"
         elif checkpoint_path.exists():
             status = "en_cours"
 
@@ -1550,31 +1545,25 @@ def api_produire_saison():
 
     episode_id = f"S{saison:02d}E{numero:02d}"
 
-    # Vérifier que les épisodes précédents sont terminés
-    import json as _json
+    # Vérifier que les épisodes précédents sont terminés (DB + fichier)
     for n in range(1, numero):
         prev_id = f"S{saison:02d}E{n:02d}"
-        rapport_path = config.LOGS_DIR / f"{prev_id}_rapport.json"
-        if not rapport_path.exists():
+        rp = dashboard_data_mod.charger_rapport(prev_id)
+        if not rp:
             return jsonify({
                 "error": f"L'épisode {prev_id} doit être terminé avant de produire {episode_id}. "
                          f"La production sérielle est séquentielle."
             }), 409
-        try:
-            with open(rapport_path, "r", encoding="utf-8") as f:
-                rp = _json.load(f)
-            etapes = rp.get("etapes", {})
-            script_ok = etapes.get("script", {}).get("validation_humaine", False)
-            montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
-            if not (script_ok and montage_ok):
-                return jsonify({
-                    "error": f"L'épisode {prev_id} n'est pas entièrement validé "
-                             f"(script: {'OK' if script_ok else 'en attente'}, "
-                             f"montage: {'OK' if montage_ok else 'en attente'}). "
-                             f"Terminez-le avant de passer à {episode_id}."
-                }), 409
-        except (ValueError, OSError):
-            return jsonify({"error": f"Rapport de {prev_id} illisible."}), 500
+        etapes = rp.get("etapes", {})
+        script_ok = etapes.get("script", {}).get("validation_humaine", False)
+        montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
+        if not (script_ok and montage_ok):
+            return jsonify({
+                "error": f"L'épisode {prev_id} n'est pas entièrement validé "
+                         f"(script: {'OK' if script_ok else 'en attente'}, "
+                         f"montage: {'OK' if montage_ok else 'en attente'}). "
+                         f"Terminez-le avant de passer à {episode_id}."
+            }), 409
 
     # Produire l'épisode avec --stop-after script (workflow séquentiel)
     cmd = [

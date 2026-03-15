@@ -72,28 +72,16 @@ def charger_historique_complet() -> list[dict]:
 def charger_rapport(episode_id: str) -> dict | None:
     """Charge le rapport de production d'un épisode (DB prioritaire, JSON fallback).
 
-    Cherche d'abord les productions terminées (completed), puis les productions
-    en cours qui ont un rapport (cas où ProductionRepo.terminer a échoué),
-    enfin le fichier JSON sur le filesystem.
+    Retourne le rapport de la production LA PLUS RÉCENTE, quel que soit son statut.
+    C'est crucial quand un épisode est re-produit après un nouveau plan de saison :
+    la nouvelle production (waiting_script) doit primer sur l'ancienne (completed).
     """
-    # 1. Essayer la DB — productions terminées puis en cours avec rapport
+    # 1. Essayer la DB — production la plus récente avec rapport
     if _db_disponible():
         try:
             from database import get_cursor
             with get_cursor(commit=False) as cur:
-                # D'abord les completed (source la plus fiable)
-                cur.execute(
-                    "SELECT rapport_json FROM productions "
-                    "WHERE episode_id = %s AND status = 'completed' "
-                    "ORDER BY completed_at DESC LIMIT 1",
-                    (episode_id,),
-                )
-                row = cur.fetchone()
-                if row and row["rapport_json"]:
-                    return row["rapport_json"]
-
-                # Fallback: production in_progress avec rapport_json non null
-                # (cas où terminer() a échoué mais le rapport a été écrit)
+                # Prendre la production la plus récente, tous statuts confondus
                 cur.execute(
                     "SELECT rapport_json FROM productions "
                     "WHERE episode_id = %s AND rapport_json IS NOT NULL "
