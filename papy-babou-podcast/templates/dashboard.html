@@ -3510,14 +3510,19 @@ async function loadValidationEpisodes() {
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const episodes = await resp.json();
 
-        document.getElementById('val-count').textContent = episodes.length;
+        const nbProduits = episodes.filter(e => e.status !== 'planned').length;
+        const nbPlanifies = episodes.filter(e => e.status === 'planned').length;
+        const countText = nbPlanifies > 0
+            ? nbProduits + ' produit' + (nbProduits > 1 ? 's' : '') + ' + ' + nbPlanifies + ' planifié' + (nbPlanifies > 1 ? 's' : '')
+            : String(nbProduits);
+        document.getElementById('val-count').textContent = countText;
 
         if (episodes.length === 0) {
             document.getElementById('val-episodes-list').innerHTML =
                 '<div class="empty"><div class="icon">&#9989;</div>'
-                + '<p>Aucun épisode produit pour le moment.</p>'
+                + '<p>Aucun épisode produit ou planifié pour le moment.</p>'
                 + '<p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">'
-                + 'Produisez un épisode dans l\'onglet "Un épisode" ou "Lancer la saison" pour commencer.</p></div>';
+                + 'Planifiez une saison ou produisez un épisode pour commencer.</p></div>';
             return;
         }
 
@@ -3527,19 +3532,32 @@ async function loadValidationEpisodes() {
             + '</tr></thead><tbody>';
 
         for (const ep of episodes) {
+            const isPlanned = (ep.status === 'planned');
             const hasAudio = ep.has_audio;
-            const audioBadge = hasAudio
-                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Oui</span>'
-                : '<span style="color: var(--corail); font-weight: 800;">&#10007; Non</span>';
-            const scriptBadge = ep.validation_script
-                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
-                : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
-            const montageBadge = ep.validation_montage
-                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
-                : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
+            const audioBadge = isPlanned
+                ? '<span style="color: var(--texte-dim);">—</span>'
+                : hasAudio
+                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Oui</span>'
+                    : '<span style="color: var(--corail); font-weight: 800;">&#10007; Non</span>';
+            const scriptBadge = isPlanned
+                ? '<span style="color: var(--texte-dim);">—</span>'
+                : ep.validation_script
+                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
+                    : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
+            const montageBadge = isPlanned
+                ? '<span style="color: var(--texte-dim);">—</span>'
+                : ep.validation_montage
+                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
+                    : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
 
-            const rowStyle = (ep.validation_script && ep.validation_montage)
-                ? ' style="opacity: 0.6;"' : '';
+            const rowStyle = isPlanned
+                ? ' style="opacity: 0.5; font-style: italic;"'
+                : (ep.validation_script && ep.validation_montage)
+                    ? ' style="opacity: 0.6;"' : '';
+
+            const actionBtn = isPlanned
+                ? '<span style="color: var(--texte-dim); font-size: 0.8rem;">&#128203; Planifié</span>'
+                : '<button class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; min-height: 44px;" onclick="loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')">&#128269; Voir</button>';
 
             html += '<tr' + rowStyle + '>'
                 + '<td class="ep-id">' + escapeHtml(ep.episode_id) + '</td>'
@@ -3548,7 +3566,7 @@ async function loadValidationEpisodes() {
                 + '<td class="hide-mobile">' + audioBadge + '</td>'
                 + '<td class="hide-mobile">' + scriptBadge + '</td>'
                 + '<td class="hide-mobile">' + montageBadge + '</td>'
-                + '<td><button class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; min-height: 44px;" onclick="loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')">&#128269; Voir</button></td>'
+                + '<td>' + actionBtn + '</td>'
                 + '</tr>';
         }
         html += '</tbody></table>';

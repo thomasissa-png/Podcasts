@@ -453,10 +453,15 @@ def api_episodes_saison(numero):
     """API JSON — Episodes existants d'une saison (produits ou planifies)."""
     episodes_produits = []
 
-    # Episodes dans l'historique
+    # Episodes dans l'historique — extraire le numéro depuis episode_id (ex: "S01E03" → 3)
     data = get_dashboard_data(numero)
     for ep in data.get("episodes", []):
-        episodes_produits.append(ep.get("numero", 0))
+        eid = ep.get("episode_id", "")
+        match = re.match(r"S\d{2}E(\d{2})", eid)
+        if match:
+            episodes_produits.append(int(match.group(1)))
+        else:
+            episodes_produits.append(ep.get("numero", 0))
 
     # Episodes dans le plan de saison
     plan = config.charger_saison(numero)
@@ -1390,9 +1395,17 @@ def _handle_publication(episode_id, comment=""):
 
 @app.route("/api/episodes-a-valider")
 def api_episodes_a_valider():
-    """API JSON — Liste des épisodes en attente de validation."""
+    """API JSON — Liste des épisodes produits + planifiés (non encore produits).
+
+    Fusionne deux sources :
+    1. Épisodes produits (depuis historique) — avec statut de validation
+    2. Épisodes planifiés mais pas encore produits (depuis plans de saison)
+       — affichés avec statut "non produit" pour que l'utilisateur voie le plan complet
+    """
     data = get_dashboard_data(0)
     episodes = []
+    produced_ids = set()
+
     for ep in data["episodes"]:
         needs_validation = (
             not ep.get("validation_script", False)
@@ -1402,7 +1415,44 @@ def api_episodes_a_valider():
             **ep,
             "needs_validation": needs_validation,
             "has_audio": bool(ep.get("audio_preview") or ep.get("audio_hq")),
+            "status": "produced",
         })
+        produced_ids.add(ep.get("episode_id", ""))
+
+    # Ajouter les épisodes planifiés mais pas encore produits
+    for num_saison in data.get("saisons_dispo", []):
+        plan = config.charger_saison(num_saison)
+        if not plan:
+            continue
+        saison_data = plan.get("saison", {})
+        for ep_plan in saison_data.get("episodes", []):
+            ep_id = f"S{num_saison:02d}E{ep_plan.get('numero', 0):02d}"
+            if ep_id not in produced_ids:
+                episodes.append({
+                    "episode_id": ep_id,
+                    "titre": ep_plan.get("titre", "?"),
+                    "type_episode": ep_plan.get("type", "standard"),
+                    "score": 0,
+                    "ambiance": ep_plan.get("ambiance", ""),
+                    "date": "",
+                    "morale": ep_plan.get("morale", ""),
+                    "personnages": ep_plan.get("personnages", []),
+                    "retours_humains": "",
+                    "audio_preview": None,
+                    "audio_hq": None,
+                    "duree_secondes": None,
+                    "taille_mb": None,
+                    "validation_script": False,
+                    "validation_montage": False,
+                    "audio_missing": False,
+                    "needs_validation": True,
+                    "has_audio": False,
+                    "status": "planned",
+                })
+
+    # Trier : épisodes planifiés d'abord (pas encore produits), puis par ID
+    episodes.sort(key=lambda e: (0 if e.get("status") == "planned" else 1, e.get("episode_id", "")))
+
     return jsonify(episodes)
 
 
