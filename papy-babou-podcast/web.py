@@ -336,7 +336,8 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
     return job_id
 
 
-_JOB_RESULT_TTL = 60  # Garder les résultats de jobs terminés 60 secondes
+_JOB_RESULT_TTL = 300  # Garder les résultats de jobs terminés 5 minutes
+# (le client peut être en sleep/onglet inactif — 60s était trop court)
 
 
 @app.route("/api/job-status/<job_id>")
@@ -972,10 +973,24 @@ def api_validate_episode(episode_id):
     # Load, update, and save rapport (DB + file for resilience)
     rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
     try:
-        # Charger le rapport depuis la DB d'abord, puis fichier (survit aux redéploiements)
-        rapport = dashboard_data_mod.charger_rapport(episode_id) or {}
+        # AUDIT-7: Charger le rapport existant — refuser si aucun (pas de rapport fantôme)
+        rapport = dashboard_data_mod.charger_rapport(episode_id)
+        if not rapport:
+            return jsonify({
+                "error": f"Aucun rapport trouvé pour {episode_id}. "
+                         f"L'épisode doit d'abord être produit."
+            }), 404
 
         with fichier_lock(rapport_path):
+            # AUDIT-5: Re-charger le rapport SOUS le lock pour éviter les race conditions
+            # (deux validations simultanées sur le même épisode ne s'écrasent plus)
+            if rapport_path.exists():
+                try:
+                    with open(rapport_path, "r", encoding="utf-8") as f:
+                        rapport = _json.load(f)
+                except (ValueError, FileNotFoundError):
+                    pass  # Garder le rapport chargé depuis la DB
+
             # Update validation status
             rapport.setdefault("etapes", {})
             rapport["etapes"].setdefault(step, {})
