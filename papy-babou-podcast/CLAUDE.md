@@ -668,9 +668,23 @@ The planificateur was generating multi-part episodes (e.g., 3 episodes on Abraha
 - The season's narrative arc comes from the RECURRING CHARACTERS (Papy, Antoine, Noémie) and the season THEME, not from repeating the same biblical subject
 
 ### Validation Page Stale Data Fix (Session 14)
-- **Bug**: When producing via web dashboard with `--stop-after script`, `ajouter_historique()` was never called because it runs at the end of the full pipeline. The validation page reads from historique, so it showed old episode data.
+- **Bug 1**: When producing via web dashboard with `--stop-after script`, `ajouter_historique()` was never called because it runs at the end of the full pipeline. The validation page reads from historique, so it showed old episode data.
 - **Fix**: `ajouter_historique(rapport, script)` now called in both `stop_after == "script"` and `stop_after == "montage"` blocks in `_pipeline_inner()`. The UPSERT logic handles duplicates.
 - **Pattern**: Any new `stop_after` block must also call `ajouter_historique()` before returning.
+
+- **Bug 2**: `charger_rapport()` in `dashboard_data.py` prioritized `completed` productions over recent ones. When re-producing an episode (e.g., after regenerating a season plan), the OLD completed production was returned instead of the NEW waiting_script one.
+- **Fix**: Single query `ORDER BY created_at DESC LIMIT 1` regardless of status — always returns the most recent production.
+
+- **Bug 3**: `api_prochain_episode()` and `api_produire_saison()` in `web.py` read rapports from filesystem only (`config.LOGS_DIR`), missing data after Replit redeploys when files are lost but DB has the data.
+- **Fix**: Both routes now use `dashboard_data_mod.charger_rapport()` which checks DB → filesystem → Object Storage.
+
+### When modifying dashboard_data.py (Session 14)
+- `charger_rapport()` returns the MOST RECENT production's rapport, not the most recent completed one
+- Never prioritize `completed` status over recency — a new `waiting_script` production must supersede an old `completed` one
+
+### When modifying web.py (Session 14)
+- Always use `dashboard_data_mod.charger_rapport()` instead of reading rapport files directly from `config.LOGS_DIR`
+- This ensures DB + filesystem + Object Storage fallback chain is used consistently
 
 ### When modifying planificateur.py (Session 14 additions)
 - `_valider_plan()` now raises `ValueError` (not just warning) on duplicate `histoire_biblique`
