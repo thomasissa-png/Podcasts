@@ -12,5 +12,11 @@ PYTHONPATH = "${REPL_HOME}/papy-babou-podcast"
 localPort = 5000
 externalPort = 80
 
+[objectStorage]
+defaultBucketID = "replit-objstore-production"
+# NOTE: Si Object Storage ne fonctionne pas, allez dans le panneau Replit :
+# Tools > Object Storage > Create bucket
+# Replit mettra a jour automatiquement le defaultBucketID ci-dessus.
+
 [deployment]
 run = ["sh", "-c", "gunicorn -c gunicorn.conf.py web:app"]

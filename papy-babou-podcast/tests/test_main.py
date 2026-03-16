@@ -41,6 +41,7 @@ class TestHistorique:
         import main
         chemin = tmp_path / "historique.json"
         monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+        monkeypatch.setattr(main, "_use_db", lambda: False)
 
         historique = [
             {"episode_id": "S01E01", "titre": "Le buisson ardent", "morale": "Confiance"},
@@ -56,6 +57,7 @@ class TestHistorique:
         import main
         chemin = tmp_path / "historique.json"
         monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+        monkeypatch.setattr(main, "_use_db", lambda: False)
 
         rapport = {
             "episode_id": "S01E01",
@@ -87,6 +89,7 @@ class TestHistorique:
         import main
         chemin = tmp_path / "historique.json"
         monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+        monkeypatch.setattr(main, "_use_db", lambda: False)
 
         rapport = {
             "episode_id": "S01E01",
