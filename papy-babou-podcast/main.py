@@ -1918,14 +1918,30 @@ def pipeline(
     except ValueError:
         pass  # Pas le thread principal — handler déjà installé ou non supporté
 
-    # Créer une production en DB si disponible
+    # Créer ou réutiliser une production en DB
     if _use_db():
         try:
-            _production_local.production_id = ProductionRepo.creer(
-                episode_id=episode_id,
-                dry_run=dry_run,
-                auto_mode=auto,
-            )
+            # Si on reprend un checkpoint, réutiliser la production existante
+            # au lieu d'en créer une nouvelle (évite les lignes orphelines en DB)
+            if etape_depart != "script":
+                existing = ProductionRepo.charger_dernier_checkpoint(episode_id)
+                if existing:
+                    _production_local.production_id = existing["id"]
+                    logger.info("Reprise de la production DB #%d pour %s", existing["id"], episode_id)
+                else:
+                    _production_local.production_id = ProductionRepo.creer(
+                        episode_id=episode_id,
+                        dry_run=dry_run,
+                        auto_mode=auto,
+                    )
+                    logger.info("Production DB #%d créée pour %s (reprise sans production existante)", _production_local.production_id, episode_id)
+            else:
+                _production_local.production_id = ProductionRepo.creer(
+                    episode_id=episode_id,
+                    dry_run=dry_run,
+                    auto_mode=auto,
+                )
+                logger.info("Production DB #%d créée pour %s", _production_local.production_id, episode_id)
             EpisodeRepo.creer_ou_maj(
                 episode_id=episode_id,
                 saison=saison,
@@ -1936,7 +1952,6 @@ def pipeline(
                 morale=morale,
                 status="in_progress",
             )
-            logger.info("Production DB #%d créée pour %s", getattr(_production_local, 'production_id', None), episode_id)
         except Exception as e:
             logger.warning("DB indisponible pour création production : %s", e)
             _production_local.production_id = None
