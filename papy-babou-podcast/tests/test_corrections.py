@@ -1584,3 +1584,61 @@ class TestJinglesSaisonCustom:
 
         assert plan["saison"]["jingles_custom"]["intro_saison"] == "/path/to/custom.mp3"
         assert plan["saison"]["decisions_humaines"][-1]["action"] == "ambiances_saison_validees"
+
+
+# ── Session 16b : charger_rapport() uses correct column name ─────────────
+
+class TestChargerRapportSQL:
+    """Vérifie que charger_rapport() utilise started_at (pas created_at) sur productions."""
+
+    def test_charger_rapport_uses_started_at(self):
+        """Le SQL de charger_rapport doit utiliser started_at, pas created_at."""
+        import inspect
+        import dashboard_data
+        source = inspect.getsource(dashboard_data.charger_rapport)
+        # La colonne created_at n'existe pas dans la table productions
+        assert "created_at" not in source, (
+            "charger_rapport() utilise 'created_at' mais la table productions "
+            "n'a que 'started_at'. Cela cause un crash SQL silencieux."
+        )
+        assert "started_at" in source, (
+            "charger_rapport() doit utiliser 'ORDER BY started_at DESC'"
+        )
+
+    def test_persist_web_job_id_max_wait_sufficient(self):
+        """_persist_web_job_id doit attendre assez longtemps pour le startup subprocess."""
+        import inspect
+        import web
+        source = inspect.getsource(web._persist_web_job_id)
+        # Vérifier que le default max_wait est suffisant (>= 60)
+        assert "max_wait=90" in source or "max_wait=120" in source, (
+            "_persist_web_job_id max_wait doit être >= 60 pour gérer "
+            "le startup lent du subprocess sur Replit (15-30s)"
+        )
+
+    def test_stop_after_script_uploads_rapport_to_object_storage(self):
+        """Le bloc stop_after=script doit uploader le rapport en Object Storage."""
+        import inspect
+        import main
+        source = inspect.getsource(main._pipeline_inner)
+        # Chercher l'upload Object Storage dans le contexte de stop_after
+        assert "upload_rapport" in source, (
+            "_pipeline_inner() doit appeler persistent_storage.upload_rapport() "
+            "dans les blocs stop_after pour survivre aux redéploiements"
+        )
+
+    def test_stop_after_blocks_log_db_errors(self):
+        """Les blocs stop_after ne doivent pas avaler silencieusement les erreurs DB."""
+        import inspect
+        import main
+        source = inspect.getsource(main._pipeline_inner)
+        import re
+        # Chercher les patterns "except Exception:" suivis directement de "pass" (sans logging)
+        bare_except_pass = re.findall(
+            r'except\s+Exception\s*:\s*\n\s*pass',
+            source,
+        )
+        assert len(bare_except_pass) == 0, (
+            f"_pipeline_inner() contient {len(bare_except_pass)} 'except Exception: pass' "
+            "sans logging — les erreurs DB sont avalées silencieusement"
+        )

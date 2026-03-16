@@ -2445,6 +2445,12 @@ def _pipeline_inner(
         with fichier_lock(chemin_rapport):
             with open(chemin_rapport, "w", encoding="utf-8") as f_out:
                 json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        # Upload rapport vers Object Storage (survit aux redéploiements)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour rapport (stop_after=script) : %s", e)
         # Ajouter à l'historique dès maintenant pour que la page de validation
         # web affiche l'épisode avec les données à jour (titre, résumé, score, etc.)
         ajouter_historique(rapport, script)
@@ -2456,8 +2462,8 @@ def _pipeline_inner(
                     _pid, etape="waiting_script",
                     rapport=rapport,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("DB indisponible pour maj_etape waiting_script : %s", e)
         return rapport
 
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
@@ -2799,6 +2805,12 @@ def _pipeline_inner(
         with fichier_lock(chemin_rapport):
             with open(chemin_rapport, "w", encoding="utf-8") as f_out:
                 json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        # Upload rapport vers Object Storage (survit aux redéploiements)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour rapport (stop_after=montage) : %s", e)
         # Mettre à jour l'historique pour que la page de validation web soit à jour
         ajouter_historique(rapport, script)
         _pid = getattr(_production_local, 'production_id', None)
@@ -2808,8 +2820,8 @@ def _pipeline_inner(
                     _pid, etape="waiting_montage",
                     rapport=rapport,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("DB indisponible pour maj_etape waiting_montage : %s", e)
         return rapport
 
     _log_step_duration("Montage")

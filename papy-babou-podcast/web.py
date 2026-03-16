@@ -439,11 +439,13 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
                 _job_processes.pop(job_id, None)
 
 
-def _persist_web_job_id(job_id, episode_id, max_wait=15):
+def _persist_web_job_id(job_id, episode_id, max_wait=90):
     """Attend que la row production existe en DB, puis y stocke le web_job_id.
 
     Le subprocess (main.py) crée la row production APRÈS son lancement.
-    On doit donc attendre qu'elle existe avant de faire l'UPDATE.
+    Sur Replit, le subprocess met 15-30s pour démarrer Python, importer les
+    modules, charger le checkpoint et appeler ProductionRepo.creer().
+    On attend donc jusqu'à 90s (avec backoff progressif).
     """
     from db_models import get_cursor
     for attempt in range(max_wait):
@@ -464,8 +466,9 @@ def _persist_web_job_id(job_id, episode_id, max_wait=15):
                     return
         except Exception as exc:
             logger.debug("_persist_web_job_id tentative %d : %s", attempt, exc)
-        time.sleep(1)
-    logger.warning("web_job_id %s non persisté pour %s après %ds", job_id, episode_id, max_wait)
+        # Backoff progressif : 1s les 30 premières tentatives, 2s ensuite
+        time.sleep(1 if attempt < 30 else 2)
+    logger.warning("web_job_id %s non persisté pour %s après %d tentatives", job_id, episode_id, max_wait)
 
 
 def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):

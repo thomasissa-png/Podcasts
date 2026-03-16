@@ -128,7 +128,7 @@ def charger_rapport(episode_id: str) -> dict | None:
                 cur.execute(
                     "SELECT rapport_json FROM productions "
                     "WHERE episode_id = %s AND rapport_json IS NOT NULL "
-                    "ORDER BY created_at DESC LIMIT 1",
+                    "ORDER BY started_at DESC LIMIT 1",
                     (episode_id,),
                 )
                 row = cur.fetchone()
