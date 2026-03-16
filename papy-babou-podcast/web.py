@@ -418,6 +418,35 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
                 _job_processes.pop(job_id, None)
 
 
+def _persist_web_job_id(job_id, episode_id, max_wait=15):
+    """Attend que la row production existe en DB, puis y stocke le web_job_id.
+
+    Le subprocess (main.py) crée la row production APRÈS son lancement.
+    On doit donc attendre qu'elle existe avant de faire l'UPDATE.
+    """
+    from db_models import get_cursor
+    for attempt in range(max_wait):
+        try:
+            with get_cursor() as cur:
+                cur.execute(
+                    """UPDATE productions SET web_job_id = %s
+                       WHERE id = (
+                           SELECT id FROM productions
+                           WHERE episode_id = %s
+                           ORDER BY started_at DESC LIMIT 1
+                       ) AND web_job_id IS NULL
+                       RETURNING id""",
+                    (job_id, episode_id),
+                )
+                if cur.fetchone():
+                    logger.info("web_job_id %s persisté pour %s", job_id, episode_id)
+                    return
+        except Exception as exc:
+            logger.debug("_persist_web_job_id tentative %d : %s", attempt, exc)
+        time.sleep(1)
+    logger.warning("web_job_id %s non persisté pour %s après %ds", job_id, episode_id, max_wait)
+
+
 def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
     """Lance un job en arriere-plan et retourne son ID immediatement.
 
@@ -449,6 +478,13 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
         }
 
     def _worker():
+        # Persister web_job_id en parallèle (thread séparé car _run_cli bloque)
+        if episode_id and _DB_AVAILABLE:
+            threading.Thread(
+                target=_persist_web_job_id,
+                args=(job_id, episode_id),
+                daemon=True,
+            ).start()
         try:
             result = _run_cli(cmd_args, timeout=timeout, job_id=job_id)
             with _jobs_lock:
@@ -470,24 +506,6 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
                     cleanup_fn()
                 except Exception as exc:
                     logger.warning("Echec du cleanup pour le job %s : %s", job_id, exc)
-
-    # Persister le web_job_id en DB pour permettre la reconnexion après perte réseau
-    if episode_id and _DB_AVAILABLE:
-        try:
-            from db_models import get_cursor
-            with get_cursor() as cur:
-                # Mettre à jour la production la plus récente de cet épisode
-                cur.execute(
-                    """UPDATE productions SET web_job_id = %s
-                       WHERE id = (
-                           SELECT id FROM productions
-                           WHERE episode_id = %s
-                           ORDER BY started_at DESC LIMIT 1
-                       )""",
-                    (job_id, episode_id),
-                )
-        except Exception as exc:
-            logger.warning("Impossible de persister web_job_id %s : %s", job_id, exc)
 
     t = threading.Thread(target=_worker, daemon=True)
     t.start()
@@ -550,6 +568,7 @@ def api_running_jobs():
                        FROM productions
                        WHERE web_job_id IS NOT NULL
                          AND status NOT IN ('completed', 'failed')
+                         AND started_at > NOW() - INTERVAL '2 hours'
                        ORDER BY started_at DESC LIMIT 10""",
                 )
                 for row in cur.fetchall():

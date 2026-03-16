@@ -2414,7 +2414,7 @@ function pollJob(jobId, maxTimeoutSec) {
             elapsedMs += interval;
             if (elapsedMs > maxTimeoutSec * 1000) {
                 _activePollTimer = null;
-                _clearActiveJob();
+                _clearActiveJob(); /* timeout réel — le job a dépassé sa durée max */
                 reject(new Error('Timeout : le job n\u0027a pas terminé après ' + maxTimeoutSec + 's'));
                 return;
             }
@@ -2427,7 +2427,8 @@ function pollJob(jobId, maxTimeoutSec) {
                     consecutiveErrors++;
                     if (consecutiveErrors >= transientRetries) {
                         _activePollTimer = null;
-                        _clearActiveJob();
+                        /* NE PAS effacer sessionStorage — le job tourne peut-être
+                           encore côté serveur. Un rechargement pourra retenter. */
                         reject(new Error(data && data.error ? data.error : 'Job introuvable'));
                         return;
                     }
@@ -2439,7 +2440,7 @@ function pollJob(jobId, maxTimeoutSec) {
                     schedule(); /* continuer le polling */
                     return;
                 }
-                /* Job termine */
+                /* Job termine — OK pour effacer sessionStorage */
                 _activePollTimer = null;
                 _clearActiveJob();
                 resolve(data);
@@ -2447,7 +2448,7 @@ function pollJob(jobId, maxTimeoutSec) {
                 consecutiveErrors++;
                 if (consecutiveErrors >= transientRetries) {
                     _activePollTimer = null;
-                    _clearActiveJob();
+                    /* NE PAS effacer sessionStorage — erreur réseau, pas échec du job */
                     reject(new Error('Erreur réseau persistante après ' + transientRetries + ' tentatives : ' + err.message));
                     return;
                 }
@@ -2486,8 +2487,15 @@ async function apiCallAsync(url, body) {
         /* Pas un job async (erreur de validation par ex) */
         return launch;
     }
-    var episodeId = body && (body.episode_id || body.fichier || null);
-    /* Tenter d'extraire l'episode_id de l'URL pour continue-production */
+    var episodeId = null;
+    if (body) {
+        episodeId = body.episode_id || body.fichier || null;
+        /* Construire episode_id depuis saison/numero (ex: /api/produire) */
+        if (!episodeId && body.saison && body.numero) {
+            episodeId = 'S' + String(body.saison).padStart(2, '0') + 'E' + String(body.numero).padStart(2, '0');
+        }
+    }
+    /* Extraire l'episode_id de l'URL pour continue-production / regenerate */
     if (!episodeId && url.indexOf('/api/episode/') === 0) {
         var m = url.match(/\/api\/episode\/([^/]+)\//);
         if (m) episodeId = m[1];
@@ -4275,8 +4283,24 @@ async function _reconnectActiveJob() {
         if (checkData.status !== 'running') {
             /* Job déjà terminé — afficher le résultat */
             _clearActiveJob();
+            var banner = document.getElementById('running-job-banner');
             if (checkData.status === 'ok') {
                 _dashboardDirty = true;
+                if (banner) {
+                    banner.style.display = 'block';
+                    banner.style.borderColor = '#4ade80';
+                    banner.innerHTML = '<div style="padding:6px;color:#4ade80;font-weight:600;">' +
+                        '&#9989; Production terminée avec succès' +
+                        (saved.episode_id ? ' (' + escapeHtml(saved.episode_id) + ')' : '') +
+                        '. <a href="javascript:void(0)" onclick="window.location.reload()" style="color:var(--turquoise);text-decoration:underline;">Actualiser</a></div>';
+                }
+            } else if (checkData.error) {
+                if (banner) {
+                    banner.style.display = 'block';
+                    banner.style.borderColor = '#ff4444';
+                    banner.innerHTML = '<div style="padding:6px;color:#ff4444;font-weight:600;">' +
+                        '&#10060; Production échouée : ' + escapeHtml(checkData.error) + '</div>';
+                }
             }
             return;
         }
