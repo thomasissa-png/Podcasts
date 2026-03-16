@@ -291,7 +291,7 @@ def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
                 "SELECT checkpoint_data FROM productions "
                 "WHERE episode_id = %s AND checkpoint_data IS NOT NULL "
                 "AND checkpoint_data != '{}' "
-                "ORDER BY created_at DESC LIMIT 1",
+                "ORDER BY started_at DESC LIMIT 1",
                 (episode_id,),
             )
             row = cur.fetchone()
@@ -1137,9 +1137,9 @@ def api_episode_debug(episode_id):
         with get_cursor(commit=False) as cur:
             # Productions
             cur.execute(
-                "SELECT id, status, etape_courante, created_at, completed_at, "
+                "SELECT id, status, etape_courante, started_at, completed_at, "
                 "rapport_json IS NOT NULL AS has_rapport "
-                "FROM productions WHERE episode_id = %s ORDER BY created_at DESC LIMIT 5",
+                "FROM productions WHERE episode_id = %s ORDER BY started_at DESC LIMIT 5",
                 (episode_id,),
             )
             diag["db"]["productions"] = [

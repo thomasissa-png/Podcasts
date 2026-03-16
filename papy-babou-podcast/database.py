@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import threading
+import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
@@ -37,9 +38,10 @@ def get_pool() -> psycopg2.pool.ThreadedConnectionPool:
                         "Ajoutez-la dans .env ou dans les secrets Replit."
                     )
                 _pool = psycopg2.pool.ThreadedConnectionPool(
-                    minconn=2,
+                    minconn=1,   # Réduit de 2 à 1 — moins de connexions idle
                     maxconn=10,
                     dsn=DATABASE_URL,
+                    connect_timeout=10,  # Timeout de connexion (Neon cold start ~3s)
                     # TCP keepalives pour détecter les connexions mortes
                     keepalives=1,
                     keepalives_idle=30,
@@ -164,6 +166,45 @@ def _reset_pool() -> None:
                 pass
             _pool = None
             logger.info("Pool PostgreSQL réinitialisé (sera recréé au prochain appel)")
+
+
+# ── Keepalive du pool (Neon scale-to-zero) ───────────────────────────────────
+
+def _pool_keepalive_loop():
+    """Ping périodique pour empêcher Neon de fermer les connexions idle.
+
+    Neon (PostgreSQL managé de Replit) ferme les connexions après ~5 min
+    d'inactivité. Les TCP keepalives ne traversent pas toujours le proxy.
+    Ce thread envoie un SELECT 1 toutes les 2 minutes pour maintenir le pool.
+    """
+    while True:
+        time.sleep(120)  # 2 minutes
+        try:
+            pool = _pool  # Lecture sans lock (atomique pour les refs Python)
+            if pool is None:
+                continue
+            # Obtenir une connexion, la pinguer, la remettre
+            conn = pool.getconn()
+            try:
+                if _ping_connection(conn):
+                    pool.putconn(conn)
+                else:
+                    pool.putconn(conn, close=True)
+                    logger.debug("Keepalive : connexion périmée remplacée")
+            except Exception:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+        except Exception:
+            pass  # Pool fermé ou indisponible — on réessaie au prochain cycle
+
+
+if DATABASE_URL:
+    _keepalive_thread = threading.Thread(
+        target=_pool_keepalive_loop, daemon=True, name="pg-keepalive"
+    )
+    _keepalive_thread.start()
 
 
 # ── Schéma de la base de données ────────────────────────────────────────────────
