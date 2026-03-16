@@ -44,6 +44,19 @@ app = Flask(__name__, template_folder=str(_THIS_DIR / "templates"))
 
 logger = logging.getLogger(__name__)
 
+
+@app.after_request
+def _no_cache_html(response):
+    """Empêche le navigateur de cacher les pages HTML (dashboard).
+
+    Sans ça, après un redéploiement Replit, le navigateur sert l'ancienne
+    version du JS depuis son cache → timeouts, bugs fantômes, etc.
+    """
+    if response.content_type and "text/html" in response.content_type:
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+    return response
+
 _default_secret = "papy-babou-dev-key"
 app.secret_key = os.getenv("FLASK_SECRET_KEY", _default_secret)
 if app.secret_key == _default_secret:
