@@ -893,6 +893,36 @@ Root cause diagnosis for 9 consecutive production failures where 35-minute jobs 
   3. Call `ajouter_historique()`
   4. Update DB via `ProductionRepo.maj_etape()` with error logging (not bare `except: pass`)
 
+### Montage Error Visibility (Session 16b — commit 2)
+3 additional fixes for subprocess observability and error resilience.
+
+**Subprocess logs in deployment logs** (`web.py`):
+- `_run_cli()` now logs last 50 stderr lines to parent logger after subprocess completes
+- On non-zero exit code: full error logged with `logger.error()` including stderr tail (2000 chars)
+- Stderr capture increased from 1000 → 2000 chars in job result
+
+**Montage error handling** (`main.py`):
+- `monteur.assembler(script)` now wrapped in try/except
+- On failure: `rapport["etapes"]["montage"]` populated with `{"status": "error", "erreur": str(e), "erreur_type": type(e).__name__}`
+- Rapport saved to normal file (`_rapport.json`) + Object Storage even on montage error
+- Checkpoint saved at etape="montage" for retry — then exception re-raised for outer handler to mark DB as failed
+
+**Partial rapport always visible** (`main.py`):
+- Pipeline outer error handler now saves to `{episode_id}_rapport.json` (was `_rapport_echec.json` which `charger_rapport()` never read)
+- Uploads to Object Storage in error handler
+- All bare `except Exception: pass` in `_pipeline_inner` replaced with proper `logger.warning()` calls
+
+### When modifying main.py montage step (Session 16b)
+- `monteur.assembler()` MUST be in try/except
+- On error: save to `rapport["etapes"]["montage"]["erreur"]`, save rapport to normal file, save checkpoint, then re-raise
+- NEVER save error rapport to `_rapport_echec.json` — always use the normal `_rapport.json` so `charger_rapport()` finds it
+- All `except Exception:` blocks MUST have logging (no bare `pass`)
+
+### When modifying web.py _run_cli (Session 16b)
+- After `proc.communicate()`: log stderr lines to parent logger for deployment log visibility
+- On error (non-zero returncode): log full error with stderr tail via `logger.error()`
+- stderr capture: 2000 chars (not 1000) for better error diagnostics
+
 ### Tests (Session 16b)
 - 4 new tests: TestChargerRapportSQL (charger_rapport uses started_at, persist_web_job_id timeout, stop_after Object Storage upload, stop_after error logging)
 - Full suite: 561 passed, 3 skipped (ffmpeg), 0 failures
