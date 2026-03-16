@@ -1823,6 +1823,19 @@ def pipeline(
     """
     _production_local.production_id = None  # Reset au début de chaque pipeline
 
+    _t_pipeline_start = time.perf_counter()
+    _t_last_step = _t_pipeline_start
+
+    def _log_step_duration(step_name: str) -> None:
+        nonlocal _t_last_step
+        now = time.perf_counter()
+        step_s = now - _t_last_step
+        total_s = now - _t_pipeline_start
+        logger.info(
+            "⏱ %s : %.1fs (total %.1fs)", step_name, step_s, total_s
+        )
+        _t_last_step = now
+
     episode_id = f"S{saison:02d}E{numero:02d}"
     rapport = checkpoint_data if checkpoint_data is not None else {
         "episode_id": episode_id,
@@ -2299,6 +2312,8 @@ def _pipeline_inner(
         except Exception as e:
             logger.warning("Object Storage indisponible pour script : %s", e)
 
+        _log_step_duration("Script + Review")
+
         # Checkpoint après script (inclut le chemin du script validé)
         sauvegarder_checkpoint(episode_id, "audio", {
             "episode_id": episode_id, "titre": titre, "resume": resume,
@@ -2427,6 +2442,8 @@ def _pipeline_inner(
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement audio : %s", e)
 
+            _log_step_duration("Audio TTS")
+
             sauvegarder_checkpoint(episode_id, "sfx", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
                 "saison": saison, "numero": numero, "morale": morale,
@@ -2486,6 +2503,8 @@ def _pipeline_inner(
                         )
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement SFX : %s", e)
+
+        _log_step_duration("SFX Bruitages")
 
         # Checkpoint après SFX (manquant auparavant — perte de données SFX sur crash)
         sauvegarder_checkpoint(episode_id, "montage", {
@@ -2701,6 +2720,8 @@ def _pipeline_inner(
                 pass
         return rapport
 
+    _log_step_duration("Montage")
+
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
     if etape_idx <= 5:
@@ -2773,6 +2794,8 @@ def _pipeline_inner(
         metadonnees_agent = Metadonnees()
         metadonnees_agent.sauvegarder(meta, chemin_meta)
         rapport["etapes"]["metadonnees"]["validation_humaine"] = True
+
+    _log_step_duration("Métadonnées")
 
     # ── Étape 7 : Publication ─────────────────────────────────────────────────
 
@@ -2847,6 +2870,8 @@ def _pipeline_inner(
                 raison_skip = "mode auto" if auto else "choix utilisateur"
                 console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention(f'SAUTÉ — {raison_skip}')}")
                 rapport["etapes"]["publication"] = {"status": f"skipped ({raison_skip})"}
+
+    _log_step_duration("Publication")
 
     # ── Étape 8 : Rapport final ───────────────────────────────────────────────
 
@@ -2942,6 +2967,10 @@ def _pipeline_inner(
         chemin_rapport=str(chemin_rapport),
         dry_run=dry_run,
     ))
+
+    total_s = time.perf_counter() - _t_pipeline_start
+    logger.info("⏱ Pipeline complet : %.1fs (%.1f min)", total_s, total_s / 60)
+    console.print(f"  Durée totale : {total_s:.0f}s ({total_s/60:.1f} min)")
 
     return rapport
 

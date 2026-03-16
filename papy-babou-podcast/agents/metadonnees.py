@@ -40,7 +40,7 @@ class Metadonnees:
                 "Cle API Anthropic (ANTHROPIC_API_KEY) non configuree. "
                 "Ajoutez-la dans votre fichier .env ou dans les Secrets Replit."
             )
-        self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, timeout=300.0)
 
     def generer(self, script: dict, duree_secondes: float) -> dict:
         """Génère les métadonnées complètes d'un épisode.

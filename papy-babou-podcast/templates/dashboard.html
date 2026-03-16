@@ -2352,7 +2352,7 @@ async function apiCall(url, body) {
 var _activePollTimer = null; /* timer courant pour permettre l'annulation */
 
 function pollJob(jobId, maxTimeoutSec) {
-    maxTimeoutSec = maxTimeoutSec || 1920; /* 32 min par defaut (> backend 1800s) */
+    maxTimeoutSec = maxTimeoutSec || 3720; /* 62 min par defaut (> backend 3600s) */
     var transientRetries = 3; /* tentatives sur erreurs reseau transitoires */
     return new Promise(function(resolve, reject) {
         var elapsedMs = 0;
@@ -2419,10 +2419,10 @@ function pollJob(jobId, maxTimeoutSec) {
 
 /* Timeouts de polling par endpoint (alignes sur les timeouts backend + marge) */
 var _POLL_TIMEOUTS = {
-    '/api/produire': 1920,          /* backend 1800s + 2min marge */
+    '/api/produire': 3720,          /* backend 3600s + 2min marge */
     '/api/planifier-saison': 1920,  /* backend 1800s + 2min marge */
     '/api/produire-saison': 7320,   /* backend 7200s + 2min marge */
-    '/api/reprendre': 1920,         /* backend 1800s + 2min marge */
+    '/api/reprendre': 3720,         /* backend 3600s + 2min marge */
     '/api/batch': 7320              /* backend 7200s + 2min marge */
 };
 
@@ -3245,7 +3245,7 @@ async function psInlineRegenerate(step) {
             /* Si c'est un job async, attendre la fin */
             if (data.job_id) {
                 try {
-                    var result = await pollJob(data.job_id, 1920);
+                    var result = await pollJob(data.job_id, 3720);
                     if (result.status === 'ok') {
                         showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' régénéré !');
                     } else {
@@ -3964,7 +3964,7 @@ async function continueProduction(episodeId, phase) {
             if (zone) zone.style.display = 'none';
             return;
         }
-        const result = await pollJob(launch.job_id, 1920);
+        const result = await pollJob(launch.job_id, 3720);
 
         if (result.status === 'ok') {
             showAlert('alert-validation', 'success', phaseLabel + ' terminé avec succès pour ' + episodeId + '.');
@@ -4017,7 +4017,7 @@ async function regenerateStep(step) {
             showAlert('alert-validation', 'error', launch.error || 'Erreur inconnue');
             return;
         }
-        var result = await pollJob(launch.job_id, 1920);
+        var result = await pollJob(launch.job_id, 3720);
 
         if (result.status === 'ok') {
             var label = (step === 'script') ? 'Script' : 'Audio + montage';
