@@ -421,14 +421,15 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
 
         # ── Log subprocess output dans les deployment logs ──────────────
         # Sans cela, stdout/stderr sont capturés par PIPE et invisibles
-        # dans les logs de Replit/gunicorn.
-        if stderr:
-            for line in stderr.strip().splitlines()[-50:]:
-                logger.warning("[subprocess %s] %s", job_id or "?", line)
+        # dans les logs de Replit/gunicorn. On ne logue que sur ERREUR
+        # pour éviter de polluer les deployment logs sur les jobs réussis.
         if proc.returncode != 0:
+            if stderr:
+                for line in stderr.strip().splitlines()[-50:]:
+                    logger.warning("[subprocess %s] %s", job_id or "?", line)
             logger.error(
-                "[subprocess %s] Exited with code %d. stderr tail:\n%s",
-                job_id or "?", proc.returncode, stderr[-2000:] if stderr else "(vide)",
+                "[subprocess %s] Exited with code %d",
+                job_id or "?", proc.returncode,
             )
 
         result = {

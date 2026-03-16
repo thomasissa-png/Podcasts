@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 561 tests (pytest)
+├── tests/                   # 564 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -95,7 +95,7 @@ All pipeline validation functions log decisions to `rapport["decisions_humaines"
 - Each entry: episode_id, titre, morale, resume_court (from segment text, not title), date_production, score_review, personnages_presents, moments_cles, questions_ouvertes, evolutions_personnages, ambiance, type_episode
 
 ### Error Handling
-- Pipeline wrapped in try/except: DB status updated to "failed", partial rapport saved to `{episode_id}_rapport_echec.json`
+- Pipeline wrapped in try/except: DB status updated to "failed", partial rapport saved to `{episode_id}_rapport.json` (normal file, NOT `_echec`) + uploaded to Object Storage
 - `_production_id_courante` reset at each pipeline start to avoid cross-contamination
 
 ## CLI Commands
@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 561 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 564 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -924,5 +924,10 @@ Root cause diagnosis for 9 consecutive production failures where 35-minute jobs 
 - stderr capture: 2000 chars (not 1000) for better error diagnostics
 
 ### Tests (Session 16b)
-- 4 new tests: TestChargerRapportSQL (charger_rapport uses started_at, persist_web_job_id timeout, stop_after Object Storage upload, stop_after error logging)
-- Full suite: 561 passed, 3 skipped (ffmpeg), 0 failures
+- 7 new tests: TestChargerRapportSQL — charger_rapport uses started_at, persist_web_job_id timeout, stop_after Object Storage upload, stop_after error logging, stderr only on error, monteur error handling, error rapport normal filename
+- Full suite: 564 passed, 3 skipped (ffmpeg), 0 failures
+
+### Audit corrections (Session 16b — post-audit)
+- **stderr spam fix**: `_run_cli()` now only logs stderr lines when `returncode != 0` (was logging for ALL jobs including success)
+- **CLAUDE.md coherence**: Error Handling section updated from `_rapport_echec.json` to `_rapport.json`
+- **3 missing tests added**: stderr conditional logging, monteur error handling, error rapport filename

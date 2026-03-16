@@ -1642,3 +1642,64 @@ class TestChargerRapportSQL:
             f"_pipeline_inner() contient {len(bare_except_pass)} 'except Exception: pass' "
             "sans logging — les erreurs DB sont avalées silencieusement"
         )
+
+    # ── Fix 4 : _run_cli ne logue stderr que sur erreur ──────────────────
+
+    def test_run_cli_logs_stderr_only_on_error(self):
+        """_run_cli ne doit loguer stderr que si returncode != 0 (pas sur succès)."""
+        import inspect
+        import web
+        source = inspect.getsource(web._run_cli)
+        # Le logging stderr doit être conditionné par returncode != 0
+        assert "if proc.returncode != 0:" in source, (
+            "_run_cli() doit conditionner le logging stderr sur returncode != 0"
+        )
+        # Pas de logging inconditionnel de stderr (éviter spam deployment logs)
+        lines = source.split("\n")
+        for i, line in enumerate(lines):
+            if "for line in stderr" in line:
+                # Vérifier que c'est à l'intérieur d'un bloc "if proc.returncode != 0"
+                # (on cherche en remontant les lignes d'indentation parent)
+                found_guard = False
+                for j in range(i - 1, max(i - 5, 0), -1):
+                    if "returncode != 0" in lines[j]:
+                        found_guard = True
+                        break
+                assert found_guard, (
+                    f"Ligne {i}: 'for line in stderr' n'est pas dans un bloc "
+                    "'if proc.returncode != 0' — risque de spam logs"
+                )
+
+    # ── Fix 5 : monteur.assembler() a un try/except ─────────────────────
+
+    def test_monteur_assembler_has_error_handling(self):
+        """monteur.assembler() doit être dans un try/except avec sauvegarde erreur."""
+        import inspect
+        import main
+        source = inspect.getsource(main._pipeline_inner)
+        # Vérifier que monteur.assembler est dans un try
+        assert "monteur.assembler(script)" in source
+        # Vérifier que l'erreur montage est sauvée dans rapport["etapes"]["montage"]
+        assert '"erreur"' in source or "'erreur'" in source, (
+            "L'erreur du monteur doit être sauvée dans rapport['etapes']['montage']['erreur']"
+        )
+        assert "erreur_type" in source, (
+            "Le type d'erreur doit être sauvé dans rapport['etapes']['montage']['erreur_type']"
+        )
+
+    # ── Fix 6 : rapport d'erreur dans _rapport.json (pas _echec) ────────
+
+    def test_error_rapport_uses_normal_filename(self):
+        """Le rapport d'erreur doit aller dans _rapport.json, pas _rapport_echec.json."""
+        import inspect
+        import main
+        source = inspect.getsource(main.pipeline)
+        # Le outer handler ne doit PAS écrire dans _rapport_echec.json
+        assert "_rapport_echec.json" not in source, (
+            "pipeline() écrit encore dans _rapport_echec.json — "
+            "charger_rapport() ne lit jamais ce fichier. Utiliser _rapport.json."
+        )
+        # Il DOIT écrire dans _rapport.json
+        assert "_rapport.json" in source, (
+            "pipeline() doit sauver le rapport d'erreur dans _rapport.json"
+        )
