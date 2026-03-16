@@ -2114,20 +2114,32 @@ def _pipeline_inner(
         ))
 
     etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
-    # Mapper les statuts d'attente vers l'étape suivante correspondante
+    # Mapper les statuts DB vers l'étape pipeline correspondante.
+    # Chaque statut non-standard DOIT être ici, sinon etape_idx = 0 → restart total.
     _etape_mapping = {
-        "waiting_script": "audio",    # script validé → reprendre à l'audio
+        "waiting_script": "audio",        # script validé → reprendre à l'audio
         "waiting_montage": "metadonnees",  # montage validé → reprendre aux métadonnées
         "script_done": "audio",
+        "review_done": "audio",
         "audio_done": "sfx",
         "sfx_done": "montage",
         "montage_done": "metadonnees",
         "metadonnees_done": "publication",
+        "publication_done": "rapport",
+        "interrupted": "script",           # fallback sûr — le checkpoint data a la bonne étape
+        "erreur": "script",                # erreur handler checkpoint — restart propre
+        "started": "script",               # production créée mais jamais avancée
     }
     etape_effective = _etape_mapping.get(etape_depart, etape_depart)
     if etape_effective != etape_depart:
         logger.info("Étape de reprise mappée : %s → %s", etape_depart, etape_effective)
-    etape_idx = etapes.index(etape_effective) if etape_effective in etapes else 0
+    if etape_effective not in etapes:
+        logger.error(
+            "Étape de reprise inconnue : %r (ni dans etapes ni dans _etape_mapping) — "
+            "redémarrage depuis le script par sécurité", etape_depart,
+        )
+        etape_effective = "script"
+    etape_idx = etapes.index(etape_effective)
 
     # Roadmap visuel des étapes
     console.print(panel_roadmap(etape_idx, dry_run=dry_run))
@@ -3596,6 +3608,32 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
         sys.exit(1)
 
 
+def _mark_failed_in_db(episode_id: str | None) -> None:
+    """Marque la production la plus récente comme 'failed' en DB.
+
+    Utilisé par reprendre() pour empêcher _auto_resume_interrupted de relancer
+    en boucle une production qui crash systématiquement.
+    """
+    if not episode_id or not _use_db():
+        return
+    try:
+        from db_models import get_cursor
+        with get_cursor() as cur:
+            cur.execute(
+                """UPDATE productions SET status = 'failed', updated_at = NOW()
+                   WHERE id = (
+                       SELECT id FROM productions
+                       WHERE episode_id = %s
+                         AND status NOT IN ('completed', 'failed')
+                       ORDER BY started_at DESC LIMIT 1
+                   )""",
+                (episode_id,),
+            )
+        logger.info("Production %s marquée 'failed' après crash dans reprendre()", episode_id)
+    except Exception as db_err:
+        logger.warning("Impossible de marquer la production failed : %s", db_err)
+
+
 @cli.command()
 @click.option("--checkpoint", "-c", required=True, type=click.Path(exists=True),
               help="Chemin du fichier checkpoint")
@@ -3604,24 +3642,26 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
 @click.option("--stop-after", type=click.Choice(["script", "montage", ""]), default="", help="Arreter apres l'etape donnee")
 def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
     """Reprend une production depuis un checkpoint."""
-    cp = charger_checkpoint(Path(checkpoint))
-    data = cp["data"]
-    etape = cp["etape"]
-
-    # Utiliser le stop_after du checkpoint si pas spécifié en CLI
-    # (reprise automatique après interruption SIGTERM)
-    effective_stop_after = stop_after or data.get("stop_after", "")
-
-    console.print(Panel(
-        f"[bold]Reprise depuis le checkpoint[/bold]\n"
-        f"Episode : {data['episode_id']} — {data['titre']}\n"
-        f"Etape de reprise : {etape}"
-        + (f"\nArrêt après : {effective_stop_after}" if effective_stop_after else ""),
-        title="Reprise de production",
-        border_style="yellow",
-    ))
-
+    episode_id = None  # Initialisé tôt pour le marquage failed dans le except
     try:
+        cp = charger_checkpoint(Path(checkpoint))
+        data = cp["data"]
+        etape = cp["etape"]
+        episode_id = data.get("episode_id")
+
+        # Utiliser le stop_after du checkpoint si pas spécifié en CLI
+        # (reprise automatique après interruption SIGTERM)
+        effective_stop_after = stop_after or data.get("stop_after", "")
+
+        console.print(Panel(
+            f"[bold]Reprise depuis le checkpoint[/bold]\n"
+            f"Episode : {data.get('episode_id', '?')} — {data.get('titre', '?')}\n"
+            f"Etape de reprise : {etape}"
+            + (f"\nArrêt après : {effective_stop_after}" if effective_stop_after else ""),
+            title="Reprise de production",
+            border_style="yellow",
+        ))
+
         pipeline(
             titre=data["titre"],
             resume=data.get("resume", ""),
@@ -3639,9 +3679,16 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
+    except SystemExit:
+        raise  # Ne pas intercepter sys.exit() du SIGTERM handler
     except Exception as e:
         console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
         logger.exception("Erreur lors de la reprise")
+        # CRITICAL: Marquer la production 'failed' en DB pour éviter que
+        # _auto_resume_interrupted ne la relance en boucle à chaque redéploiement.
+        # Sans ce marquage, le status reste 'interrupted'/'started'/etc. →
+        # chaque redeploy re-auto-resume → même crash → boucle infinie.
+        _mark_failed_in_db(episode_id)
         sys.exit(1)
 
 

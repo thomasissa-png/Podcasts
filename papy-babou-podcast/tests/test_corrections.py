@@ -1816,3 +1816,78 @@ class TestCheckpointDBFormat:
             "_restore_checkpoint_from_db doit détecter si la DB contient "
             "une enveloppe complète (ancien bug) ou juste le dict data"
         )
+
+
+# ── Session 16e : anti-boucle infinie auto-resume ─────────────────────
+
+class TestAutoResumeAntiLoop:
+    """Régression pour la boucle infinie auto-resume → crash → auto-resume."""
+
+    def test_reprendre_marks_failed_on_crash(self):
+        """reprendre() doit marquer la production 'failed' en DB si elle crash."""
+        import inspect
+        import main
+        source = inspect.getsource(main.reprendre.callback)
+        assert "_mark_failed_in_db" in source, (
+            "reprendre() doit appeler _mark_failed_in_db() dans son except — "
+            "sinon la production reste non-terminale et auto-resume la relance en boucle"
+        )
+
+    def test_reprendre_catches_all_exceptions(self):
+        """Le try/except de reprendre() doit englober TOUT le corps (y compris data['titre'])."""
+        import inspect
+        import main
+        source = inspect.getsource(main.reprendre.callback)
+        # Vérifier que data.get('titre') est utilisé (pas data['titre']) pour le Panel
+        assert "data.get('titre'" in source or 'data.get("titre"' in source, (
+            "reprendre() doit utiliser data.get('titre', '?') dans le Panel — "
+            "sinon KeyError avant le try/except et pas de marquage failed"
+        )
+
+    def test_etape_mapping_covers_all_db_statuses(self):
+        """_etape_mapping doit couvrir tous les statuts DB possibles."""
+        import inspect
+        import main
+        source = inspect.getsource(main._pipeline_inner)
+        for status in ["interrupted", "erreur", "started",
+                        "waiting_script", "waiting_montage",
+                        "script_done", "audio_done", "sfx_done",
+                        "montage_done", "metadonnees_done"]:
+            assert f'"{status}"' in source, (
+                f"_etape_mapping manque le statut '{status}' — "
+                "risque de etape_idx=0 (restart total) si ce statut arrive"
+            )
+
+    def test_auto_resume_has_recency_guard(self):
+        """_auto_resume_interrupted doit avoir une garde temporelle anti-boucle."""
+        import inspect
+        import web
+        source = inspect.getsource(web._auto_resume_interrupted)
+        assert "updated_at" in source and "INTERVAL" in source, (
+            "_auto_resume_interrupted doit filtrer par updated_at pour éviter "
+            "de relancer immédiatement une production qui vient de crasher"
+        )
+
+    def test_maj_etape_waiting_status_not_suffixed(self):
+        """maj_etape('waiting_script') doit mettre status='waiting_script', pas 'waiting_script_done'."""
+        import inspect
+        import db_models
+        source = inspect.getsource(db_models.ProductionRepo.maj_etape)
+        # Vérifier que les statuts waiting_* ne sont pas suffixés _done
+        assert "waiting_" in source, (
+            "maj_etape doit traiter spécialement les statuts waiting_*"
+        )
+        # Il ne doit pas y avoir de f"{etape}_done" appliqué aveuglément
+        assert 'startswith("waiting_")' in source or "startswith('waiting_')" in source, (
+            "maj_etape doit détecter les étapes waiting_* et NE PAS suffixer _done — "
+            "sinon status='waiting_script_done' qui échappe au filtre auto-resume"
+        )
+
+    def test_etape_unknown_falls_back_to_script_with_log(self):
+        """Si etape_depart est inconnu, log une erreur et reprend au script."""
+        import inspect
+        import main
+        source = inspect.getsource(main._pipeline_inner)
+        assert "etape_effective not in etapes" in source or "not in etapes" in source, (
+            "_pipeline_inner doit détecter les étapes inconnues et loguer une erreur"
+        )

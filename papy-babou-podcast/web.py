@@ -304,6 +304,7 @@ def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
                 "AND checkpoint_data IS NOT NULL "
                 "AND checkpoint_data != '{}' "
                 "AND checkpoint_data != 'null' "
+                "AND status NOT IN ('completed', 'failed') "
                 "ORDER BY updated_at DESC LIMIT 1",
                 (episode_id,),
             )
@@ -2316,6 +2317,7 @@ def _auto_resume_interrupted():
                        WHERE status NOT IN ('completed', 'failed',
                                             'waiting_script', 'waiting_montage')
                          AND started_at > NOW() - INTERVAL '2 hours'
+                         AND updated_at < NOW() - INTERVAL '2 minutes'
                        ORDER BY started_at DESC LIMIT 5""",
                 )
                 rows = cur.fetchall()

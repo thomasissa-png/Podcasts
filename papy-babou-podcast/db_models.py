@@ -405,7 +405,12 @@ class ProductionRepo:
         """
         with get_cursor() as cur:
             updates = ["etape_courante = %s", "status = %s"]
-            params = [etape, f"{etape}_done"]
+            # Les statuts "waiting_*" sont des statuts terminaux de workflow
+            # (attente de validation humaine) — NE PAS suffixer "_done".
+            if etape.startswith("waiting_"):
+                params = [etape, etape]
+            else:
+                params = [etape, f"{etape}_done"]
 
             if rapport:
                 updates.append("rapport_json = %s")
@@ -446,7 +451,7 @@ class ProductionRepo:
             cur.execute(
                 """UPDATE productions SET
                    status = 'failed',
-                   checkpoint_data = checkpoint_data || %s,
+                   checkpoint_data = COALESCE(checkpoint_data, '{}') || %s,
                    completed_at = NOW()
                    WHERE id = %s""",
                 (

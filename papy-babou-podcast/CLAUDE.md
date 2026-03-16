@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 571 tests (pytest)
+├── tests/                   # 577 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 571 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 577 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -1003,3 +1003,35 @@ CRITICAL bug causing `KeyError: 'titre'` on every auto-resume after redeployment
 - `_sync_checkpoint_to_db()` MUST store only the `data` dict, NEVER the full envelope — `sauvegarder_checkpoint()` in main.py already stores the `data` dict directly via `ProductionRepo.maj_etape(checkpoint_data=data)`
 - `_restore_checkpoint_from_db()` MUST handle both formats in DB: old envelope (detect via `"data" in cp_data and "etape" in cp_data`) and new data-only format
 - The two storage paths (`sauvegarder_checkpoint` → `maj_etape` and `_sync_checkpoint_to_db`) MUST store the same format
+
+## Infinite Auto-Resume Loop Fix (Session 16e)
+ROOT CAUSE of 12 consecutive failures: `maj_etape()` + `reprendre()` error handling.
+
+### ROOT CAUSE: `maj_etape()` generates wrong status for waiting states
+- `ProductionRepo.maj_etape()` unconditionally did `status = f"{etape}_done"`
+- Called with `etape="waiting_script"` → `status = "waiting_script_done"`
+- Auto-resume exclusion list had `waiting_script` but NOT `waiting_script_done`
+- Every redeploy: auto-resume picked up `"waiting_script_done"` → re-ran script → stopped at same point → next redeploy → repeat FOREVER
+- **Fix**: `maj_etape()` detects `etape.startswith("waiting_")` and sets `status = etape` (no `_done` suffix)
+
+### CRITICAL: `reprendre()` error handling
+- `reprendre()` had `data['titre']` OUTSIDE the try/except → KeyError crashed before the error handler
+- No marking of the production as `failed` in DB → auto-resume kept relaunching
+- **Fix**: Entire body wrapped in try/except, `data.get('titre', '?')` for display, `_mark_failed_in_db()` in except block
+
+### Anti-loop safeguards
+- `_auto_resume_interrupted()` now filters `updated_at < NOW() - 2 minutes` — won't re-resume a production that just crashed
+- `_etape_mapping` now covers ALL possible DB statuses including `interrupted`, `erreur`, `started`
+- Unknown `etape_depart` values now log an explicit error and fall back to `"script"` (was silently defaulting)
+- `_restore_checkpoint_from_db` now filters `status NOT IN ('completed', 'failed')` — won't restore completed productions
+- `echouer()` uses `COALESCE(checkpoint_data, '{}')` for safe JSONB concat
+
+### When modifying db_models.py (Session 16e)
+- `maj_etape()` MUST check `etape.startswith("waiting_")` — waiting states are workflow terminal, NOT step completion
+- `echouer()` must use `COALESCE(checkpoint_data, '{}')` for NULL safety
+
+### When modifying main.py (Session 16e)
+- `reprendre()` entire body MUST be in try/except — any crash before pipeline() reaches the error handler
+- `_mark_failed_in_db()` MUST be called in the except block to prevent auto-resume loops
+- `SystemExit` must be re-raised (SIGTERM handler uses `sys.exit(0)`)
+- `_etape_mapping` must cover ALL possible DB statuses: `interrupted`, `erreur`, `started`, all `*_done`, all `waiting_*`
