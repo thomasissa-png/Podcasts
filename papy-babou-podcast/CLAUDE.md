@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 386 tests (pytest)
+├── tests/                   # 557 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 537 passed, 3 skipped (integration tests requiring ffmpeg), 3 pre-existing flaky (TestHistorique)
+**Expected**: 557 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -503,8 +503,10 @@ Clear visual separation between single-episode and season production workflows:
 - `STEREO_PAN`: antoine=-0.4, noemie=0.4, mamie_sonia=0.5 (was -0.3/0.3/0.2) — wider stereo image
 
 ## Deployment (Gunicorn)
-- `gunicorn.conf.py`: gthread workers (2 workers × 4 threads = 8 concurrent requests)
-- Timeout: 1800s (30min) because production subprocesses block the thread during `proc.communicate()`
+- `gunicorn.conf.py`: gthread workers (1 worker × 8 threads = 8 concurrent requests)
+- IMPORTANT: 1 worker only — `_jobs` dict is in-memory, multiple workers would lose job state
+- Timeout: 3900s (65min) — must be > `_TIMEOUT_PRODUIRE` (3600s) + margin
+- `graceful_timeout = 60` — gives SIGTERM handler time to save checkpoint
 - `post_fork` hook: resets PostgreSQL pool after fork (psycopg2 pool is not fork-safe)
 - `.replit` uses `gunicorn -c gunicorn.conf.py web:app` (not `python web.py`)
 - Env vars: `GUNICORN_WORKERS`, `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`, `GUNICORN_LOG_LEVEL`
@@ -769,3 +771,91 @@ Comprehensive 6-agent audit of the entire episode creation workflow. 14 fixes (2
 
 ### When modifying config.py (Session 15b)
 - `_voice_config_lock` must be acquired before modifying `VOICE_IDS`, `VOICE_SETTINGS`, or `STEREO_PAN`
+
+## Job Resilience & SIGTERM Survival (Session 16)
+Complete resilience system for surviving Replit autoscale SIGTERM + redeploy during long-running productions (18-30 min).
+
+### Architecture: 3-layer resilience
+
+**Layer 1 — SIGTERM Handler (main.py)**
+- `signal.signal(signal.SIGTERM, _sigterm_handler)` registered at `pipeline()` start
+- Pipeline context stored in `_production_local.pipeline_context` (thread-local), updated by `sauvegarder_checkpoint()` at every step
+- On SIGTERM: saves checkpoint (file + DB + Object Storage), marks production `status='interrupted'` in DB with 3 retries (0.5s intervals)
+- Uses `sys.exit(0)` — `SystemExit` is `BaseException`, not caught by `except Exception` in pipeline error handler
+
+**Layer 2 — Auto-Resume Thread (web.py)**
+- `_auto_resume_interrupted()` runs as daemon thread on server startup
+- Retries DB connection 4 times with exponential backoff (5s, 8s, 12s, 20s) — handles Neon cold start
+- Queries `WHERE status NOT IN ('completed', 'failed')` — catches ALL non-terminal statuses including `interrupted`, `started`, `*_done` (in case SIGTERM handler's DB update failed)
+- Restores checkpoint from DB → validates envelope structure → launches `reprendre --auto` with original `stop_after`
+- Corrupted checkpoint files detected and re-restored from DB
+
+**Layer 3 — Frontend Reconnection (dashboard.html)**
+- `_reconnectActiveJob()` retries `/api/running-jobs` 3 times with 3s intervals on page load
+- Discovers auto-resumed job (new job_id), updates sessionStorage, resumes polling
+- `/api/running-jobs` prioritizes in-memory jobs (source=memory) over DB jobs (source=db)
+- DB source excludes `'interrupted'` status (handled by auto-resume thread)
+
+### Network resilience (from earlier in this session)
+- `pollJob()` retries 404s up to 30 times (3s intervals) during network loss
+- `apiCallAsync()` saves job to sessionStorage BEFORE polling — survives page reload
+- `_clearActiveJob()` NOT called on network errors (keeps sessionStorage for reconnection)
+- Running job banner shown immediately on reconnect, before polling result
+
+### DB Pool Keepalive (database.py)
+- `_pool_keepalive_loop()` daemon thread pings DB every 2 minutes via `SELECT 1`
+- Prevents Neon from closing idle connections during long productions (~18 min)
+- `minconn=1` (was 2) — fewer idle connections to go stale
+- `connect_timeout=10` — faster failure detection on Neon cold start
+
+### Checkpoint System Fixes
+- `stop_after` now persisted in ALL checkpoint data dicts — auto-resume respects original workflow
+- `_restore_checkpoint_from_db()` reconstructs the full envelope `{episode_id, etape, timestamp, data}` from DB (DB stores only the inner `data` dict)
+- Uses `etape_courante` from production row + `checkpoint_data` for the data
+- Query uses `ORDER BY updated_at DESC` and filters out empty `checkpoint_data` to avoid reading a fresh empty row from `reprendre()` instead of the real checkpoint
+
+### SQL Column Fixes
+- Table `productions` has columns: `started_at`, `completed_at`, `updated_at` — NO `created_at`
+- Fixed 4 queries in web.py that referenced non-existent `created_at`: `_restore_checkpoint_from_db`, `_sync_rapport_to_db`, `_sync_checkpoint_to_db`, episode diagnostic
+- Tables `scripts`, `fichiers_audio`, `saisons`, etc. DO have `created_at` — those queries are correct
+
+### Status State Machine
+Production lifecycle statuses:
+- `'started'` — row created by `ProductionRepo.creer()` at pipeline start
+- `'{etape}_done'` — set by `ProductionRepo.maj_etape()` after each step (script_done, audio_done, sfx_done, montage_done, metadonnees_done)
+- `'interrupted'` — set by SIGTERM handler (may fail if DB is down → stays in `*_done`)
+- `'completed'` — set by `ProductionRepo.terminer()` at pipeline end
+- `'failed'` — set by `ProductionRepo.echouer()` on pipeline exception
+- `'waiting_script'` / `'waiting_montage'` — set when `--stop-after` is used
+
+### When modifying main.py (Session 16 patterns)
+- `_production_local.pipeline_context` must be set BEFORE registering SIGTERM handler
+- `sauvegarder_checkpoint()` automatically updates `pipeline_context['etape_courante']` and `pipeline_context['rapport']`
+- ALL `sauvegarder_checkpoint()` calls must include `stop_after` in the data dict
+- `signal.signal(signal.SIGTERM, ...)` wrapped in try/except ValueError (fails if not main thread)
+- `reprendre()` reads `stop_after` from checkpoint data if not specified on CLI: `effective_stop_after = stop_after or data.get("stop_after", "")`
+
+### When modifying web.py (Session 16 patterns)
+- `_auto_resume_interrupted()` catches ALL non-terminal statuses — never use `status IN ('interrupted', 'started')`, always use `status NOT IN ('completed', 'failed')`
+- `_restore_checkpoint_from_db()` must reconstruct checkpoint envelope with `episode_id`, `etape`, `timestamp`, `data` — `charger_checkpoint()` validates all 3 fields
+- DB queries on `productions` table: use `started_at` or `updated_at`, NEVER `created_at` (column doesn't exist)
+- `_persist_web_job_id()` runs in a parallel thread with retry loop (max 15 attempts, 1s intervals)
+- `/api/running-jobs` uses `memory_episodes` set to skip DB rows when an in-memory job already covers that episode
+
+### When modifying database.py (Session 16 additions)
+- `_pool_keepalive_loop()` daemon thread pings every 120s — do NOT remove or it will break long productions
+- `minconn=1` (not 2) — reduces idle connections that Neon might close
+- `connect_timeout=10` added for faster cold-start failure detection
+
+### When modifying dashboard.html (Session 16 patterns)
+- `_reconnectActiveJob()` must retry `/api/running-jobs` with delays — auto-resume thread needs time to start
+- `pollJob()` must NOT clear sessionStorage on network errors — only clear on definitive job completion/failure
+- `apiCallAsync()` must save to sessionStorage BEFORE calling `pollJob()` — survives page reload mid-poll
+
+### Tests (Session 16)
+- 7 new tests: TestSIGTERMHandler (3), TestStopAfterInCheckpoint (2), TestPipelineContextForSIGTERM (2)
+- Full suite: 557 passed, 3 skipped (ffmpeg), 0 failures
+
+### Git Workflow (Session 16)
+- Branch: `claude/audit-episode-workflow-pWYpg`
+- Push: `git push -u origin claude/audit-episode-workflow-pWYpg`
