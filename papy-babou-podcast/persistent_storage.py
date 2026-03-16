@@ -331,6 +331,67 @@ def restore_rapport(episode_id: str, dest_dir: Path) -> Path | None:
     return None
 
 
+PREFIX_SEGMENTS = "segments/"
+
+
+def upload_segments(episode_id: str, segments_dir: Path) -> int:
+    """Upload tous les segments audio d'un épisode vers Object Storage.
+
+    Parcourt {segments_dir}/{episode_id}/ et uploade chaque fichier MP3.
+
+    Args:
+        episode_id: Identifiant de l'épisode (ex: S01E01).
+        segments_dir: Répertoire racine des segments (config.SEGMENTS_DIR).
+
+    Returns:
+        Nombre de fichiers uploadés.
+    """
+    episode_dir = segments_dir / episode_id
+    if not episode_dir.is_dir():
+        return 0
+    count = 0
+    for mp3_file in episode_dir.glob("*.mp3"):
+        key = _storage_key(PREFIX_SEGMENTS, f"{episode_id}/{mp3_file.name}")
+        if upload_file(key, mp3_file):
+            count += 1
+    if count > 0:
+        logger.info("Segments uploadés pour %s : %d fichiers", episode_id, count)
+    return count
+
+
+def restore_segments(episode_id: str, segments_dir: Path) -> int:
+    """Restaure les segments audio d'un épisode depuis Object Storage.
+
+    Télécharge tous les fichiers segments/{episode_id}/*.mp3 vers
+    {segments_dir}/{episode_id}/.
+
+    Args:
+        episode_id: Identifiant de l'épisode.
+        segments_dir: Répertoire racine des segments (config.SEGMENTS_DIR).
+
+    Returns:
+        Nombre de fichiers restaurés.
+    """
+    prefix = _storage_key(PREFIX_SEGMENTS, f"{episode_id}/")
+    keys = list_files(prefix)
+    if not keys:
+        return 0
+    dest_dir = segments_dir / episode_id
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for key in keys:
+        filename = key.split("/")[-1]  # segments/S01E01/seg_001.mp3 → seg_001.mp3
+        dest = dest_dir / filename
+        if dest.exists():
+            count += 1
+            continue
+        if download_file(key, dest):
+            count += 1
+    if count > 0:
+        logger.info("Segments restaurés pour %s : %d fichiers", episode_id, count)
+    return count
+
+
 def upload_saison(numero: int, saison_path: Path) -> str | None:
     """Upload le plan de saison vers Object Storage.
 

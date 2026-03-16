@@ -2205,33 +2205,52 @@ def _pipeline_inner(
     chemin_valide = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
 
     # Si on reprend, charger le script existant et restaurer le score
-    if etape_idx > 0 and chemin_valide.exists():
+    if etape_idx > 0:
+        # Restaurer depuis Object Storage / DB si le fichier local est absent
+        # (cas fréquent après un redéploiement Replit qui remet le FS à zéro)
+        if not chemin_valide.exists():
+            _restored = False
+            # Tentative 1 : Object Storage
+            try:
+                import persistent_storage
+                if persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR):
+                    logger.info("Script validé restauré depuis Object Storage : %s", chemin_valide)
+                    _restored = True
+            except Exception as e:
+                logger.warning("Restauration Object Storage échouée : %s", e)
+            # Tentative 2 : DB (ScriptRepo)
+            if not _restored:
+                try:
+                    from db_models import ScriptRepo
+                    db_script = ScriptRepo.charger_valide(episode_id)
+                    if not db_script or not db_script.get("episode"):
+                        db_script = ScriptRepo.charger_derniere_version(episode_id)
+                    if db_script and db_script.get("episode"):
+                        chemin_valide.parent.mkdir(parents=True, exist_ok=True)
+                        with open(chemin_valide, "w", encoding="utf-8") as f:
+                            json.dump(db_script, f, ensure_ascii=False, indent=2)
+                        logger.info("Script validé restauré depuis la DB : %s", chemin_valide)
+                        _restored = True
+                except Exception as e:
+                    logger.warning("Restauration DB échouée : %s", e)
+            if not _restored:
+                raise FileNotFoundError(
+                    f"Reprise à l'étape {etape_depart} impossible : "
+                    f"le script validé {chemin_valide} est introuvable "
+                    f"(ni local, ni Object Storage, ni DB)."
+                )
+        # Charger le script
         try:
             with open(chemin_valide, "r", encoding="utf-8") as f:
                 script = json.load(f)
         except (json.JSONDecodeError, OSError) as e:
-            # Tenter la restauration depuis Object Storage si le fichier local est corrompu
-            try:
-                import persistent_storage
-                if persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR):
-                    with open(chemin_valide, "r", encoding="utf-8") as f:
-                        script = json.load(f)
-                    logger.info("Script restauré depuis Object Storage après corruption locale")
-                else:
-                    raise
-            except Exception:
-                raise ValueError(
-                    f"Script validé corrompu ({chemin_valide}) : {e}. "
-                    f"Supprimez-le et relancez la production."
-                ) from e
+            raise ValueError(
+                f"Script validé corrompu ({chemin_valide}) : {e}. "
+                f"Supprimez-le et relancez la production."
+            ) from e
         if checkpoint_data:
             score = checkpoint_data.get("etapes", {}).get("script", {}).get("score_review", 0)
-        logger.info("Script chargé depuis le checkpoint : %s", chemin_valide)
-    elif etape_idx > 0:
-        raise FileNotFoundError(
-            f"Reprise à l'étape {etape_depart} impossible : "
-            f"le script validé {chemin_valide} est introuvable."
-        )
+        logger.info("Script chargé pour reprise : %s", chemin_valide)
 
     # ── Étape 1-2 : Scripteur + Reviewer ─────────────────────────────────────
 
@@ -2605,6 +2624,15 @@ def _pipeline_inner(
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement audio : %s", e)
 
+            # Upload segments voix vers Object Storage (survie au redéploiement)
+            try:
+                import persistent_storage
+                nb_uploaded = persistent_storage.upload_segments(episode_id, config.SEGMENTS_DIR)
+                if nb_uploaded > 0:
+                    logger.info("Segments voix uploadés : %d fichiers", nb_uploaded)
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour segments voix : %s", e)
+
             _log_step_duration("Audio TTS")
 
             sauvegarder_checkpoint(episode_id, "sfx", {
@@ -2668,6 +2696,16 @@ def _pipeline_inner(
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement SFX : %s", e)
 
+        # Upload segments SFX vers Object Storage (les SFX sont dans le même dossier)
+        if not dry_run and nb_sfx > 0:
+            try:
+                import persistent_storage
+                nb_uploaded = persistent_storage.upload_segments(episode_id, config.SEGMENTS_DIR)
+                if nb_uploaded > 0:
+                    logger.info("Segments (voix+SFX) uploadés : %d fichiers", nb_uploaded)
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour segments SFX : %s", e)
+
         _log_step_duration("SFX Bruitages")
 
         # Checkpoint après SFX (manquant auparavant — perte de données SFX sur crash)
@@ -2683,6 +2721,22 @@ def _pipeline_inner(
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
 
     if etape_idx <= 4:
+        # Restaurer les segments audio depuis Object Storage si absents
+        # (cas fréquent après un redéploiement Replit qui remet le FS à zéro)
+        if not dry_run and etape_idx >= 2:
+            segments_episode_dir = config.SEGMENTS_DIR / episode_id
+            if not segments_episode_dir.exists() or not any(segments_episode_dir.glob("*.mp3")):
+                try:
+                    import persistent_storage
+                    nb_restored = persistent_storage.restore_segments(episode_id, config.SEGMENTS_DIR)
+                    if nb_restored > 0:
+                        logger.info("Segments restaurés depuis Object Storage avant montage : %d fichiers", nb_restored)
+                        console.print(f"  [cyan]Segments restaurés depuis Object Storage : {nb_restored} fichiers[/cyan]")
+                    else:
+                        logger.warning("Aucun segment trouvé dans Object Storage pour %s", episode_id)
+                except Exception as e:
+                    logger.warning("Restauration segments depuis Object Storage échouée : %s", e)
+
         if dry_run:
             console.print(f"\n{Typo.etape(5, 8, 'Montage')}  {Typo.attention('SAUTÉ — dry-run')}")
             rapport["etapes"]["montage"] = {"status": "skipped (dry-run)"}
