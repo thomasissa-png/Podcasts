@@ -280,6 +280,10 @@ def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
     Après un redéploiement Replit, les fichiers checkpoint sont perdus.
     Cette fonction les restaure depuis le champ checkpoint_data de la
     production la plus récente en DB.
+
+    IMPORTANT : la DB stocke uniquement le dict 'data' du checkpoint,
+    pas l'enveloppe complète {episode_id, etape, timestamp, data}.
+    On reconstruit l'enveloppe ici avec etape_courante de la production.
     """
     try:
         from database import DATABASE_URL, get_cursor
@@ -288,7 +292,7 @@ def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
         import json as _json
         with get_cursor(commit=False) as cur:
             cur.execute(
-                "SELECT checkpoint_data FROM productions "
+                "SELECT checkpoint_data, etape_courante FROM productions "
                 "WHERE episode_id = %s AND checkpoint_data IS NOT NULL "
                 "AND checkpoint_data != '{}' "
                 "ORDER BY started_at DESC LIMIT 1",
@@ -297,11 +301,22 @@ def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
             row = cur.fetchone()
         if row and row["checkpoint_data"]:
             cp_data = row["checkpoint_data"]
+            etape = row["etape_courante"] or "script"
+
+            # Reconstruire l'enveloppe attendue par charger_checkpoint()
+            # Format : {"episode_id": ..., "etape": ..., "timestamp": ..., "data": {...}}
+            checkpoint_envelope = {
+                "episode_id": episode_id,
+                "etape": etape,
+                "timestamp": datetime.now().isoformat(),
+                "data": cp_data,
+            }
+
             # S'assurer que le répertoire existe
             checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
             with open(checkpoint_path, "w", encoding="utf-8") as f:
-                _json.dump(cp_data, f, ensure_ascii=False, indent=2)
-            logger.info("Checkpoint %s restauré depuis la DB", episode_id)
+                _json.dump(checkpoint_envelope, f, ensure_ascii=False, indent=2)
+            logger.info("Checkpoint %s restauré depuis la DB (étape: %s)", episode_id, etape)
 
             # Restaurer aussi le script validé si absent
             script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
