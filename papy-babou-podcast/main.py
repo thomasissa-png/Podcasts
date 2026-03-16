@@ -16,6 +16,7 @@ Usage:
 import json
 import logging
 import os
+import signal
 import sys
 import tempfile
 import threading
@@ -373,6 +374,62 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
 _production_local = threading.local()
 
 
+# ── Gestionnaire SIGTERM (redéploiement Replit) ────────────────────────────────
+
+def _sigterm_handler(signum, frame):
+    """Sauvegarde l'état du pipeline avant arrêt forcé (SIGTERM de Replit autoscale).
+
+    Quand Replit redéploie, il envoie SIGTERM au process gunicorn, qui le propage
+    aux subprocesses (main.py). Ce handler :
+    1. Sauvegarde le checkpoint avec l'état courant
+    2. Marque la production comme 'interrupted' en DB (distinct de 'failed')
+    3. Sort proprement pour que le serveur puisse reprendre au redémarrage
+    """
+    pipeline_ctx = getattr(_production_local, 'pipeline_context', None)
+    pid = getattr(_production_local, 'production_id', None)
+
+    if pipeline_ctx:
+        episode_id = pipeline_ctx.get('episode_id', 'unknown')
+        rapport = pipeline_ctx.get('rapport', {})
+        logger.warning(
+            "SIGTERM reçu — sauvegarde checkpoint d'interruption pour %s (étape: %s)",
+            episode_id, pipeline_ctx.get('etape_courante', '?'),
+        )
+        try:
+            sauvegarder_checkpoint(episode_id, pipeline_ctx.get('etape_courante', 'interrupted'), {
+                "episode_id": episode_id,
+                "titre": pipeline_ctx.get("titre", ""),
+                "resume": pipeline_ctx.get("resume", ""),
+                "saison": pipeline_ctx.get("saison", 1),
+                "numero": pipeline_ctx.get("numero", 1),
+                "morale": pipeline_ctx.get("morale", ""),
+                "type_episode": pipeline_ctx.get("type_episode", "standard"),
+                "dry_run": pipeline_ctx.get("dry_run", False),
+                "rapport": rapport,
+                "pubdate_offset_seconds": pipeline_ctx.get("pubdate_offset_seconds", 0),
+                "stop_after": pipeline_ctx.get("stop_after", ""),
+            })
+        except Exception as e:
+            logger.error("Impossible de sauvegarder le checkpoint SIGTERM : %s", e)
+
+    # Marquer la production comme 'interrupted' en DB
+    if _use_db() and pid:
+        try:
+            from db_models import get_cursor
+            with get_cursor() as cur:
+                cur.execute(
+                    """UPDATE productions SET status = 'interrupted', updated_at = NOW()
+                       WHERE id = %s AND status NOT IN ('completed', 'failed')""",
+                    (pid,),
+                )
+            logger.info("Production #%d marquée 'interrupted' en DB", pid)
+        except Exception as e:
+            logger.error("Impossible de marquer la production comme interrupted : %s", e)
+
+    # Sortie propre — SystemExit n'est pas capturé par except Exception
+    sys.exit(0)
+
+
 def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
     """Sauvegarde un checkpoint pour permettre la reprise sur échec.
 
@@ -388,6 +445,13 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
         Chemin du fichier checkpoint.
     """
     _pid = getattr(_production_local, 'production_id', None)
+
+    # Mettre à jour le contexte SIGTERM avec l'étape courante et le rapport
+    ctx = getattr(_production_local, 'pipeline_context', None)
+    if ctx:
+        ctx['etape_courante'] = etape
+        if 'rapport' in data:
+            ctx['rapport'] = data['rapport']
 
     # Sauvegarder en DB si disponible
     if _use_db() and _pid:
@@ -1846,6 +1910,21 @@ def pipeline(
         "etapes": {},
     }
 
+    # Enregistrer le contexte du pipeline pour le handler SIGTERM
+    _production_local.pipeline_context = {
+        "episode_id": episode_id, "titre": titre, "resume": resume,
+        "saison": saison, "numero": numero, "morale": morale,
+        "type_episode": type_episode, "dry_run": dry_run,
+        "rapport": rapport, "etape_courante": etape_depart,
+        "pubdate_offset_seconds": pubdate_offset_seconds,
+        "stop_after": stop_after,
+    }
+    # Installer le handler SIGTERM (uniquement depuis le thread principal)
+    try:
+        signal.signal(signal.SIGTERM, _sigterm_handler)
+    except ValueError:
+        pass  # Pas le thread principal — handler déjà installé ou non supporté
+
     # Créer une production en DB si disponible
     if _use_db():
         try:
@@ -1918,6 +1997,7 @@ def pipeline(
                 "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
+                "stop_after": stop_after,
             })
         except Exception:
             logger.debug("Impossible de sauvegarder le checkpoint d'erreur")
@@ -2323,6 +2403,7 @@ def _pipeline_inner(
             "dry_run": dry_run, "rapport": rapport,
             "chemin_script_valide": str(chemin_valide),
             "pubdate_offset_seconds": pubdate_offset_seconds,
+            "stop_after": stop_after,
         })
 
         # ── Validation humaine : script ──────────────────────────────────────
@@ -2451,6 +2532,7 @@ def _pipeline_inner(
                 "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
+                "stop_after": stop_after,
             })
 
     # ── Étape 4 : Bruitages (SFX) ─────────────────────────────────────────────
@@ -2514,6 +2596,7 @@ def _pipeline_inner(
             "type_episode": type_episode,
             "dry_run": dry_run, "rapport": rapport,
             "pubdate_offset_seconds": pubdate_offset_seconds,
+            "stop_after": stop_after,
         })
 
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
@@ -2585,6 +2668,7 @@ def _pipeline_inner(
                 "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
+                "stop_after": stop_after,
             })
 
     # ── Validation humaine : montage ─────────────────────────────────────────
@@ -2661,6 +2745,7 @@ def _pipeline_inner(
                 "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
+                "stop_after": stop_after,
             })
         else:
             logger.warning(
@@ -3433,10 +3518,15 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
     data = cp["data"]
     etape = cp["etape"]
 
+    # Utiliser le stop_after du checkpoint si pas spécifié en CLI
+    # (reprise automatique après interruption SIGTERM)
+    effective_stop_after = stop_after or data.get("stop_after", "")
+
     console.print(Panel(
         f"[bold]Reprise depuis le checkpoint[/bold]\n"
         f"Episode : {data['episode_id']} — {data['titre']}\n"
-        f"Etape de reprise : {etape}",
+        f"Etape de reprise : {etape}"
+        + (f"\nArrêt après : {effective_stop_after}" if effective_stop_after else ""),
         title="Reprise de production",
         border_style="yellow",
     ))
@@ -3454,7 +3544,7 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
             checkpoint_data=data.get("rapport"),
             type_episode=data.get("type_episode", "standard"),
             no_publish=no_publish,
-            stop_after=stop_after,
+            stop_after=effective_stop_after,
             pubdate_offset_seconds=data.get("pubdate_offset_seconds", 0),
         )
     except ProductionAbandonnee as e:

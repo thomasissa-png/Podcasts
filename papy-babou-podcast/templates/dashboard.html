@@ -4247,27 +4247,43 @@ async function _reconnectActiveJob() {
     /* 1. Vérifier sessionStorage */
     var saved = _getActiveJob();
 
-    /* 2. Vérifier aussi le serveur pour les jobs en cours */
-    try {
-        var resp = await fetch('/api/running-jobs');
-        if (resp.ok) {
-            var data = await resp.json();
-            if (data.jobs && data.jobs.length > 0) {
-                /* Utiliser le job du serveur si aucun en sessionStorage,
-                   ou si le sessionStorage a un job obsolète */
-                var serverJob = data.jobs[0];
-                if (!saved || saved.job_id !== serverJob.job_id) {
-                    saved = {
-                        job_id: serverJob.job_id,
-                        episode_id: serverJob.episode_id,
-                        url: null,
-                        started_at: Date.now()
-                    };
-                    _saveActiveJob(saved.job_id, saved.episode_id, null);
+    /* 2. Vérifier le serveur pour les jobs en cours.
+       Après un redéploiement Replit, le serveur relance automatiquement
+       les productions interrompues (thread auto-resume, ~5s après démarrage).
+       On fait jusqu'à 3 tentatives espacées de 3s pour laisser le temps
+       au thread de reprendre le job. */
+    var serverJob = null;
+    for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+            var resp = await fetch('/api/running-jobs');
+            if (resp.ok) {
+                var data = await resp.json();
+                if (data.jobs && data.jobs.length > 0) {
+                    serverJob = data.jobs[0];
+                    break;
                 }
             }
+        } catch(e) { /* serveur pas joignable */ }
+        /* Si on a un job en sessionStorage et que le serveur n'en a pas encore,
+           attendre un peu (le thread auto-resume peut être en train de démarrer) */
+        if (saved && attempt < 2) {
+            await new Promise(r => setTimeout(r, 3000));
+        } else {
+            break;
         }
-    } catch(e) { /* serveur pas joignable, on utilise sessionStorage seul */ }
+    }
+
+    if (serverJob) {
+        if (!saved || saved.job_id !== serverJob.job_id) {
+            saved = {
+                job_id: serverJob.job_id,
+                episode_id: serverJob.episode_id,
+                url: null,
+                started_at: Date.now()
+            };
+            _saveActiveJob(saved.job_id, saved.episode_id, null);
+        }
+    }
 
     if (!saved) return;
 

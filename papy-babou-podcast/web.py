@@ -543,41 +543,52 @@ def api_running_jobs():
     """Liste les jobs en cours — permet au navigateur de se reconnecter après perte réseau.
 
     Vérifie deux sources :
-    1. Le dict _jobs en mémoire (jobs du process courant)
+    1. Le dict _jobs en mémoire (jobs du process courant — prioritaire)
     2. La table productions en DB (jobs qui ont survécu à un redéploiement)
+
+    Les productions 'interrupted' ne sont PAS listées ici — elles sont
+    reprises automatiquement par le thread _auto_resume_interrupted au démarrage.
+    Une fois reprises, elles apparaissent comme jobs en mémoire (source 1).
     """
     running = []
+    memory_episodes = set()
 
-    # Source 1 : jobs en mémoire
+    # Source 1 : jobs en mémoire (prioritaires — ce sont les vrais jobs actifs)
     with _jobs_lock:
         for jid, job in _jobs.items():
             if job["status"] == "running":
+                ep_id = job.get("episode_id")
                 running.append({
                     "job_id": jid,
-                    "episode_id": job.get("episode_id"),
+                    "episode_id": ep_id,
                     "source": "memory",
                 })
+                if ep_id:
+                    memory_episodes.add(ep_id)
 
-    # Source 2 : productions en DB avec web_job_id non-null et non-terminées
+    # Source 2 : productions en DB (fallback pour les jobs non encore repris)
     if _DB_AVAILABLE:
         try:
             from db_models import get_cursor
             with get_cursor(commit=False) as cur:
                 cur.execute(
-                    """SELECT web_job_id, episode_id, etape_courante
+                    """SELECT web_job_id, episode_id, etape_courante, status
                        FROM productions
                        WHERE web_job_id IS NOT NULL
-                         AND status NOT IN ('completed', 'failed')
+                         AND status NOT IN ('completed', 'failed', 'interrupted')
                          AND started_at > NOW() - INTERVAL '2 hours'
                        ORDER BY started_at DESC LIMIT 10""",
                 )
                 for row in cur.fetchall():
+                    ep_id = row["episode_id"]
                     jid = row["web_job_id"]
-                    # Ne pas dupliquer si déjà trouvé en mémoire
+                    # Ne pas dupliquer si un job en mémoire couvre déjà cet épisode
+                    if ep_id in memory_episodes:
+                        continue
                     if not any(r["job_id"] == jid for r in running):
                         running.append({
                             "job_id": jid,
-                            "episode_id": row["episode_id"],
+                            "episode_id": ep_id,
                             "etape": row["etape_courante"],
                             "source": "db",
                         })
@@ -2216,6 +2227,96 @@ def api_batch():
 # Important : cette initialisation doit se faire au niveau module pour que
 # gunicorn/Replit l'execute aussi (pas seulement __main__).
 _init_db_if_available()
+
+
+# ── Reprise automatique après redéploiement (SIGTERM) ─────────────────────────
+
+def _auto_resume_interrupted():
+    """Reprend automatiquement les productions interrompues par un SIGTERM.
+
+    Après un redéploiement Replit, les productions en cours sont tuées.
+    Le handler SIGTERM dans main.py les marque 'interrupted' en DB.
+    Ce thread les détecte au redémarrage et les relance automatiquement.
+    """
+    # Attendre que la DB soit prête (Neon scale-to-zero peut prendre 2-3s)
+    time.sleep(5)
+
+    if not _DB_AVAILABLE:
+        return
+
+    try:
+        from db_models import get_cursor
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                """SELECT episode_id, etape_courante, checkpoint_data, status
+                   FROM productions
+                   WHERE status IN ('interrupted', 'started')
+                     AND status NOT IN ('completed', 'failed')
+                     AND started_at > NOW() - INTERVAL '2 hours'
+                   ORDER BY started_at DESC LIMIT 5""",
+            )
+            rows = cur.fetchall()
+
+        if not rows:
+            logger.debug("Aucune production interrompue à reprendre")
+            return
+
+        for row in rows:
+            episode_id = row["episode_id"]
+            status = row["status"]
+
+            # Ne reprendre que les productions vraiment interrompues
+            # (pas celles en 'started' qui sont peut-être juste lentes)
+            if status == "started":
+                # Vérifier qu'aucun job n'est déjà en cours en mémoire
+                with _jobs_lock:
+                    already_running = any(
+                        j.get("episode_id") == episode_id and j["status"] == "running"
+                        for j in _jobs.values()
+                    )
+                if already_running:
+                    continue
+
+            # Restaurer le checkpoint depuis la DB
+            checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+            if not checkpoint_path.exists():
+                _restore_checkpoint_from_db(episode_id, checkpoint_path)
+            if not checkpoint_path.exists():
+                logger.warning("Checkpoint introuvable pour %s — impossible de reprendre", episode_id)
+                continue
+
+            # Lire le stop_after du checkpoint pour respecter le workflow original
+            try:
+                import json as _json
+                with open(checkpoint_path, "r", encoding="utf-8") as f:
+                    cp = _json.load(f)
+                stop_after = cp.get("data", {}).get("stop_after", "")
+            except Exception:
+                stop_after = ""
+
+            # Construire la commande de reprise
+            cmd = ["reprendre", "-c", str(checkpoint_path), "--auto"]
+            if stop_after:
+                cmd.extend(["--stop-after", stop_after])
+
+            try:
+                job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+                logger.info(
+                    "Auto-reprise de %s (status=%s, étape=%s) → job %s",
+                    episode_id, status, row["etape_courante"], job_id,
+                )
+            except ValueError as e:
+                logger.debug("Auto-reprise ignorée pour %s : %s", episode_id, e)
+            except Exception as e:
+                logger.warning("Erreur auto-reprise pour %s : %s", episode_id, e)
+
+    except Exception as e:
+        logger.warning("Auto-resume thread échoué : %s", e)
+
+
+# Lancer la reprise automatique dans un thread daemon
+threading.Thread(target=_auto_resume_interrupted, daemon=True, name="auto-resume").start()
+
 
 # ── Lancement ────────────────────────────────────────────────────────────────
 

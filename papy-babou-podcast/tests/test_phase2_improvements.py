@@ -19,6 +19,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import config
+import main
 from agents.publisher import Publisher
 from agents.reviewer import Reviewer
 from agents.planificateur import Planificateur
@@ -1030,3 +1031,219 @@ class TestSauvegarderPlanComplet:
 
         # La sauvegarde JSON doit toujours se faire
         mock_planificateur.sauvegarder.assert_called_once()
+
+
+# ── Tests SIGTERM handler et auto-resume ────────────────────────────────────
+
+
+class TestSIGTERMHandler:
+    """Tests pour le handler SIGTERM qui sauvegarde l'état avant arrêt."""
+
+    def test_sigterm_handler_saves_checkpoint(self, tmp_path, monkeypatch):
+        """Le handler SIGTERM doit sauvegarder un checkpoint avec l'état courant."""
+        monkeypatch.setattr(config, "CHECKPOINTS_DIR", tmp_path)
+
+        # Simuler le contexte du pipeline
+        main._production_local.pipeline_context = {
+            "episode_id": "S01E03",
+            "titre": "Le test SIGTERM",
+            "resume": "Un résumé",
+            "saison": 1,
+            "numero": 3,
+            "morale": "La patience",
+            "type_episode": "standard",
+            "dry_run": False,
+            "rapport": {"etapes": {"script": {"score": 8.5}}},
+            "etape_courante": "audio",
+            "pubdate_offset_seconds": 0,
+            "stop_after": "montage",
+        }
+        main._production_local.production_id = None
+
+        # Appeler le handler directement (il appelle sys.exit(0))
+        with pytest.raises(SystemExit) as exc_info:
+            main._sigterm_handler(15, None)  # 15 = SIGTERM
+
+        assert exc_info.value.code == 0
+
+        # Vérifier que le checkpoint a été sauvegardé
+        checkpoint_path = tmp_path / "S01E03_checkpoint.json"
+        assert checkpoint_path.exists()
+        cp = json.loads(checkpoint_path.read_text())
+        assert cp["episode_id"] == "S01E03"
+        assert cp["etape"] == "audio"
+        assert cp["data"]["stop_after"] == "montage"
+        assert cp["data"]["rapport"]["etapes"]["script"]["score"] == 8.5
+
+    def test_sigterm_handler_marks_db_interrupted(self, tmp_path, monkeypatch):
+        """Le handler SIGTERM doit marquer la production comme 'interrupted' en DB."""
+        monkeypatch.setattr(config, "CHECKPOINTS_DIR", tmp_path)
+
+        main._production_local.pipeline_context = {
+            "episode_id": "S01E04",
+            "titre": "Test",
+            "resume": "",
+            "saison": 1,
+            "numero": 4,
+            "morale": "",
+            "type_episode": "standard",
+            "dry_run": False,
+            "rapport": {},
+            "etape_courante": "sfx",
+            "pubdate_offset_seconds": 0,
+            "stop_after": "",
+        }
+        main._production_local.production_id = 42
+
+        # Mock DB
+        mock_cursor = MagicMock()
+        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_cursor.__exit__ = MagicMock(return_value=False)
+        monkeypatch.setattr(main, "_use_db", lambda: True)
+
+        with patch("db_models.get_cursor", return_value=mock_cursor):
+            with pytest.raises(SystemExit):
+                main._sigterm_handler(15, None)
+
+        # Vérifier que l'UPDATE a été appelé avec status='interrupted'
+        mock_cursor.execute.assert_called()
+        sql_call = mock_cursor.execute.call_args[0][0]
+        assert "interrupted" in sql_call
+
+    def test_sigterm_handler_no_context(self):
+        """Le handler SIGTERM ne doit pas crasher si aucun pipeline n'est actif."""
+        main._production_local.pipeline_context = None
+        main._production_local.production_id = None
+
+        with pytest.raises(SystemExit) as exc_info:
+            main._sigterm_handler(15, None)
+
+        assert exc_info.value.code == 0
+
+
+class TestStopAfterInCheckpoint:
+    """Tests pour la persistance du stop_after dans les checkpoints."""
+
+    def test_reprendre_uses_checkpoint_stop_after(self, tmp_path, monkeypatch):
+        """reprendre() doit utiliser le stop_after du checkpoint si pas de CLI."""
+        checkpoint_data = {
+            "episode_id": "S01E05",
+            "etape": "audio",
+            "timestamp": "2026-03-16T10:00:00",
+            "data": {
+                "episode_id": "S01E05",
+                "titre": "Test stop_after",
+                "saison": 1,
+                "numero": 5,
+                "stop_after": "montage",
+                "rapport": {},
+            },
+        }
+        cp_path = tmp_path / "checkpoint.json"
+        cp_path.write_text(json.dumps(checkpoint_data))
+
+        # Mock pipeline pour capturer les arguments
+        captured = {}
+
+        def mock_pipeline(**kwargs):
+            captured.update(kwargs)
+            return {}
+
+        monkeypatch.setattr(main, "pipeline", mock_pipeline)
+        monkeypatch.setattr(main, "console", MagicMock())
+
+        # Invoquer reprendre SANS stop_after CLI (= "")
+        from click.testing import CliRunner
+        runner = CliRunner()
+        result = runner.invoke(main.cli, [
+            "reprendre", "-c", str(cp_path), "--auto",
+        ])
+
+        # Le pipeline doit avoir reçu stop_after="montage" du checkpoint
+        assert captured.get("stop_after") == "montage"
+
+    def test_cli_stop_after_overrides_checkpoint(self, tmp_path, monkeypatch):
+        """Le stop_after CLI doit prendre le dessus sur celui du checkpoint."""
+        checkpoint_data = {
+            "episode_id": "S01E06",
+            "etape": "audio",
+            "timestamp": "2026-03-16T10:00:00",
+            "data": {
+                "episode_id": "S01E06",
+                "titre": "Test override",
+                "saison": 1,
+                "numero": 6,
+                "stop_after": "montage",
+                "rapport": {},
+            },
+        }
+        cp_path = tmp_path / "checkpoint.json"
+        cp_path.write_text(json.dumps(checkpoint_data))
+
+        captured = {}
+
+        def mock_pipeline(**kwargs):
+            captured.update(kwargs)
+            return {}
+
+        monkeypatch.setattr(main, "pipeline", mock_pipeline)
+        monkeypatch.setattr(main, "console", MagicMock())
+
+        from click.testing import CliRunner
+        runner = CliRunner()
+        result = runner.invoke(main.cli, [
+            "reprendre", "-c", str(cp_path), "--auto", "--stop-after", "script",
+        ])
+
+        # Le CLI stop_after "script" doit prendre le dessus
+        assert captured.get("stop_after") == "script"
+
+
+class TestPipelineContextForSIGTERM:
+    """Tests pour la mise à jour du contexte pipeline dans sauvegarder_checkpoint."""
+
+    def test_checkpoint_updates_pipeline_context(self, tmp_path, monkeypatch):
+        """sauvegarder_checkpoint doit mettre à jour le contexte SIGTERM."""
+        monkeypatch.setattr(config, "CHECKPOINTS_DIR", tmp_path)
+        main._production_local.production_id = None
+        main._production_local.pipeline_context = {
+            "etape_courante": "script",
+            "rapport": {},
+        }
+
+        main.sauvegarder_checkpoint("S01E01", "audio", {
+            "rapport": {"etapes": {"script": {"done": True}}},
+        })
+
+        # Le contexte SIGTERM doit être mis à jour
+        ctx = main._production_local.pipeline_context
+        assert ctx["etape_courante"] == "audio"
+        assert ctx["rapport"]["etapes"]["script"]["done"] is True
+
+    def test_signal_handler_registered_in_pipeline(self, monkeypatch):
+        """pipeline() doit enregistrer le handler SIGTERM."""
+        import signal
+
+        handlers_set = []
+
+        def mock_signal(signum, handler):
+            handlers_set.append((signum, handler))
+            return None
+
+        monkeypatch.setattr(signal, "signal", mock_signal)
+        monkeypatch.setattr(main, "_use_db", lambda: False)
+
+        # Le pipeline va crasher rapidement (pas de vrai scripteur),
+        # mais on vérifie que le signal est enregistré avant le crash
+        try:
+            main.pipeline(
+                titre="Test", resume="Résumé", saison=1, numero=1,
+                dry_run=True, auto=True,
+            )
+        except Exception:
+            pass
+
+        # Vérifier que SIGTERM a été enregistré
+        sigterm_handlers = [h for s, h in handlers_set if s == signal.SIGTERM]
+        assert len(sigterm_handlers) >= 1
+        assert sigterm_handlers[0] == main._sigterm_handler
