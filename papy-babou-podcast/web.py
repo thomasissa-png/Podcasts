@@ -419,10 +419,22 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
         if proc.returncode == -9 or proc.returncode == -15:
             return {"error": "Production annulee par l'utilisateur.", "status": "cancelled"}
 
+        # ── Log subprocess output dans les deployment logs ──────────────
+        # Sans cela, stdout/stderr sont capturés par PIPE et invisibles
+        # dans les logs de Replit/gunicorn.
+        if stderr:
+            for line in stderr.strip().splitlines()[-50:]:
+                logger.warning("[subprocess %s] %s", job_id or "?", line)
+        if proc.returncode != 0:
+            logger.error(
+                "[subprocess %s] Exited with code %d. stderr tail:\n%s",
+                job_id or "?", proc.returncode, stderr[-2000:] if stderr else "(vide)",
+            )
+
         result = {
             "status": "ok" if proc.returncode == 0 else "error",
             "stdout": stdout[-4000:] if stdout else "",
-            "stderr": stderr[-1000:] if stderr else "",
+            "stderr": stderr[-2000:] if stderr else "",
         }
 
         if proc.returncode != 0 and stderr:

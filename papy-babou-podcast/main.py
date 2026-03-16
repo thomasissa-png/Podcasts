@@ -1988,13 +1988,22 @@ def pipeline(
                 corrections_stale.unlink()
         except OSError:
             pass
-        # Sauvegarder le rapport partiel
+        # Sauvegarder le rapport partiel dans le fichier NORMAL (pas _echec)
+        # pour que charger_rapport() le trouve et que le web dashboard affiche
+        # les résultats partiels (ex: script OK, audio OK, montage échoué).
         rapport["erreur"] = str(e)
+        rapport["status"] = "failed"
         rapport["fin"] = datetime.now().isoformat()
-        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport_echec.json"
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
         with fichier_lock(chemin_rapport):
             with open(chemin_rapport, "w", encoding="utf-8") as f:
                 json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+        # Upload rapport vers Object Storage (survit aux redéploiements)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e_os:
+            logger.warning("Object Storage indisponible pour rapport échec : %s", e_os)
         # Sauvegarder un checkpoint d'erreur pour permettre la reprise
         try:
             sauvegarder_checkpoint(episode_id, "erreur", {
@@ -2625,7 +2634,37 @@ def _pipeline_inner(
         else:
             console.print(f"\n{Typo.etape(5, 8, 'Montage')}")
             monteur = Monteur()
-            resultat_montage = monteur.assembler(script)
+            try:
+                resultat_montage = monteur.assembler(script)
+            except Exception as e:
+                # ── Montage échoué : sauvegarder l'erreur dans le rapport ──
+                logger.error("Montage échoué pour %s : %s", episode_id, e, exc_info=True)
+                rapport["etapes"]["montage"] = {
+                    "status": "error",
+                    "erreur": str(e),
+                    "erreur_type": type(e).__name__,
+                }
+                # Sauvegarder le rapport partiel (même en cas d'erreur)
+                chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+                rapport["erreur_montage"] = str(e)
+                with fichier_lock(chemin_rapport):
+                    with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                        json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+                try:
+                    import persistent_storage
+                    persistent_storage.upload_rapport(episode_id, chemin_rapport)
+                except Exception as e_os:
+                    logger.warning("Object Storage indisponible pour rapport montage échec : %s", e_os)
+                # Sauvegarder checkpoint pour reprise
+                sauvegarder_checkpoint(episode_id, "montage", {
+                    "episode_id": episode_id, "titre": titre, "resume": resume,
+                    "saison": saison, "numero": numero, "morale": morale,
+                    "type_episode": type_episode,
+                    "dry_run": dry_run, "rapport": rapport,
+                    "pubdate_offset_seconds": pubdate_offset_seconds,
+                    "stop_after": stop_after,
+                })
+                raise  # Re-raise pour que le outer handler marque failed en DB
 
             duree_secondes = resultat_montage["duree_secondes"]
             taille_bytes = resultat_montage["taille_bytes"]
