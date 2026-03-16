@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 557 tests (pytest)
+├── tests/                   # 561 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 557 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 561 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -859,3 +859,40 @@ Production lifecycle statuses:
 ### Git Workflow (Session 16)
 - Branch: `claude/audit-episode-workflow-pWYpg`
 - Push: `git push -u origin claude/audit-episode-workflow-pWYpg`
+
+## Production Result Visibility Fix (Session 16b)
+Root cause diagnosis for 9 consecutive production failures where 35-minute jobs produced no visible results.
+
+### CRITICAL fix
+- **`charger_rapport()` SQL column** (`dashboard_data.py:131`): Used `ORDER BY created_at DESC` on the `productions` table, but `productions` has `started_at` (not `created_at`). This caused EVERY DB rapport lookup to silently fail, falling back to local JSON files. After Replit redeploy (which wipes local files), rapport data became permanently invisible despite being correctly stored in DB by the pipeline.
+
+### HIGH fix
+- **`_persist_web_job_id` timeout** (`web.py`): `max_wait=15` was insufficient — `reprendre` subprocess needs 15-30s on Replit to start Python, import modules, load checkpoint, and call `ProductionRepo.creer()`. Increased to `max_wait=90` with progressive backoff (1s for first 30 attempts, 2s after).
+
+### MEDIUM fixes
+- **`stop_after` Object Storage upload**: Both `stop_after == "script"` and `stop_after == "montage"` blocks now upload rapport to Object Storage via `persistent_storage.upload_rapport()` — ensures rapport survives Replit redeploys even if DB is temporarily down.
+- **`stop_after` error logging**: Replaced bare `except Exception: pass` with `except Exception as e: logger.warning(...)` in DB update calls — errors no longer silently swallowed.
+
+### Why 9 failures occurred (post-mortem)
+1. Pipeline ran correctly for 35 minutes (TTS + montage)
+2. Audio saved to: local filesystem ✓, Object Storage ✓, DB (FichierAudioRepo) ✓
+3. Rapport saved to: local JSON ✓, DB (ProductionRepo.maj_etape) ✓
+4. Replit redeployed (common during 35-minute productions) → local files lost
+5. `/api/episode/S01E01` called `charger_rapport()` → DB query crashed on `created_at` → fell back to JSON → JSON gone → returned None
+6. Episode appeared as if production never happened
+7. `_persist_web_job_id` also failed (15s timeout too short) → browser couldn't reconnect to job after redeploy
+
+### When modifying dashboard_data.py (Session 16b)
+- `charger_rapport()` SQL MUST use `ORDER BY started_at DESC` (not `created_at`) — `productions` table has no `created_at` column
+- `trouver_fichier_audio()` SQL on `fichiers_audio` table CAN use `created_at` — that table has it
+
+### When modifying main.py stop_after blocks (Session 16b)
+- Both `stop_after == "script"` and `stop_after == "montage"` blocks must:
+  1. Save rapport to local JSON file
+  2. Upload rapport to Object Storage
+  3. Call `ajouter_historique()`
+  4. Update DB via `ProductionRepo.maj_etape()` with error logging (not bare `except: pass`)
+
+### Tests (Session 16b)
+- 4 new tests: TestChargerRapportSQL (charger_rapport uses started_at, persist_web_job_id timeout, stop_after Object Storage upload, stop_after error logging)
+- Full suite: 561 passed, 3 skipped (ffmpeg), 0 failures
