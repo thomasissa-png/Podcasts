@@ -450,6 +450,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Migration : ajouter web_job_id pour reconnecter le polling après perte réseau
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'productions'
+                   AND column_name = 'web_job_id') THEN
+        ALTER TABLE productions ADD COLUMN web_job_id VARCHAR(12) DEFAULT NULL;
+    END IF;
+END $$;
+
 -- Appliquer le trigger d'audit sur toutes les tables principales
 DO $$
 DECLARE

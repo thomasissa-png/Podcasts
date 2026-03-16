@@ -471,6 +471,24 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
                 except Exception as exc:
                     logger.warning("Echec du cleanup pour le job %s : %s", job_id, exc)
 
+    # Persister le web_job_id en DB pour permettre la reconnexion après perte réseau
+    if episode_id and _DB_AVAILABLE:
+        try:
+            from db_models import get_cursor
+            with get_cursor() as cur:
+                # Mettre à jour la production la plus récente de cet épisode
+                cur.execute(
+                    """UPDATE productions SET web_job_id = %s
+                       WHERE id = (
+                           SELECT id FROM productions
+                           WHERE episode_id = %s
+                           ORDER BY started_at DESC LIMIT 1
+                       )""",
+                    (job_id, episode_id),
+                )
+        except Exception as exc:
+            logger.warning("Impossible de persister web_job_id %s : %s", job_id, exc)
+
     t = threading.Thread(target=_worker, daemon=True)
     t.start()
     return job_id
@@ -500,6 +518,54 @@ def api_job_status(job_id):
         result = job["result"]
         job["read_at"] = time.monotonic()
     return jsonify(result)
+
+
+@app.route("/api/running-jobs")
+def api_running_jobs():
+    """Liste les jobs en cours — permet au navigateur de se reconnecter après perte réseau.
+
+    Vérifie deux sources :
+    1. Le dict _jobs en mémoire (jobs du process courant)
+    2. La table productions en DB (jobs qui ont survécu à un redéploiement)
+    """
+    running = []
+
+    # Source 1 : jobs en mémoire
+    with _jobs_lock:
+        for jid, job in _jobs.items():
+            if job["status"] == "running":
+                running.append({
+                    "job_id": jid,
+                    "episode_id": job.get("episode_id"),
+                    "source": "memory",
+                })
+
+    # Source 2 : productions en DB avec web_job_id non-null et non-terminées
+    if _DB_AVAILABLE:
+        try:
+            from db_models import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    """SELECT web_job_id, episode_id, etape_courante
+                       FROM productions
+                       WHERE web_job_id IS NOT NULL
+                         AND status NOT IN ('completed', 'failed')
+                       ORDER BY started_at DESC LIMIT 10""",
+                )
+                for row in cur.fetchall():
+                    jid = row["web_job_id"]
+                    # Ne pas dupliquer si déjà trouvé en mémoire
+                    if not any(r["job_id"] == jid for r in running):
+                        running.append({
+                            "job_id": jid,
+                            "episode_id": row["episode_id"],
+                            "etape": row["etape_courante"],
+                            "source": "db",
+                        })
+        except Exception as exc:
+            logger.warning("Erreur lecture running-jobs DB : %s", exc)
+
+    return jsonify({"jobs": running})
 
 
 # ── Routes pages ─────────────────────────────────────────────────────────────

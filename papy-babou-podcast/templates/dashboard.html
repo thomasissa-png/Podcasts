@@ -1071,6 +1071,15 @@
 </div>
 {% endif %}
 
+<!-- Bandeau production en cours (affiché par JS si un job est actif) -->
+<div id="running-job-banner" style="display:none; background: var(--fond-card); border: 2px solid var(--turquoise); padding: 14px 20px; border-radius: 10px; margin: 10px 20px; display: none;">
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <span class="spinner" style="width:20px;height:20px;"></span>
+        <span id="running-job-text" style="font-weight:600; color: var(--texte);">Production en cours...</span>
+        <span id="running-job-episode" style="font-size:0.85rem; color: var(--texte-light);"></span>
+    </div>
+</div>
+
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
      ║  1. PLANIFIER UNE SAISON                                              ║
      ╚════════════════════════════════════════════════════════════════════════╝ -->
@@ -2351,9 +2360,39 @@ async function apiCall(url, body) {
 /* ── Helper : polling d'un job asynchrone ──────────────────────────────── */
 var _activePollTimer = null; /* timer courant pour permettre l'annulation */
 
+/* Sauvegarde/restore de job actif dans sessionStorage pour survivre aux rechargements */
+function _saveActiveJob(jobId, episodeId, url) {
+    try {
+        sessionStorage.setItem('_activeJob', JSON.stringify({
+            job_id: jobId, episode_id: episodeId || null,
+            url: url || null, started_at: Date.now()
+        }));
+    } catch(e) { /* sessionStorage indisponible */ }
+}
+function _clearActiveJob() {
+    try { sessionStorage.removeItem('_activeJob'); } catch(e) {}
+    var banner = document.getElementById('running-job-banner');
+    if (banner) banner.style.display = 'none';
+}
+function _getActiveJob() {
+    try {
+        var s = sessionStorage.getItem('_activeJob');
+        return s ? JSON.parse(s) : null;
+    } catch(e) { return null; }
+}
+
+function _showRunningBanner(episodeId) {
+    var banner = document.getElementById('running-job-banner');
+    if (!banner) return;
+    banner.style.display = 'block';
+    var epEl = document.getElementById('running-job-episode');
+    if (epEl && episodeId) epEl.textContent = episodeId;
+}
+
 function pollJob(jobId, maxTimeoutSec) {
     maxTimeoutSec = maxTimeoutSec || 3720; /* 62 min par defaut (> backend 3600s) */
-    var transientRetries = 3; /* tentatives sur erreurs reseau transitoires */
+    /* 30 tentatives réseau = ~5 min de coupure tolérée (polling toutes les 10s) */
+    var transientRetries = 30;
     return new Promise(function(resolve, reject) {
         var elapsedMs = 0;
         var consecutiveErrors = 0;
@@ -2375,6 +2414,7 @@ function pollJob(jobId, maxTimeoutSec) {
             elapsedMs += interval;
             if (elapsedMs > maxTimeoutSec * 1000) {
                 _activePollTimer = null;
+                _clearActiveJob();
                 reject(new Error('Timeout : le job n\u0027a pas terminé après ' + maxTimeoutSec + 's'));
                 return;
             }
@@ -2387,6 +2427,7 @@ function pollJob(jobId, maxTimeoutSec) {
                     consecutiveErrors++;
                     if (consecutiveErrors >= transientRetries) {
                         _activePollTimer = null;
+                        _clearActiveJob();
                         reject(new Error(data && data.error ? data.error : 'Job introuvable'));
                         return;
                     }
@@ -2400,11 +2441,13 @@ function pollJob(jobId, maxTimeoutSec) {
                 }
                 /* Job termine */
                 _activePollTimer = null;
+                _clearActiveJob();
                 resolve(data);
             } catch (err) {
                 consecutiveErrors++;
                 if (consecutiveErrors >= transientRetries) {
                     _activePollTimer = null;
+                    _clearActiveJob();
                     reject(new Error('Erreur réseau persistante après ' + transientRetries + ' tentatives : ' + err.message));
                     return;
                 }
@@ -2443,8 +2486,23 @@ async function apiCallAsync(url, body) {
         /* Pas un job async (erreur de validation par ex) */
         return launch;
     }
+    var episodeId = body && (body.episode_id || body.fichier || null);
+    /* Tenter d'extraire l'episode_id de l'URL pour continue-production */
+    if (!episodeId && url.indexOf('/api/episode/') === 0) {
+        var m = url.match(/\/api\/episode\/([^/]+)\//);
+        if (m) episodeId = m[1];
+    }
+    _saveActiveJob(launch.job_id, episodeId, url);
+    _showRunningBanner(episodeId);
     var timeout = _getPollTimeout(url);
-    return await pollJob(launch.job_id, timeout);
+    try {
+        var result = await pollJob(launch.job_id, timeout);
+        return result;
+    } catch(err) {
+        /* Le job a peut-être terminé en arrière-plan — ne pas effacer le sessionStorage
+           si c'est une erreur réseau (le job tourne toujours côté serveur) */
+        throw err;
+    }
 }
 
 /* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */
@@ -3254,6 +3312,8 @@ async function psInlineRegenerate(step) {
             showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' en cours de régénération...');
             /* Si c'est un job async, attendre la fin */
             if (data.job_id) {
+                _saveActiveJob(data.job_id, _psInlineEpisodeId, '/api/episode/' + _psInlineEpisodeId + '/regenerate');
+                _showRunningBanner(_psInlineEpisodeId);
                 try {
                     var result = await pollJob(data.job_id, 3720);
                     if (result.status === 'ok') {
@@ -3974,6 +4034,8 @@ async function continueProduction(episodeId, phase) {
             if (zone) zone.style.display = 'none';
             return;
         }
+        _saveActiveJob(launch.job_id, episodeId, '/api/episode/' + episodeId + '/continue-production');
+        _showRunningBanner(episodeId);
         const result = await pollJob(launch.job_id, 3720);
 
         if (result.status === 'ok') {
@@ -4027,6 +4089,8 @@ async function regenerateStep(step) {
             showAlert('alert-validation', 'error', launch.error || 'Erreur inconnue');
             return;
         }
+        _saveActiveJob(launch.job_id, _currentEpisodeId, '/api/episode/' + _currentEpisodeId + '/regenerate');
+        _showRunningBanner(_currentEpisodeId);
         var result = await pollJob(launch.job_id, 3720);
 
         if (result.status === 'ok') {
@@ -4162,7 +4226,106 @@ async function deleteEpisode() {
     if (prodSaisonInput && prodSaisonInput.value) {
         prodSaisonInput.dispatchEvent(new Event('change'));
     }
+
+    /* ── Reconnexion automatique après perte réseau / rechargement ─────── */
+    _reconnectActiveJob();
 })();
+
+/**
+ * Vérifie s'il y a un job actif (sessionStorage ou DB) et reprend le polling.
+ * Appelé au chargement de la page.
+ */
+async function _reconnectActiveJob() {
+    /* 1. Vérifier sessionStorage */
+    var saved = _getActiveJob();
+
+    /* 2. Vérifier aussi le serveur pour les jobs en cours */
+    try {
+        var resp = await fetch('/api/running-jobs');
+        if (resp.ok) {
+            var data = await resp.json();
+            if (data.jobs && data.jobs.length > 0) {
+                /* Utiliser le job du serveur si aucun en sessionStorage,
+                   ou si le sessionStorage a un job obsolète */
+                var serverJob = data.jobs[0];
+                if (!saved || saved.job_id !== serverJob.job_id) {
+                    saved = {
+                        job_id: serverJob.job_id,
+                        episode_id: serverJob.episode_id,
+                        url: null,
+                        started_at: Date.now()
+                    };
+                    _saveActiveJob(saved.job_id, saved.episode_id, null);
+                }
+            }
+        }
+    } catch(e) { /* serveur pas joignable, on utilise sessionStorage seul */ }
+
+    if (!saved) return;
+
+    /* 3. Vérifier que le job est encore running */
+    try {
+        var checkResp = await fetch('/api/job-status/' + saved.job_id);
+        if (!checkResp.ok) {
+            /* Job terminé/introuvable — nettoyer */
+            _clearActiveJob();
+            return;
+        }
+        var checkData = await checkResp.json();
+        if (checkData.status !== 'running') {
+            /* Job déjà terminé — afficher le résultat */
+            _clearActiveJob();
+            if (checkData.status === 'ok') {
+                _dashboardDirty = true;
+            }
+            return;
+        }
+    } catch(e) {
+        /* Erreur réseau — on tente quand même le polling */
+    }
+
+    /* 4. Reprendre le polling */
+    _showRunningBanner(saved.episode_id);
+    var timeout = saved.url ? _getPollTimeout(saved.url) : 3720;
+    /* Réduire le timeout par le temps déjà écoulé */
+    var elapsedSec = Math.floor((Date.now() - (saved.started_at || Date.now())) / 1000);
+    var remainingTimeout = Math.max(timeout - elapsedSec, 300); /* minimum 5 min */
+
+    try {
+        var result = await pollJob(saved.job_id, remainingTimeout);
+        _clearActiveJob();
+        if (result.status === 'ok') {
+            var banner = document.getElementById('running-job-banner');
+            if (banner) {
+                banner.style.display = 'block';
+                banner.style.borderColor = '#4ade80';
+                banner.innerHTML = '<div style="padding:6px;color:#4ade80;font-weight:600;">' +
+                    '&#9989; Production terminée avec succès' +
+                    (saved.episode_id ? ' (' + escapeHtml(saved.episode_id) + ')' : '') +
+                    '. <a href="javascript:void(0)" onclick="window.location.reload()" style="color:var(--turquoise);text-decoration:underline;">Actualiser</a></div>';
+            }
+        } else if (result.error) {
+            var banner = document.getElementById('running-job-banner');
+            if (banner) {
+                banner.style.display = 'block';
+                banner.style.borderColor = '#ff4444';
+                banner.innerHTML = '<div style="padding:6px;color:#ff4444;font-weight:600;">' +
+                    '&#10060; Production échouée : ' + escapeHtml(result.error) + '</div>';
+            }
+        }
+    } catch(err) {
+        _clearActiveJob();
+        var banner = document.getElementById('running-job-banner');
+        if (banner) {
+            banner.style.display = 'block';
+            banner.style.borderColor = '#ff4444';
+            banner.innerHTML = '<div style="padding:6px;color:#ff4444;font-weight:600;">' +
+                '&#10060; Connexion perdue avec le job' +
+                (saved.episode_id ? ' (' + escapeHtml(saved.episode_id) + ')' : '') +
+                '. <a href="javascript:void(0)" onclick="window.location.reload()" style="color:var(--turquoise);text-decoration:underline;">Réessayer</a></div>';
+        }
+    }
+}
 </script>
 
 </body>
