@@ -412,19 +412,25 @@ def _sigterm_handler(signum, frame):
         except Exception as e:
             logger.error("Impossible de sauvegarder le checkpoint SIGTERM : %s", e)
 
-    # Marquer la production comme 'interrupted' en DB
+    # Marquer la production comme 'interrupted' en DB — retry car DB peut être lente
     if _use_db() and pid:
-        try:
-            from db_models import get_cursor
-            with get_cursor() as cur:
-                cur.execute(
-                    """UPDATE productions SET status = 'interrupted', updated_at = NOW()
-                       WHERE id = %s AND status NOT IN ('completed', 'failed')""",
-                    (pid,),
+        for _attempt in range(3):
+            try:
+                from db_models import get_cursor
+                with get_cursor() as cur:
+                    cur.execute(
+                        """UPDATE productions SET status = 'interrupted', updated_at = NOW()
+                           WHERE id = %s AND status NOT IN ('completed', 'failed')""",
+                        (pid,),
+                    )
+                logger.info("Production #%d marquée 'interrupted' en DB", pid)
+                break  # Succès
+            except Exception as e:
+                logger.error(
+                    "Marquage interrupted tentative %d/3 échouée : %s", _attempt + 1, e,
                 )
-            logger.info("Production #%d marquée 'interrupted' en DB", pid)
-        except Exception as e:
-            logger.error("Impossible de marquer la production comme interrupted : %s", e)
+                if _attempt < 2:
+                    time.sleep(0.5)
 
     # Sortie propre — SystemExit n'est pas capturé par except Exception
     sys.exit(0)

@@ -279,11 +279,15 @@ def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
 
     Après un redéploiement Replit, les fichiers checkpoint sont perdus.
     Cette fonction les restaure depuis le champ checkpoint_data de la
-    production la plus récente en DB.
+    production la plus récente NON-VIDE en DB.
 
     IMPORTANT : la DB stocke uniquement le dict 'data' du checkpoint,
     pas l'enveloppe complète {episode_id, etape, timestamp, data}.
     On reconstruit l'enveloppe ici avec etape_courante de la production.
+
+    La query filtre les checkpoint_data vides ('{}') pour éviter de prendre
+    une production fraîchement créée par reprendre() qui n'a pas encore
+    de checkpoint sauvegardé.
     """
     try:
         from database import DATABASE_URL, get_cursor
@@ -293,9 +297,11 @@ def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
         with get_cursor(commit=False) as cur:
             cur.execute(
                 "SELECT checkpoint_data, etape_courante FROM productions "
-                "WHERE episode_id = %s AND checkpoint_data IS NOT NULL "
+                "WHERE episode_id = %s "
+                "AND checkpoint_data IS NOT NULL "
                 "AND checkpoint_data != '{}' "
-                "ORDER BY started_at DESC LIMIT 1",
+                "AND checkpoint_data != 'null' "
+                "ORDER BY updated_at DESC LIMIT 1",
                 (episode_id,),
             )
             row = cur.fetchone()
@@ -2251,82 +2257,108 @@ def _auto_resume_interrupted():
 
     Après un redéploiement Replit, les productions en cours sont tuées.
     Le handler SIGTERM dans main.py les marque 'interrupted' en DB.
-    Ce thread les détecte au redémarrage et les relance automatiquement.
-    """
-    # Attendre que la DB soit prête (Neon scale-to-zero peut prendre 2-3s)
-    time.sleep(5)
+    Mais si le handler échoue (DB down), le status reste à '{etape}_done'
+    ou 'started'. Ce thread détecte TOUS les cas et relance.
 
+    Statuts possibles d'une production interrompue :
+    - 'interrupted' : SIGTERM handler a réussi l'UPDATE
+    - 'started' : production créée mais jamais passée à l'étape suivante
+    - '*_done' : SIGTERM a tué le process APRÈS un checkpoint mais AVANT
+      que le handler ne puisse marquer 'interrupted' (DB down, SIGKILL, etc.)
+    """
     if not _DB_AVAILABLE:
         return
 
-    try:
-        from db_models import get_cursor
-        with get_cursor(commit=False) as cur:
-            cur.execute(
-                """SELECT episode_id, etape_courante, checkpoint_data, status
-                   FROM productions
-                   WHERE status IN ('interrupted', 'started')
-                     AND status NOT IN ('completed', 'failed')
-                     AND started_at > NOW() - INTERVAL '2 hours'
-                   ORDER BY started_at DESC LIMIT 5""",
+    # Retry avec backoff exponentiel — la DB peut être en cold start (Neon)
+    import json as _json
+    rows = None
+    for db_attempt in range(4):
+        wait = [5, 8, 12, 20][db_attempt]
+        time.sleep(wait)
+        try:
+            from db_models import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    """SELECT episode_id, etape_courante, checkpoint_data, status
+                       FROM productions
+                       WHERE status NOT IN ('completed', 'failed')
+                         AND started_at > NOW() - INTERVAL '2 hours'
+                       ORDER BY started_at DESC LIMIT 5""",
+                )
+                rows = cur.fetchall()
+            break  # DB OK
+        except Exception as e:
+            logger.warning(
+                "Auto-resume DB tentative %d/4 échouée : %s", db_attempt + 1, e,
             )
-            rows = cur.fetchall()
 
-        if not rows:
-            logger.debug("Aucune production interrompue à reprendre")
-            return
+    if rows is None:
+        logger.error("Auto-resume abandonné — DB inaccessible après 4 tentatives")
+        return
 
-        for row in rows:
-            episode_id = row["episode_id"]
-            status = row["status"]
+    if not rows:
+        logger.debug("Aucune production interrompue à reprendre")
+        return
 
-            # Ne reprendre que les productions vraiment interrompues
-            # (pas celles en 'started' qui sont peut-être juste lentes)
-            if status == "started":
-                # Vérifier qu'aucun job n'est déjà en cours en mémoire
-                with _jobs_lock:
-                    already_running = any(
-                        j.get("episode_id") == episode_id and j["status"] == "running"
-                        for j in _jobs.values()
-                    )
-                if already_running:
-                    continue
+    for row in rows:
+        episode_id = row["episode_id"]
+        status = row["status"]
 
-            # Restaurer le checkpoint depuis la DB
-            checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
-            if not checkpoint_path.exists():
-                _restore_checkpoint_from_db(episode_id, checkpoint_path)
-            if not checkpoint_path.exists():
-                logger.warning("Checkpoint introuvable pour %s — impossible de reprendre", episode_id)
-                continue
+        # Vérifier qu'aucun job n'est déjà en cours en mémoire pour cet épisode
+        with _jobs_lock:
+            already_running = any(
+                j.get("episode_id") == episode_id and j["status"] == "running"
+                for j in _jobs.values()
+            )
+        if already_running:
+            continue
 
-            # Lire le stop_after du checkpoint pour respecter le workflow original
+        # Restaurer le checkpoint depuis la DB (le fichier local est perdu après redeploy)
+        checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        # Toujours restaurer depuis la DB — le fichier local peut être corrompu ou périmé
+        _restore_checkpoint_from_db(episode_id, checkpoint_path)
+        # Vérifier que le fichier est lisible
+        if checkpoint_path.exists():
             try:
-                import json as _json
                 with open(checkpoint_path, "r", encoding="utf-8") as f:
                     cp = _json.load(f)
-                stop_after = cp.get("data", {}).get("stop_after", "")
-            except Exception:
-                stop_after = ""
-
-            # Construire la commande de reprise
-            cmd = ["reprendre", "-c", str(checkpoint_path), "--auto"]
-            if stop_after:
-                cmd.extend(["--stop-after", stop_after])
-
-            try:
-                job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
-                logger.info(
-                    "Auto-reprise de %s (status=%s, étape=%s) → job %s",
-                    episode_id, status, row["etape_courante"], job_id,
+                # Vérifier les champs obligatoires
+                if "etape" not in cp or "data" not in cp:
+                    raise ValueError("Enveloppe checkpoint incomplète")
+            except (ValueError, _json.JSONDecodeError) as e:
+                logger.warning(
+                    "Checkpoint corrompu pour %s (%s), re-restauration depuis DB", episode_id, e,
                 )
-            except ValueError as e:
-                logger.debug("Auto-reprise ignorée pour %s : %s", episode_id, e)
-            except Exception as e:
-                logger.warning("Erreur auto-reprise pour %s : %s", episode_id, e)
+                checkpoint_path.unlink(missing_ok=True)
+                _restore_checkpoint_from_db(episode_id, checkpoint_path)
 
-    except Exception as e:
-        logger.warning("Auto-resume thread échoué : %s", e)
+        if not checkpoint_path.exists():
+            logger.warning("Checkpoint introuvable pour %s — impossible de reprendre", episode_id)
+            continue
+
+        # Lire le stop_after du checkpoint pour respecter le workflow original
+        try:
+            with open(checkpoint_path, "r", encoding="utf-8") as f:
+                cp = _json.load(f)
+            stop_after = cp.get("data", {}).get("stop_after", "")
+        except Exception:
+            stop_after = ""
+
+        # Construire la commande de reprise
+        cmd = ["reprendre", "-c", str(checkpoint_path), "--auto"]
+        if stop_after:
+            cmd.extend(["--stop-after", stop_after])
+
+        try:
+            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+            logger.info(
+                "Auto-reprise de %s (status=%s, étape=%s) → job %s",
+                episode_id, status, row["etape_courante"], job_id,
+            )
+        except ValueError as e:
+            logger.debug("Auto-reprise ignorée pour %s : %s", episode_id, e)
+        except Exception as e:
+            logger.warning("Erreur auto-reprise pour %s : %s", episode_id, e)
 
 
 # Lancer la reprise automatique dans un thread daemon
