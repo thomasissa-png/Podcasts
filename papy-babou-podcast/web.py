@@ -2297,7 +2297,8 @@ def _auto_resume_interrupted():
                 cur.execute(
                     """SELECT episode_id, etape_courante, checkpoint_data, status
                        FROM productions
-                       WHERE status NOT IN ('completed', 'failed')
+                       WHERE status NOT IN ('completed', 'failed',
+                                            'waiting_script', 'waiting_montage')
                          AND started_at > NOW() - INTERVAL '2 hours'
                        ORDER BY started_at DESC LIMIT 5""",
                 )

@@ -41,8 +41,7 @@ class SaisonRepo:
         with get_cursor() as cur:
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM saisons WHERE numero = %s "
-                "FOR UPDATE",
+                "FROM saisons WHERE numero = %s",
                 (numero,),
             )
             next_version = cur.fetchone()["next_v"]
@@ -245,8 +244,7 @@ class ScriptRepo:
             # Prochaine version
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM scripts WHERE episode_id = %s "
-                "FOR UPDATE",
+                "FROM scripts WHERE episode_id = %s",
                 (episode_id,),
             )
             next_version = cur.fetchone()["next_v"]
@@ -738,8 +736,7 @@ class PersonnageRepo:
         with get_cursor() as cur:
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM personnages WHERE personnage_id = %s "
-                "FOR UPDATE",
+                "FROM personnages WHERE personnage_id = %s",
                 (personnage_id,),
             )
             next_version = cur.fetchone()["next_v"]

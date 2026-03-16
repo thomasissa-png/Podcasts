@@ -1734,3 +1734,58 @@ class TestChargerRapportSQL:
             "pipeline() error handler doit charger le rapport existant "
             "avant de sauvegarder le rapport d'erreur"
         )
+
+
+# ── Session 16d : SQL FOR UPDATE, étape mapping, auto-resume exclusion ─────
+
+class TestSession16dFixes:
+    """Régression pour les 3 bugs Session 16d."""
+
+    def test_no_for_update_with_aggregate(self):
+        """FOR UPDATE ne doit pas être combiné avec des fonctions d'agrégation (MAX)."""
+        import inspect
+        import db_models
+        source = inspect.getsource(db_models)
+        import re
+        # Trouver les patterns "MAX(...) ... FOR UPDATE" dans la même requête SQL
+        # Les requêtes SQL sont entre guillemets, on cherche MAX et FOR UPDATE proches
+        violations = re.findall(
+            r'MAX\(.*?\).*?FOR UPDATE',
+            source,
+            re.DOTALL,
+        )
+        assert len(violations) == 0, (
+            f"db_models contient {len(violations)} requête(s) avec MAX() + FOR UPDATE — "
+            "PostgreSQL interdit FOR UPDATE avec des fonctions d'agrégation"
+        )
+
+    def test_etape_mapping_waiting_statuses(self):
+        """_pipeline_inner doit mapper waiting_script → audio, waiting_montage → metadonnees."""
+        import inspect
+        import main
+        source = inspect.getsource(main._pipeline_inner)
+        assert '"waiting_script"' in source, (
+            "_pipeline_inner doit mapper waiting_script vers l'étape suivante"
+        )
+        assert '"waiting_montage"' in source, (
+            "_pipeline_inner doit mapper waiting_montage vers l'étape suivante"
+        )
+        # Vérifier que le mapping est correct
+        assert '"waiting_script": "audio"' in source, (
+            "waiting_script doit être mappé vers 'audio' (le script est fini)"
+        )
+        assert '"waiting_montage": "metadonnees"' in source, (
+            "waiting_montage doit être mappé vers 'metadonnees' (le montage est fini)"
+        )
+
+    def test_auto_resume_excludes_waiting_statuses(self):
+        """_auto_resume_interrupted ne doit PAS reprendre les productions en attente de validation."""
+        import inspect
+        import web
+        source = inspect.getsource(web._auto_resume_interrupted)
+        assert "waiting_script" in source, (
+            "_auto_resume_interrupted doit exclure le status 'waiting_script'"
+        )
+        assert "waiting_montage" in source, (
+            "_auto_resume_interrupted doit exclure le status 'waiting_montage'"
+        )

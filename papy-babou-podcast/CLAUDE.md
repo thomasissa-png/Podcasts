@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 566 tests (pytest)
+├── tests/                   # 569 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 566 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 569 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -950,3 +950,39 @@ Two CRITICAL bugs causing NameError crashes and data loss on resume/redeploy.
 - Error handler in `pipeline()` MUST merge with existing rapport before saving — never overwrite blindly
 - Keys to preserve on merge: `decisions_humaines`, `metriques`, `alertes_post_generation`
 - Etapes merge: existing etapes as base, new etapes overwrite only their own keys
+
+## Resume & SQL Fixes (Session 16d)
+Three bugs causing auto-resume to restart from scratch and SQL errors on script validation.
+
+### CRITICAL fix 1: `FOR UPDATE` with aggregate functions
+- `db_models.py` used `SELECT MAX(version) ... FOR UPDATE` in 3 places (ScriptRepo, SaisonRepo, PersonnageRepo)
+- PostgreSQL forbids `FOR UPDATE` with aggregate functions (`MAX`)
+- Caused "Sync script validé DB ÉCHOUÉ" error on script validation
+- **Fix**: Removed `FOR UPDATE` from all 3 aggregate queries — row-level locking not needed for version counter in single-user context
+
+### CRITICAL fix 2: Auto-resume re-launches from scratch
+- `_auto_resume_interrupted()` query used `status NOT IN ('completed', 'failed')` — this included `waiting_script` and `waiting_montage` statuses
+- Productions waiting for human validation were auto-resumed, launching a fresh script generation instead of waiting for the user
+- **Fix**: Excluded `waiting_script` and `waiting_montage` from auto-resume query
+
+### CRITICAL fix 3: `etape_depart` mapping for DB statuses
+- `_pipeline_inner()` had `etapes.index(etape_depart)` with fixed list `["script", "review", "audio", ...]`
+- DB statuses like `"waiting_script"`, `"waiting_montage"`, `"script_done"` are NOT in this list
+- When `etape_depart` was not in the list, `etape_idx` defaulted to 0 → full restart from scratch
+- **Fix**: Added `_etape_mapping` dict in `_pipeline_inner()` that maps DB statuses to pipeline steps:
+  - `waiting_script` → `audio`, `waiting_montage` → `metadonnees`
+  - `script_done` → `audio`, `audio_done` → `sfx`, `sfx_done` → `montage`
+  - `montage_done` → `metadonnees`, `metadonnees_done` → `publication`
+
+### When modifying db_models.py (Session 16d)
+- NEVER use `FOR UPDATE` with aggregate functions (`MAX`, `MIN`, `COUNT`, `SUM`, `AVG`)
+- PostgreSQL will reject the query with "FOR UPDATE is not allowed with aggregate functions"
+
+### When modifying web.py (Session 16d)
+- `_auto_resume_interrupted()` must exclude ALL terminal AND waiting statuses: `'completed', 'failed', 'waiting_script', 'waiting_montage'`
+- `waiting_*` statuses mean "waiting for human validation" — auto-resuming them defeats the purpose
+
+### When modifying main.py (Session 16d)
+- `_pipeline_inner()` has `_etape_mapping` dict that maps DB statuses to pipeline steps
+- Any new `waiting_*` or `*_done` status MUST be added to this mapping
+- The mapping ensures checkpoint resume works even when `etape_courante` in DB uses DB-specific status names instead of pipeline step names

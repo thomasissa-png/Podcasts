@@ -2114,7 +2114,20 @@ def _pipeline_inner(
         ))
 
     etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
-    etape_idx = etapes.index(etape_depart) if etape_depart in etapes else 0
+    # Mapper les statuts d'attente vers l'étape suivante correspondante
+    _etape_mapping = {
+        "waiting_script": "audio",    # script validé → reprendre à l'audio
+        "waiting_montage": "metadonnees",  # montage validé → reprendre aux métadonnées
+        "script_done": "audio",
+        "audio_done": "sfx",
+        "sfx_done": "montage",
+        "montage_done": "metadonnees",
+        "metadonnees_done": "publication",
+    }
+    etape_effective = _etape_mapping.get(etape_depart, etape_depart)
+    if etape_effective != etape_depart:
+        logger.info("Étape de reprise mappée : %s → %s", etape_depart, etape_effective)
+    etape_idx = etapes.index(etape_effective) if etape_effective in etapes else 0
 
     # Roadmap visuel des étapes
     console.print(panel_roadmap(etape_idx, dry_run=dry_run))
