@@ -181,7 +181,7 @@ def _sync_rapport_to_db(episode_id: str, rapport: dict) -> None:
             cur.execute(
                 "UPDATE productions SET rapport_json = %s, updated_at = NOW() "
                 "WHERE id = (SELECT id FROM productions WHERE episode_id = %s "
-                "ORDER BY created_at DESC LIMIT 1) "
+                "ORDER BY started_at DESC LIMIT 1) "
                 "RETURNING id",
                 (json.dumps(rapport, ensure_ascii=False, default=str), episode_id),
             )
@@ -263,7 +263,7 @@ def _sync_checkpoint_to_db(episode_id: str) -> None:
             cur.execute(
                 "UPDATE productions SET checkpoint_data = %s, updated_at = NOW() "
                 "WHERE id = (SELECT id FROM productions WHERE episode_id = %s "
-                "ORDER BY created_at DESC LIMIT 1) "
+                "ORDER BY started_at DESC LIMIT 1) "
                 "RETURNING id",
                 (_json.dumps(cp_data, ensure_ascii=False, default=str), episode_id),
             )
