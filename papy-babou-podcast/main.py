@@ -1894,19 +1894,6 @@ def pipeline(
     """
     _production_local.production_id = None  # Reset au début de chaque pipeline
 
-    _t_pipeline_start = time.perf_counter()
-    _t_last_step = _t_pipeline_start
-
-    def _log_step_duration(step_name: str) -> None:
-        nonlocal _t_last_step
-        now = time.perf_counter()
-        step_s = now - _t_last_step
-        total_s = now - _t_pipeline_start
-        logger.info(
-            "⏱ %s : %.1fs (total %.1fs)", step_name, step_s, total_s
-        )
-        _t_last_step = now
-
     episode_id = f"S{saison:02d}E{numero:02d}"
     rapport = checkpoint_data if checkpoint_data is not None else {
         "episode_id": episode_id,
@@ -1995,7 +1982,26 @@ def pipeline(
         rapport["status"] = "failed"
         rapport["fin"] = datetime.now().isoformat()
         chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        # MERGE avec le rapport existant pour préserver decisions_humaines,
+        # etapes déjà complétées, etc. (ne pas écraser un rapport riche
+        # par un rapport d'erreur squelettique)
         with fichier_lock(chemin_rapport):
+            if chemin_rapport.exists():
+                try:
+                    with open(chemin_rapport, "r", encoding="utf-8") as f:
+                        rapport_existant = json.load(f)
+                    # Préserver les clés du rapport existant absentes du nouveau
+                    for cle in ("decisions_humaines", "metriques", "alertes_post_generation"):
+                        if cle in rapport_existant and cle not in rapport:
+                            rapport[cle] = rapport_existant[cle]
+                    # Merger les étapes : garder les étapes existantes, écraser
+                    # uniquement celles que le nouveau rapport a aussi
+                    if "etapes" in rapport_existant:
+                        etapes_merged = rapport_existant["etapes"].copy()
+                        etapes_merged.update(rapport.get("etapes", {}))
+                        rapport["etapes"] = etapes_merged
+                except (json.JSONDecodeError, OSError) as merge_err:
+                    logger.debug("Impossible de merger avec rapport existant : %s", merge_err)
             with open(chemin_rapport, "w", encoding="utf-8") as f:
                 json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
         # Upload rapport vers Object Storage (survit aux redéploiements)
@@ -2031,6 +2037,20 @@ def _pipeline_inner(
     episode_courant=0, total_episodes=0, saison_theme="",
 ):
     """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
+    # Timer pour mesurer la durée de chaque étape
+    _t_pipeline_start = time.perf_counter()
+    _t_last_step = _t_pipeline_start
+
+    def _log_step_duration(step_name: str) -> None:
+        nonlocal _t_last_step
+        now = time.perf_counter()
+        step_s = now - _t_last_step
+        total_s = now - _t_pipeline_start
+        logger.info(
+            "⏱ %s : %.1fs (total %.1fs)", step_name, step_s, total_s
+        )
+        _t_last_step = now
+
     # Charger le contexte de saison automatiquement si pas fourni
     if not contexte_saison:
         contexte_saison = config.charger_saison(saison) or None

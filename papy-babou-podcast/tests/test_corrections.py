@@ -1703,3 +1703,34 @@ class TestChargerRapportSQL:
         assert "_rapport.json" in source, (
             "pipeline() doit sauver le rapport d'erreur dans _rapport.json"
         )
+
+    # ── Fix: _log_step_duration doit être dans _pipeline_inner ──────────
+
+    def test_log_step_duration_defined_in_pipeline_inner(self):
+        """_log_step_duration doit être définie dans _pipeline_inner, pas pipeline."""
+        import inspect
+        import main
+        source_inner = inspect.getsource(main._pipeline_inner)
+        source_outer = inspect.getsource(main.pipeline)
+        # Retirer le code de _pipeline_inner du source de pipeline pour isoler
+        # (pipeline appelle _pipeline_inner, mais la def doit être dans inner)
+        assert "def _log_step_duration" in source_inner, (
+            "_log_step_duration doit être définie DANS _pipeline_inner() "
+            "pour être accessible — sinon NameError au montage"
+        )
+
+    # ── Fix: rapport d'erreur merge avec existant ───────────────────────
+
+    def test_error_rapport_merges_with_existing(self):
+        """Le error handler doit merger avec le rapport existant (pas écraser)."""
+        import inspect
+        import main
+        source = inspect.getsource(main.pipeline)
+        assert "decisions_humaines" in source, (
+            "pipeline() error handler doit préserver decisions_humaines "
+            "du rapport existant lors du merge"
+        )
+        assert "rapport_existant" in source, (
+            "pipeline() error handler doit charger le rapport existant "
+            "avant de sauvegarder le rapport d'erreur"
+        )

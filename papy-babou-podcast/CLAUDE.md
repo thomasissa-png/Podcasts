@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 564 tests (pytest)
+├── tests/                   # 566 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 564 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 566 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -931,3 +931,22 @@ Root cause diagnosis for 9 consecutive production failures where 35-minute jobs 
 - **stderr spam fix**: `_run_cli()` now only logs stderr lines when `returncode != 0` (was logging for ALL jobs including success)
 - **CLAUDE.md coherence**: Error Handling section updated from `_rapport_echec.json` to `_rapport.json`
 - **3 missing tests added**: stderr conditional logging, monteur error handling, error rapport filename
+
+## Crash Recovery Fixes (Session 16c)
+Two CRITICAL bugs causing NameError crashes and data loss on resume/redeploy.
+
+### CRITICAL fix 1: `_log_step_duration` NameError
+- `_log_step_duration()` was defined inside `pipeline()` but called from `_pipeline_inner()` (a separate function)
+- Every job that reached montage (or any step calling `_log_step_duration`) crashed with `NameError: name '_log_step_duration' is not defined`
+- **Fix**: Moved `_log_step_duration()` definition (and its timer variables) from `pipeline()` into `_pipeline_inner()`
+
+### CRITICAL fix 2: Error rapport overwrites `decisions_humaines`
+- When a crash occurred, the error handler saved a minimal rapport that overwrote the existing rich rapport (with `decisions_humaines`, validated steps, etc.)
+- **Fix**: Error handler now loads existing rapport and merges: preserves `decisions_humaines`, `metriques`, `alertes_post_generation`, and merges `etapes` (existing + new)
+- Uses `rapport_existant["etapes"].copy()` + `.update()` so existing step data is preserved while new error data is added
+
+### When modifying main.py (Session 16c patterns)
+- `_log_step_duration()` MUST be defined inside `_pipeline_inner()`, NOT inside `pipeline()` — `_pipeline_inner` is a separate function, not a nested one
+- Error handler in `pipeline()` MUST merge with existing rapport before saving — never overwrite blindly
+- Keys to preserve on merge: `decisions_humaines`, `metriques`, `alertes_post_generation`
+- Etapes merge: existing etapes as base, new etapes overwrite only their own keys
