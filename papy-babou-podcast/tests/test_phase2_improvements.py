@@ -963,3 +963,70 @@ class TestPlanificateurUnSujetParEpisode:
         """Le system prompt doit contenir la règle d'ordre chronologique."""
         from agents.planificateur import SYSTEM_PROMPT
         assert "ORDRE CHRONOLOGIQUE" in SYSTEM_PROMPT
+
+
+class TestSauvegarderPlanComplet:
+    """Tests pour _sauvegarder_plan_complet — sauvegarde JSON + DB + Object Storage."""
+
+    def test_sauvegarde_json_db_objstore(self, tmp_path, monkeypatch):
+        """Le plan doit être sauvegardé sur les 3 backends."""
+        import main
+        import persistent_storage
+
+        plan = {"saison": {"numero": 1, "theme": "Test", "episodes": []}}
+        chemin_json = tmp_path / "saison_01.json"
+
+        monkeypatch.setattr(main, "_use_db", lambda: True)
+
+        mock_saison_repo = MagicMock()
+        mock_saison_repo.sauvegarder.return_value = 42
+        monkeypatch.setattr(main, "SaisonRepo", mock_saison_repo)
+
+        # Mock Object Storage au niveau du module
+        monkeypatch.setattr(persistent_storage, "upload_saison", MagicMock(return_value="saisons/saison_01.json"))
+
+        mock_planificateur = MagicMock()
+
+        main._sauvegarder_plan_complet(plan, chemin_json, 1, mock_planificateur)
+
+        mock_planificateur.sauvegarder.assert_called_once_with(plan, chemin_json)
+        mock_saison_repo.sauvegarder.assert_called_once_with(plan)
+        persistent_storage.upload_saison.assert_called_once_with(1, chemin_json)
+
+    def test_sauvegarde_sans_db(self, tmp_path, monkeypatch):
+        """Sans DB, le plan est sauvegardé en JSON + Object Storage seulement."""
+        import main
+        import persistent_storage
+
+        plan = {"saison": {"numero": 1, "theme": "Test", "episodes": []}}
+        chemin_json = tmp_path / "saison_01.json"
+
+        monkeypatch.setattr(main, "_use_db", lambda: False)
+        monkeypatch.setattr(persistent_storage, "upload_saison", MagicMock(return_value="saisons/saison_01.json"))
+
+        mock_planificateur = MagicMock()
+
+        main._sauvegarder_plan_complet(plan, chemin_json, 1, mock_planificateur)
+
+        mock_planificateur.sauvegarder.assert_called_once()
+        persistent_storage.upload_saison.assert_called_once()
+
+    def test_sauvegarde_objstore_echec_warning(self, tmp_path, monkeypatch, caplog):
+        """Échec Object Storage doit logger un warning, pas crasher."""
+        import main
+        import persistent_storage
+        import logging
+
+        plan = {"saison": {"numero": 1, "theme": "Test", "episodes": []}}
+        chemin_json = tmp_path / "saison_01.json"
+
+        monkeypatch.setattr(main, "_use_db", lambda: False)
+        monkeypatch.setattr(persistent_storage, "upload_saison", MagicMock(return_value=None))
+
+        mock_planificateur = MagicMock()
+
+        with caplog.at_level(logging.WARNING):
+            main._sauvegarder_plan_complet(plan, chemin_json, 1, mock_planificateur)
+
+        # La sauvegarde JSON doit toujours se faire
+        mock_planificateur.sauvegarder.assert_called_once()

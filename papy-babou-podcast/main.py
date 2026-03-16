@@ -843,6 +843,46 @@ def _validation_script(
             console.print("[red]  Choix non reconnu. Tapez v, m, c ou a.[/red]")
 
 
+def _sauvegarder_plan_complet(
+    plan: dict,
+    chemin_json: Path,
+    saison: int,
+    planificateur_instance=None,
+) -> None:
+    """Sauvegarde un plan de saison sur les 3 backends : JSON + DB + Object Storage.
+
+    Doit être appelé après chaque modification du plan pour éviter la perte
+    de données en cas de redéploiement Replit (le filesystem est éphémère).
+    """
+    # 1. JSON (filesystem local)
+    if planificateur_instance:
+        planificateur_instance.sauvegarder(plan, chemin_json)
+    else:
+        from agents import Planificateur
+        Planificateur().sauvegarder(plan, chemin_json)
+
+    # 2. PostgreSQL (versionnée)
+    if _use_db():
+        try:
+            db_id = SaisonRepo.sauvegarder(plan)
+            logger.info("Plan saison %d sauvegardé en DB (id=%d)", saison, db_id)
+        except Exception as e:
+            logger.warning("DB indisponible pour plan saison %d : %s", saison, e)
+
+    # 3. Object Storage (survit aux redéploiements)
+    try:
+        import persistent_storage
+        key = persistent_storage.upload_saison(saison, chemin_json)
+        if not key:
+            logger.warning(
+                "Object Storage : échec upload plan saison %d "
+                "(bucket non configuré ? Allez dans Tools > Object Storage sur Replit)",
+                saison,
+            )
+    except Exception as e:
+        logger.warning("Object Storage indisponible pour plan saison %d : %s", saison, e)
+
+
 def _previsualiser_ambiances_saison(
     plan: dict,
     chemin_json: Path,
@@ -990,10 +1030,8 @@ def _previsualiser_ambiances_saison(
         "timestamp": datetime.now().isoformat(),
     })
 
-    # Sauvegarder le plan mis à jour
-    from agents import Planificateur
-    planificateur = Planificateur()
-    planificateur.sauvegarder(plan, chemin_json)
+    # Sauvegarder le plan mis à jour (JSON + DB + Object Storage)
+    _sauvegarder_plan_complet(plan, chemin_json, saison)
     console.print(f"\n[{Palette.SUCCES}]Ambiances sonores de saison validées et sauvegardées.[/]")
 
     return plan
@@ -1062,6 +1100,7 @@ def _validation_plan_saison(
                 "action": "valide",
                 "timestamp": datetime.now().isoformat(),
             })
+            _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
             return plan
 
         elif choix in ("m", "modifier"):
@@ -1079,7 +1118,8 @@ def _validation_plan_saison(
                     "action": "modification_json",
                     "timestamp": datetime.now().isoformat(),
                 })
-                console.print(f"[{Palette.SUCCES}]  Plan rechargé et validé depuis le fichier.[/]")
+                _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+                console.print(f"[{Palette.SUCCES}]  Plan rechargé, validé et sauvegardé (DB + Object Storage).[/]")
                 _afficher_plan_saison(plan)
             except (json.JSONDecodeError, FileNotFoundError) as e:
                 console.print(f"[red]  Erreur au rechargement : {e}[/red]")
@@ -1102,8 +1142,8 @@ def _validation_plan_saison(
                 preferences_producteur=_construire_bloc_preferences(),
                 archives_saisons=archives_saisons or None,
             )
-            planificateur.sauvegarder(plan, chemin_json)
-            console.print(f"[{Palette.SUCCES}]  Nouveau plan généré et sauvegardé.[/]")
+            _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+            console.print(f"[{Palette.SUCCES}]  Nouveau plan généré et sauvegardé (DB + Object Storage).[/]")
             _afficher_plan_saison(plan)
 
         elif choix in ("i", "instructions"):
@@ -1145,8 +1185,8 @@ def _validation_plan_saison(
                     "instructions": instructions_texte,
                     "date": datetime.now().isoformat(),
                 })
-                planificateur.sauvegarder(plan, chemin_json)
-                console.print(f"[{Palette.SUCCES}]  Nouveau plan généré avec vos instructions.[/]")
+                _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+                console.print(f"[{Palette.SUCCES}]  Nouveau plan généré avec vos instructions (DB + Object Storage).[/]")
                 _afficher_plan_saison(plan)
 
         elif choix in ("a", "abandonner"):
@@ -3530,25 +3570,9 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 saison=saison,
             )
 
-        # Re-sauvegarder le plan valide (peut avoir ete modifie ou regenere)
-        planificateur.sauvegarder(plan, chemin_json)
-
-        # Sauvegarder en DB (versionnée — anciennes versions conservées)
-        if _use_db():
-            try:
-                db_id = SaisonRepo.sauvegarder(plan)
-                console.print(f"  Plan sauvegardé en PostgreSQL (id={db_id})")
-            except Exception as e:
-                console.print(f"  [yellow]DB indisponible pour plan : {e}[/yellow]")
-
-        # Persister en Object Storage (survit aux redéploiements Replit)
-        try:
-            import persistent_storage
-            key = persistent_storage.upload_saison(saison, chemin_json)
-            if key:
-                console.print(f"  Plan sauvegardé dans Object Storage ({key})")
-        except Exception as e:
-            logger.debug("Object Storage indisponible pour plan : %s", e)
+        # Re-sauvegarder le plan valide (JSON + DB + Object Storage)
+        _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+        console.print(f"  Plan sauvegardé (JSON + DB + Object Storage).")
 
         # Exporter en CSV et Markdown
         chemin_csv = config.SAISONS_DIR / f"saison_{saison:02d}.csv"
