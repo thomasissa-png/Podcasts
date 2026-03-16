@@ -245,9 +245,9 @@ def _sync_script_validated_to_db(episode_id: str) -> None:
 def _sync_checkpoint_to_db(episode_id: str) -> None:
     """Synchronise le checkpoint en DB pour survie au redéploiement.
 
-    Sauvegarde le contenu du checkpoint dans le champ checkpoint_data
-    de la production la plus récente. Permet de reprendre la production
-    audio après un redéploiement même si le fichier checkpoint est perdu.
+    Sauvegarde le dict 'data' interne du checkpoint en DB (pas l'enveloppe
+    complète). L'enveloppe {episode_id, etape, timestamp, data} est
+    reconstruite par _restore_checkpoint_from_db() à la restauration.
     """
     try:
         from database import DATABASE_URL, get_cursor
@@ -258,14 +258,17 @@ def _sync_checkpoint_to_db(episode_id: str) -> None:
         if not checkpoint_path.exists():
             return
         with open(checkpoint_path, "r", encoding="utf-8") as f:
-            cp_data = _json.load(f)
+            cp_full = _json.load(f)
+        # Stocker SEULEMENT le dict 'data' interne, pas l'enveloppe complète.
+        # L'enveloppe sera reconstruite par _restore_checkpoint_from_db().
+        cp_data_only = cp_full.get("data", cp_full)
         with get_cursor() as cur:
             cur.execute(
                 "UPDATE productions SET checkpoint_data = %s, updated_at = NOW() "
                 "WHERE id = (SELECT id FROM productions WHERE episode_id = %s "
                 "ORDER BY started_at DESC LIMIT 1) "
                 "RETURNING id",
-                (_json.dumps(cp_data, ensure_ascii=False, default=str), episode_id),
+                (_json.dumps(cp_data_only, ensure_ascii=False, default=str), episode_id),
             )
             row = cur.fetchone()
             if row:
@@ -309,14 +312,27 @@ def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
             cp_data = row["checkpoint_data"]
             etape = row["etape_courante"] or "script"
 
-            # Reconstruire l'enveloppe attendue par charger_checkpoint()
-            # Format : {"episode_id": ..., "etape": ..., "timestamp": ..., "data": {...}}
-            checkpoint_envelope = {
-                "episode_id": episode_id,
-                "etape": etape,
-                "timestamp": datetime.now().isoformat(),
-                "data": cp_data,
-            }
+            # Détecter si la DB contient une enveloppe complète (ancien bug)
+            # ou juste le dict 'data' interne (format correct).
+            # Enveloppe = a "episode_id" + "etape" + "data" keys
+            if (isinstance(cp_data, dict) and "data" in cp_data
+                    and "etape" in cp_data and "episode_id" in cp_data):
+                # Ancien format : la DB contient l'enveloppe complète.
+                # Utiliser directement comme checkpoint (ne pas re-envelopper).
+                checkpoint_envelope = cp_data
+                # Mais utiliser l'étape DB (plus récente) si dispo
+                if etape and etape != "script":
+                    checkpoint_envelope["etape"] = etape
+                logger.info("Checkpoint %s : détecté ancien format enveloppe en DB, utilisé tel quel", episode_id)
+            else:
+                # Format correct : la DB contient le dict 'data' interne.
+                # Reconstruire l'enveloppe attendue par charger_checkpoint()
+                checkpoint_envelope = {
+                    "episode_id": episode_id,
+                    "etape": etape,
+                    "timestamp": datetime.now().isoformat(),
+                    "data": cp_data,
+                }
 
             # S'assurer que le répertoire existe
             checkpoint_path.parent.mkdir(parents=True, exist_ok=True)

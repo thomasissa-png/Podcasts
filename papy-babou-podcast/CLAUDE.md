@@ -22,7 +22,7 @@ papy-babou-podcast/
 │   ├── publisher.py         # RSS 2.0 feed + iTunes/Podcast Index namespaces
 │   ├── cover_art.py         # DALL-E 3 cover art generation (PNG format)
 │   └── planificateur.py     # Season planning (Claude API)
-├── tests/                   # 569 tests (pytest)
+├── tests/                   # 571 tests (pytest)
 │   ├── conftest.py          # Fixtures: script_exemple, script_avec_sfx_overlay, review_exemple
 │   ├── test_scripteur.py    # Validation, comptage, bible, serial context, structure narrative
 │   ├── test_reviewer.py     # Review validation, scoring, corrections vs alertes
@@ -119,7 +119,7 @@ python -m pytest tests/ -x              # Stop on first failure
 python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 ```
 
-**Expected**: 569 passed, 3 skipped (integration tests requiring ffmpeg)
+**Expected**: 571 passed, 3 skipped (integration tests requiring ffmpeg)
 
 ## Critical Patterns to Remember
 
@@ -986,3 +986,20 @@ Three bugs causing auto-resume to restart from scratch and SQL errors on script 
 - `_pipeline_inner()` has `_etape_mapping` dict that maps DB statuses to pipeline steps
 - Any new `waiting_*` or `*_done` status MUST be added to this mapping
 - The mapping ensures checkpoint resume works even when `etape_courante` in DB uses DB-specific status names instead of pipeline step names
+
+## Checkpoint DB Format Fix (Session 16d-bis)
+CRITICAL bug causing `KeyError: 'titre'` on every auto-resume after redeployment.
+
+### Root cause: double-envelope bug
+- `_sync_checkpoint_to_db()` stored the FULL checkpoint envelope `{episode_id, etape, timestamp, data: {titre, ...}}` in DB
+- `_restore_checkpoint_from_db()` then wrapped it in ANOTHER envelope: `{episode_id, etape, data: {episode_id, etape, data: {titre, ...}}}`
+- `reprendre()` did `cp["data"]["titre"]` → got the outer envelope → `KeyError: 'titre'`
+
+### Fix
+- **`_sync_checkpoint_to_db()`**: Now extracts `cp_full.get("data", cp_full)` before storing — only the inner `data` dict goes to DB
+- **`_restore_checkpoint_from_db()`**: Detects if DB contains old envelope format (has both `"data"` + `"etape"` + `"episode_id"` keys) and uses it directly instead of re-wrapping
+
+### When modifying web.py (Session 16d-bis)
+- `_sync_checkpoint_to_db()` MUST store only the `data` dict, NEVER the full envelope — `sauvegarder_checkpoint()` in main.py already stores the `data` dict directly via `ProductionRepo.maj_etape(checkpoint_data=data)`
+- `_restore_checkpoint_from_db()` MUST handle both formats in DB: old envelope (detect via `"data" in cp_data and "etape" in cp_data`) and new data-only format
+- The two storage paths (`sauvegarder_checkpoint` → `maj_etape` and `_sync_checkpoint_to_db`) MUST store the same format

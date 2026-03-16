@@ -1789,3 +1789,30 @@ class TestSession16dFixes:
         assert "waiting_montage" in source, (
             "_auto_resume_interrupted doit exclure le status 'waiting_montage'"
         )
+
+
+# ── Session 16d-bis : checkpoint DB format correctness ─────────────────
+
+class TestCheckpointDBFormat:
+    """Régression pour le bug de double-enveloppement des checkpoints en DB."""
+
+    def test_sync_checkpoint_stores_data_only(self):
+        """_sync_checkpoint_to_db doit stocker le dict 'data' interne, pas l'enveloppe."""
+        import inspect
+        import web
+        source = inspect.getsource(web._sync_checkpoint_to_db)
+        assert 'cp_full.get("data"' in source or "cp_full.get('data'" in source, (
+            "_sync_checkpoint_to_db doit extraire le dict 'data' de l'enveloppe "
+            "avant de stocker en DB — sinon double-enveloppement à la restauration"
+        )
+
+    def test_restore_checkpoint_handles_both_formats(self):
+        """_restore_checkpoint_from_db doit détecter l'ancien format enveloppe en DB."""
+        import inspect
+        import web
+        source = inspect.getsource(web._restore_checkpoint_from_db)
+        # Doit détecter le format enveloppe (qui a "data" + "etape" + "episode_id")
+        assert '"data" in cp_data' in source or "'data' in cp_data" in source, (
+            "_restore_checkpoint_from_db doit détecter si la DB contient "
+            "une enveloppe complète (ancien bug) ou juste le dict data"
+        )
