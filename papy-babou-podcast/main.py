@@ -2717,6 +2717,46 @@ def _pipeline_inner(
                 "stop_after": stop_after,
             })
 
+    # ── Stop après audio (survie au recyclage container) ──────────────────────
+    if stop_after == "audio":
+        # Le checkpoint sauvé ci-dessus (etape="sfx") garde stop_after="audio".
+        # On le met à jour vers "montage" pour que l'auto-resume ne boucle pas
+        # sur le stop_after="audio" si le chaînage web échoue.
+        sauvegarder_checkpoint(episode_id, "sfx", {
+            "episode_id": episode_id, "titre": titre, "resume": resume,
+            "saison": saison, "numero": numero, "morale": morale,
+            "type_episode": type_episode,
+            "dry_run": dry_run, "rapport": rapport,
+            "pubdate_offset_seconds": pubdate_offset_seconds,
+            "stop_after": "montage",  # Destination finale, pas l'étape intermédiaire
+        })
+        rapport["stop_after"] = "audio"
+        rapport["status"] = "audio_done"
+        console.print(
+            f"\n[bold cyan]  Pipeline arrêté après l'audio — "
+            f"SFX et montage dans le prochain job.[/bold cyan]"
+        )
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour rapport (stop_after=audio) : %s", e)
+        ajouter_historique(rapport, script)
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
+            try:
+                ProductionRepo.maj_etape(
+                    _pid, etape="audio_done",
+                    rapport=rapport,
+                )
+            except Exception as e:
+                logger.warning("DB indisponible pour maj_etape audio_done : %s", e)
+        return rapport
+
     # ── Étape 4 : Bruitages (SFX) ─────────────────────────────────────────────
 
     if etape_idx <= 3:
@@ -2790,6 +2830,44 @@ def _pipeline_inner(
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": stop_after,
         })
+
+    # ── Stop après SFX (survie au recyclage container) ────────────────────────
+    if stop_after == "sfx":
+        # Mettre à jour le checkpoint avec stop_after="montage" pour l'auto-resume
+        sauvegarder_checkpoint(episode_id, "montage", {
+            "episode_id": episode_id, "titre": titre, "resume": resume,
+            "saison": saison, "numero": numero, "morale": morale,
+            "type_episode": type_episode,
+            "dry_run": dry_run, "rapport": rapport,
+            "pubdate_offset_seconds": pubdate_offset_seconds,
+            "stop_after": "montage",  # Destination finale, pas l'étape intermédiaire
+        })
+        rapport["stop_after"] = "sfx"
+        rapport["status"] = "sfx_done"
+        console.print(
+            f"\n[bold cyan]  Pipeline arrêté après les SFX — "
+            f"montage dans le prochain job.[/bold cyan]"
+        )
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour rapport (stop_after=sfx) : %s", e)
+        ajouter_historique(rapport, script)
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
+            try:
+                ProductionRepo.maj_etape(
+                    _pid, etape="sfx_done",
+                    rapport=rapport,
+                )
+            except Exception as e:
+                logger.warning("DB indisponible pour maj_etape sfx_done : %s", e)
+        return rapport
 
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
 
@@ -3384,7 +3462,7 @@ def cli(ctx):
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 @click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
-@click.option("--stop-after", type=click.Choice(["script", "montage", ""]), default="", help="Arreter le pipeline apres l'etape donnee (pour validation web)")
+@click.option("--stop-after", type=click.Choice(["script", "audio", "sfx", "montage", ""]), default="", help="Arreter le pipeline apres l'etape donnee (pour validation web)")
 def produire(episode: str, saison: int, numero: int, resume: str, morale: str, type_episode: str, dry_run: bool, auto: bool, no_publish: bool, stop_after: str):
     """Produit un episode complet du podcast."""
     try:
@@ -3812,7 +3890,7 @@ def _mark_failed_in_db(episode_id: str | None) -> None:
               help="Chemin du fichier checkpoint")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 @click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
-@click.option("--stop-after", type=click.Choice(["script", "montage", ""]), default="", help="Arreter apres l'etape donnee")
+@click.option("--stop-after", type=click.Choice(["script", "audio", "sfx", "montage", ""]), default="", help="Arreter apres l'etape donnee")
 def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
     """Reprend une production depuis un checkpoint."""
     episode_id = None  # Initialisé tôt pour le marquage failed dans le except

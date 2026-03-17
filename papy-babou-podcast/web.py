@@ -7,10 +7,12 @@ Usage :
     python web.py                     # Demarre sur le port 5000
 """
 
+import atexit
 import json
 import logging
 import os
 import re
+import signal
 import subprocess
 import sys
 import threading
@@ -155,6 +157,60 @@ _jobs = {}          # {job_id: {"status": ..., "result": ..., "created_at": ...}
 _jobs_lock = threading.Lock()
 _job_processes = {} # {job_id: subprocess.Popen} — per-job process tracking
 _process_lock = threading.Lock()
+
+
+def _terminate_all_subprocesses():
+    """Envoie SIGTERM à tous les subprocesses de production en cours.
+
+    Appelé via atexit et le handler SIGTERM du worker gunicorn pour que les
+    subprocesses main.py reçoivent SIGTERM et puissent sauvegarder leurs
+    checkpoints avant de mourir.
+
+    Sans cela, quand Replit recycle le container :
+    1. SIGTERM → gunicorn master → workers meurent
+    2. Les subprocesses deviennent orphelins → SIGKILL direct → aucun checkpoint
+    """
+    with _process_lock:
+        procs = list(_job_processes.items())
+    for jid, proc in procs:
+        try:
+            if proc.poll() is None:  # Encore vivant
+                logger.info("Forwarding SIGTERM to subprocess %s (pid %d)", jid, proc.pid)
+                proc.terminate()  # Envoie SIGTERM
+        except Exception as e:
+            logger.debug("Cannot terminate subprocess %s: %s", jid, e)
+    # Laisser le temps aux subprocesses de sauvegarder leurs checkpoints
+    # (le handler SIGTERM de main.py prend ~2-5 secondes pour DB+OS+fichier)
+    if procs:
+        time.sleep(5)
+
+
+# ── Forward SIGTERM aux subprocesses ──────────────────────────────────────
+# Quand Replit recycle le container, SIGTERM va à gunicorn qui tue ses workers.
+# Les subprocesses (main.py) ne reçoivent PAS SIGTERM et sont SIGKILL'd sans
+# pouvoir sauvegarder leur checkpoint. Ceci est la cause racine des 17 échecs.
+_original_sigterm = signal.getsignal(signal.SIGTERM)
+
+
+def _sigterm_forward_handler(signum, frame):
+    """Forward SIGTERM aux subprocesses, puis exécuter le handler original."""
+    _terminate_all_subprocesses()
+    # Ré-exécuter le handler original (gunicorn en a un)
+    if callable(_original_sigterm) and _original_sigterm not in (signal.SIG_DFL, signal.SIG_IGN):
+        _original_sigterm(signum, frame)
+    else:
+        sys.exit(0)
+
+
+try:
+    signal.signal(signal.SIGTERM, _sigterm_forward_handler)
+except (ValueError, OSError):
+    pass  # Pas le thread principal — on se rabat sur atexit
+
+
+# Fallback: atexit fonctionne sur exit() et SystemExit (mais pas SIGKILL)
+atexit.register(_terminate_all_subprocesses)
+
 
 _JOB_TTL_SECONDS = 3600  # Supprimer les jobs termines apres 1 heure
 
@@ -576,7 +632,7 @@ def _persist_web_job_id(job_id, episode_id, max_wait=90):
     logger.warning("web_job_id %s non persisté pour %s après %d tentatives", job_id, episode_id, max_wait)
 
 
-def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
+def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None, on_success_fn=None):
     """Lance un job en arriere-plan et retourne son ID immediatement.
 
     Args:
@@ -584,6 +640,8 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
         timeout: Timeout en secondes.
         cleanup_fn: Fonction optionnelle appelee apres le job (ex: supprimer fichier temp).
         episode_id: Identifiant de l'épisode (pour empêcher les jobs concurrents).
+        on_success_fn: Fonction appelée uniquement si le job réussit (returncode=0).
+            Utilisé pour chaîner automatiquement les étapes (audio → sfx → montage).
 
     Returns:
         job_id (str): Identifiant unique du job.
@@ -622,6 +680,14 @@ def _start_job(cmd_args, timeout=300, cleanup_fn=None, episode_id=None):
                     "result": result,
                     "created_at": time.monotonic(),
                 }
+            # Auto-chaînage : lancer l'étape suivante si le job a réussi
+            if on_success_fn and result.get("status") == "ok":
+                try:
+                    on_success_fn()
+                except Exception as chain_err:
+                    logger.warning(
+                        "Auto-chaînage échoué après job %s : %s", job_id, chain_err,
+                    )
         except Exception as e:
             with _jobs_lock:
                 _jobs[job_id] = {
@@ -1543,15 +1609,61 @@ def api_continue_production(episode_id):
         return jsonify({"error": f"Checkpoint introuvable pour {episode_id}. La production initiale doit d'abord être lancée."}), 404
 
     if phase == "audio":
-        # Reprendre depuis l'étape audio, s'arrêter après le montage
+        # ── Auto-chaînage : audio → sfx → montage en 3 jobs courts ──
+        # Chaque job dure ~10-15 min au lieu de ~40 min pour les 3 ensemble.
+        # Cela permet de survivre aux recyclages container Replit (30-90 min).
+        # Entre chaque job, un checkpoint est sauvé → reprise possible.
+        def _chain_sfx_then_montage():
+            """Lancé automatiquement après le job audio."""
+            _cp = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+            if not _cp.exists():
+                _restore_checkpoint_from_db(episode_id, _cp)
+            if not _cp.exists():
+                logger.warning("Chaînage sfx impossible : checkpoint %s introuvable", episode_id)
+                return
+
+            def _chain_montage():
+                """Lancé automatiquement après le job SFX."""
+                _cp2 = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+                if not _cp2.exists():
+                    _restore_checkpoint_from_db(episode_id, _cp2)
+                if not _cp2.exists():
+                    logger.warning("Chaînage montage impossible : checkpoint %s introuvable", episode_id)
+                    return
+                cmd_montage = [
+                    "reprendre", "-c", str(_cp2), "--auto",
+                    "--stop-after", "montage",
+                ]
+                try:
+                    _start_job(cmd_montage, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+                    logger.info("Auto-chaînage : montage lancé pour %s", episode_id)
+                except ValueError:
+                    logger.debug("Auto-chaînage montage ignoré (job déjà en cours) pour %s", episode_id)
+
+            cmd_sfx = [
+                "reprendre", "-c", str(_cp), "--auto",
+                "--stop-after", "sfx",
+            ]
+            try:
+                _start_job(
+                    cmd_sfx, timeout=_TIMEOUT_PRODUIRE,
+                    episode_id=episode_id, on_success_fn=_chain_montage,
+                )
+                logger.info("Auto-chaînage : SFX lancé pour %s", episode_id)
+            except ValueError:
+                logger.debug("Auto-chaînage SFX ignoré (job déjà en cours) pour %s", episode_id)
+
         cmd = [
             "reprendre",
             "-c", str(checkpoint_path),
             "--auto",
-            "--stop-after", "montage",
+            "--stop-after", "audio",
         ]
         try:
-            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+            job_id = _start_job(
+                cmd, timeout=_TIMEOUT_PRODUIRE,
+                episode_id=episode_id, on_success_fn=_chain_sfx_then_montage,
+            )
         except ValueError as e:
             return jsonify({"error": str(e)}), 409
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "audio"})

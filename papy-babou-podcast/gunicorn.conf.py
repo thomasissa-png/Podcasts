@@ -62,3 +62,18 @@ def post_fork(server, worker):
         database.close_pool()
     except Exception:
         pass
+
+
+def worker_exit(server, worker):
+    """Quand le worker meurt : envoyer SIGTERM aux subprocesses de production.
+
+    Sans cela, quand Replit recycle le container :
+    1. SIGTERM → gunicorn master → workers meurent
+    2. Subprocesses main.py deviennent orphelins → SIGKILL → aucun checkpoint sauvé
+    Ce hook garantit que les subprocesses reçoivent SIGTERM et peuvent sauvegarder.
+    """
+    try:
+        import web
+        web._terminate_all_subprocesses()
+    except Exception:
+        pass
