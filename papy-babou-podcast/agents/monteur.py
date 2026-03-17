@@ -291,6 +291,7 @@ class Monteur:
         Returns:
             Dictionnaire avec les chemins des fichiers générés et la durée.
         """
+        import sys as _sys
         episode = script["episode"]
         episode_id = f"S{episode['saison']:02d}E{episode['numero']:02d}"
 
@@ -298,6 +299,13 @@ class Monteur:
         output_dir = dossier_sortie or config.OUTPUT_DIR
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        # Log direct stderr pour visibilité subprocess (bypass Rich Console)
+        _sys.stderr.write(
+            f"[monteur] Début assemblage {episode_id} — "
+            f"{len(episode['segments'])} segments, "
+            f"segments_dir={segments_dir}, output_dir={output_dir}\n"
+        )
+        _sys.stderr.flush()
         logger.info("Assemblage de l'épisode %s — %s", episode_id, episode["titre"])
 
         # ── Checkpoint intermédiaire : si un WAV pré-assemblé existe, skip étapes 1-8 ──
@@ -424,6 +432,8 @@ class Monteur:
                 logger.warning("Upload WAV intermédiaire échoué : %s", e_wav)
 
         # 9. Exporter
+        _sys.stderr.write(f"[monteur] [9/9] Export MP3 — épisode : {len(episode_complet)/1000:.0f}s\n")
+        _sys.stderr.flush()
         logger.info("  [9/9] Export MP3 HQ + preview...")
         chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
         chemin_preview = output_dir / f"{nom_fichier}_128k.mp3"
@@ -441,6 +451,11 @@ class Monteur:
         )
 
         duree_sec = len(episode_complet) / 1000.0
+        _sys.stderr.write(
+            f"[monteur] Export terminé — HQ: {chemin_hq} ({duree_sec:.0f}s), "
+            f"Preview: {chemin_preview}\n"
+        )
+        _sys.stderr.flush()
         logger.info("Épisode exporté : %s (%.0f sec)", chemin_hq, duree_sec)
         logger.info("Preview exporté : %s", chemin_preview)
 
@@ -492,6 +507,11 @@ class Monteur:
         for i, seg in enumerate(segments):
             # Log de progression tous les 20 segments (visible en temps réel)
             if i > 0 and i % 20 == 0:
+                import sys as _sys_inner
+                _sys_inner.stderr.write(
+                    f"[monteur] Segment {i}/{total_segments} ({100*i//total_segments}%)\n"
+                )
+                _sys_inner.stderr.flush()
                 logger.info(
                     "  Montage segment %d/%d (%.0f%%)",
                     i, total_segments, 100.0 * i / total_segments,

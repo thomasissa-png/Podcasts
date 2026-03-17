@@ -72,7 +72,11 @@ LOG_FILE = config.LOGS_DIR / "production.log"
 
 
 def configurer_logging() -> None:
-    """Configure le logging avec sortie console (Rich) et fichier."""
+    """Configure le logging avec sortie console (Rich) et fichier.
+
+    Utilise force=True pour écraser toute configuration antérieure
+    (imports de bibliothèques qui appellent logging avant nous).
+    """
     logging.basicConfig(
         level=logging.INFO,
         format="%(message)s",
@@ -81,7 +85,16 @@ def configurer_logging() -> None:
             RichHandler(console=console, rich_tracebacks=True),
             logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
         ],
+        force=True,
     )
+    # Ajouter un handler stderr explicite pour les subprocesses
+    # Rich Console peut ne pas flusher correctement quand stdout est un PIPE.
+    # Ce handler garantit que les messages INFO+ arrivent dans stderr,
+    # capturé par _stream_reader dans web.py.
+    _stderr_handler = logging.StreamHandler(sys.stderr)
+    _stderr_handler.setLevel(logging.INFO)
+    _stderr_handler.setFormatter(logging.Formatter("[%(levelname)s] %(name)s: %(message)s"))
+    logging.getLogger().addHandler(_stderr_handler)
 
 
 def initialiser_db() -> bool:
@@ -2052,6 +2065,13 @@ def _pipeline_inner(
     episode_courant=0, total_episodes=0, saison_theme="",
 ):
     """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
+    # Log direct stderr pour visibilité subprocess (ne dépend pas de Rich Console)
+    def _log_direct(msg: str) -> None:
+        sys.stderr.write(f"[pipeline {episode_id}] {msg}\n")
+        sys.stderr.flush()
+
+    _log_direct(f"Démarrage pipeline — etape_depart={etape_depart}, stop_after={stop_after}")
+
     # Timer pour mesurer la durée de chaque étape
     _t_pipeline_start = time.perf_counter()
     _t_last_step = _t_pipeline_start
@@ -2155,6 +2175,7 @@ def _pipeline_inner(
         )
         etape_effective = "script"
     etape_idx = etapes.index(etape_effective)
+    _log_direct(f"etape_idx={etape_idx} ({etape_effective}), etapes à jouer: {etapes[etape_idx:]}")
 
     # ── Nettoyer les anciennes erreurs du rapport pour les étapes qui seront rejouées ──
     # Quand on reprend un checkpoint "empoisonné" (ex: montage échoué), le rapport
@@ -2627,6 +2648,51 @@ def _pipeline_inner(
             )
             etape_idx = 2  # Reculer à l'étape audio
 
+        # ── Nettoyage des segments périmés ──
+        # Après restauration depuis Object Storage, il peut y avoir des segments
+        # d'anciennes productions (IDs différents du script actuel).
+        # Les supprimer pour éviter toute confusion lors du montage.
+        if _segments_present and script:
+            _ids_attendus = {s["id"] for s in script["episode"]["segments"]}
+            _voix_ids = {
+                s["id"] for s in script["episode"]["segments"]
+                if s["personnage"] != "sfx"
+            }
+            _nb_nettoyes = 0
+            for _old_mp3 in segments_episode_dir.glob("*.mp3"):
+                _seg_id = _old_mp3.stem  # ex: "seg_001" from "seg_001.mp3"
+                if _seg_id not in _ids_attendus:
+                    try:
+                        _old_mp3.unlink()
+                        _nb_nettoyes += 1
+                    except OSError:
+                        pass
+            if _nb_nettoyes > 0:
+                _log_direct(
+                    f"Nettoyage : {_nb_nettoyes} segments périmés supprimés "
+                    f"(ne correspondent pas au script actuel avec {len(_ids_attendus)} segments)"
+                )
+                logger.info(
+                    "Segments périmés nettoyés : %d fichiers supprimés "
+                    "(script actuel : %d segments)",
+                    _nb_nettoyes, len(_ids_attendus),
+                )
+
+            # Vérifier que les segments voix du script actuel sont présents
+            _fichiers_restants = {f.stem for f in segments_episode_dir.glob("*.mp3")}
+            _voix_manquants = _voix_ids - _fichiers_restants
+            if len(_voix_manquants) > len(_voix_ids) * 0.5:
+                _log_direct(
+                    f"Après nettoyage : {len(_voix_manquants)}/{len(_voix_ids)} "
+                    f"segments voix manquants — régénération audio nécessaire"
+                )
+                logger.warning(
+                    "Segments voix insuffisants après nettoyage : %d/%d manquants — "
+                    "recul à l'étape audio",
+                    len(_voix_manquants), len(_voix_ids),
+                )
+                etape_idx = 2  # Reculer à audio
+
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 
     if etape_idx <= 2:
@@ -2872,6 +2938,7 @@ def _pipeline_inner(
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
 
     if etape_idx <= 4:
+        _log_direct("Entrée étape 5 — Montage")
         if dry_run:
             console.print(f"\n{Typo.etape(5, 8, 'Montage')}  {Typo.attention('SAUTÉ — dry-run')}")
             rapport["etapes"]["montage"] = {"status": "skipped (dry-run)"}
@@ -2881,6 +2948,7 @@ def _pipeline_inner(
             taille_bytes = 0
             chemin_hq = None
         else:
+            _log_direct(f"Montage — {len(script['episode']['segments'])} segments dans le script")
             console.print(f"\n{Typo.etape(5, 8, 'Montage')}")
 
             # ── Restaurer le WAV intermédiaire depuis Object Storage si nécessaire ──
@@ -2904,11 +2972,56 @@ def _pipeline_inner(
                 except Exception as e_wav_restore:
                     logger.debug("Pas de WAV intermédiaire en Object Storage : %s", e_wav_restore)
 
+            # ── Vérification de cohérence segments vs script ──
+            # CRITIQUE : si les segments locaux ne correspondent pas au script actuel
+            # (ex: anciennes productions restaurées depuis Object Storage), le montage
+            # produira un épisode incohérent ou échouera silencieusement.
+            _seg_dir_check = config.SEGMENTS_DIR / episode_id
+            if _seg_dir_check.exists() and script:
+                _voix_ids_script = {
+                    s["id"] for s in script["episode"]["segments"]
+                    if s["personnage"] != "sfx"
+                }
+                _fichiers_locaux = {f.stem for f in _seg_dir_check.glob("*.mp3")}
+                _voix_manquants = _voix_ids_script - _fichiers_locaux
+                if _voix_manquants:
+                    _log_direct(
+                        f"ALERTE : {len(_voix_manquants)} segments voix manquants "
+                        f"sur {len(_voix_ids_script)} attendus. "
+                        f"Manquants: {sorted(_voix_manquants)[:10]}"
+                    )
+                    logger.warning(
+                        "Segments voix manquants avant montage : %d/%d — %s",
+                        len(_voix_manquants), len(_voix_ids_script),
+                        sorted(_voix_manquants)[:10],
+                    )
+                    # Si plus de 50% des segments voix manquent, le montage est impossible
+                    if len(_voix_manquants) > len(_voix_ids_script) * 0.5:
+                        raise RuntimeError(
+                            f"Montage impossible : {len(_voix_manquants)}/{len(_voix_ids_script)} "
+                            f"segments voix manquants. Relancez la production audio."
+                        )
+
             monteur = Monteur()
+            # Vérifier que les segments audio existent avant de lancer le montage
+            _seg_dir = config.SEGMENTS_DIR / episode_id
+            _seg_count = len(list(_seg_dir.glob("*.mp3"))) if _seg_dir.exists() else 0
+            _script_seg_count = len(script["episode"]["segments"])
+            _log_direct(
+                f"Lancement monteur.assembler() — "
+                f"{_seg_count} fichiers MP3 en local, "
+                f"{_script_seg_count} segments dans le script"
+            )
             try:
                 resultat_montage = monteur.assembler(script)
+                _log_direct(
+                    f"Montage terminé — "
+                    f"durée={resultat_montage.get('duree_secondes', '?')}s, "
+                    f"fichier={resultat_montage.get('chemin_hq', '?')}"
+                )
             except Exception as e:
                 # ── Montage échoué : sauvegarder l'erreur dans le rapport ──
+                _log_direct(f"ERREUR MONTAGE : {type(e).__name__}: {e}")
                 logger.error("Montage échoué pour %s : %s", episode_id, e, exc_info=True)
                 rapport["etapes"]["montage"] = {
                     "status": "error",
@@ -3111,6 +3224,7 @@ def _pipeline_inner(
 
     # ── Stop après montage (mode web : attendre validation avant publication) ─
     if stop_after == "montage":
+        _log_direct(f"Stop après montage — chemin_hq={chemin_hq}")
         rapport["stop_after"] = "montage"
         rapport["status"] = "waiting_validation"
         console.print(
@@ -3893,12 +4007,20 @@ def _mark_failed_in_db(episode_id: str | None) -> None:
 @click.option("--stop-after", type=click.Choice(["script", "audio", "sfx", "montage", ""]), default="", help="Arreter apres l'etape donnee")
 def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
     """Reprend une production depuis un checkpoint."""
+    # Log explicite sur stderr pour garantir la visibilité dans les deployment logs
+    # (Rich Console peut ne pas flusher quand stdout est un PIPE subprocess)
+    def _log_direct(msg: str) -> None:
+        sys.stderr.write(f"[reprendre] {msg}\n")
+        sys.stderr.flush()
+
+    _log_direct(f"Démarrage reprendre — checkpoint={checkpoint}, stop_after={stop_after}")
     episode_id = None  # Initialisé tôt pour le marquage failed dans le except
     try:
         cp = charger_checkpoint(Path(checkpoint))
         data = cp["data"]
         etape = cp["etape"]
         episode_id = data.get("episode_id")
+        _log_direct(f"Checkpoint chargé — episode={episode_id}, etape={etape}")
 
         # Utiliser le stop_after du checkpoint si pas spécifié en CLI
         # (reprise automatique après interruption SIGTERM)
@@ -3913,6 +4035,7 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
             border_style="yellow",
         ))
 
+        _log_direct(f"Lancement pipeline — etape_depart={etape}, stop_after={effective_stop_after}")
         pipeline(
             titre=data["titre"],
             resume=data.get("resume", ""),
@@ -3928,11 +4051,14 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
             stop_after=effective_stop_after,
             pubdate_offset_seconds=data.get("pubdate_offset_seconds", 0),
         )
+        _log_direct(f"Pipeline terminé avec succès pour {episode_id}")
     except ProductionAbandonnee as e:
+        _log_direct(f"Production abandonnée : {e}")
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
     except SystemExit:
         raise  # Ne pas intercepter sys.exit() du SIGTERM handler
     except Exception as e:
+        _log_direct(f"ERREUR FATALE : {type(e).__name__}: {e}")
         console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
         logger.exception("Erreur lors de la reprise")
         # CRITICAL: Marquer la production 'failed' en DB pour éviter que

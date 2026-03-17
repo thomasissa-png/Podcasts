@@ -1178,3 +1178,46 @@ Three file types were created locally but never uploaded:
 - `_run_cli()` creates `_lines_lock = threading.Lock()` passed to both reader threads
 - Final join reads lists under lock: `with _lines_lock: stdout = "\n".join(...)`
 - `_stream_reader` logs exceptions at debug level (not silent pass)
+
+## Montage Job Logging & Segment Coherence Fix (Session 18)
+Root cause diagnosis of 18 consecutive montage failures: invisible subprocess logs + stale segments from Object Storage.
+
+### ROOT CAUSE 1: Subprocess logs invisible
+- `logging.basicConfig()` is a NO-OP if root logger already has handlers (can happen from imports)
+- Rich Console may not flush properly when stdout is a PIPE (subprocess mode)
+- **Fix**: `configurer_logging()` now uses `force=True` to override any prior config
+- **Fix**: Added explicit `sys.stderr.write()` + `flush()` at ALL critical points in `reprendre()`, `_pipeline_inner()`, and `monteur.assembler()`
+- **Fix**: Added `logging.StreamHandler(sys.stderr)` as backup handler that bypasses Rich Console
+- This guarantees log visibility in deployment logs regardless of Rich Console behavior
+
+### ROOT CAUSE 2: Stale segments from Object Storage
+- `restore_segments()` downloads ALL files matching `segments/{episode_id}/` — including segments from OLD script versions
+- After script regeneration or modification, Object Storage accumulates segments from multiple production attempts
+- The monteur iterates over the CURRENT script's segment IDs, but stale segments pollute the directory and cause confusion
+- **Fix**: After restoring segments, cleanup phase removes any MP3 files whose stem (ID) is NOT in the current script's segment list
+- **Fix**: After cleanup, verify that >50% of voice segments are present — if not, force audio regeneration (`etape_idx = 2`)
+- **Fix**: Before montage, coherence check raises `RuntimeError` if >50% of voice segments are still missing
+
+### ROOT CAUSE 3: No heartbeat during montage
+- `monteur.assembler()` runs for 20-30 minutes with logs only every 20 segments via `logger.info()`
+- If logging is broken, the subprocess appears to run silently for the entire duration
+- **Fix**: Direct `sys.stderr.write()` at monteur startup, every 20 segments, and at export completion
+- These bypass all logging frameworks and go directly to stderr, captured by `_stream_reader` in web.py
+
+### When modifying main.py (Session 18)
+- `configurer_logging()` MUST use `force=True` — without it, `basicConfig()` may be silently ignored
+- `_pipeline_inner()` has `_log_direct()` helper for stderr logging — use it at all critical checkpoints
+- `reprendre()` has its own `_log_direct()` — use it for all startup/completion/error messages
+- Segment cleanup guard runs BEFORE audio step and removes files not in `script["episode"]["segments"]`
+- Segment coherence check in montage step raises `RuntimeError` if >50% voice segments are missing
+
+### When modifying monteur.py (Session 18)
+- `assembler()` writes directly to `sys.stderr` at startup, during segment progress, and at export completion
+- These writes bypass `logger` and Rich Console — guaranteed to be captured by subprocess PIPE readers
+
+### When modifying persistent_storage.py (Session 18)
+- `restore_segments()` restores ALL segments for an episode — caller is responsible for cleaning stale ones
+- Stale segments MUST be cleaned by the pipeline AFTER `restore_segments()` and BEFORE `monteur.assembler()`
+
+### Tests (Session 18)
+- Full suite: 579 passed, 3 skipped (ffmpeg), 0 failures
