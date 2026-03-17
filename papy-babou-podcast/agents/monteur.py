@@ -588,11 +588,11 @@ class Monteur:
     def _ffmpeg_master_lufs(input_wav: Path, output_wav: Path,
                             lufs_cible: float = -16.0) -> None:
         """Applique master bus (EQ boost voix + compression) + normalisation LUFS via ffmpeg."""
-        # EQ: boost 2-5kHz (+2.5dB) pour clarté voix
+        # EQ: boost 2-5kHz (+2.5dB, 1.5 octaves) pour clarté voix
         # Compression: ratio 2:1 au-dessus de -20dB
         # LUFS: normalisation intégrée à la cible
         af_filters = (
-            f"equalizer=f=3500:t=o:w=3000:g=2.5,"
+            f"equalizer=f=3500:t=o:w=1.5:g=2.5,"
             f"acompressor=threshold=-20dB:ratio=2:attack=20:release=200,"
             f"loudnorm=I={lufs_cible}:TP=-1.5:LRA=11"
         )
