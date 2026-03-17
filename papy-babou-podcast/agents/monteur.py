@@ -577,7 +577,7 @@ class Monteur:
                  "-filter_complex",
                  "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=2:normalize=0",
                  "-ac", "2", str(output)],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True, text=True, timeout=900,
                 check=True,
             )
         except _subprocess.CalledProcessError as e:
@@ -602,7 +602,7 @@ class Monteur:
                  "-af", af_filters,
                  "-ar", "44100", "-ac", "2",
                  str(output_wav)],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True, text=True, timeout=900,
                 check=True,
             )
         except _subprocess.CalledProcessError as e:
