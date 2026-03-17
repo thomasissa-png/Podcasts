@@ -686,14 +686,14 @@ class Monteur:
                 ["ffmpeg", "-y", "-i", str(input_wav),
                  "-codec:a", "libmp3lame", "-b:a", bitrate,
                  str(output_mp3)],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, timeout=600,
                 check=True,
             )
         except _subprocess.TimeoutExpired as e:
-            logger.error("ffmpeg mp3 export timeout après 120s")
+            logger.error("ffmpeg mp3 export timeout après 600s")
             if e.process:
                 e.process.kill()
-            raise RuntimeError("ffmpeg export MP3 timeout après 120s") from e
+            raise RuntimeError("ffmpeg export MP3 timeout après 600s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg mp3 export failed: %s", e.stderr[-500:] if e.stderr else "")
             raise RuntimeError(f"ffmpeg export MP3 échoué: {e.stderr[-200:]}") from e
