@@ -400,25 +400,49 @@ Clear visual separation between single-episode and season production workflows:
 ### Architecture
 - `persistent_storage.py`: Abstraction over Replit Object Storage SDK
 - Lazy client initialization — no-op when Object Storage is unavailable (dev local, tests)
-- Three storage prefixes: `audio/`, `scripts/`, `rapports/`
+- Nine storage prefixes: `audio/`, `scripts/`, `rapports/`, `saisons/`, `checkpoints/`, `segments/`, `metadonnees/`, `chapters/`, `covers/`
 
 ### Upload (automatic after production)
-- **Audio**: `upload_episode_audio()` after montage (both HQ and preview MP3)
-- **Script**: `upload_script()` after script validation
-- **Rapport**: `upload_rapport()` after rapport final save
-- Storage keys stored in `rapport["etapes"]["montage"]["object_storage"]` and `rapport["etapes"]["script"]["object_storage"]`
+- **Audio HQ/Preview**: `upload_episode_audio()` after montage
+- **Script validé**: `upload_script()` after script validation
+- **Rapport**: `upload_rapport()` after rapport save (+ error handler + stop_after blocks)
+- **Segments voix**: `upload_segments()` after audio TTS production
+- **Segments SFX**: `upload_segments()` after SFX generation
+- **Checkpoint**: `upload_checkpoint()` after each major step
+- **Saison plan**: `upload_saison()` after plan generation/validation
+- **Métadonnées**: `upload_metadonnees()` after metadata validation
+- **Chapitres**: `upload_chapters()` after montage alongside audio
+- **Cover art**: `upload_cover()` after DALL-E generation
+- Storage keys stored in `rapport["etapes"][step]["object_storage*"]`
 
-### Restore (automatic on access)
-- **`web.py` `/audio/episodes/<file>`**: If local file missing, downloads from Object Storage transparently
-- **`web.py` `/api/episode/<id>`**: Restores script from Object Storage before DB fallback
-- **`dashboard_data.py` `trouver_fichier_audio()`**: Step 4 restores audio from Object Storage
-- **`dashboard_data.py` `charger_rapport()`**: Restores rapport JSON from Object Storage
+### Restore (automatic on access/resume)
+- **Audio**: `dashboard_data.trouver_fichier_audio()` → `restore_episode_audio()`
+- **Script**: `main.py` pipeline resume → `restore_script()` + DB fallback (`ScriptRepo`)
+- **Rapport**: `dashboard_data.charger_rapport()` → `restore_rapport()`
+- **Segments**: `main.py` guard before audio step → `restore_segments()` (+ fallback to audio regeneration)
+- **Checkpoint**: `web.py` resume route → `restore_checkpoint()`
+- **Saison**: `config.charger_saison()` + `config.liste_saisons()` → `restore_saison()` / `restore_all_saisons()`
+- **Métadonnées**: `main.py` pipeline resume at etape > 5 → `restore_metadonnees()`
+- **Cover art**: `web.py` `/api/episode/<id>` → `restore_cover()`
 
 ### Patterns
 - All `persistent_storage` imports are inside try/except blocks — never breaks the pipeline
 - `is_available()` caches availability check (lazy singleton)
 - `restore_*()` functions check local file first, download only if missing
 - `upload_file()` returns bool — caller logs warning on failure but continues
+- Pipeline works fully without Object Storage (dev local, tests) — JSON files as fallback
+
+### Segment Fallback (CRITICAL for resume after redeploy)
+- Before audio step: if `etape_idx > 2` (checkpoint says SFX/montage/etc.), check if segments exist locally
+- If not: try `restore_segments()` from Object Storage
+- If still missing (segments were never uploaded — pre-upload-code productions): **fallback to `etape_idx = 2`** to regenerate audio from validated script
+- This prevents the "stuck at montage with no segments" infinite loop
+
+### DATABASE_URL Configuration
+- Pipeline works WITHOUT PostgreSQL — all DB writes guarded by `_use_db()` which returns False if `DATABASE_URL` env var is empty
+- All data persisted to JSON files + Object Storage as fallback
+- To enable DB: set `DATABASE_URL` in Replit Secrets (Neon PostgreSQL connection string)
+- `initialiser_db()` creates schema only when `DATABASE_URL` is set
 
 ## Season Production Pipeline Audit Fixes (Session 8)
 
@@ -1035,3 +1059,78 @@ ROOT CAUSE of 12 consecutive failures: `maj_etape()` + `reprendre()` error handl
 - `_mark_failed_in_db()` MUST be called in the except block to prevent auto-resume loops
 - `SystemExit` must be re-raised (SIGTERM handler uses `sys.exit(0)`)
 - `_etape_mapping` must cover ALL possible DB statuses: `interrupted`, `erreur`, `started`, all `*_done`, all `waiting_*`
+
+## Redeploy Resilience & Object Storage Audit (Session 17)
+Root cause of 14 consecutive production failures after Replit redeploys. Full Object Storage coverage audit.
+
+### ROOT CAUSE: Missing segments on resume → stuck at montage forever
+After Replit redeploy, filesystem is wiped. The pipeline checkpoint said "montage" but audio segments (88 voix + 14 SFX) existed only on local filesystem — never uploaded to Object Storage (the upload code didn't exist yet). Pipeline skipped to montage, found 0 segments, crashed. Next resume → same thing. Infinite loop.
+
+### Fix 1: Script restoration from Object Storage on resume
+- **Before**: `main.py:2208` checked `if chemin_valide.exists()` — if file missing (redeploy), raised `FileNotFoundError` without trying Object Storage
+- **After**: Tries Object Storage first (`persistent_storage.restore_script()`), then DB (`ScriptRepo.charger_valide()`), then raises error only if both fail
+- Same pattern applied to metadata restoration (`restore_metadonnees()`)
+
+### Fix 2: Audio segments upload to Object Storage
+- New functions: `persistent_storage.upload_segments()` / `restore_segments()`
+- Prefix: `segments/{episode_id}/{filename}.mp3`
+- Upload after audio TTS (all voice segments) and after SFX generation
+- Restore before montage on resume
+
+### Fix 3: Segment fallback — regenerate audio if segments irrecoverable
+- Guard BEFORE the audio step (`if etape_idx > 2`): checks if segments exist locally
+- If not: tries `restore_segments()` from Object Storage
+- If still missing: **resets `etape_idx = 2`** to regenerate audio+SFX from validated script
+- This breaks the "stuck at montage" infinite loop for productions where segments were never uploaded
+
+### Fix 4: Resume reuses existing production row (no orphaned DB rows)
+- `pipeline()` was unconditionally calling `ProductionRepo.creer()` even on resume
+- Each resume created a new empty production row, polluting the DB
+- **Fix**: When `etape_depart != "script"`, looks up existing production via `charger_dernier_checkpoint()` and reuses its ID
+
+### Fix 5: Full Object Storage coverage (audit 7/10 → 10/10)
+Three file types were created locally but never uploaded:
+- **Cover art PNG**: `upload_cover()` / `restore_cover()` — uploaded after DALL-E generation, restored in dashboard
+- **Métadonnées JSON** (includes transcript): `upload_metadonnees()` / `restore_metadonnees()` — uploaded after validation, restored on resume
+- **Chapitres JSON**: `upload_chapters()` / `restore_chapters()` — uploaded after montage
+
+### Fix 6: DATABASE_URL not configured (DB empty)
+- `DATABASE_URL` env var was empty → `_use_db()` always returned False → 0 DB writes
+- Not a code bug — config issue. Pipeline designed to work without DB (JSON + Object Storage fallback)
+- To enable: set `DATABASE_URL` in Replit Secrets
+
+### When modifying persistent_storage.py (Session 17)
+- 9 prefixes: `audio/`, `scripts/`, `rapports/`, `saisons/`, `checkpoints/`, `segments/`, `metadonnees/`, `chapters/`, `covers/`
+- `upload_segments()` / `restore_segments()` handle entire `{segments_dir}/{episode_id}/` directory
+- `restore_cover()` tries both PNG and JPG extensions
+- All new functions follow existing patterns: try/except, log warnings, return None/0 on failure
+
+### When modifying main.py (Session 17)
+- Segment guard BEFORE audio step: `if not dry_run and etape_idx > 2` → check segments → restore → fallback to `etape_idx = 2`
+- Script restore on resume: tries Object Storage → DB → error (not just local file check)
+- Metadata restore on resume: same pattern as script
+- Cover art upload: after DALL-E generation in metadata step
+- Chapters upload: after montage alongside audio upload
+- Metadata upload: after metadata validation
+- `pipeline()` reuses existing production on resume (`etape_depart != "script"`)
+
+### When modifying web.py (Session 17)
+- `/api/episode/<id>`: restores cover art from Object Storage if missing locally
+- All `persistent_storage` imports remain inside try/except blocks
+
+### Complete Object Storage Upload/Restore Map
+| File Type | Upload Location | Restore Location | Prefix |
+|-----------|----------------|------------------|--------|
+| Audio HQ/Preview | main.py (montage) | dashboard_data.py | `audio/` |
+| Script validé | main.py (review) | main.py (resume) + web.py | `scripts/` |
+| Rapport | main.py (multiple) | dashboard_data.py | `rapports/` |
+| Checkpoint | main.py (each step) | web.py (resume route) | `checkpoints/` |
+| Saison plan | main.py (planifier) | config.py | `saisons/` |
+| Segments voix/SFX | main.py (audio+SFX) | main.py (guard before audio) | `segments/` |
+| Métadonnées JSON | main.py (after validation) | main.py (resume) | `metadonnees/` |
+| Chapitres JSON | main.py (montage) | — | `chapters/` |
+| Cover art PNG | main.py (DALL-E) | web.py (episode endpoint) | `covers/` |
+
+### Tests (Session 17)
+- Full suite: 577 passed, 3 skipped (ffmpeg), 0 failures
+- Branch: `claude/audit-episode-workflow-pWYpg`
