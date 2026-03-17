@@ -422,22 +422,27 @@ def _extract_error_from_stderr(stderr):
     return None
 
 
-def _stream_reader(stream, label, job_id, collected_lines):
+def _stream_reader(stream, label, job_id, collected_lines, lock):
     """Lit un flux ligne par ligne et le logue en temps réel.
 
     Tourne dans un thread dédié pour ne pas bloquer le thread principal.
-    Les lignes sont aussi collectées dans collected_lines pour le résultat final.
+    Les lignes sont aussi collectées dans collected_lines (protégé par lock) pour le résultat final.
     """
     try:
         for line in stream:
             line = line.rstrip("\n")
             if line:
-                collected_lines.append(line)
+                with lock:
+                    collected_lines.append(line)
                 logger.info("[%s %s] %s", label, job_id or "?", line)
-    except Exception:
-        pass
+    except Exception as e:
+        # I3: Ne pas avaler silencieusement les erreurs de lecture
+        logger.debug("[%s %s] Stream reader terminé : %s", label, job_id or "?", e)
     finally:
-        stream.close()
+        try:
+            stream.close()
+        except Exception:
+            pass
 
 
 def _run_cli(cmd_args, timeout=300, job_id=None):
@@ -471,16 +476,18 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
         # Au lieu de proc.communicate() qui bufferise tout, on lit
         # stdout et stderr dans des threads séparés. Chaque ligne est
         # immédiatement loguée dans les deployment logs Replit.
+        # I4: Lock partagé pour protéger les listes contre les accès concurrents.
         stdout_lines = []
         stderr_lines = []
+        _lines_lock = threading.Lock()
         t_out = threading.Thread(
             target=_stream_reader,
-            args=(proc.stdout, "stdout", job_id, stdout_lines),
+            args=(proc.stdout, "stdout", job_id, stdout_lines, _lines_lock),
             daemon=True,
         )
         t_err = threading.Thread(
             target=_stream_reader,
-            args=(proc.stderr, "stderr", job_id, stderr_lines),
+            args=(proc.stderr, "stderr", job_id, stderr_lines, _lines_lock),
             daemon=True,
         )
         t_out.start()
@@ -504,8 +511,9 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
         t_out.join(timeout=5)
         t_err.join(timeout=5)
 
-        stdout = "\n".join(stdout_lines)
-        stderr = "\n".join(stderr_lines)
+        with _lines_lock:
+            stdout = "\n".join(stdout_lines)
+            stderr = "\n".join(stderr_lines)
 
         if proc.returncode == -9 or proc.returncode == -15:
             return {"error": "Production annulee par l'utilisateur.", "status": "cancelled"}

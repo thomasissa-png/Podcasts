@@ -2789,7 +2789,7 @@ def _pipeline_inner(
             if not _wav_checkpoint_path.exists():
                 try:
                     import persistent_storage
-                    _wav_key = f"montage_wav/{episode_id}_pre_export.wav"
+                    _wav_key = persistent_storage.PREFIX_MONTAGE_WAV + f"{episode_id}_pre_export.wav"
                     if persistent_storage.download_file(_wav_key, _wav_checkpoint_path):
                         logger.info(
                             "WAV intermédiaire restauré depuis Object Storage — "

@@ -332,6 +332,7 @@ def restore_rapport(episode_id: str, dest_dir: Path) -> Path | None:
 
 
 PREFIX_SEGMENTS = "segments/"
+PREFIX_MONTAGE_WAV = "montage_wav/"
 PREFIX_METADONNEES = "metadonnees/"
 PREFIX_CHAPTERS = "chapters/"
 PREFIX_COVERS = "covers/"

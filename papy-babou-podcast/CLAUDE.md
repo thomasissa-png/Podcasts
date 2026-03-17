@@ -1130,7 +1130,51 @@ Three file types were created locally but never uploaded:
 | Métadonnées JSON | main.py (after validation) | main.py (resume) | `metadonnees/` |
 | Chapitres JSON | main.py (montage) | — | `chapters/` |
 | Cover art PNG | main.py (DALL-E) | web.py (episode endpoint) | `covers/` |
+| WAV intermédiaire | monteur.py (after LUFS) | main.py (before montage) | `montage_wav/` |
 
 ### Tests (Session 17)
 - Full suite: 577 passed, 3 skipped (ffmpeg), 0 failures
 - Branch: `claude/audit-episode-workflow-pWYpg`
+
+## Infrastructure Audit Fixes (Session 17b)
+6 fixes from infrastructure audit (3 CRITICAL, 3 HIGH) — score 6.5/10 → fixed.
+
+### I1 CRITICAL: WAV export atomique
+- `monteur.py` WAV checkpoint was written directly → container kill = truncated file → montage stuck forever
+- **Fix**: tempfile + os.replace() pattern — atomic rename prevents corrupt WAV files
+- Temp file cleaned up on exception
+
+### I2 CRITICAL: WAV integrity validation on load
+- No validation when loading intermediate WAV — truncated/corrupt file caused crash or silent audio loss
+- **Fix**: Size check (>1KB), duration check (>10s), try/except around AudioSegment.from_wav()
+- On corrupt WAV: delete + regenerate from scratch (full montage)
+
+### I3 CRITICAL: _stream_reader exception logging
+- `except Exception: pass` silently swallowed all read errors — invisible failures
+- **Fix**: Log exceptions at debug level with stream label and job_id
+- Also protect stream.close() in finally block
+
+### I4 HIGH: Thread-safe log collection
+- stdout_lines/stderr_lines lists shared between threads without lock
+- **Fix**: threading.Lock() shared between both reader threads, acquired on append and join
+
+### I5 HIGH: PREFIX_MONTAGE_WAV constant
+- `montage_wav/` prefix hardcoded in main.py and monteur.py, not defined in persistent_storage.py
+- **Fix**: `PREFIX_MONTAGE_WAV = "montage_wav/"` constant in persistent_storage.py, used by both callers
+
+### I6 HIGH: WAV cleanup in try/except
+- `.unlink()` on WAV cleanup not protected — OSError could crash pipeline after successful export
+- **Fix**: Wrapped in try/except OSError with warning log
+
+### When modifying monteur.py (Session 17b)
+- WAV export MUST use tempfile + os.replace() (atomic write)
+- WAV load MUST validate: size >1KB, duration >10s, wrapped in try/except
+- On corrupt WAV: set `episode_complet = None` → triggers full regeneration
+- `if episode_complet is None:` replaces `else:` for the regeneration block
+- WAV cleanup in try/except OSError
+
+### When modifying web.py (Session 17b)
+- `_stream_reader()` takes a `lock` parameter — all list.append() under lock
+- `_run_cli()` creates `_lines_lock = threading.Lock()` passed to both reader threads
+- Final join reads lists under lock: `with _lines_lock: stdout = "\n".join(...)`
+- `_stream_reader` logs exceptions at debug level (not silent pass)

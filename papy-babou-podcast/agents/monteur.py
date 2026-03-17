@@ -2,7 +2,9 @@
 
 import json
 import logging
+import os
 import random
+import tempfile
 import time
 from pathlib import Path
 
@@ -306,9 +308,28 @@ class Monteur:
         chemin_wav_intermediaire = output_dir / f"{nom_fichier}_pre_export.wav"
 
         if chemin_wav_intermediaire.exists():
-            logger.info("  WAV intermédiaire trouvé — skip étapes 1-8, reprise à l'export")
-            episode_complet = AudioSegment.from_wav(str(chemin_wav_intermediaire))
-        else:
+            # I2: Valider l'intégrité du WAV avant de l'utiliser
+            # Un container kill pendant l'export WAV laisse un fichier tronqué.
+            try:
+                _wav_size = chemin_wav_intermediaire.stat().st_size
+                if _wav_size < 1000:  # WAV header = 44 bytes min, silence ~100KB
+                    raise ValueError(f"WAV trop petit ({_wav_size} bytes)")
+                episode_complet = AudioSegment.from_wav(str(chemin_wav_intermediaire))
+                if len(episode_complet) < 10000:  # < 10 secondes = corrompu
+                    raise ValueError(f"WAV trop court ({len(episode_complet)}ms)")
+                logger.info(
+                    "  WAV intermédiaire trouvé — skip étapes 1-8, reprise à l'export (%.1fs)",
+                    len(episode_complet) / 1000.0,
+                )
+            except Exception as e_wav_load:
+                logger.warning(
+                    "WAV intermédiaire corrompu (%s) — régénération complète", e_wav_load,
+                )
+                chemin_wav_intermediaire.unlink(missing_ok=True)
+                # Laisser tomber dans le else ci-dessous (pas de variable episode_complet)
+                episode_complet = None
+
+        if episode_complet is None:
             # 1. Charger et assembler les segments voix avec overlay SFX et transitions
             logger.info("  [1/9] Assemblage des %d segments voix...", len(episode["segments"]))
             transition = self._charger_transition()
@@ -371,15 +392,28 @@ class Monteur:
             )
 
             # ── Sauvegarder le WAV intermédiaire (checkpoint montage) ──
-            # Si le container est recyclé pendant l'export MP3, ce fichier
-            # permettra de reprendre sans refaire les étapes 1-8.
+            # I1: Export ATOMIQUE — tempfile + os.replace empêche les WAV tronqués
+            # si le container est recyclé pendant l'écriture.
             logger.info("  Sauvegarde WAV intermédiaire (checkpoint montage)...")
-            episode_complet.export(str(chemin_wav_intermediaire), format="wav")
+            try:
+                with tempfile.NamedTemporaryFile(
+                    dir=str(output_dir), suffix=".wav", delete=False,
+                ) as tmp_wav:
+                    tmp_wav_path = Path(tmp_wav.name)
+                episode_complet.export(str(tmp_wav_path), format="wav")
+                os.replace(str(tmp_wav_path), str(chemin_wav_intermediaire))
+            except Exception:
+                # Nettoyer le fichier temporaire en cas d'erreur
+                try:
+                    tmp_wav_path.unlink(missing_ok=True)
+                except Exception:
+                    pass
+                raise
             # Upload vers Object Storage pour survivre aux redeploys
             try:
                 import persistent_storage
                 persistent_storage.upload_file(
-                    f"montage_wav/{episode_id}_pre_export.wav",
+                    persistent_storage.PREFIX_MONTAGE_WAV + f"{episode_id}_pre_export.wav",
                     chemin_wav_intermediaire,
                 )
                 logger.info("  WAV intermédiaire uploadé en Object Storage")
@@ -407,9 +441,12 @@ class Monteur:
         logger.info("Épisode exporté : %s (%.0f sec)", chemin_hq, duree_sec)
         logger.info("Preview exporté : %s", chemin_preview)
 
-        # Nettoyer le WAV intermédiaire (plus nécessaire après export réussi)
-        if chemin_wav_intermediaire.exists():
-            chemin_wav_intermediaire.unlink()
+        # I6: Nettoyer le WAV intermédiaire (plus nécessaire après export réussi)
+        try:
+            if chemin_wav_intermediaire.exists():
+                chemin_wav_intermediaire.unlink()
+        except OSError as e_cleanup:
+            logger.warning("Nettoyage WAV intermédiaire échoué : %s", e_cleanup)
 
         # 10. Générer les chapitres
         type_episode = episode.get("type", "standard")
