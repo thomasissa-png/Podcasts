@@ -2156,6 +2156,30 @@ def _pipeline_inner(
         etape_effective = "script"
     etape_idx = etapes.index(etape_effective)
 
+    # ── Nettoyer les anciennes erreurs du rapport pour les étapes qui seront rejouées ──
+    # Quand on reprend un checkpoint "empoisonné" (ex: montage échoué), le rapport
+    # contient status="error" pour l'étape. Si le pipeline crashe AVANT d'atteindre
+    # cette étape (ex: erreur de chargement script), l'error handler re-sauvegarde
+    # le rapport tel quel — perpétuant la vieille erreur indéfiniment.
+    # On nettoie ici les statuts error/failed des étapes qui vont être rejouées.
+    if rapport.get("etapes"):
+        for i in range(etape_idx, len(etapes)):
+            step_name = etapes[i]
+            step_data = rapport["etapes"].get(step_name, {})
+            if step_data.get("status") in ("error", "failed"):
+                logger.info(
+                    "Nettoyage erreur précédente pour l'étape '%s' avant retry "
+                    "(ancien status=%s, erreur=%s)",
+                    step_name, step_data.get("status"), step_data.get("erreur", "?"),
+                )
+                # Supprimer l'étape erronée — elle sera recréée proprement
+                del rapport["etapes"][step_name]
+        # Nettoyer les flags d'erreur globaux du rapport
+        rapport.pop("erreur", None)
+        rapport.pop("erreur_montage", None)
+        if rapport.get("status") == "failed":
+            del rapport["status"]
+
     # Roadmap visuel des étapes
     console.print(panel_roadmap(etape_idx, dry_run=dry_run))
 

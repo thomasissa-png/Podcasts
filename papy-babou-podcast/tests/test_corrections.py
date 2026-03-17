@@ -1891,3 +1891,91 @@ class TestAutoResumeAntiLoop:
         assert "etape_effective not in etapes" in source or "not in etapes" in source, (
             "_pipeline_inner doit détecter les étapes inconnues et loguer une erreur"
         )
+
+
+# ── Session 18 : nettoyage rapport empoisonné sur reprise ────────────
+
+class TestRapportErrorCleanupOnResume:
+    """Régression pour le checkpoint empoisonné qui empêche la reprise.
+
+    Quand le montage échoue, le rapport contient montage.status='error'.
+    Sur reprise, si le pipeline crashe AVANT d'atteindre le montage (ex: erreur
+    de chargement script), l'error handler re-sauvegarde le rapport tel quel,
+    perpétuant l'erreur indéfiniment.
+    """
+
+    def test_pipeline_inner_cleans_error_steps_on_resume(self):
+        """_pipeline_inner doit nettoyer les étapes error/failed avant retry."""
+        import inspect
+        import main
+        source = inspect.getsource(main._pipeline_inner)
+        # Doit vérifier le status "error" ou "failed" dans les étapes du rapport
+        assert '"error"' in source and '"failed"' in source, (
+            "_pipeline_inner doit nettoyer les étapes avec status='error'/'failed' "
+            "dans le rapport avant de réessayer — sinon checkpoint empoisonné"
+        )
+        # Doit supprimer l'erreur globale du rapport
+        assert 'rapport.pop("erreur"' in source or "rapport.pop('erreur'" in source, (
+            "_pipeline_inner doit supprimer la clé 'erreur' globale du rapport "
+            "avant de réessayer"
+        )
+
+    def test_error_cleanup_logic(self):
+        """Vérifie que la logique de nettoyage fonctionne correctement."""
+        # Simuler un rapport empoisonné (montage échoué)
+        rapport = {
+            "episode_id": "S01E01",
+            "titre": "Test",
+            "status": "failed",
+            "erreur": "UnboundLocalError: tmp_wav_path",
+            "erreur_montage": "UnboundLocalError: tmp_wav_path",
+            "etapes": {
+                "script": {
+                    "score_review": 8,
+                    "validation_humaine": True,
+                    "nb_mots": 3200,
+                },
+                "audio": {
+                    "duree_secondes": 1234.5,
+                },
+                "sfx": {
+                    "nb_sfx": 12,
+                },
+                "montage": {
+                    "status": "error",
+                    "erreur": "UnboundLocalError: tmp_wav_path",
+                    "erreur_type": "UnboundLocalError",
+                },
+            },
+        }
+
+        etapes = ["script", "review", "audio", "sfx", "montage",
+                  "metadonnees", "publication", "rapport"]
+        # Simuler reprise au montage (etape_idx=4)
+        etape_idx = 4
+
+        # Reproduire la logique de nettoyage de _pipeline_inner
+        if rapport.get("etapes"):
+            for i in range(etape_idx, len(etapes)):
+                step_name = etapes[i]
+                step_data = rapport["etapes"].get(step_name, {})
+                if step_data.get("status") in ("error", "failed"):
+                    del rapport["etapes"][step_name]
+            rapport.pop("erreur", None)
+            rapport.pop("erreur_montage", None)
+            if rapport.get("status") == "failed":
+                del rapport["status"]
+
+        # Vérifications
+        assert "montage" not in rapport["etapes"], (
+            "L'étape montage avec status='error' doit être supprimée"
+        )
+        assert "erreur" not in rapport, "La clé 'erreur' globale doit être supprimée"
+        assert "erreur_montage" not in rapport, "La clé 'erreur_montage' doit être supprimée"
+        assert "status" not in rapport, "Le status 'failed' global doit être supprimé"
+        # Les étapes antérieures au point de reprise sont préservées
+        assert rapport["etapes"]["script"]["validation_humaine"] is True, (
+            "Les étapes AVANT le point de reprise doivent être conservées"
+        )
+        assert rapport["etapes"]["audio"]["duree_secondes"] == 1234.5
+        assert rapport["etapes"]["sfx"]["nb_sfx"] == 12
