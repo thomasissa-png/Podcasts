@@ -302,6 +302,7 @@ class Monteur:
 
         # ── Checkpoint intermédiaire : si un WAV pré-assemblé existe, skip étapes 1-8 ──
         # Cela permet de survivre aux recyclages de container Replit pendant le montage.
+        episode_complet = None
         # Après les étapes 1-8 (assemblage + master bus + LUFS), on sauvegarde un WAV
         # temporaire. Sur resume, si ce fichier existe, on va directement à l'export MP3.
         nom_fichier = f"{episode_id}_{_slug_util(episode['titre'])}"
