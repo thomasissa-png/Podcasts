@@ -1,9 +1,11 @@
 """Agent Monteur — Assemble les segments audio en un épisode final."""
 
+import gc
 import json
 import logging
 import os
 import random
+import subprocess as _subprocess
 import tempfile
 import time
 from pathlib import Path
@@ -275,6 +277,12 @@ def _titre_chapitre_semantique(
 class Monteur:
     """Assemble les segments audio en un épisode final avec musique et jingles."""
 
+    # ── Taille de chunk pour l'assemblage par morceaux ──
+    # Chaque chunk de 25 segments ≈ 3-5 min de voix ≈ 30-50 MB en RAM.
+    # Cela empêche l'OOM kill qui survenait en chargeant les 100+ segments
+    # d'un coup (200-600 MB de RAM pour un épisode de 20+ min).
+    CHUNK_SIZE = 25
+
     def assembler(
         self,
         script: dict,
@@ -282,6 +290,10 @@ class Monteur:
         dossier_sortie: Path | None = None,
     ) -> dict:
         """Assemble un épisode complet à partir des segments et du script.
+
+        Version memory-safe : traite les segments par morceaux (chunks) et
+        utilise ffmpeg pour le post-traitement (ambiance, master bus, LUFS)
+        au lieu de tout charger en RAM via pydub.
 
         Args:
             script: Script JSON validé (pour l'ordre des segments et les pauses).
@@ -308,119 +320,175 @@ class Monteur:
         _sys.stderr.flush()
         logger.info("Assemblage de l'épisode %s — %s", episode_id, episode["titre"])
 
-        # ── Checkpoint intermédiaire : si un WAV pré-assemblé existe, skip étapes 1-8 ──
-        # Cela permet de survivre aux recyclages de container Replit pendant le montage.
-        episode_complet = None
-        # Après les étapes 1-8 (assemblage + master bus + LUFS), on sauvegarde un WAV
-        # temporaire. Sur resume, si ce fichier existe, on va directement à l'export MP3.
         nom_fichier = f"{episode_id}_{_slug_util(episode['titre'])}"
+        chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
+        chemin_preview = output_dir / f"{nom_fichier}_128k.mp3"
+
+        # ── Checkpoint intermédiaire : si un WAV pré-assemblé existe, skip vers export ──
         chemin_wav_intermediaire = output_dir / f"{nom_fichier}_pre_export.wav"
+        _skip_to_export = False
 
         if chemin_wav_intermediaire.exists():
-            # I2: Valider l'intégrité du WAV avant de l'utiliser
-            # Un container kill pendant l'export WAV laisse un fichier tronqué.
             try:
                 _wav_size = chemin_wav_intermediaire.stat().st_size
-                if _wav_size < 1000:  # WAV header = 44 bytes min, silence ~100KB
+                if _wav_size < 1000:
                     raise ValueError(f"WAV trop petit ({_wav_size} bytes)")
-                episode_complet = AudioSegment.from_wav(str(chemin_wav_intermediaire))
-                if len(episode_complet) < 10000:  # < 10 secondes = corrompu
-                    raise ValueError(f"WAV trop court ({len(episode_complet)}ms)")
-                logger.info(
-                    "  WAV intermédiaire trouvé — skip étapes 1-8, reprise à l'export (%.1fs)",
-                    len(episode_complet) / 1000.0,
+                # Valider avec ffprobe (pas de chargement en RAM)
+                _probe = _subprocess.run(
+                    ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                     "-of", "default=noprint_wrappers=1:nokey=1",
+                     str(chemin_wav_intermediaire)],
+                    capture_output=True, text=True, timeout=10,
                 )
+                _dur = float(_probe.stdout.strip())
+                if _dur < 10:
+                    raise ValueError(f"WAV trop court ({_dur:.1f}s)")
+                logger.info(
+                    "  WAV intermédiaire trouvé — skip vers export (%.1fs)", _dur,
+                )
+                _skip_to_export = True
             except Exception as e_wav_load:
                 logger.warning(
                     "WAV intermédiaire corrompu (%s) — régénération complète", e_wav_load,
                 )
                 chemin_wav_intermediaire.unlink(missing_ok=True)
-                # Laisser tomber dans le else ci-dessous (pas de variable episode_complet)
-                episode_complet = None
 
-        if episode_complet is None:
-            # 1. Charger et assembler les segments voix avec overlay SFX et transitions
-            logger.info("  [1/9] Assemblage des %d segments voix...", len(episode["segments"]))
+        if not _skip_to_export:
+            # ── Assemblage par morceaux (memory-safe) ──
+            # Au lieu de charger tout en RAM, on traite par chunks de 25 segments,
+            # exporte chaque chunk en WAV, puis utilise ffmpeg pour tout assembler.
+            _sys.stderr.write("[monteur] [1/9] Assemblage segments par morceaux...\n")
+            _sys.stderr.flush()
+
+            all_segments = episode["segments"]
             transition = self._charger_transition()
-            voix = self._assembler_segments(episode["segments"], segments_dir, transition)
-            logger.info("  [1/9] Segments voix assemblés : %.1f secondes", len(voix) / 1000.0)
+            chunk_wavs = []
+            _tmp_dir = Path(tempfile.mkdtemp(dir=str(output_dir), prefix="montage_"))
 
-            # 2. Charger les assets audio (jingles dynamiques par type d'épisode)
-            logger.info("  [2/9] Chargement des jingles...")
-            type_episode = episode.get("type", "standard")
-            numero_saison = episode.get("saison")
-            intro = self._charger_jingle("intro", type_episode, numero_saison)
-            outro = self._charger_jingle("outro", type_episode, numero_saison)
-
-            # 3. Charger la musique de fond selon l'ambiance (dynamique par acte si dispo)
-            logger.info("  [3/9] Chargement musique de fond...")
-            ambiance_par_acte = episode.get("ambiance_par_acte")
-            ambiance_principale = episode.get("ambiance", "fond_doux")
-
-            if ambiance_par_acte and isinstance(ambiance_par_acte, list) and len(ambiance_par_acte) > 1:
-                voix_avec_fond = self._mixer_ambiance_dynamique(
-                    voix, ambiance_par_acte, episode["segments"],
-                )
-                logger.info(
-                    "Ambiance dynamique par acte : %s",
-                    " → ".join(ambiance_par_acte),
-                )
-            else:
-                fond = self._charger_ambiance(ambiance_principale)
-                fond_ajuste = self._preparer_fond(fond, len(voix))
-                voix_avec_fond = voix.overlay(fond_ajuste)
-
-            # 5. Room tone continu adapté à l'ambiance (A1 + adaptatif)
-            logger.info("  [5/9] Chargement room tone...")
-            room_tone = self._charger_room_tone(ambiance_principale)
-            if len(room_tone) > 0:
-                room_tone = room_tone.apply_gain(ROOM_TONE_DB)
-                if room_tone.channels == 1:
-                    room_tone = room_tone.set_channels(2)
-                # Boucler le room tone sur toute la durée
-                if len(room_tone) < len(voix_avec_fond):
-                    repetitions = (len(voix_avec_fond) // len(room_tone)) + 1
-                    room_tone = room_tone * repetitions
-                room_tone = room_tone[:len(voix_avec_fond)]
-                room_tone = room_tone.fade_in(2000).fade_out(2000)
-                voix_avec_fond = voix_avec_fond.overlay(room_tone)
-                logger.info("Room tone appliqué sur %.1fs", len(voix_avec_fond) / 1000.0)
-
-            # 6. Assembler : intro → voix+fond → outro
-            logger.info("  [6/9] Assemblage final (intro + voix + outro)...")
-            episode_complet = self._assembler_final(intro, voix_avec_fond, outro)
-
-            # 7. Traitement master bus (A4)
-            logger.info("  [7/9] Traitement master bus (EQ + compression + limiter)...")
-            episode_complet = self._appliquer_master_bus(episode_complet)
-
-            # 8. Normaliser LUFS
-            logger.info("  [8/9] Normalisation LUFS...")
-            episode_complet = _normaliser_lufs(
-                episode_complet, config.PRODUCTION["lufs_cible"]
-            )
-
-            # ── Sauvegarder le WAV intermédiaire (checkpoint montage) ──
-            # I1: Export ATOMIQUE — tempfile + os.replace empêche les WAV tronqués
-            # si le container est recyclé pendant l'écriture.
-            logger.info("  Sauvegarde WAV intermédiaire (checkpoint montage)...")
-            tmp_wav_path = None
             try:
-                with tempfile.NamedTemporaryFile(
-                    dir=str(output_dir), suffix=".wav", delete=False,
-                ) as tmp_wav:
-                    tmp_wav_path = Path(tmp_wav.name)
-                episode_complet.export(str(tmp_wav_path), format="wav")
-                os.replace(str(tmp_wav_path), str(chemin_wav_intermediaire))
-            except Exception:
-                # Nettoyer le fichier temporaire en cas d'erreur
-                if tmp_wav_path is not None:
-                    try:
-                        tmp_wav_path.unlink(missing_ok=True)
-                    except Exception:
-                        pass
-                raise
-            # Upload vers Object Storage pour survivre aux redeploys
+                # 1. Assembler les segments par chunks
+                for chunk_idx in range(0, len(all_segments), self.CHUNK_SIZE):
+                    chunk_segments = all_segments[chunk_idx:chunk_idx + self.CHUNK_SIZE]
+                    _sys.stderr.write(
+                        f"[monteur] Chunk {chunk_idx // self.CHUNK_SIZE + 1}"
+                        f"/{(len(all_segments) + self.CHUNK_SIZE - 1) // self.CHUNK_SIZE}"
+                        f" — segments {chunk_idx + 1}..{chunk_idx + len(chunk_segments)}\n"
+                    )
+                    _sys.stderr.flush()
+
+                    # Assembler ce chunk via pydub (petit : ~30-50 MB max)
+                    chunk_audio = self._assembler_segments(
+                        chunk_segments, segments_dir,
+                        transition if chunk_idx > 0 else transition,
+                    )
+
+                    # Exporter le chunk en WAV et libérer la mémoire
+                    chunk_path = _tmp_dir / f"chunk_{chunk_idx:04d}.wav"
+                    chunk_audio.export(str(chunk_path), format="wav")
+                    chunk_wavs.append(chunk_path)
+
+                    # CRITIQUE : libérer la RAM du chunk avant le suivant
+                    del chunk_audio
+                    gc.collect()
+
+                logger.info(
+                    "  [1/9] %d chunks assemblés", len(chunk_wavs),
+                )
+
+                # 2. Concaténer les chunks via ffmpeg (streaming, pas de RAM)
+                _sys.stderr.write("[monteur] [2/9] Concaténation ffmpeg...\n")
+                _sys.stderr.flush()
+                voix_wav = _tmp_dir / "voix_complet.wav"
+                self._ffmpeg_concat(chunk_wavs, voix_wav)
+                logger.info("  [2/9] Voix concaténées : %s", voix_wav)
+
+                # Supprimer les chunks (libérer espace disque)
+                for cp in chunk_wavs:
+                    cp.unlink(missing_ok=True)
+
+                # 3. Préparer la musique de fond
+                _sys.stderr.write("[monteur] [3/9] Préparation ambiance...\n")
+                _sys.stderr.flush()
+                ambiance_par_acte = episode.get("ambiance_par_acte")
+                ambiance_principale = episode.get("ambiance", "fond_doux")
+
+                fond_wav = _tmp_dir / "fond.wav"
+                if ambiance_par_acte and isinstance(ambiance_par_acte, list) and len(ambiance_par_acte) > 1:
+                    self._preparer_fond_dynamique_wav(
+                        ambiance_par_acte, voix_wav, fond_wav,
+                    )
+                else:
+                    self._preparer_fond_wav(ambiance_principale, voix_wav, fond_wav)
+
+                # 4. Overlay voix + fond via ffmpeg
+                _sys.stderr.write("[monteur] [4/9] Mix voix + ambiance via ffmpeg...\n")
+                _sys.stderr.flush()
+                voix_fond_wav = _tmp_dir / "voix_fond.wav"
+                self._ffmpeg_mix(voix_wav, fond_wav, voix_fond_wav)
+                voix_wav.unlink(missing_ok=True)
+                fond_wav.unlink(missing_ok=True)
+                logger.info("  [4/9] Voix + fond mixés")
+
+                # 5. Room tone
+                _sys.stderr.write("[monteur] [5/9] Room tone...\n")
+                _sys.stderr.flush()
+                room_wav = _tmp_dir / "room.wav"
+                _has_room = self._preparer_room_tone_wav(
+                    ambiance_principale, voix_fond_wav, room_wav,
+                )
+                if _has_room:
+                    voix_fond_room_wav = _tmp_dir / "voix_fond_room.wav"
+                    self._ffmpeg_mix(voix_fond_wav, room_wav, voix_fond_room_wav)
+                    voix_fond_wav.unlink(missing_ok=True)
+                    room_wav.unlink(missing_ok=True)
+                    voix_fond_wav = voix_fond_room_wav
+                logger.info("  [5/9] Room tone appliqué" if _has_room else "  [5/9] Pas de room tone")
+
+                # 6. Intro + outro (petits fichiers : OK en RAM)
+                _sys.stderr.write("[monteur] [6/9] Assemblage intro/outro...\n")
+                _sys.stderr.flush()
+                type_episode = episode.get("type", "standard")
+                numero_saison = episode.get("saison")
+                intro = self._charger_jingle("intro", type_episode, numero_saison)
+                outro = self._charger_jingle("outro", type_episode, numero_saison)
+                signature = self._charger_signature()
+
+                # Exporter intro/outro en WAV temporaires
+                intro_wav = self._export_jingle_wav(intro, _tmp_dir / "intro.wav", "intro")
+                outro_wav = self._export_jingle_wav(outro, _tmp_dir / "outro.wav", "outro")
+                sig_wav = self._export_jingle_wav(signature, _tmp_dir / "sig.wav", "signature")
+                del intro, outro, signature
+                gc.collect()
+
+                # Concaténer : signature + intro + voix_fond + outro + signature
+                episode_wav = _tmp_dir / "episode.wav"
+                self._ffmpeg_concat(
+                    [sig_wav, intro_wav, voix_fond_wav, outro_wav, sig_wav],
+                    episode_wav,
+                )
+                for f in [intro_wav, outro_wav, sig_wav, voix_fond_wav]:
+                    f.unlink(missing_ok=True)
+                logger.info("  [6/9] Épisode assemblé")
+
+                # 7-8. Master bus + LUFS via ffmpeg
+                _sys.stderr.write("[monteur] [7-8/9] Master bus + LUFS via ffmpeg...\n")
+                _sys.stderr.flush()
+                self._ffmpeg_master_lufs(
+                    episode_wav, chemin_wav_intermediaire,
+                    lufs_cible=config.PRODUCTION["lufs_cible"],
+                )
+                episode_wav.unlink(missing_ok=True)
+                logger.info("  [7-8/9] Master bus + LUFS appliqués")
+
+            finally:
+                # Nettoyage des fichiers temporaires restants
+                import shutil
+                try:
+                    shutil.rmtree(str(_tmp_dir), ignore_errors=True)
+                except Exception:
+                    pass
+
+            # Upload WAV intermédiaire vers Object Storage
             try:
                 import persistent_storage
                 persistent_storage.upload_file(
@@ -431,35 +499,29 @@ class Monteur:
             except Exception as e_wav:
                 logger.warning("Upload WAV intermédiaire échoué : %s", e_wav)
 
-        # 9. Exporter
-        _sys.stderr.write(f"[monteur] [9/9] Export MP3 — épisode : {len(episode_complet)/1000:.0f}s\n")
+        # 9. Export MP3 via ffmpeg (pas de chargement en RAM)
+        _sys.stderr.write(f"[monteur] [9/9] Export MP3 via ffmpeg...\n")
         _sys.stderr.flush()
-        logger.info("  [9/9] Export MP3 HQ + preview...")
-        chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
-        chemin_preview = output_dir / f"{nom_fichier}_128k.mp3"
-
-        episode_complet.export(
-            str(chemin_hq),
-            format="mp3",
+        self._ffmpeg_export_mp3(
+            chemin_wav_intermediaire, chemin_hq,
             bitrate=config.PRODUCTION["mp3_bitrate_final"],
         )
         logger.info("  Export HQ terminé : %s", chemin_hq)
-        episode_complet.export(
-            str(chemin_preview),
-            format="mp3",
+        self._ffmpeg_export_mp3(
+            chemin_wav_intermediaire, chemin_preview,
             bitrate=config.PRODUCTION["mp3_bitrate_preview"],
         )
 
-        duree_sec = len(episode_complet) / 1000.0
+        # Calculer la durée via ffprobe (pas de chargement en RAM)
+        duree_sec = self._ffprobe_duration(chemin_wav_intermediaire)
         _sys.stderr.write(
             f"[monteur] Export terminé — HQ: {chemin_hq} ({duree_sec:.0f}s), "
             f"Preview: {chemin_preview}\n"
         )
         _sys.stderr.flush()
         logger.info("Épisode exporté : %s (%.0f sec)", chemin_hq, duree_sec)
-        logger.info("Preview exporté : %s", chemin_preview)
 
-        # I6: Nettoyer le WAV intermédiaire (plus nécessaire après export réussi)
+        # Nettoyer le WAV intermédiaire
         try:
             if chemin_wav_intermediaire.exists():
                 chemin_wav_intermediaire.unlink()
@@ -482,6 +544,187 @@ class Monteur:
             "chapitres": chapitres,
             "chemin_chapitres": chemin_chapitres,
         }
+
+    # ── Helpers ffmpeg pour le montage memory-safe ──────────────────────────
+
+    @staticmethod
+    def _ffmpeg_concat(input_wavs: list[Path], output_wav: Path) -> None:
+        """Concatène des fichiers WAV via ffmpeg concat demuxer (streaming, 0 RAM)."""
+        concat_list = output_wav.parent / f"{output_wav.stem}_list.txt"
+        with open(concat_list, "w", encoding="utf-8") as f:
+            for wav in input_wavs:
+                f.write(f"file '{wav}'\n")
+        try:
+            _subprocess.run(
+                ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                 "-i", str(concat_list), "-c", "copy", str(output_wav)],
+                capture_output=True, text=True, timeout=120,
+                check=True,
+            )
+        except _subprocess.CalledProcessError as e:
+            logger.error("ffmpeg concat failed: %s", e.stderr[-500:] if e.stderr else "no stderr")
+            raise RuntimeError(f"ffmpeg concat échoué: {e.stderr[-200:]}") from e
+        finally:
+            concat_list.unlink(missing_ok=True)
+
+    @staticmethod
+    def _ffmpeg_mix(input1: Path, input2: Path, output: Path) -> None:
+        """Mixe deux fichiers audio via ffmpeg amix (streaming, 0 RAM)."""
+        try:
+            _subprocess.run(
+                ["ffmpeg", "-y",
+                 "-i", str(input1), "-i", str(input2),
+                 "-filter_complex",
+                 "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=2",
+                 "-ac", "2", str(output)],
+                capture_output=True, text=True, timeout=300,
+                check=True,
+            )
+        except _subprocess.CalledProcessError as e:
+            logger.error("ffmpeg mix failed: %s", e.stderr[-500:] if e.stderr else "no stderr")
+            raise RuntimeError(f"ffmpeg mix échoué: {e.stderr[-200:]}") from e
+
+    @staticmethod
+    def _ffmpeg_master_lufs(input_wav: Path, output_wav: Path,
+                            lufs_cible: float = -16.0) -> None:
+        """Applique master bus (EQ boost voix + compression) + normalisation LUFS via ffmpeg."""
+        # EQ: boost 2-5kHz (+2.5dB) pour clarté voix
+        # Compression: ratio 2:1 au-dessus de -20dB
+        # LUFS: normalisation intégrée à la cible
+        af_filters = (
+            f"equalizer=f=3500:t=o:w=3000:g=2.5,"
+            f"acompressor=threshold=-20dB:ratio=2:attack=20:release=200,"
+            f"loudnorm=I={lufs_cible}:TP=-1.5:LRA=11"
+        )
+        try:
+            _subprocess.run(
+                ["ffmpeg", "-y", "-i", str(input_wav),
+                 "-af", af_filters,
+                 "-ar", "44100", "-ac", "2",
+                 str(output_wav)],
+                capture_output=True, text=True, timeout=300,
+                check=True,
+            )
+        except _subprocess.CalledProcessError as e:
+            logger.error("ffmpeg master+lufs failed: %s", e.stderr[-500:] if e.stderr else "")
+            raise RuntimeError(f"ffmpeg master+LUFS échoué: {e.stderr[-200:]}") from e
+
+    @staticmethod
+    def _ffmpeg_export_mp3(input_wav: Path, output_mp3: Path,
+                           bitrate: str = "192k") -> None:
+        """Exporte WAV → MP3 via ffmpeg (streaming, 0 RAM)."""
+        try:
+            _subprocess.run(
+                ["ffmpeg", "-y", "-i", str(input_wav),
+                 "-codec:a", "libmp3lame", "-b:a", bitrate,
+                 str(output_mp3)],
+                capture_output=True, text=True, timeout=120,
+                check=True,
+            )
+        except _subprocess.CalledProcessError as e:
+            logger.error("ffmpeg mp3 export failed: %s", e.stderr[-500:] if e.stderr else "")
+            raise RuntimeError(f"ffmpeg export MP3 échoué: {e.stderr[-200:]}") from e
+
+    @staticmethod
+    def _ffprobe_duration(path: Path) -> float:
+        """Retourne la durée d'un fichier audio en secondes via ffprobe."""
+        try:
+            result = _subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
+                capture_output=True, text=True, timeout=10,
+            )
+            return float(result.stdout.strip())
+        except Exception:
+            logger.warning("ffprobe durée échoué pour %s — fallback pydub", path)
+            audio = AudioSegment.from_file(str(path))
+            dur = len(audio) / 1000.0
+            del audio
+            return dur
+
+    def _export_jingle_wav(self, jingle: AudioSegment, dest: Path, label: str) -> Path:
+        """Exporte un jingle en WAV avec fade et formatage correct."""
+        if jingle.channels == 1:
+            jingle = jingle.set_channels(2)
+        if label == "intro":
+            max_dur = config.PRODUCTION["intro_jingle_duree_ms"]
+            if len(jingle) > max_dur:
+                jingle = jingle[:max_dur]
+            jingle = jingle.fade_out(FADE_JINGLE_MS)
+        elif label == "outro":
+            max_dur = config.PRODUCTION["outro_jingle_duree_ms"]
+            if len(jingle) > max_dur:
+                jingle = jingle[:max_dur]
+            jingle = jingle.fade_in(FADE_JINGLE_MS)
+        elif label == "signature":
+            jingle = jingle.fade_in(200).fade_out(300)
+
+        # Ajouter le silence de transition
+        silence = AudioSegment.silent(duration=SILENCE_TRANSITION_MS, frame_rate=44100)
+        silence = silence.set_channels(2)
+        if label == "intro":
+            jingle = jingle + silence
+        elif label == "outro":
+            jingle = silence + jingle
+
+        jingle.export(str(dest), format="wav")
+        return dest
+
+    def _preparer_fond_wav(self, ambiance: str, voix_wav: Path, fond_wav: Path) -> None:
+        """Prépare la musique de fond et l'exporte en WAV à la durée de la voix."""
+        duree_ms = int(self._ffprobe_duration(voix_wav) * 1000)
+        fond = self._charger_ambiance(ambiance)
+        fond = self._preparer_fond(fond, duree_ms)
+        fond.export(str(fond_wav), format="wav")
+        del fond
+        gc.collect()
+
+    def _preparer_fond_dynamique_wav(
+        self, ambiances: list[str], voix_wav: Path, fond_wav: Path,
+    ) -> None:
+        """Prépare un fond dynamique (multi-ambiance) et l'exporte en WAV."""
+        duree_totale_ms = int(self._ffprobe_duration(voix_wav) * 1000)
+        nb_actes = len(ambiances)
+        duree_par_acte = duree_totale_ms // nb_actes
+
+        resultat = AudioSegment.empty()
+        crossfade_amb = 2000
+
+        for i, ambiance in enumerate(ambiances):
+            dur = duree_par_acte if i < nb_actes - 1 else (duree_totale_ms - i * duree_par_acte)
+            fond = self._charger_ambiance(ambiance)
+            fond = self._preparer_fond(fond, dur)
+            if len(resultat) > crossfade_amb and len(fond) > crossfade_amb:
+                resultat = resultat.append(fond, crossfade=crossfade_amb)
+            else:
+                resultat += fond
+            del fond
+
+        resultat.export(str(fond_wav), format="wav")
+        del resultat
+        gc.collect()
+
+    def _preparer_room_tone_wav(
+        self, ambiance: str, voix_wav: Path, room_wav: Path,
+    ) -> bool:
+        """Prépare le room tone et l'exporte en WAV. Retourne False si pas de room tone."""
+        room_tone = self._charger_room_tone(ambiance)
+        if len(room_tone) == 0:
+            return False
+
+        duree_ms = int(self._ffprobe_duration(voix_wav) * 1000)
+        room_tone = room_tone.apply_gain(ROOM_TONE_DB)
+        if room_tone.channels == 1:
+            room_tone = room_tone.set_channels(2)
+        if len(room_tone) < duree_ms:
+            repetitions = (duree_ms // len(room_tone)) + 1
+            room_tone = room_tone * repetitions
+        room_tone = room_tone[:duree_ms]
+        room_tone = room_tone.fade_in(2000).fade_out(2000)
+        room_tone.export(str(room_wav), format="wav")
+        del room_tone
+        gc.collect()
+        return True
 
     def _assembler_segments(
         self, segments: list[dict], dossier: Path,

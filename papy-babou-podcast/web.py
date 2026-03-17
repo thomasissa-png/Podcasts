@@ -572,7 +572,22 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
             stderr = "\n".join(stderr_lines)
 
         if proc.returncode == -9 or proc.returncode == -15:
-            return {"error": "Production annulee par l'utilisateur.", "status": "cancelled"}
+            # SIGKILL (-9) = OOM killer ou kill externe
+            # SIGTERM (-15) = annulation utilisateur ou recyclage container
+            if proc.returncode == -9:
+                err_msg = (
+                    "Le processus a été tué par le système (SIGKILL). "
+                    "Cause probable : mémoire insuffisante (OOM). "
+                    "Le montage audio charge trop de données en RAM."
+                )
+                logger.error(
+                    "[subprocess %s] OOM kill (SIGKILL) — "
+                    "le montage a dépassé la limite mémoire du container",
+                    job_id or "?",
+                )
+                return {"error": err_msg, "status": "error"}
+            else:
+                return {"error": "Production annulée (SIGTERM).", "status": "cancelled"}
 
         if proc.returncode != 0:
             logger.error(
