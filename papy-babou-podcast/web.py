@@ -1577,7 +1577,16 @@ def api_validate_episode(episode_id):
     }
     if step == "script" and action == "validate":
         # BUG #4: Vérifier que le checkpoint existe avant de proposer la suite
+        # Restaurer depuis Object Storage / DB si nécessaire (après redéploiement)
         checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        if not checkpoint_path.exists():
+            try:
+                import persistent_storage
+                persistent_storage.restore_checkpoint(episode_id, config.CHECKPOINTS_DIR)
+            except Exception:
+                pass
+        if not checkpoint_path.exists():
+            _restore_checkpoint_from_db(episode_id, checkpoint_path)
         if checkpoint_path.exists():
             response["next_phase"] = "audio"
             response["message"] += " Lancez maintenant la production audio."
@@ -1765,7 +1774,16 @@ def api_regenerate_episode(episode_id):
 
         # W3: Utiliser reprendre depuis le checkpoint pour éviter de créer
         # une nouvelle entrée production en DB (produire en crée une à chaque appel)
+        # Restaurer checkpoint depuis Object Storage / DB si nécessaire
         checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        if not checkpoint_path.exists():
+            try:
+                import persistent_storage
+                persistent_storage.restore_checkpoint(episode_id, config.CHECKPOINTS_DIR)
+            except Exception:
+                pass
+        if not checkpoint_path.exists():
+            _restore_checkpoint_from_db(episode_id, checkpoint_path)
         if checkpoint_path.exists():
             try:
                 with fichier_lock(checkpoint_path):
@@ -1818,9 +1836,18 @@ def api_regenerate_episode(episode_id):
 
     elif step == "montage":
         # Relancer audio+montage depuis le checkpoint
+        # Si le fichier n'existe pas (redéploiement), restaurer depuis Object Storage ou DB
         checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
         if not checkpoint_path.exists():
-            return jsonify({"error": f"Checkpoint introuvable pour {episode_id}."}), 404
+            try:
+                import persistent_storage
+                persistent_storage.restore_checkpoint(episode_id, config.CHECKPOINTS_DIR)
+            except Exception:
+                pass
+        if not checkpoint_path.exists():
+            _restore_checkpoint_from_db(episode_id, checkpoint_path)
+        if not checkpoint_path.exists():
+            return jsonify({"error": f"Checkpoint introuvable pour {episode_id}. Relancez la production depuis le début."}), 404
 
         # Sauvegarder les instructions dans le rapport (DB + fichier)
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
