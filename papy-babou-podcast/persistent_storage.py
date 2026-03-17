@@ -332,6 +332,9 @@ def restore_rapport(episode_id: str, dest_dir: Path) -> Path | None:
 
 
 PREFIX_SEGMENTS = "segments/"
+PREFIX_METADONNEES = "metadonnees/"
+PREFIX_CHAPTERS = "chapters/"
+PREFIX_COVERS = "covers/"
 
 
 def upload_segments(episode_id: str, segments_dir: Path) -> int:
@@ -390,6 +393,96 @@ def restore_segments(episode_id: str, segments_dir: Path) -> int:
     if count > 0:
         logger.info("Segments restaurés pour %s : %d fichiers", episode_id, count)
     return count
+
+
+def upload_metadonnees(episode_id: str, meta_path: Path) -> str | None:
+    """Upload le fichier métadonnées vers Object Storage.
+
+    Returns:
+        Clé de stockage, ou None si échec.
+    """
+    if not meta_path or not meta_path.exists():
+        return None
+    key = _storage_key(PREFIX_METADONNEES, meta_path.name)
+    if upload_file(key, meta_path):
+        return key
+    return None
+
+
+def restore_metadonnees(episode_id: str, dest_dir: Path) -> Path | None:
+    """Restaure le fichier métadonnées depuis Object Storage.
+
+    Returns:
+        Chemin du fichier restauré, ou None si indisponible.
+    """
+    key = _storage_key(PREFIX_METADONNEES, f"{episode_id}_meta.json")
+    dest = dest_dir / f"{episode_id}_meta.json"
+    if dest.exists():
+        return dest
+    if download_file(key, dest):
+        return dest
+    return None
+
+
+def upload_chapters(episode_id: str, chapters_path: Path) -> str | None:
+    """Upload le fichier chapitres vers Object Storage.
+
+    Returns:
+        Clé de stockage, ou None si échec.
+    """
+    if not chapters_path or not chapters_path.exists():
+        return None
+    key = _storage_key(PREFIX_CHAPTERS, chapters_path.name)
+    if upload_file(key, chapters_path):
+        return key
+    return None
+
+
+def restore_chapters(episode_id: str, dest_dir: Path) -> Path | None:
+    """Restaure le fichier chapitres depuis Object Storage.
+
+    Returns:
+        Chemin du fichier restauré, ou None si indisponible.
+    """
+    key = _storage_key(PREFIX_CHAPTERS, f"{episode_id}_chapters.json")
+    dest = dest_dir / f"{episode_id}_chapters.json"
+    if dest.exists():
+        return dest
+    if download_file(key, dest):
+        return dest
+    return None
+
+
+def upload_cover(episode_id: str, cover_path: Path) -> str | None:
+    """Upload le cover art vers Object Storage.
+
+    Returns:
+        Clé de stockage, ou None si échec.
+    """
+    if not cover_path or not cover_path.exists():
+        return None
+    key = _storage_key(PREFIX_COVERS, cover_path.name)
+    if upload_file(key, cover_path):
+        return key
+    return None
+
+
+def restore_cover(episode_id: str, dest_dir: Path) -> Path | None:
+    """Restaure le cover art depuis Object Storage.
+
+    Cherche PNG puis JPG.
+
+    Returns:
+        Chemin du fichier restauré, ou None si indisponible.
+    """
+    for ext in ("png", "jpg"):
+        dest = dest_dir / f"{episode_id}_cover.{ext}"
+        if dest.exists():
+            return dest
+        key = _storage_key(PREFIX_COVERS, f"{episode_id}_cover.{ext}")
+        if download_file(key, dest):
+            return dest
+    return None
 
 
 def upload_saison(numero: int, saison_path: Path) -> str | None:

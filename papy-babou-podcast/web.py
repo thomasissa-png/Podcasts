@@ -1116,13 +1116,21 @@ def api_episode_detail(episode_id):
             except Exception as e:
                 logger.warning("Échec chargement script checkpoint %s : %s", episode_id, e)
 
-    # Load cover art path
+    # Load cover art path (restore from Object Storage if missing)
     cover_art = None
     for ext in (".png", ".jpg"):
         cover_path = config.COVERS_DIR / f"{episode_id}_cover{ext}"
         if cover_path.exists():
             cover_art = f"{episode_id}_cover{ext}"
             break
+    if not cover_art:
+        try:
+            import persistent_storage
+            restored = persistent_storage.restore_cover(episode_id, config.COVERS_DIR)
+            if restored:
+                cover_art = restored.name
+        except Exception:
+            pass
 
     # Load transcript
     transcript = None

@@ -2187,15 +2187,25 @@ def _pipeline_inner(
             rapport["etapes"].setdefault("montage", {})["validation_humaine"] = True
 
     # Restaurer les métadonnées depuis le fichier si on reprend après l'étape metadonnees
-    if etape_idx > 5 and chemin_meta.exists():
-        with open(chemin_meta, "r", encoding="utf-8") as f:
-            meta = json.load(f)
-        logger.info("Métadonnées chargées depuis : %s", chemin_meta)
-    elif etape_idx > 5:
-        raise FileNotFoundError(
-            f"Reprise à l'étape {etape_depart} impossible : "
-            f"le fichier de métadonnées {chemin_meta} est introuvable."
-        )
+    if etape_idx > 5:
+        if not chemin_meta.exists():
+            # Restaurer depuis Object Storage
+            try:
+                import persistent_storage
+                persistent_storage.restore_metadonnees(episode_id, config.SCRIPTS_DIR)
+                logger.info("Métadonnées restaurées depuis Object Storage : %s", chemin_meta)
+            except Exception as e:
+                logger.warning("Restauration métadonnées Object Storage échouée : %s", e)
+        if chemin_meta.exists():
+            with open(chemin_meta, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            logger.info("Métadonnées chargées depuis : %s", chemin_meta)
+        else:
+            raise FileNotFoundError(
+                f"Reprise à l'étape {etape_depart} impossible : "
+                f"le fichier de métadonnées {chemin_meta} est introuvable "
+                f"(ni local, ni Object Storage)."
+            )
 
     # Charger l'historique pour la continuité
     historique = charger_historique()
@@ -2837,7 +2847,7 @@ def _pipeline_inner(
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement montage : %s", e)
 
-            # Upload audio vers Object Storage (persistance inter-deploy)
+            # Upload audio + chapitres vers Object Storage (persistance inter-deploy)
             try:
                 import persistent_storage
                 _preview_raw = resultat_montage.get("chemin_preview")
@@ -2847,8 +2857,14 @@ def _pipeline_inner(
                 )
                 if storage_keys:
                     rapport["etapes"]["montage"]["object_storage"] = storage_keys
+                # Upload chapitres
+                chemin_chapitres = resultat_montage.get("chemin_chapitres")
+                if chemin_chapitres:
+                    chap_key = persistent_storage.upload_chapters(episode_id, Path(chemin_chapitres))
+                    if chap_key:
+                        rapport["etapes"]["montage"]["object_storage_chapters"] = chap_key
             except Exception as e:
-                logger.warning("Object Storage indisponible pour audio : %s", e)
+                logger.warning("Object Storage indisponible pour audio/chapitres : %s", e)
 
             sauvegarder_checkpoint(episode_id, "metadonnees", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
@@ -3062,6 +3078,15 @@ def _pipeline_inner(
                 console.print(f"  Cover art : {cover_path}")
                 rapport["etapes"]["metadonnees"]["cover_art_cout"] = config.COUTS["openai_dalle3_par_image"]
 
+                # Upload cover art vers Object Storage
+                try:
+                    import persistent_storage
+                    cover_key = persistent_storage.upload_cover(episode_id, cover_path)
+                    if cover_key:
+                        rapport["etapes"]["metadonnees"]["object_storage_cover"] = cover_key
+                except Exception as e:
+                    logger.warning("Object Storage indisponible pour cover art : %s", e)
+
     # ── Validation humaine : metadonnees ──────────────────────────────────────
 
     if not auto and not dry_run and etape_idx <= 5:
@@ -3074,6 +3099,16 @@ def _pipeline_inner(
         metadonnees_agent = Metadonnees()
         metadonnees_agent.sauvegarder(meta, chemin_meta)
         rapport["etapes"]["metadonnees"]["validation_humaine"] = True
+
+    # Upload métadonnées vers Object Storage (après validation éventuelle)
+    if not dry_run and etape_idx <= 5:
+        try:
+            import persistent_storage
+            meta_key = persistent_storage.upload_metadonnees(episode_id, chemin_meta)
+            if meta_key:
+                rapport["etapes"]["metadonnees"]["object_storage_meta"] = meta_key
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour métadonnées : %s", e)
 
     _log_step_duration("Métadonnées")
 
