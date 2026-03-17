@@ -396,6 +396,7 @@ class Monteur:
             # I1: Export ATOMIQUE — tempfile + os.replace empêche les WAV tronqués
             # si le container est recyclé pendant l'écriture.
             logger.info("  Sauvegarde WAV intermédiaire (checkpoint montage)...")
+            tmp_wav_path = None
             try:
                 with tempfile.NamedTemporaryFile(
                     dir=str(output_dir), suffix=".wav", delete=False,
@@ -405,10 +406,11 @@ class Monteur:
                 os.replace(str(tmp_wav_path), str(chemin_wav_intermediaire))
             except Exception:
                 # Nettoyer le fichier temporaire en cas d'erreur
-                try:
-                    tmp_wav_path.unlink(missing_ok=True)
-                except Exception:
-                    pass
+                if tmp_wav_path is not None:
+                    try:
+                        tmp_wav_path.unlink(missing_ok=True)
+                    except Exception:
+                        pass
                 raise
             # Upload vers Object Storage pour survivre aux redeploys
             try:
