@@ -575,7 +575,7 @@ class Monteur:
                 ["ffmpeg", "-y",
                  "-i", str(input1), "-i", str(input2),
                  "-filter_complex",
-                 "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=2",
+                 "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=2:normalize=0",
                  "-ac", "2", str(output)],
                 capture_output=True, text=True, timeout=300,
                 check=True,
