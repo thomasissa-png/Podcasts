@@ -237,6 +237,134 @@ def _construire_bloc_preferences() -> str:
     return "\n".join(lignes)
 
 
+def _appliquer_instructions_montage(
+    script: dict, instructions: str, episode_id: str
+) -> dict:
+    """Modifie le script selon les instructions du producteur pour le montage.
+
+    Utilise Claude pour interpréter les instructions en langage naturel et
+    adapter les paramètres du script qui affectent le montage : pause_apres_ms,
+    ton, rythme, mode SFX, ambiance_par_acte.
+
+    Le script modifié est sauvegardé comme nouvelle version validée.
+
+    Args:
+        script: Script JSON validé actuel.
+        instructions: Instructions en texte libre du producteur.
+        episode_id: Identifiant de l'épisode (pour la sauvegarde).
+
+    Returns:
+        Script modifié avec les ajustements demandés.
+    """
+    import anthropic
+    from utils import parser_json_llm
+
+    client = anthropic.Anthropic()
+
+    # Extraire les segments actuels pour contexte
+    segments = script.get("episode", {}).get("segments", [])
+    segments_resume = []
+    for i, seg in enumerate(segments):
+        segments_resume.append(
+            f"  [{i}] id={seg['id']} personnage={seg['personnage']} "
+            f"ton={seg.get('ton', 'normal')} rythme={seg.get('rythme', 'normal')} "
+            f"pause_apres_ms={seg.get('pause_apres_ms', 0)} "
+            f"texte=\"{seg.get('texte', '')[:60]}...\""
+        )
+
+    system_prompt = (
+        "Tu es un ingénieur son spécialisé dans le montage de podcasts pour enfants. "
+        "On te donne un script JSON d'épisode et des instructions du producteur. "
+        "Tu dois modifier UNIQUEMENT les paramètres de montage du script, sans changer "
+        "le texte des dialogues ni ajouter/supprimer de segments.\n\n"
+        "Paramètres modifiables par segment :\n"
+        "- pause_apres_ms (0-2500) : durée de la pause après le segment en ms\n"
+        "- ton : émotion du segment (joyeux, triste, dramatique, solennel, tendre, "
+        "epique, malicieux, mystérieux, calme, surpris, effrayé, enthousiaste, "
+        "nostalgique, complice, rieur)\n"
+        "- rythme : cadence (rapide, normal, lent)\n"
+        "- mode (SFX uniquement) : overlay (superposé à la voix) ou insert (séquentiel)\n\n"
+        "Paramètres modifiables au niveau épisode :\n"
+        "- ambiance : thème musical de fond\n"
+        "- ambiance_par_acte : liste de 3 ambiances pour varier par acte\n\n"
+        "Réponds UNIQUEMENT avec un JSON contenant les modifications :\n"
+        "{\n"
+        '  "modifications_segments": {\n'
+        '    "<index_segment>": {"pause_apres_ms": 1500, "ton": "dramatique", ...},\n'
+        "    ...\n"
+        "  },\n"
+        '  "modifications_episode": {"ambiance": "...", "ambiance_par_acte": [...]},\n'
+        '  "resume_modifications": "Description courte des changements appliqués"\n'
+        "}\n\n"
+        "Ne modifie QUE ce qui est demandé par le producteur. "
+        "Laisse les autres paramètres inchangés."
+    )
+
+    user_prompt = (
+        f"INSTRUCTIONS DU PRODUCTEUR :\n{instructions}\n\n"
+        f"SEGMENTS ACTUELS ({len(segments)} segments) :\n"
+        + "\n".join(segments_resume)
+        + f"\n\nAmbiance actuelle : {script.get('episode', {}).get('ambiance', 'non définie')}"
+        + f"\nAmbiance par acte : {script.get('episode', {}).get('ambiance_par_acte', 'non défini')}"
+    )
+
+    logger.info("Appel Claude pour instructions montage %s", episode_id)
+    response = config.appel_claude_avec_retry(
+        client,
+        model=config.CLAUDE_MODEL,
+        max_tokens=4096,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_prompt}],
+    )
+
+    response_text = response.content[0].text
+    try:
+        modifications = parser_json_llm(response_text)
+    except (json.JSONDecodeError, ValueError):
+        logger.warning(
+            "Réponse Claude non parsable pour instructions montage %s", episode_id
+        )
+        return script
+
+    if not modifications:
+        logger.warning("Aucune modification retournée par Claude pour %s", episode_id)
+        return script
+
+    # Appliquer les modifications aux segments
+    mods_segments = modifications.get("modifications_segments", {})
+    for idx_str, changements in mods_segments.items():
+        try:
+            idx = int(idx_str)
+            if 0 <= idx < len(segments):
+                for cle, valeur in changements.items():
+                    if cle in ("pause_apres_ms", "ton", "rythme", "mode"):
+                        segments[idx][cle] = valeur
+        except (ValueError, IndexError):
+            logger.warning("Index segment invalide : %s", idx_str)
+
+    # Appliquer les modifications au niveau épisode
+    mods_episode = modifications.get("modifications_episode", {})
+    if "ambiance" in mods_episode:
+        script["episode"]["ambiance"] = mods_episode["ambiance"]
+    if "ambiance_par_acte" in mods_episode:
+        script["episode"]["ambiance_par_acte"] = mods_episode["ambiance_par_acte"]
+
+    resume = modifications.get("resume_modifications", "Modifications appliquées")
+    logger.info("Instructions montage appliquées pour %s : %s", episode_id, resume)
+
+    # Sauvegarder le script modifié comme version validée
+    chemin_valide = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    try:
+        with fichier_lock(chemin_valide):
+            with open(chemin_valide, "w", encoding="utf-8") as f:
+                json.dump(script, f, ensure_ascii=False, indent=2)
+        logger.info("Script modifié sauvegardé : %s", chemin_valide)
+    except Exception as e:
+        logger.warning("Erreur sauvegarde script modifié : %s", e)
+
+    return script
+
+
 def _charger_scripts_precedents_saison(saison: int, numero: int) -> list[dict]:
     """Charge les scripts validés des épisodes précédents de la même saison.
 
@@ -3001,6 +3129,34 @@ def _pipeline_inner(
                             f"Montage impossible : {len(_voix_manquants)}/{len(_voix_ids_script)} "
                             f"segments voix manquants. Relancez la production audio."
                         )
+
+            # ── Appliquer les instructions de montage (modification depuis le web) ──
+            # Si le producteur a soumis des instructions via "Modifier le montage",
+            # on utilise Claude pour adapter le script (pauses, tons, rythmes, SFX)
+            # avant de relancer le montage avec les segments audio existants.
+            _montage_instructions_path = config.SCRIPTS_DIR / f"{episode_id}_montage_instructions.txt"
+            if _montage_instructions_path.exists():
+                try:
+                    _montage_instructions = _montage_instructions_path.read_text(
+                        encoding="utf-8"
+                    ).strip()
+                    if _montage_instructions:
+                        _log_direct(
+                            f"Instructions de montage détectées : "
+                            f"{_montage_instructions[:200]}"
+                        )
+                        console.print(
+                            f"  [bold cyan]Instructions du producteur :[/bold cyan] "
+                            f"{_montage_instructions[:200]}"
+                        )
+                        script = _appliquer_instructions_montage(
+                            script, _montage_instructions, episode_id
+                        )
+                    _montage_instructions_path.unlink()  # Usage unique
+                except Exception as e:
+                    logger.warning(
+                        "Erreur application instructions montage : %s", e
+                    )
 
             monteur = Monteur()
             # Vérifier que les segments audio existent avant de lancer le montage

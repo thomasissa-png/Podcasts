@@ -137,7 +137,10 @@ def serve_episode_audio(filename):
                 return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
         except Exception:
             return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
-    return send_from_directory(str(episodes_dir), filename, mimetype="audio/mpeg")
+    response = send_from_directory(str(episodes_dir), filename, mimetype="audio/mpeg")
+    # Empêcher le cache navigateur de servir un ancien fichier après regénération
+    response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
 
 
 def _check_api_key(key_name="ANTHROPIC_API_KEY"):
@@ -1835,7 +1838,7 @@ def api_regenerate_episode(episode_id):
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "script"})
 
     elif step == "montage":
-        # Relancer audio+montage depuis le checkpoint
+        # Relancer le montage depuis le checkpoint avec instructions
         # Si le fichier n'existe pas (redéploiement), restaurer depuis Object Storage ou DB
         checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
         if not checkpoint_path.exists():
@@ -1848,6 +1851,11 @@ def api_regenerate_episode(episode_id):
             _restore_checkpoint_from_db(episode_id, checkpoint_path)
         if not checkpoint_path.exists():
             return jsonify({"error": f"Checkpoint introuvable pour {episode_id}. Relancez la production depuis le début."}), 404
+
+        # Sauvegarder les instructions dans un fichier pour le pipeline
+        montage_instructions_path = config.SCRIPTS_DIR / f"{episode_id}_montage_instructions.txt"
+        montage_instructions_path.parent.mkdir(parents=True, exist_ok=True)
+        montage_instructions_path.write_text(instructions, encoding="utf-8")
 
         # Sauvegarder les instructions dans le rapport (DB + fichier)
         rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
@@ -1872,12 +1880,12 @@ def api_regenerate_episode(episode_id):
             except Exception as e:
                 logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
 
-        # Forcer la reprise depuis l'étape audio en réécrivant le checkpoint
+        # Forcer la reprise depuis l'étape montage (pas audio — les segments existent déjà)
         try:
             with fichier_lock(checkpoint_path):
                 with open(checkpoint_path, "r", encoding="utf-8") as f:
                     cp = _json.load(f)
-                cp["etape"] = "audio"
+                cp["etape"] = "montage"
                 with open(checkpoint_path, "w", encoding="utf-8") as f:
                     _json.dump(cp, f, ensure_ascii=False, indent=2)
         except Exception as e:

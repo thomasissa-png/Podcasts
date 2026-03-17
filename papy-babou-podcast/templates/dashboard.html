@@ -3134,8 +3134,9 @@ function _renderAudioInline(ep, containerId) {
     var el = document.getElementById(containerId);
     var audioFile = ep.audio_preview || ep.audio_hq;
     if (!audioFile) { el.innerHTML = '<p style="color: var(--texte-light);">Pas d\'audio disponible.</p>'; return; }
+    var cacheBust = '?v=' + Date.now();
     var html = '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
-        + '<source src="/audio/episodes/' + escapeHtml(audioFile) + '" type="audio/mpeg"></audio>';
+        + '<source src="/audio/episodes/' + escapeHtml(audioFile) + cacheBust + '" type="audio/mpeg"></audio>';
     if (ep.duree_secondes) {
         var min = Math.floor(ep.duree_secondes / 60);
         var sec = Math.round(ep.duree_secondes % 60);
@@ -3821,8 +3822,9 @@ async function loadEpisodeDetail(episodeId) {
 
         /* Audio player */
         if (audioFile) {
+            let audioCacheBust = '?v=' + Date.now();
             let audioHtml = '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
-                + '<source src="/audio/episodes/' + escapeHtml(audioFile) + '" type="audio/mpeg">'
+                + '<source src="/audio/episodes/' + escapeHtml(audioFile) + audioCacheBust + '" type="audio/mpeg">'
                 + '</audio>';
             if (ep.duree_secondes) {
                 const min = Math.floor(ep.duree_secondes / 60);
@@ -3832,7 +3834,7 @@ async function loadEpisodeDetail(episodeId) {
                 audioHtml += '</p>';
             }
             if (ep.audio_hq) {
-                audioHtml += '<p style="margin-top: 0.3rem;"><a href="/audio/episodes/' + escapeHtml(ep.audio_hq) + '" download style="color: var(--turquoise); font-weight: 700; text-decoration: none; font-size: 0.85rem;">&#11015; Télécharger HQ</a></p>';
+                audioHtml += '<p style="margin-top: 0.3rem;"><a href="/audio/episodes/' + escapeHtml(ep.audio_hq) + audioCacheBust + '" download style="color: var(--turquoise); font-weight: 700; text-decoration: none; font-size: 0.85rem;">&#11015; Télécharger HQ</a></p>';
             }
             document.getElementById('val-audio-section').innerHTML = audioHtml;
         } else if (ep.audio_missing) {

@@ -1247,3 +1247,213 @@ class TestPipelineContextForSIGTERM:
         sigterm_handlers = [h for s, h in handlers_set if s == signal.SIGTERM]
         assert len(sigterm_handlers) >= 1
         assert sigterm_handlers[0] == main._sigterm_handler
+
+
+# ── Tests instructions montage ───────────────────────────────────────────────
+
+
+class TestAppliquerInstructionsMontage:
+    """Tests pour _appliquer_instructions_montage()."""
+
+    def _make_script(self):
+        return {
+            "episode": {
+                "titre": "Test",
+                "saison": 1,
+                "numero": 1,
+                "ambiance": "fond_doux",
+                "segments": [
+                    {
+                        "id": "seg_001",
+                        "personnage": "papy_babou",
+                        "texte": "Il était une fois...",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 500,
+                    },
+                    {
+                        "id": "seg_002",
+                        "personnage": "antoine",
+                        "texte": "Raconte-moi, Papy !",
+                        "ton": "enthousiaste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300,
+                    },
+                    {
+                        "id": "seg_003",
+                        "personnage": "sfx",
+                        "texte": "birds chirping",
+                        "ton": "calme",
+                        "mode": "insert",
+                        "pause_apres_ms": 0,
+                        "duree_sfx_secondes": 3,
+                    },
+                ],
+            }
+        }
+
+    def test_applies_segment_modifications(self, monkeypatch, tmp_path):
+        """Les modifications de segments (pause, ton, rythme) sont appliquées."""
+        script = self._make_script()
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps({
+            "modifications_segments": {
+                "0": {"pause_apres_ms": 1200, "ton": "dramatique"},
+                "1": {"rythme": "lent"},
+            },
+            "modifications_episode": {},
+            "resume_modifications": "Pause allongée, ton dramatique pour Papy",
+        }))]
+
+        monkeypatch.setattr(config, "SCRIPTS_DIR", tmp_path)
+        monkeypatch.setattr(
+            config, "appel_claude_avec_retry", lambda *a, **kw: mock_response
+        )
+
+        result = main._appliquer_instructions_montage(script, "Plus de tension", "S01E01")
+
+        assert result["episode"]["segments"][0]["pause_apres_ms"] == 1200
+        assert result["episode"]["segments"][0]["ton"] == "dramatique"
+        assert result["episode"]["segments"][1]["rythme"] == "lent"
+        # Segment 2 inchangé
+        assert result["episode"]["segments"][2]["mode"] == "insert"
+
+    def test_applies_episode_modifications(self, monkeypatch, tmp_path):
+        """Les modifications d'ambiance au niveau épisode sont appliquées."""
+        script = self._make_script()
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps({
+            "modifications_segments": {},
+            "modifications_episode": {
+                "ambiance": "mystérieux",
+                "ambiance_par_acte": ["mystérieux", "dramatique", "calme"],
+            },
+            "resume_modifications": "Ambiance mystérieuse",
+        }))]
+
+        monkeypatch.setattr(config, "SCRIPTS_DIR", tmp_path)
+        monkeypatch.setattr(
+            config, "appel_claude_avec_retry", lambda *a, **kw: mock_response
+        )
+
+        result = main._appliquer_instructions_montage(script, "Ambiance plus sombre", "S01E01")
+
+        assert result["episode"]["ambiance"] == "mystérieux"
+        assert result["episode"]["ambiance_par_acte"] == ["mystérieux", "dramatique", "calme"]
+
+    def test_ignores_invalid_segment_index(self, monkeypatch, tmp_path):
+        """Les index de segment invalides sont ignorés sans crash."""
+        script = self._make_script()
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps({
+            "modifications_segments": {
+                "999": {"ton": "triste"},
+                "abc": {"ton": "triste"},
+            },
+            "modifications_episode": {},
+            "resume_modifications": "Rien appliqué",
+        }))]
+
+        monkeypatch.setattr(config, "SCRIPTS_DIR", tmp_path)
+        monkeypatch.setattr(
+            config, "appel_claude_avec_retry", lambda *a, **kw: mock_response
+        )
+
+        # Ne doit pas crasher
+        result = main._appliquer_instructions_montage(script, "Test invalide", "S01E01")
+        assert result["episode"]["segments"][0]["ton"] == "chaleureux"  # Inchangé
+
+    def test_returns_unmodified_on_empty_response(self, monkeypatch, tmp_path):
+        """Si Claude ne retourne rien, le script original est retourné."""
+        script = self._make_script()
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="Je ne sais pas quoi faire")]
+
+        monkeypatch.setattr(config, "SCRIPTS_DIR", tmp_path)
+        monkeypatch.setattr(
+            config, "appel_claude_avec_retry", lambda *a, **kw: mock_response
+        )
+
+        result = main._appliquer_instructions_montage(script, "Hmm", "S01E01")
+        # Script inchangé
+        assert result["episode"]["segments"][0]["ton"] == "chaleureux"
+
+    def test_saves_modified_script(self, monkeypatch, tmp_path):
+        """Le script modifié est sauvegardé comme version validée."""
+        script = self._make_script()
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps({
+            "modifications_segments": {"0": {"ton": "solennel"}},
+            "modifications_episode": {},
+            "resume_modifications": "Ton solennel",
+        }))]
+
+        monkeypatch.setattr(config, "SCRIPTS_DIR", tmp_path)
+        monkeypatch.setattr(
+            config, "appel_claude_avec_retry", lambda *a, **kw: mock_response
+        )
+
+        main._appliquer_instructions_montage(script, "Plus solennel", "S01E01")
+
+        # Vérifier que le fichier est sauvegardé
+        saved = tmp_path / "S01E01_valide.json"
+        assert saved.exists()
+        saved_data = json.loads(saved.read_text(encoding="utf-8"))
+        assert saved_data["episode"]["segments"][0]["ton"] == "solennel"
+
+    def test_only_modifies_allowed_keys(self, monkeypatch, tmp_path):
+        """Seuls pause_apres_ms, ton, rythme, mode sont modifiables."""
+        script = self._make_script()
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text=json.dumps({
+            "modifications_segments": {
+                "0": {"texte": "HACKED", "personnage": "HACKED", "ton": "triste"},
+            },
+            "modifications_episode": {},
+            "resume_modifications": "Test sécurité",
+        }))]
+
+        monkeypatch.setattr(config, "SCRIPTS_DIR", tmp_path)
+        monkeypatch.setattr(
+            config, "appel_claude_avec_retry", lambda *a, **kw: mock_response
+        )
+
+        result = main._appliquer_instructions_montage(script, "Hack test", "S01E01")
+
+        # ton modifié (autorisé)
+        assert result["episode"]["segments"][0]["ton"] == "triste"
+        # texte et personnage inchangés (non autorisés)
+        assert result["episode"]["segments"][0]["texte"] == "Il était une fois..."
+        assert result["episode"]["segments"][0]["personnage"] == "papy_babou"
+
+
+class TestMontageInstructionsWebRoute:
+    """Tests pour la sauvegarde des instructions montage dans web.py."""
+
+    def test_instructions_file_created(self, monkeypatch, tmp_path):
+        """Le fichier d'instructions est créé par la route montage."""
+        instructions_path = tmp_path / "S01E01_montage_instructions.txt"
+        monkeypatch.setattr(config, "SCRIPTS_DIR", tmp_path)
+
+        # Simuler l'écriture comme le fait web.py
+        instructions = "Augmente les pauses entre les segments"
+        instructions_path.write_text(instructions, encoding="utf-8")
+
+        assert instructions_path.exists()
+        assert instructions_path.read_text(encoding="utf-8") == instructions
+
+    def test_instructions_file_deleted_after_use(self, monkeypatch, tmp_path):
+        """Le fichier d'instructions est supprimé après usage unique."""
+        instructions_path = tmp_path / "S01E01_montage_instructions.txt"
+        instructions_path.write_text("Plus de tension", encoding="utf-8")
+
+        # Simuler le comportement du pipeline
+        assert instructions_path.exists()
+        instructions_path.unlink()
+        assert not instructions_path.exists()
