@@ -2554,6 +2554,45 @@ def _pipeline_inner(
                 logger.warning("DB indisponible pour maj_etape waiting_script : %s", e)
         return rapport
 
+    # ── Garde : si le checkpoint demande montage mais que les segments audio
+    #    sont introuvables (ni local, ni Object Storage), reculer à l'étape audio
+    #    pour régénérer. Cela arrive quand les segments ont été générés avant
+    #    l'introduction de l'upload Object Storage, puis perdus au redéploiement.
+    if not dry_run and etape_idx > 2:
+        segments_episode_dir = config.SEGMENTS_DIR / episode_id
+        _segments_present = (
+            segments_episode_dir.exists()
+            and any(segments_episode_dir.glob("*.mp3"))
+        )
+        if not _segments_present:
+            # Tenter la restauration depuis Object Storage
+            try:
+                import persistent_storage
+                nb_restored = persistent_storage.restore_segments(episode_id, config.SEGMENTS_DIR)
+                if nb_restored > 0:
+                    logger.info(
+                        "Segments restaurés depuis Object Storage : %d fichiers", nb_restored
+                    )
+                    console.print(
+                        f"  [cyan]Segments restaurés depuis Object Storage : "
+                        f"{nb_restored} fichiers[/cyan]"
+                    )
+                    _segments_present = True
+            except Exception as e:
+                logger.warning("Restauration segments Object Storage échouée : %s", e)
+
+        if not _segments_present:
+            logger.warning(
+                "Segments introuvables pour %s (ni local, ni Object Storage). "
+                "Fallback : régénération audio depuis le script validé.",
+                episode_id,
+            )
+            console.print(
+                f"\n  [bold yellow]Segments audio introuvables — "
+                f"régénération automatique depuis le script validé[/bold yellow]"
+            )
+            etape_idx = 2  # Reculer à l'étape audio
+
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 
     if etape_idx <= 2:
@@ -2721,22 +2760,6 @@ def _pipeline_inner(
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
 
     if etape_idx <= 4:
-        # Restaurer les segments audio depuis Object Storage si absents
-        # (cas fréquent après un redéploiement Replit qui remet le FS à zéro)
-        if not dry_run and etape_idx >= 2:
-            segments_episode_dir = config.SEGMENTS_DIR / episode_id
-            if not segments_episode_dir.exists() or not any(segments_episode_dir.glob("*.mp3")):
-                try:
-                    import persistent_storage
-                    nb_restored = persistent_storage.restore_segments(episode_id, config.SEGMENTS_DIR)
-                    if nb_restored > 0:
-                        logger.info("Segments restaurés depuis Object Storage avant montage : %d fichiers", nb_restored)
-                        console.print(f"  [cyan]Segments restaurés depuis Object Storage : {nb_restored} fichiers[/cyan]")
-                    else:
-                        logger.warning("Aucun segment trouvé dans Object Storage pour %s", episode_id)
-                except Exception as e:
-                    logger.warning("Restauration segments depuis Object Storage échouée : %s", e)
-
         if dry_run:
             console.print(f"\n{Typo.etape(5, 8, 'Montage')}  {Typo.attention('SAUTÉ — dry-run')}")
             rapport["etapes"]["montage"] = {"status": "skipped (dry-run)"}
