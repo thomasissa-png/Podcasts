@@ -34,7 +34,7 @@ from rich.prompt import Prompt
 from rich.style import Style
 
 import config
-from utils import fichier_lock, ouvrir_fichier
+from utils import fichier_lock, ouvrir_fichier, slug as _slug
 from agents import (
     Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur,
     Metadonnees, Publisher, CoverArt, Planificateur,
@@ -2780,6 +2780,28 @@ def _pipeline_inner(
             chemin_hq = None
         else:
             console.print(f"\n{Typo.etape(5, 8, 'Montage')}")
+
+            # ── Restaurer le WAV intermédiaire depuis Object Storage si nécessaire ──
+            # Si le container a été recyclé pendant l'export MP3, le WAV intermédiaire
+            # (étapes 1-8 déjà complétées) peut être en Object Storage.
+            _wav_checkpoint_name = f"{episode_id}_{_slug(titre)}_pre_export.wav"
+            _wav_checkpoint_path = config.OUTPUT_DIR / _wav_checkpoint_name
+            if not _wav_checkpoint_path.exists():
+                try:
+                    import persistent_storage
+                    _wav_key = f"montage_wav/{episode_id}_pre_export.wav"
+                    if persistent_storage.download_file(_wav_key, _wav_checkpoint_path):
+                        logger.info(
+                            "WAV intermédiaire restauré depuis Object Storage — "
+                            "montage reprendra à l'export MP3"
+                        )
+                        console.print(
+                            "  [cyan]WAV intermédiaire restauré — "
+                            "reprise à l'export MP3 (skip étapes 1-8)[/cyan]"
+                        )
+                except Exception as e_wav_restore:
+                    logger.debug("Pas de WAV intermédiaire en Object Storage : %s", e_wav_restore)
+
             monteur = Monteur()
             try:
                 resultat_montage = monteur.assembler(script)

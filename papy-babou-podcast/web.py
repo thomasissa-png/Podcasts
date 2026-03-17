@@ -422,12 +422,37 @@ def _extract_error_from_stderr(stderr):
     return None
 
 
+def _stream_reader(stream, label, job_id, collected_lines):
+    """Lit un flux ligne par ligne et le logue en temps réel.
+
+    Tourne dans un thread dédié pour ne pas bloquer le thread principal.
+    Les lignes sont aussi collectées dans collected_lines pour le résultat final.
+    """
+    try:
+        for line in stream:
+            line = line.rstrip("\n")
+            if line:
+                collected_lines.append(line)
+                logger.info("[%s %s] %s", label, job_id or "?", line)
+    except Exception:
+        pass
+    finally:
+        stream.close()
+
+
 def _run_cli(cmd_args, timeout=300, job_id=None):
     """Lance une commande main.py et retourne le resultat.
 
     Utilise Popen pour permettre l'annulation via /api/cancel.
+    Les logs (stdout/stderr) sont streamés en temps réel dans les deployment
+    logs Replit, pour être visibles PENDANT l'exécution (pas seulement à la fin).
     """
-    cmd = [sys.executable, "main.py"] + cmd_args
+    cmd = [sys.executable, "-u", "main.py"] + cmd_args
+    # PYTHONUNBUFFERED=1 + "-u" : forcer le flush immédiat de stdout/stderr
+    # Sans cela, Python utilise un buffer de 4-8KB quand stdout/stderr sont des PIPE,
+    # et les logs ne sortent jamais avant que le process soit tué par le recyclage container.
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
     try:
         proc = subprocess.Popen(
             cmd,
@@ -436,32 +461,56 @@ def _run_cli(cmd_args, timeout=300, job_id=None):
             stderr=subprocess.PIPE,
             text=True,
             cwd=str(_THIS_DIR),
+            env=env,
         )
         if job_id:
             with _process_lock:
                 _job_processes[job_id] = proc
+
+        # ── Streaming en temps réel ──────────────────────────────────────
+        # Au lieu de proc.communicate() qui bufferise tout, on lit
+        # stdout et stderr dans des threads séparés. Chaque ligne est
+        # immédiatement loguée dans les deployment logs Replit.
+        stdout_lines = []
+        stderr_lines = []
+        t_out = threading.Thread(
+            target=_stream_reader,
+            args=(proc.stdout, "stdout", job_id, stdout_lines),
+            daemon=True,
+        )
+        t_err = threading.Thread(
+            target=_stream_reader,
+            args=(proc.stderr, "stderr", job_id, stderr_lines),
+            daemon=True,
+        )
+        t_out.start()
+        t_err.start()
+
         try:
-            stdout, stderr = proc.communicate(timeout=timeout)
+            proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
             proc.terminate()  # SIGTERM d'abord (graceful)
             try:
                 proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 proc.kill()  # SIGKILL en dernier recours
-                proc.wait(timeout=2)
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    pass  # Le process est zombie, on continue
             return {"error": f"Timeout ({timeout}s)", "status": "error"}
+
+        # Attendre que les threads de lecture finissent
+        t_out.join(timeout=5)
+        t_err.join(timeout=5)
+
+        stdout = "\n".join(stdout_lines)
+        stderr = "\n".join(stderr_lines)
 
         if proc.returncode == -9 or proc.returncode == -15:
             return {"error": "Production annulee par l'utilisateur.", "status": "cancelled"}
 
-        # ── Log subprocess output dans les deployment logs ──────────────
-        # Sans cela, stdout/stderr sont capturés par PIPE et invisibles
-        # dans les logs de Replit/gunicorn. On ne logue que sur ERREUR
-        # pour éviter de polluer les deployment logs sur les jobs réussis.
         if proc.returncode != 0:
-            if stderr:
-                for line in stderr.strip().splitlines()[-50:]:
-                    logger.warning("[subprocess %s] %s", job_id or "?", line)
             logger.error(
                 "[subprocess %s] Exited with code %d",
                 job_id or "?", proc.returncode,

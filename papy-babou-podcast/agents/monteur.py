@@ -298,62 +298,96 @@ class Monteur:
 
         logger.info("Assemblage de l'épisode %s — %s", episode_id, episode["titre"])
 
-        # 1. Charger et assembler les segments voix avec overlay SFX et transitions
-        transition = self._charger_transition()
-        voix = self._assembler_segments(episode["segments"], segments_dir, transition)
-        logger.info("Segments voix assemblés : %.1f secondes", len(voix) / 1000.0)
+        # ── Checkpoint intermédiaire : si un WAV pré-assemblé existe, skip étapes 1-8 ──
+        # Cela permet de survivre aux recyclages de container Replit pendant le montage.
+        # Après les étapes 1-8 (assemblage + master bus + LUFS), on sauvegarde un WAV
+        # temporaire. Sur resume, si ce fichier existe, on va directement à l'export MP3.
+        nom_fichier = f"{episode_id}_{_slug_util(episode['titre'])}"
+        chemin_wav_intermediaire = output_dir / f"{nom_fichier}_pre_export.wav"
 
-        # 2. Charger les assets audio (jingles dynamiques par type d'épisode)
-        type_episode = episode.get("type", "standard")
-        numero_saison = episode.get("saison")
-        intro = self._charger_jingle("intro", type_episode, numero_saison)
-        outro = self._charger_jingle("outro", type_episode, numero_saison)
-
-        # 3. Charger la musique de fond selon l'ambiance (dynamique par acte si dispo)
-        ambiance_par_acte = episode.get("ambiance_par_acte")
-        ambiance_principale = episode.get("ambiance", "fond_doux")
-
-        if ambiance_par_acte and isinstance(ambiance_par_acte, list) and len(ambiance_par_acte) > 1:
-            voix_avec_fond = self._mixer_ambiance_dynamique(
-                voix, ambiance_par_acte, episode["segments"],
-            )
-            logger.info(
-                "Ambiance dynamique par acte : %s",
-                " → ".join(ambiance_par_acte),
-            )
+        if chemin_wav_intermediaire.exists():
+            logger.info("  WAV intermédiaire trouvé — skip étapes 1-8, reprise à l'export")
+            episode_complet = AudioSegment.from_wav(str(chemin_wav_intermediaire))
         else:
-            fond = self._charger_ambiance(ambiance_principale)
-            fond_ajuste = self._preparer_fond(fond, len(voix))
-            voix_avec_fond = voix.overlay(fond_ajuste)
+            # 1. Charger et assembler les segments voix avec overlay SFX et transitions
+            logger.info("  [1/9] Assemblage des %d segments voix...", len(episode["segments"]))
+            transition = self._charger_transition()
+            voix = self._assembler_segments(episode["segments"], segments_dir, transition)
+            logger.info("  [1/9] Segments voix assemblés : %.1f secondes", len(voix) / 1000.0)
 
-        # 5. Room tone continu adapté à l'ambiance (A1 + adaptatif)
-        room_tone = self._charger_room_tone(ambiance_principale)
-        if len(room_tone) > 0:
-            room_tone = room_tone.apply_gain(ROOM_TONE_DB)
-            if room_tone.channels == 1:
-                room_tone = room_tone.set_channels(2)
-            # Boucler le room tone sur toute la durée
-            if len(room_tone) < len(voix_avec_fond):
-                repetitions = (len(voix_avec_fond) // len(room_tone)) + 1
-                room_tone = room_tone * repetitions
-            room_tone = room_tone[:len(voix_avec_fond)]
-            room_tone = room_tone.fade_in(2000).fade_out(2000)
-            voix_avec_fond = voix_avec_fond.overlay(room_tone)
-            logger.info("Room tone appliqué sur %.1fs", len(voix_avec_fond) / 1000.0)
+            # 2. Charger les assets audio (jingles dynamiques par type d'épisode)
+            logger.info("  [2/9] Chargement des jingles...")
+            type_episode = episode.get("type", "standard")
+            numero_saison = episode.get("saison")
+            intro = self._charger_jingle("intro", type_episode, numero_saison)
+            outro = self._charger_jingle("outro", type_episode, numero_saison)
 
-        # 6. Assembler : intro → voix+fond → outro
-        episode_complet = self._assembler_final(intro, voix_avec_fond, outro)
+            # 3. Charger la musique de fond selon l'ambiance (dynamique par acte si dispo)
+            logger.info("  [3/9] Chargement musique de fond...")
+            ambiance_par_acte = episode.get("ambiance_par_acte")
+            ambiance_principale = episode.get("ambiance", "fond_doux")
 
-        # 7. Traitement master bus (A4)
-        episode_complet = self._appliquer_master_bus(episode_complet)
+            if ambiance_par_acte and isinstance(ambiance_par_acte, list) and len(ambiance_par_acte) > 1:
+                voix_avec_fond = self._mixer_ambiance_dynamique(
+                    voix, ambiance_par_acte, episode["segments"],
+                )
+                logger.info(
+                    "Ambiance dynamique par acte : %s",
+                    " → ".join(ambiance_par_acte),
+                )
+            else:
+                fond = self._charger_ambiance(ambiance_principale)
+                fond_ajuste = self._preparer_fond(fond, len(voix))
+                voix_avec_fond = voix.overlay(fond_ajuste)
 
-        # 8. Normaliser LUFS
-        episode_complet = _normaliser_lufs(
-            episode_complet, config.PRODUCTION["lufs_cible"]
-        )
+            # 5. Room tone continu adapté à l'ambiance (A1 + adaptatif)
+            logger.info("  [5/9] Chargement room tone...")
+            room_tone = self._charger_room_tone(ambiance_principale)
+            if len(room_tone) > 0:
+                room_tone = room_tone.apply_gain(ROOM_TONE_DB)
+                if room_tone.channels == 1:
+                    room_tone = room_tone.set_channels(2)
+                # Boucler le room tone sur toute la durée
+                if len(room_tone) < len(voix_avec_fond):
+                    repetitions = (len(voix_avec_fond) // len(room_tone)) + 1
+                    room_tone = room_tone * repetitions
+                room_tone = room_tone[:len(voix_avec_fond)]
+                room_tone = room_tone.fade_in(2000).fade_out(2000)
+                voix_avec_fond = voix_avec_fond.overlay(room_tone)
+                logger.info("Room tone appliqué sur %.1fs", len(voix_avec_fond) / 1000.0)
+
+            # 6. Assembler : intro → voix+fond → outro
+            logger.info("  [6/9] Assemblage final (intro + voix + outro)...")
+            episode_complet = self._assembler_final(intro, voix_avec_fond, outro)
+
+            # 7. Traitement master bus (A4)
+            logger.info("  [7/9] Traitement master bus (EQ + compression + limiter)...")
+            episode_complet = self._appliquer_master_bus(episode_complet)
+
+            # 8. Normaliser LUFS
+            logger.info("  [8/9] Normalisation LUFS...")
+            episode_complet = _normaliser_lufs(
+                episode_complet, config.PRODUCTION["lufs_cible"]
+            )
+
+            # ── Sauvegarder le WAV intermédiaire (checkpoint montage) ──
+            # Si le container est recyclé pendant l'export MP3, ce fichier
+            # permettra de reprendre sans refaire les étapes 1-8.
+            logger.info("  Sauvegarde WAV intermédiaire (checkpoint montage)...")
+            episode_complet.export(str(chemin_wav_intermediaire), format="wav")
+            # Upload vers Object Storage pour survivre aux redeploys
+            try:
+                import persistent_storage
+                persistent_storage.upload_file(
+                    f"montage_wav/{episode_id}_pre_export.wav",
+                    chemin_wav_intermediaire,
+                )
+                logger.info("  WAV intermédiaire uploadé en Object Storage")
+            except Exception as e_wav:
+                logger.warning("Upload WAV intermédiaire échoué : %s", e_wav)
 
         # 9. Exporter
-        nom_fichier = f"{episode_id}_{_slug_util(episode['titre'])}"
+        logger.info("  [9/9] Export MP3 HQ + preview...")
         chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
         chemin_preview = output_dir / f"{nom_fichier}_128k.mp3"
 
@@ -362,6 +396,7 @@ class Monteur:
             format="mp3",
             bitrate=config.PRODUCTION["mp3_bitrate_final"],
         )
+        logger.info("  Export HQ terminé : %s", chemin_hq)
         episode_complet.export(
             str(chemin_preview),
             format="mp3",
@@ -372,7 +407,12 @@ class Monteur:
         logger.info("Épisode exporté : %s (%.0f sec)", chemin_hq, duree_sec)
         logger.info("Preview exporté : %s", chemin_preview)
 
+        # Nettoyer le WAV intermédiaire (plus nécessaire après export réussi)
+        if chemin_wav_intermediaire.exists():
+            chemin_wav_intermediaire.unlink()
+
         # 10. Générer les chapitres
+        type_episode = episode.get("type", "standard")
         chapitres = self._generer_chapitres(episode["segments"], segments_dir)
         chemin_chapitres = config.CHAPTERS_DIR / f"{episode_id}_chapters.json"
         with open(chemin_chapitres, "w", encoding="utf-8") as f:
@@ -407,8 +447,15 @@ class Monteur:
         segments_depuis_transition: int = 0
 
         dernier_ton: str = ""
+        total_segments = len(segments)
 
         for i, seg in enumerate(segments):
+            # Log de progression tous les 20 segments (visible en temps réel)
+            if i > 0 and i % 20 == 0:
+                logger.info(
+                    "  Montage segment %d/%d (%.0f%%)",
+                    i, total_segments, 100.0 * i / total_segments,
+                )
             # Transition sonore entre actes narratifs
             # Déclenchement : papy_babou après 8+ segments OU après un SFX marqueur
             est_transition_acte = (
