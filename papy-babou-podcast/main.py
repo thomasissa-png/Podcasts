@@ -91,10 +91,19 @@ def configurer_logging() -> None:
     # Rich Console peut ne pas flusher correctement quand stdout est un PIPE.
     # Ce handler garantit que les messages INFO+ arrivent dans stderr,
     # capturé par _stream_reader dans web.py.
-    _stderr_handler = logging.StreamHandler(sys.stderr)
-    _stderr_handler.setLevel(logging.INFO)
-    _stderr_handler.setFormatter(logging.Formatter("[%(levelname)s] %(name)s: %(message)s"))
-    logging.getLogger().addHandler(_stderr_handler)
+    # Vérifier qu'on n'ajoute pas un doublon (appels multiples de configurer_logging).
+    _root = logging.getLogger()
+    _has_stderr = any(
+        isinstance(h, logging.StreamHandler)
+        and getattr(h, "_is_papy_stderr", False)
+        for h in _root.handlers
+    )
+    if not _has_stderr:
+        _stderr_handler = logging.StreamHandler(sys.stderr)
+        _stderr_handler.setLevel(logging.INFO)
+        _stderr_handler.setFormatter(logging.Formatter("[%(levelname)s] %(name)s: %(message)s"))
+        _stderr_handler._is_papy_stderr = True  # tag pour détection doublon
+        _root.addHandler(_stderr_handler)
 
 
 def initialiser_db() -> bool:
@@ -336,9 +345,28 @@ def _appliquer_instructions_montage(
         try:
             idx = int(idx_str)
             if 0 <= idx < len(segments):
+                _RYTHMES_VALIDES = {"rapide", "normal", "lent"}
+                _MODES_VALIDES = {"insert", "overlay"}
+                _TONS_VALIDES = {
+                    "joyeux", "triste", "dramatique", "solennel", "tendre",
+                    "epique", "malicieux", "mystérieux", "calme", "surpris",
+                    "effrayé", "enthousiaste", "nostalgique", "complice",
+                    "rieur", "normal",
+                }
                 for cle, valeur in changements.items():
-                    if cle in ("pause_apres_ms", "ton", "rythme", "mode"):
-                        segments[idx][cle] = valeur
+                    if cle == "pause_apres_ms":
+                        if isinstance(valeur, (int, float)):
+                            valeur = max(0, min(int(valeur), config.PRODUCTION.get("max_pause_ms", 2500)))
+                            segments[idx][cle] = valeur
+                    elif cle == "rythme":
+                        if isinstance(valeur, str) and valeur in _RYTHMES_VALIDES:
+                            segments[idx][cle] = valeur
+                    elif cle == "mode":
+                        if isinstance(valeur, str) and valeur in _MODES_VALIDES:
+                            segments[idx][cle] = valeur
+                    elif cle == "ton":
+                        if isinstance(valeur, str) and valeur in _TONS_VALIDES:
+                            segments[idx][cle] = valeur
         except (ValueError, IndexError):
             logger.warning("Index segment invalide : %s", idx_str)
 
@@ -4190,6 +4218,14 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
             title="Reprise de production",
             border_style="yellow",
         ))
+
+        # Valider les champs obligatoires du checkpoint
+        for _required in ("titre", "saison", "numero"):
+            if _required not in data:
+                raise ValueError(
+                    f"Checkpoint corrompu : champ '{_required}' manquant dans data. "
+                    f"Clés présentes : {list(data.keys())}"
+                )
 
         _log_direct(f"Lancement pipeline — etape_depart={etape}, stop_after={effective_stop_after}")
         pipeline(

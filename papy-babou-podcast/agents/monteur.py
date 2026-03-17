@@ -5,7 +5,10 @@ import json
 import logging
 import os
 import random
+import re
+import shutil
 import subprocess as _subprocess
+import sys as _sys_mod
 import tempfile
 import time
 from pathlib import Path
@@ -303,7 +306,7 @@ class Monteur:
         Returns:
             Dictionnaire avec les chemins des fichiers générés et la durée.
         """
-        import sys as _sys
+        _sys = _sys_mod
         episode = script["episode"]
         episode_id = f"S{episode['saison']:02d}E{episode['numero']:02d}"
 
@@ -379,7 +382,7 @@ class Monteur:
                     # Assembler ce chunk via pydub (petit : ~30-50 MB max)
                     chunk_audio = self._assembler_segments(
                         chunk_segments, segments_dir,
-                        transition if chunk_idx > 0 else transition,
+                        transition if chunk_idx > 0 else None,
                     )
 
                     # Exporter le chunk en WAV et libérer la mémoire
@@ -470,19 +473,30 @@ class Monteur:
                     f.unlink(missing_ok=True)
                 logger.info("  [6/9] Épisode assemblé")
 
-                # 7-8. Master bus + LUFS via ffmpeg
+                # 7-8. Master bus + LUFS via ffmpeg (écriture atomique)
                 _sys.stderr.write("[monteur] [7-8/9] Master bus + LUFS via ffmpeg...\n")
                 _sys.stderr.flush()
-                self._ffmpeg_master_lufs(
-                    episode_wav, chemin_wav_intermediaire,
-                    lufs_cible=config.PRODUCTION["lufs_cible"],
+                # Écriture atomique : tempfile + os.replace() pour éviter les WAV
+                # tronqués en cas de kill container pendant l'écriture ffmpeg.
+                _tmp_wav = tempfile.NamedTemporaryFile(
+                    dir=str(output_dir), suffix="_master.wav", delete=False,
                 )
+                _tmp_wav_path = Path(_tmp_wav.name)
+                _tmp_wav.close()
+                try:
+                    self._ffmpeg_master_lufs(
+                        episode_wav, _tmp_wav_path,
+                        lufs_cible=config.PRODUCTION["lufs_cible"],
+                    )
+                    os.replace(str(_tmp_wav_path), str(chemin_wav_intermediaire))
+                except Exception:
+                    _tmp_wav_path.unlink(missing_ok=True)
+                    raise
                 episode_wav.unlink(missing_ok=True)
                 logger.info("  [7-8/9] Master bus + LUFS appliqués")
 
             finally:
                 # Nettoyage des fichiers temporaires restants
-                import shutil
                 try:
                     shutil.rmtree(str(_tmp_dir), ignore_errors=True)
                 except Exception:
@@ -561,6 +575,11 @@ class Monteur:
                 capture_output=True, text=True, timeout=120,
                 check=True,
             )
+        except _subprocess.TimeoutExpired as e:
+            logger.error("ffmpeg concat timeout après 120s")
+            if e.process:
+                e.process.kill()
+            raise RuntimeError("ffmpeg concat timeout après 120s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg concat failed: %s", e.stderr[-500:] if e.stderr else "no stderr")
             raise RuntimeError(f"ffmpeg concat échoué: {e.stderr[-200:]}") from e
@@ -580,6 +599,11 @@ class Monteur:
                 capture_output=True, text=True, timeout=900,
                 check=True,
             )
+        except _subprocess.TimeoutExpired as e:
+            logger.error("ffmpeg mix timeout après 900s")
+            if e.process:
+                e.process.kill()
+            raise RuntimeError("ffmpeg mix timeout après 900s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg mix failed: %s", e.stderr[-500:] if e.stderr else "no stderr")
             raise RuntimeError(f"ffmpeg mix échoué: {e.stderr[-200:]}") from e
@@ -631,6 +655,11 @@ class Monteur:
                 capture_output=True, text=True, timeout=300,
                 check=True,
             )
+        except _subprocess.TimeoutExpired as e:
+            logger.error("ffmpeg master+volume timeout après 300s")
+            if e.process:
+                e.process.kill()
+            raise RuntimeError("ffmpeg master+volume timeout après 300s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg master+volume failed: %s", e.stderr[-500:] if e.stderr else "")
             raise RuntimeError(f"ffmpeg master+volume échoué: {e.stderr[-200:]}") from e
@@ -640,7 +669,6 @@ class Monteur:
         """Extract mean_volume from ffmpeg volumedetect output."""
         if not stderr:
             return None
-        import re
         m = re.search(r"mean_volume:\s*([-\d.]+)\s*dB", stderr)
         if m:
             try:
@@ -661,6 +689,11 @@ class Monteur:
                 capture_output=True, text=True, timeout=120,
                 check=True,
             )
+        except _subprocess.TimeoutExpired as e:
+            logger.error("ffmpeg mp3 export timeout après 120s")
+            if e.process:
+                e.process.kill()
+            raise RuntimeError("ffmpeg export MP3 timeout après 120s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg mp3 export failed: %s", e.stderr[-500:] if e.stderr else "")
             raise RuntimeError(f"ffmpeg export MP3 échoué: {e.stderr[-200:]}") from e
@@ -790,11 +823,10 @@ class Monteur:
         for i, seg in enumerate(segments):
             # Log de progression tous les 20 segments (visible en temps réel)
             if i > 0 and i % 20 == 0:
-                import sys as _sys_inner
-                _sys_inner.stderr.write(
+                _sys_mod.stderr.write(
                     f"[monteur] Segment {i}/{total_segments} ({100*i//total_segments}%)\n"
                 )
-                _sys_inner.stderr.flush()
+                _sys_mod.stderr.flush()
                 logger.info(
                     "  Montage segment %d/%d (%.0f%%)",
                     i, total_segments, 100.0 * i / total_segments,
