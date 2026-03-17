@@ -158,12 +158,30 @@ _process_lock = threading.Lock()
 
 _JOB_TTL_SECONDS = 3600  # Supprimer les jobs termines apres 1 heure
 
-# Timeouts par type de job (configurables via env)
-_TIMEOUT_PRODUIRE = int(os.getenv("TIMEOUT_PRODUIRE", "3600"))          # 1h (audio TTS peut être long)
-_TIMEOUT_PLANIFIER = int(os.getenv("TIMEOUT_PLANIFIER", "1800"))        # 30 min
-_TIMEOUT_PRODUIRE_SAISON = int(os.getenv("TIMEOUT_PRODUIRE_SAISON", "7200"))  # 2h
-_TIMEOUT_REPRENDRE = int(os.getenv("TIMEOUT_REPRENDRE", "3600"))        # 1h (audio TTS peut être long)
-_TIMEOUT_BATCH = int(os.getenv("TIMEOUT_BATCH", "7200"))                # 2h
+# Timeouts par type de job (configurables via env, minimum 300s = 5 min)
+_TIMEOUT_MIN = 300  # Sécurité: empêcher les timeouts absurdement bas (ex: env var à "2")
+_TIMEOUT_PRODUIRE = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_PRODUIRE", "3600")))          # 1h
+_TIMEOUT_PLANIFIER = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_PLANIFIER", "1800")))        # 30 min
+_TIMEOUT_PRODUIRE_SAISON = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_PRODUIRE_SAISON", "7200")))  # 2h
+_TIMEOUT_REPRENDRE = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_REPRENDRE", "3600")))        # 1h
+_TIMEOUT_BATCH = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_BATCH", "7200")))                # 2h
+
+# Avertir si un timeout env var était trop bas (cause fréquente de "timed out after 2 seconds")
+for _tname, _tval, _tenv in [
+    ("PRODUIRE", _TIMEOUT_PRODUIRE, "TIMEOUT_PRODUIRE"),
+    ("REPRENDRE", _TIMEOUT_REPRENDRE, "TIMEOUT_REPRENDRE"),
+    ("PLANIFIER", _TIMEOUT_PLANIFIER, "TIMEOUT_PLANIFIER"),
+    ("BATCH", _TIMEOUT_BATCH, "TIMEOUT_BATCH"),
+    ("SAISON", _TIMEOUT_PRODUIRE_SAISON, "TIMEOUT_PRODUIRE_SAISON"),
+]:
+    _raw = os.getenv(_tenv)
+    if _raw is not None and int(_raw) < _TIMEOUT_MIN:
+        logger.warning(
+            "⚠ Variable %s=%s trop basse (min %ds) — forcée à %ds. "
+            "Supprimez cette variable des Replit Secrets.",
+            _tenv, _raw, _TIMEOUT_MIN, _tval,
+        )
+
 _JOB_ID_RE = re.compile(r'^[0-9a-f]{12}$')
 
 
