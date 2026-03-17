@@ -587,27 +587,92 @@ class Monteur:
     @staticmethod
     def _ffmpeg_master_lufs(input_wav: Path, output_wav: Path,
                             lufs_cible: float = -16.0) -> None:
-        """Applique master bus (EQ boost voix + compression) + normalisation LUFS via ffmpeg."""
-        # EQ: boost 2-5kHz (+2.5dB, 1.5 octaves) pour clarté voix
-        # Compression: ratio 2:1 au-dessus de -20dB
-        # LUFS: normalisation intégrée à la cible
-        af_filters = (
-            f"equalizer=f=3500:t=o:w=1.5:g=2.5,"
-            f"acompressor=threshold=-20dB:ratio=2:attack=20:release=200,"
-            f"loudnorm=I={lufs_cible}:TP=-1.5:LRA=11"
+        """Applique master bus (EQ + compression) + normalisation LUFS two-pass.
+
+        Two-pass loudnorm is much faster than one-pass on slow CPUs:
+        - Pass 1: EQ + compressor + loudnorm analysis only (output to /dev/null)
+        - Pass 2: EQ + compressor + loudnorm with measured values (linear mode, single-pass)
+        """
+        eq_comp = (
+            "equalizer=f=3500:t=o:w=1.5:g=2.5,"
+            "acompressor=threshold=-20dB:ratio=2:attack=20:release=200"
+        )
+        loudnorm_base = f"loudnorm=I={lufs_cible}:TP=-1.5:LRA=11"
+
+        # ── Pass 1: analyse only (fast, no output file) ─────────────────
+        try:
+            result = _subprocess.run(
+                ["ffmpeg", "-y", "-i", str(input_wav),
+                 "-af", f"{eq_comp},{loudnorm_base}:print_format=json",
+                 "-f", "null", "-"],
+                capture_output=True, text=True, timeout=600,
+            )
+        except _subprocess.TimeoutExpired:
+            raise RuntimeError("ffmpeg loudnorm pass 1 (analyse) timeout après 600s")
+
+        # Parse measured values from stderr JSON block
+        measured = Monteur._parse_loudnorm_json(result.stderr)
+        if not measured:
+            logger.warning("loudnorm pass 1: impossible de parser les mesures, fallback one-pass")
+            # Fallback: simple EQ + compressor sans loudnorm
+            try:
+                _subprocess.run(
+                    ["ffmpeg", "-y", "-i", str(input_wav),
+                     "-af", eq_comp,
+                     "-ar", "44100", "-ac", "2",
+                     str(output_wav)],
+                    capture_output=True, text=True, timeout=300,
+                    check=True,
+                )
+            except _subprocess.CalledProcessError as e:
+                logger.error("ffmpeg EQ fallback failed: %s", e.stderr[-500:] if e.stderr else "")
+                raise RuntimeError(f"ffmpeg EQ fallback échoué: {e.stderr[-200:]}") from e
+            return
+
+        # ── Pass 2: apply with measured values (linear, single-pass) ────
+        loudnorm_pass2 = (
+            f"{loudnorm_base}"
+            f":measured_I={measured['input_i']}"
+            f":measured_TP={measured['input_tp']}"
+            f":measured_LRA={measured['input_lra']}"
+            f":measured_thresh={measured['input_thresh']}"
+            f":offset={measured['target_offset']}"
+            ":linear=true"
         )
         try:
             _subprocess.run(
                 ["ffmpeg", "-y", "-i", str(input_wav),
-                 "-af", af_filters,
+                 "-af", f"{eq_comp},{loudnorm_pass2}",
                  "-ar", "44100", "-ac", "2",
                  str(output_wav)],
-                capture_output=True, text=True, timeout=900,
+                capture_output=True, text=True, timeout=300,
                 check=True,
             )
         except _subprocess.CalledProcessError as e:
-            logger.error("ffmpeg master+lufs failed: %s", e.stderr[-500:] if e.stderr else "")
-            raise RuntimeError(f"ffmpeg master+LUFS échoué: {e.stderr[-200:]}") from e
+            logger.error("ffmpeg master+lufs pass 2 failed: %s", e.stderr[-500:] if e.stderr else "")
+            raise RuntimeError(f"ffmpeg master+LUFS pass 2 échoué: {e.stderr[-200:]}") from e
+
+    @staticmethod
+    def _parse_loudnorm_json(stderr: str) -> dict | None:
+        """Extract loudnorm measured values from ffmpeg stderr JSON output."""
+        if not stderr:
+            return None
+        # loudnorm prints a JSON block between last { and last }
+        last_brace = stderr.rfind("}")
+        if last_brace == -1:
+            return None
+        first_brace = stderr.rfind("{", 0, last_brace)
+        if first_brace == -1:
+            return None
+        try:
+            data = json.loads(stderr[first_brace:last_brace + 1])
+            # Verify required keys exist
+            required = ["input_i", "input_tp", "input_lra", "input_thresh", "target_offset"]
+            if all(k in data for k in required):
+                return data
+            return None
+        except (json.JSONDecodeError, KeyError):
+            return None
 
     @staticmethod
     def _ffmpeg_export_mp3(input_wav: Path, output_mp3: Path,
