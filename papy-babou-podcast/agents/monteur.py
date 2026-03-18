@@ -315,57 +315,10 @@ class Monteur:
     ) -> None:
         """Vérifie que les segments voix requis existent avant le montage.
 
-        Seuls les segments voix sont bloquants — les jingles et ambiances
-        ont un fallback silence intégré et sont générés à la volée pendant
-        le montage via ElevenLabs/Freesound. Les bloquer ici empêche
-        le montage de s'exécuter sur un container sans assets locaux.
+        Seuls les segments voix sont vérifiés ici. Les jingles et ambiances
+        sont chargés à la demande pendant l'assemblage avec fallback silence
+        intégré — inutile de les pré-charger (et risque de timeout API).
         """
-        manquants: list[str] = []
-
-        # ── Jingles/ambiance : tentative de pré-chargement (non bloquant) ──
-        # On tente de charger/générer les assets musicaux pour diagnostic,
-        # mais on ne bloque PAS si ça échoue — le montage utilisera du silence.
-        assets_warns: list[str] = []
-        try:
-            intro = self._charger_jingle("intro", type_episode, numero_saison)
-            if len(intro) == 0 or intro.dBFS == float("-inf"):
-                assets_warns.append("intro_jingle")
-        except Exception as e:
-            assets_warns.append(f"intro_jingle ({e})")
-
-        try:
-            outro = self._charger_jingle("outro", type_episode, numero_saison)
-            if len(outro) == 0 or outro.dBFS == float("-inf"):
-                assets_warns.append("outro_jingle")
-        except Exception as e:
-            assets_warns.append(f"outro_jingle ({e})")
-
-        try:
-            signature = self._charger_signature()
-            if len(signature) == 0 or signature.dBFS == float("-inf"):
-                assets_warns.append("signature_jingle")
-        except Exception as e:
-            assets_warns.append(f"signature_jingle ({e})")
-
-        try:
-            fond = self._charger_ambiance(ambiance)
-            if len(fond) == 0 or fond.dBFS == float("-inf"):
-                assets_warns.append(f"ambiance '{ambiance}'")
-        except Exception as e:
-            assets_warns.append(f"ambiance '{ambiance}' ({e})")
-
-        if assets_warns:
-            warn_msg = (
-                f"[monteur] AVERTISSEMENT : {len(assets_warns)} asset(s) musicaux "
-                f"non disponibles (silence utilisé) : {', '.join(assets_warns)}\n"
-            )
-            _sys_mod.stderr.write(warn_msg)
-            _sys_mod.stderr.flush()
-            logger.warning(
-                "Assets musicaux manquants (fallback silence) : %s",
-                ", ".join(assets_warns),
-            )
-
         # ── Segments voix : vérification BLOQUANTE ──
         segments_manquants = []
         for seg in episode["segments"]:
@@ -374,25 +327,35 @@ class Monteur:
             chemin = segments_dir / f"{seg['id']}.mp3"
             if not chemin.exists():
                 segments_manquants.append(seg["id"])
+
         if segments_manquants:
             n = len(segments_manquants)
             total_voix = sum(
                 1 for s in episode["segments"] if s["personnage"] != "sfx"
             )
-            manquants.append(
-                f"{n}/{total_voix} segments voix manquants "
-                f"(ex: {', '.join(segments_manquants[:5])})"
-            )
-
-        if manquants:
             msg = (
-                f"Montage impossible — {len(manquants)} problème(s) bloquant(s) :\n"
-                + "\n".join(f"  • {m}" for m in manquants)
-                + "\n\nSolution : relancez la production audio (étape 3)"
+                f"Montage impossible — {n}/{total_voix} segments voix manquants "
+                f"(ex: {', '.join(segments_manquants[:5])})\n"
+                f"Solution : relancez la production audio (étape 3)"
             )
             _sys_mod.stderr.write(f"[monteur] ERREUR: {msg}\n")
             _sys_mod.stderr.flush()
             raise RuntimeError(msg)
+
+        # Log SFX manquants comme avertissement (non bloquant — silence en fallback)
+        sfx_manquants = []
+        for seg in episode["segments"]:
+            if seg["personnage"] != "sfx":
+                continue
+            chemin = segments_dir / f"{seg['id']}.mp3"
+            if not chemin.exists():
+                sfx_manquants.append(seg["id"])
+        if sfx_manquants:
+            _sys_mod.stderr.write(
+                f"[monteur] AVERTISSEMENT : {len(sfx_manquants)} segments SFX manquants "
+                f"(silence en fallback) : {', '.join(sfx_manquants[:5])}\n"
+            )
+            _sys_mod.stderr.flush()
 
         _sys_mod.stderr.write(
             "[monteur] Pré-vol OK : tous les assets audio requis sont présents\n"
@@ -479,9 +442,8 @@ class Monteur:
                 chemin_wav_intermediaire.unlink(missing_ok=True)
 
         if not _skip_to_export:
-            # ── Pré-vol : vérifier que les assets audio requis existent ──
-            # Le monteur DOIT échouer clairement si des assets manquent,
-            # au lieu de produire un épisode avec du silence à la place.
+            # ── Pré-vol : vérifier que les segments voix existent ──
+            # Jingles/ambiance sont chargés à la demande avec fallback silence.
             type_episode = episode.get("type", "standard")
             numero_saison = episode.get("saison")
             ambiance = episode.get("ambiance", "fond_doux")
