@@ -2698,6 +2698,74 @@ def _pipeline_inner(
                 except (json.JSONDecodeError, OSError) as e:
                     logger.warning("Arc state %s illisible : %s", ep_prec_id, e)
 
+        # ── Directeur Podcast — brief créatif pré-génération ──────────────
+        brief_directeur = ""
+        if not dry_run:
+            try:
+                directeur_brief = DirecteurPodcast()
+                resultat_brief = directeur_brief.brief_creatif(
+                    titre=titre, resume=resume, morale=morale,
+                    type_episode=type_episode,
+                    episode_plan=episode_plan,
+                    contexte_saison=contexte_saison,
+                )
+                # Afficher le brief
+                console.print(f"\n  {Icons.REVIEW} Brief créatif du directeur :")
+                if resultat_brief.get("directives_ton"):
+                    console.print(f"  Ton : {Typo.dim(resultat_brief['directives_ton'])}")
+                if resultat_brief.get("accroche_suggestion"):
+                    console.print(f"  Accroche : {Typo.dim(resultat_brief['accroche_suggestion'])}")
+                moments = resultat_brief.get("moments_cles", [])
+                if moments:
+                    console.print("  Moments clés :")
+                    for m in moments[:5]:
+                        console.print(f"    - {m}")
+                pieges = resultat_brief.get("pieges_a_eviter", [])
+                if pieges:
+                    console.print("[yellow]  Pièges à éviter :[/yellow]")
+                    for p in pieges[:3]:
+                        console.print(f"    ! {p}")
+
+                # Construire le bloc texte à injecter dans le prompt du scripteur
+                brief_lines = ["\n\nBRIEF CRÉATIF DU DIRECTEUR PODCAST :"]
+                brief_lines.append(f"Ton : {resultat_brief.get('directives_ton', '')}")
+                brief_lines.append(f"Accroche : {resultat_brief.get('accroche_suggestion', '')}")
+                if moments:
+                    brief_lines.append("Moments clés à ne pas manquer :")
+                    for m in moments:
+                        brief_lines.append(f"  - {m}")
+                sfx_attendus = resultat_brief.get("sfx_attendus", [])
+                if sfx_attendus:
+                    brief_lines.append("SFX attendus :")
+                    for s in sfx_attendus:
+                        brief_lines.append(f"  - {s}")
+                ambiances = resultat_brief.get("ambiances_suggerees", {})
+                if ambiances:
+                    brief_lines.append("Ambiances suggérées :")
+                    for acte, amb in ambiances.items():
+                        brief_lines.append(f"  - {acte} : {amb}")
+                if pieges:
+                    brief_lines.append("Pièges à éviter :")
+                    for p in pieges:
+                        brief_lines.append(f"  - {p}")
+                perso_focus = resultat_brief.get("personnages_focus", "")
+                if perso_focus:
+                    brief_lines.append(f"Focus personnages : {perso_focus}")
+                brief_directeur = "\n".join(brief_lines)
+
+                rapport["etapes"]["brief_directeur"] = {
+                    "directives_ton": resultat_brief.get("directives_ton", ""),
+                    "nb_moments_cles": len(moments),
+                    "nb_sfx_attendus": len(sfx_attendus),
+                    "nb_pieges": len(pieges),
+                }
+            except Exception as e:
+                logger.warning("Directeur Podcast (brief créatif) indisponible : %s", e)
+                console.print(f"[yellow]  Brief créatif non disponible : {e}[/yellow]")
+
+        # Combiner préférences producteur + brief directeur
+        preferences_completes = _construire_bloc_preferences() + brief_directeur
+
         for iteration in range(1, max_iterations_review + 1):
             console.print(f"  Iteration {iteration}/{max_iterations_review}...")
 
@@ -2706,7 +2774,7 @@ def _pipeline_inner(
                 morale=morale, corrections=corrections, historique=historique,
                 contexte_saison=contexte_saison, episode_plan=episode_plan,
                 type_episode=type_episode,
-                preferences_producteur=_construire_bloc_preferences(),
+                preferences_producteur=preferences_completes,
                 scripts_precedents=scripts_precedents,
                 arc_state_precedent=arc_state_precedent,
             )
@@ -3867,6 +3935,60 @@ def _pipeline_inner(
                 except Exception as e:
                     logger.warning("Object Storage indisponible pour cover art : %s", e)
 
+    # ── Directeur Podcast — validation métadonnées ────────────────────────────
+
+    if not dry_run and etape_idx <= 5:
+        try:
+            directeur_meta = DirecteurPodcast()
+            resultat_meta_dir = directeur_meta.valider_metadonnees(meta, script)
+            note_meta = resultat_meta_dir.get("note", 0)
+            verdict_meta = resultat_meta_dir.get("verdict", "?")
+
+            couleur = {
+                "feu_vert": Palette.SUCCES,
+                "ajustements_mineurs": "yellow",
+                "retravailler": "red",
+            }.get(verdict_meta, "white")
+            console.print(
+                f"  Directeur (métadonnées) : [{couleur}]{verdict_meta.replace('_', ' ').upper()}[/] "
+                f"(note {note_meta}/10)"
+            )
+
+            # Titre
+            titre_avis = resultat_meta_dir.get("titre_avis", "")
+            if titre_avis:
+                console.print(f"  Titre : {Typo.dim(titre_avis)}")
+
+            # Suggestions de titres alternatifs
+            suggestions = resultat_meta_dir.get("suggestions", {})
+            titres_alt = suggestions.get("titres_alternatifs", [])
+            if titres_alt:
+                console.print("[yellow]  Titres alternatifs proposés :[/yellow]")
+                for t in titres_alt[:3]:
+                    console.print(f"    - {t}")
+
+            # Description
+            desc_avis = resultat_meta_dir.get("description_avis", "")
+            if desc_avis:
+                console.print(f"  Description : {Typo.dim(desc_avis)}")
+
+            # Personas
+            personas_meta = resultat_meta_dir.get("personas", {})
+            for pk, pv in personas_meta.items():
+                nom = pk.replace("_", " ").title()
+                clic = "cliquerait" if pv.get("cliquerait", True) else "NE cliquerait PAS"
+                comm = pv.get("commentaire", "")
+                console.print(f"  {Typo.dim(f'{nom} : {clic} — {comm}')}")
+
+            rapport["etapes"]["directeur_metadonnees"] = {
+                "note": note_meta,
+                "verdict": verdict_meta,
+                "titres_alternatifs": titres_alt,
+            }
+        except Exception as e:
+            logger.warning("Directeur Podcast (métadonnées) indisponible : %s", e)
+            console.print(f"[yellow]  Validation directeur métadonnées non disponible : {e}[/yellow]")
+
     # ── Validation humaine : metadonnees ──────────────────────────────────────
 
     if not auto and not dry_run and etape_idx <= 5:
@@ -3900,6 +4022,63 @@ def _pipeline_inner(
             console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention(f'SAUTÉ — {raison}')}")
             rapport["etapes"]["publication"] = {"status": f"skipped ({raison})"}
         else:
+            # ── Directeur Podcast — Go/No-Go final ────────────────────────
+            try:
+                directeur_pub = DirecteurPodcast()
+                resultat_go = directeur_pub.go_no_go_publication(rapport, meta)
+                verdict_go = resultat_go.get("verdict", "?")
+                note_go = resultat_go.get("note_globale", 0)
+
+                couleur_go = {
+                    "go": Palette.SUCCES,
+                    "conditionnel": "yellow",
+                    "no_go": "red",
+                }.get(verdict_go, "white")
+                console.print(
+                    f"  Directeur — verdict final : [{couleur_go}]{verdict_go.upper()}[/] "
+                    f"(note {note_go}/10)"
+                )
+
+                synthese_go = resultat_go.get("synthese", "")
+                if synthese_go:
+                    console.print(f"  {Typo.dim(synthese_go)}")
+
+                # Points forts
+                for pf in resultat_go.get("points_forts", []):
+                    console.print(f"  [{Palette.SUCCES}]+ {pf}[/]")
+
+                # Risques
+                for r in resultat_go.get("risques", []):
+                    console.print(f"  [yellow]! {r}[/yellow]")
+
+                # Conditions (si conditionnel)
+                for c in resultat_go.get("conditions", []):
+                    console.print(f"  [bold yellow]? {c}[/bold yellow]")
+
+                # Personas
+                personas_go = resultat_go.get("personas", {})
+                for pk, pv in personas_go.items():
+                    nom = pk.replace("_", " ").title()
+                    pret = "OK" if pv.get("pret_a_publier", True) else "NON"
+                    comm_go = pv.get("commentaire", "")
+                    console.print(f"  {Typo.dim(f'{nom} ({pret}) : {comm_go}')}")
+
+                rapport["etapes"]["directeur_go_no_go"] = {
+                    "verdict": verdict_go,
+                    "note_globale": note_go,
+                    "risques": resultat_go.get("risques", []),
+                }
+
+                # Bloquer si no_go
+                if verdict_go == "no_go" and not auto:
+                    console.print(
+                        f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur podcast recommande "
+                        f"de NE PAS publier en l'état.[/bold red]"
+                    )
+            except Exception as e:
+                logger.warning("Directeur Podcast (go/no-go) indisponible : %s", e)
+                console.print(f"[yellow]  Go/No-Go directeur non disponible : {e}[/yellow]")
+
             # Confirmation avant publication (T4)
             # En mode auto, la publication est sautée par défaut
             # (action irréversible qui nécessite une demande explicite via --publish)

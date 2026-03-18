@@ -577,6 +577,175 @@ def _construire_user_prompt_correction(
     return "\n".join(parts)
 
 
+# ── System Prompt — Validation des métadonnées ────────────────────────────────
+
+_SYSTEM_PROMPT_METADONNEES = """\
+Tu es Marc Delacroix, directeur podcast expert. Tu valides les MÉTADONNÉES \
+d'un épisode du podcast "Les Histoires de Papy Babou" (enfants 6-10 ans, \
+histoires bibliques).
+
+Les métadonnées déterminent si un parent va cliquer "Play" sur Apple Podcasts \
+ou Spotify. C'est la VITRINE de l'épisode. Un mauvais titre = 0 écoute.
+
+PERSONAS D'AUDIENCE :
+{personas}
+
+ÉVALUATION :
+1. TITRE — Est-il accrocheur, court (<60 chars), évocateur pour un enfant ET un parent ?
+   Éviter les titres génériques ("L'histoire de..."), préférer l'intrigue ou l'émotion.
+2. DESCRIPTION COURTE — Donne-t-elle envie d'écouter en 2-3 phrases ?
+   Un parent scroll vite — la 1ère phrase doit captiver.
+3. MOTS-CLÉS — Sont-ils pertinents pour le SEO podcast ?
+   Inclure : thème biblique, personnages, émotion principale.
+4. COHÉRENCE — Les métadonnées reflètent-elles fidèlement le contenu ?
+   Pas de promesses non tenues (clickbait).
+
+FORMAT DE RÉPONSE — JSON STRICT :
+{{
+  "verdict": "feu_vert|ajustements_mineurs|retravailler",
+  "note": 8,
+  "titre_avis": "Avis sur le titre — ce qui fonctionne et ce qui pourrait être amélioré.",
+  "description_avis": "Avis sur la description.",
+  "suggestions": {{
+    "titres_alternatifs": ["Titre alternatif 1", "Titre alternatif 2"],
+    "description_amelioree": "Version améliorée de la description si nécessaire.",
+    "mots_cles_manquants": ["mot-clé 1"]
+  }},
+  "personas": {{
+    "lina_7ans": {{
+      "cliquerait": true,
+      "commentaire": "Réaction de Lina face au titre/description"
+    }},
+    "noah_10ans": {{
+      "cliquerait": true,
+      "commentaire": "Réaction de Noah"
+    }},
+    "sophie_parent": {{
+      "cliquerait": true,
+      "commentaire": "Réaction de Sophie (parent)"
+    }}
+  }}
+}}
+
+Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
+"""
+
+# ── System Prompt — Go/No-Go publication ──────────────────────────────────────
+
+_SYSTEM_PROMPT_GO_NO_GO = """\
+Tu es Marc Delacroix, directeur podcast expert. Tu donnes l'avis FINAL \
+avant publication RSS d'un épisode du podcast "Les Histoires de Papy Babou" \
+(enfants 6-10 ans, histoires bibliques, voix IA ElevenLabs).
+
+C'est le moment de vérité. Une fois publié, l'épisode est public et \
+irréversible. Tu as devant toi le RAPPORT COMPLET de production : \
+script, review, montage, métadonnées.
+
+PERSONAS D'AUDIENCE :
+{personas}
+
+TON RÔLE :
+1. Synthétiser TOUTES les données du rapport (notes, alertes, métriques)
+2. Identifier les RISQUES résiduels (alertes non résolues, notes basses)
+3. Donner un verdict tranché : GO, NO-GO, ou CONDITIONNEL
+
+GRILLE DE DÉCISION :
+- "go" : Note directeur ≥7, note audience ≥7, pas d'alerte critique, \
+  validation humaine script + montage = OK. Épisode prêt.
+- "conditionnel" : Note entre 6-7 OU alertes mineures non résolues. \
+  Publication acceptable avec réserves (les lister).
+- "no_go" : Note <6 OU alerte critique OU validation humaine manquante. \
+  Ne PAS publier en l'état. Expliquer ce qui bloque.
+
+FORMAT DE RÉPONSE — JSON STRICT :
+{{
+  "verdict": "go|no_go|conditionnel",
+  "note_globale": 8.0,
+  "synthese": "Synthèse en 3-4 phrases du verdict final.",
+  "risques": ["Risque résiduel 1"],
+  "points_forts": ["Point fort 1"],
+  "conditions": ["Condition pour publier (si conditionnel)"],
+  "personas": {{
+    "lina_7ans": {{
+      "pret_a_publier": true,
+      "commentaire": "Lina serait contente de cet épisode parce que..."
+    }},
+    "noah_10ans": {{
+      "pret_a_publier": true,
+      "commentaire": "Noah trouverait cet épisode..."
+    }},
+    "sophie_parent": {{
+      "pret_a_publier": true,
+      "commentaire": "Sophie recommanderait cet épisode parce que..."
+    }}
+  }}
+}}
+
+Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
+"""
+
+# ── System Prompt — Brief créatif pré-génération ─────────────────────────────
+
+_SYSTEM_PROMPT_BRIEF_CREATIF = """\
+Tu es Marc Delacroix, directeur podcast expert pour enfants de 6-10 ans. \
+Tu donnes un BRIEF CRÉATIF au scripteur AVANT qu'il écrive le script \
+du podcast "Les Histoires de Papy Babou" (histoires bibliques, voix IA).
+
+Ton brief est une FEUILLE DE ROUTE créative. Le scripteur va s'en servir \
+pour écrire un script de qualité broadcast. Sois CONCRET et ACTIONNABLE.
+
+Tu sais que :
+- Le podcast utilise des voix IA ElevenLabs — les segments doivent être \
+  courts, percutants, avec des tons variés
+- Les SFX sont générés automatiquement — les descriptions doivent être \
+  en ANGLAIS, spécifiques et immersives
+- Le public = enfants 6-10 ans + parents qui écoutent ensemble
+- Chaque épisode = UNE histoire biblique complète de A à Z
+- Structure : scène de vie familiale → transition → récit biblique → retour
+
+FORMAT DE RÉPONSE — JSON STRICT :
+{
+  "directives_ton": "Directive globale sur le ton de l'épisode (ex: 'Commencer mystérieux, monter en épique, finir tendre')",
+  "accroche_suggestion": "Suggestion concrète pour l'accroche des 30 premières secondes",
+  "moments_cles": [
+    "Moment clé 1 à ne pas manquer dans le récit biblique",
+    "Moment clé 2 — la scène la plus émouvante/spectaculaire",
+    "Moment clé 3 — le twist ou la révélation"
+  ],
+  "sfx_attendus": [
+    "SFX atmosphère attendu pour la scène d'ouverture (EN ANGLAIS)",
+    "SFX clé pour le moment dramatique (EN ANGLAIS)",
+    "SFX de transition entre scène de vie et récit biblique (EN ANGLAIS)"
+  ],
+  "ambiances_suggerees": {
+    "acte_1": "ambiance suggérée pour l'acte 1",
+    "acte_2": "ambiance suggérée pour l'acte 2",
+    "acte_3": "ambiance suggérée pour l'acte 3"
+  },
+  "pieges_a_eviter": [
+    "Piège 1 spécifique à cette histoire biblique",
+    "Piège 2 lié au public enfant"
+  ],
+  "personnages_focus": "Conseil sur l'utilisation des personnages récurrents dans cet épisode"
+}
+
+Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
+"""
+
+
+def _construire_personas_text() -> str:
+    """Construit le texte des personas pour injection dans les prompts."""
+    parts = []
+    for key, persona in PERSONAS.items():
+        parts.append(
+            f"PERSONA {persona['nom'].upper()} ({persona['age']} ans, {persona['profil']}) :\n"
+            f"{persona['description']}\n"
+            f"Critères d'évaluation :\n"
+            + "\n".join(f"  - {c}" for c in persona["criteres"])
+        )
+    return "\n\n".join(parts)
+
+
 class DirecteurPodcast:
     """Directeur créatif — validation finale et retours d'audience simulés."""
 
@@ -1124,3 +1293,306 @@ class DirecteurPodcast:
             Note sur 10.
         """
         return DirecteurPodcast.note_audience(resultat)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # Validation métadonnées (titre, description, transcript)
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def valider_metadonnees(
+        self,
+        meta: dict,
+        script: dict,
+        *,
+        max_retry: int = 3,
+    ) -> dict:
+        """Valide les métadonnées de l'épisode (titre, description, mots-clés).
+
+        Le directeur vérifie que le titre est accrocheur, que la description
+        donne envie d'écouter, et que les mots-clés sont pertinents pour le SEO
+        podcast (Apple Podcasts, Spotify).
+
+        Args:
+            meta: Dict des métadonnées (titre, description_courte, mots_cles, etc.).
+            script: Script de l'épisode pour le contexte.
+            max_retry: Nombre de tentatives de parsing JSON.
+
+        Returns:
+            Dict avec clés : "verdict", "note", "titre_avis", "description_avis",
+            "suggestions", "personas".
+        """
+        system_prompt = _SYSTEM_PROMPT_METADONNEES.format(
+            personas=_construire_personas_text(),
+        )
+
+        episode = script.get("episode", {})
+        user_prompt = (
+            "MÉTADONNÉES À VALIDER :\n"
+            f"{json.dumps(meta, ensure_ascii=False, indent=2)}\n\n"
+            "CONTEXTE DU SCRIPT :\n"
+            f"- Titre épisode : {episode.get('titre', '?')}\n"
+            f"- Histoire biblique : {episode.get('histoire_biblique', '?')}\n"
+            f"- Morale : {episode.get('morale', '?')}\n"
+            f"- Type : {episode.get('type', 'standard')}\n"
+            f"- Nombre de segments : {len(episode.get('segments', []))}\n"
+        )
+
+        client = anthropic.Anthropic()
+        derniere_erreur = None
+
+        for tentative in range(1, max_retry + 1):
+            try:
+                response = config.appel_claude_avec_retry(
+                    client,
+                    model=config.CLAUDE_MODEL,
+                    max_tokens=2048,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": user_prompt}],
+                )
+                resultat = parser_json_llm(response.content[0].text)
+                self._valider_resultat_metadonnees(resultat)
+                return resultat
+
+            except (json.JSONDecodeError, ValueError, KeyError) as e:
+                derniere_erreur = e
+                if tentative < max_retry:
+                    logger.warning(
+                        "Directeur métadonnées — parsing tentative %d/%d : %s",
+                        tentative, max_retry, e,
+                    )
+                    continue
+                raise ValueError(
+                    f"Directeur Podcast (métadonnées) : impossible de parser "
+                    f"après {max_retry} tentatives."
+                ) from derniere_erreur
+
+        raise ValueError("Directeur Podcast (métadonnées) : aucun résultat obtenu.")  # pragma: no cover
+
+    @staticmethod
+    def _valider_resultat_metadonnees(resultat: dict) -> None:
+        """Vérifie la structure minimale du résultat de validation métadonnées."""
+        for champ in ("verdict", "note", "titre_avis", "description_avis"):
+            if champ not in resultat:
+                raise ValueError(f"Champ '{champ}' manquant dans le résultat métadonnées.")
+        if resultat["verdict"] not in ("feu_vert", "ajustements_mineurs", "retravailler"):
+            raise ValueError(f"Verdict invalide : '{resultat['verdict']}'")
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # Go/No-Go final avant publication
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def go_no_go_publication(
+        self,
+        rapport: dict,
+        meta: dict,
+        *,
+        max_retry: int = 3,
+    ) -> dict:
+        """Avis final du directeur avant publication RSS.
+
+        Synthétise toutes les étapes (script, review, montage, métadonnées)
+        et donne un verdict go/no-go pour la publication.
+
+        Args:
+            rapport: Rapport complet de production avec toutes les étapes.
+            meta: Métadonnées de l'épisode.
+            max_retry: Nombre de tentatives de parsing JSON.
+
+        Returns:
+            Dict avec clés : "verdict" (go/no_go/conditionnel), "note_globale",
+            "synthese", "risques", "points_forts", "personas".
+        """
+        system_prompt = _SYSTEM_PROMPT_GO_NO_GO.format(
+            personas=_construire_personas_text(),
+        )
+
+        # Synthèse du rapport pour le LLM
+        etapes = rapport.get("etapes", {})
+        user_prompt = (
+            "RAPPORT DE PRODUCTION COMPLET :\n\n"
+            f"ÉPISODE : {meta.get('titre', '?')}\n"
+            f"Description : {meta.get('description_courte', '?')}\n\n"
+        )
+
+        # Script
+        script_data = etapes.get("script", {})
+        user_prompt += (
+            "1. SCRIPT :\n"
+            f"   - Score reviewer : {script_data.get('score', '?')}/10\n"
+            f"   - Validation humaine : {'Oui' if script_data.get('validation_humaine') else 'Non'}\n\n"
+        )
+
+        # Directeur évaluation script
+        dir_data = etapes.get("directeur_podcast", {})
+        if dir_data:
+            user_prompt += (
+                "2. ÉVALUATION DIRECTEUR (script) :\n"
+                f"   - Note globale : {dir_data.get('note_globale', '?')}/10\n"
+                f"   - Verdict : {dir_data.get('verdict', '?')}\n"
+                f"   - Note audience : {dir_data.get('note_audience', '?')}/10\n\n"
+            )
+
+        # Montage
+        montage_data = etapes.get("montage", {})
+        user_prompt += (
+            "3. MONTAGE AUDIO :\n"
+            f"   - Durée : {montage_data.get('duree_secondes', '?')}s\n"
+            f"   - Validation humaine : {'Oui' if montage_data.get('validation_humaine') else 'Non'}\n\n"
+        )
+
+        # Métadonnées
+        meta_data = etapes.get("metadonnees", {})
+        user_prompt += (
+            "4. MÉTADONNÉES :\n"
+            f"   - Titre : {meta_data.get('titre', meta.get('titre', '?'))}\n"
+            f"   - Cover art : {'Oui' if meta_data.get('cover_art_path') else 'Non'}\n\n"
+        )
+
+        # Alertes
+        alertes = rapport.get("alertes_post_generation", [])
+        metriques = rapport.get("metriques", {})
+        if alertes:
+            user_prompt += "ALERTES :\n" + "\n".join(f"  - {a}" for a in alertes) + "\n\n"
+        if metriques:
+            user_prompt += "MÉTRIQUES :\n"
+            for k, v in metriques.items():
+                user_prompt += f"  - {k} : {v}\n"
+            user_prompt += "\n"
+
+        user_prompt += "Donne ton verdict GO / NO-GO / CONDITIONNEL pour la publication."
+
+        client = anthropic.Anthropic()
+        derniere_erreur = None
+
+        for tentative in range(1, max_retry + 1):
+            try:
+                response = config.appel_claude_avec_retry(
+                    client,
+                    model=config.CLAUDE_MODEL,
+                    max_tokens=2048,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": user_prompt}],
+                )
+                resultat = parser_json_llm(response.content[0].text)
+                self._valider_resultat_go_no_go(resultat)
+                return resultat
+
+            except (json.JSONDecodeError, ValueError, KeyError) as e:
+                derniere_erreur = e
+                if tentative < max_retry:
+                    logger.warning(
+                        "Directeur go/no-go — parsing tentative %d/%d : %s",
+                        tentative, max_retry, e,
+                    )
+                    continue
+                raise ValueError(
+                    f"Directeur Podcast (go/no-go) : impossible de parser "
+                    f"après {max_retry} tentatives."
+                ) from derniere_erreur
+
+        raise ValueError("Directeur Podcast (go/no-go) : aucun résultat obtenu.")  # pragma: no cover
+
+    @staticmethod
+    def _valider_resultat_go_no_go(resultat: dict) -> None:
+        """Vérifie la structure minimale du résultat go/no-go."""
+        for champ in ("verdict", "note_globale", "synthese"):
+            if champ not in resultat:
+                raise ValueError(f"Champ '{champ}' manquant dans le résultat go/no-go.")
+        if resultat["verdict"] not in ("go", "no_go", "conditionnel"):
+            raise ValueError(f"Verdict invalide : '{resultat['verdict']}'")
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # Brief créatif pré-génération script
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def brief_creatif(
+        self,
+        titre: str,
+        resume: str,
+        morale: str,
+        type_episode: str = "standard",
+        *,
+        episode_plan: dict | None = None,
+        contexte_saison: dict | None = None,
+        max_retry: int = 3,
+    ) -> dict:
+        """Génère un brief créatif pour guider le scripteur.
+
+        Le directeur donne des directives sur le ton, le rythme, les SFX
+        attendus, les moments clés à ne pas manquer, et les pièges à éviter.
+
+        Args:
+            titre: Titre de l'épisode.
+            resume: Résumé de l'histoire biblique.
+            morale: Morale de l'épisode.
+            type_episode: Type (standard, ouverture, final, etc.).
+            episode_plan: Plan de l'épisode depuis le planificateur.
+            contexte_saison: Contexte de la saison (fil rouge, arcs, etc.).
+            max_retry: Nombre de tentatives de parsing JSON.
+
+        Returns:
+            Dict avec clés : "directives_ton", "moments_cles", "sfx_attendus",
+            "pieges_a_eviter", "accroche_suggestion", "ambiances_suggerees".
+        """
+        system_prompt = _SYSTEM_PROMPT_BRIEF_CREATIF
+
+        user_parts = [
+            f"TITRE : {titre}",
+            f"TYPE D'ÉPISODE : {type_episode}",
+            f"RÉSUMÉ BIBLIQUE : {resume}",
+            f"MORALE : {morale}",
+        ]
+
+        if episode_plan:
+            user_parts.append(f"PRÉTEXTE (scène de vie) : {episode_plan.get('pretexte', '?')}")
+            user_parts.append(f"AMBIANCE PRÉVUE : {episode_plan.get('ambiance', '?')}")
+            if episode_plan.get("arcs_personnages"):
+                user_parts.append("ARCS PERSONNAGES :")
+                for perso, arc in episode_plan["arcs_personnages"].items():
+                    user_parts.append(f"  - {perso} : {arc}")
+
+        if contexte_saison:
+            user_parts.append(f"\nFIL ROUGE SAISON : {contexte_saison.get('fil_rouge', '?')}")
+            user_parts.append(f"THÈME SAISON : {contexte_saison.get('theme', '?')}")
+
+        user_parts.append(
+            "\nDonne tes directives créatives pour que le scripteur "
+            "produise un épisode de qualité broadcast."
+        )
+
+        client = anthropic.Anthropic()
+        derniere_erreur = None
+
+        for tentative in range(1, max_retry + 1):
+            try:
+                response = config.appel_claude_avec_retry(
+                    client,
+                    model=config.CLAUDE_MODEL,
+                    max_tokens=2048,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": "\n".join(user_parts)}],
+                )
+                resultat = parser_json_llm(response.content[0].text)
+                self._valider_resultat_brief(resultat)
+                return resultat
+
+            except (json.JSONDecodeError, ValueError, KeyError) as e:
+                derniere_erreur = e
+                if tentative < max_retry:
+                    logger.warning(
+                        "Directeur brief créatif — parsing tentative %d/%d : %s",
+                        tentative, max_retry, e,
+                    )
+                    continue
+                raise ValueError(
+                    f"Directeur Podcast (brief créatif) : impossible de parser "
+                    f"après {max_retry} tentatives."
+                ) from derniere_erreur
+
+        raise ValueError("Directeur Podcast (brief créatif) : aucun résultat obtenu.")  # pragma: no cover
+
+    @staticmethod
+    def _valider_resultat_brief(resultat: dict) -> None:
+        """Vérifie la structure minimale du brief créatif."""
+        for champ in ("directives_ton", "moments_cles", "pieges_a_eviter"):
+            if champ not in resultat:
+                raise ValueError(f"Champ '{champ}' manquant dans le brief créatif.")

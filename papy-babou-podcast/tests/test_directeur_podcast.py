@@ -798,3 +798,382 @@ class TestEvaluerPlanSaison:
             directeur.corriger_plan_saison(
                 plan_saison_exemple, retours, max_retry=1,
             )
+
+
+# ── Tests Validation Métadonnées ────────────────────────────────────────────
+
+from agents.directeur_podcast import (
+    _SYSTEM_PROMPT_METADONNEES,
+    _SYSTEM_PROMPT_GO_NO_GO,
+    _SYSTEM_PROMPT_BRIEF_CREATIF,
+    _construire_personas_text,
+)
+
+
+class TestValiderMetadonnees:
+    """Tests de la validation de métadonnées par le directeur."""
+
+    @pytest.fixture(autouse=True)
+    def _mock_api_key(self, monkeypatch):
+        import config
+        monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "test-key")
+
+    @pytest.fixture
+    def meta_exemple(self):
+        return {
+            "titre": "Le buisson ardent",
+            "description_courte": "Papy Babou raconte l'histoire de Moïse.",
+            "mots_cles": ["bible", "moïse", "buisson"],
+        }
+
+    @pytest.fixture
+    def resultat_meta_valide(self):
+        return {
+            "verdict": "feu_vert",
+            "note": 8,
+            "titre_avis": "Titre accrocheur et évocateur.",
+            "description_avis": "Bonne description.",
+            "suggestions": {
+                "titres_alternatifs": ["Moïse et le feu sacré"],
+                "description_amelioree": "",
+                "mots_cles_manquants": ["enfants"],
+            },
+            "personas": {
+                "lina_7ans": {"cliquerait": True, "commentaire": "Cool !"},
+                "noah_10ans": {"cliquerait": True, "commentaire": "Intéressant."},
+                "sophie_parent": {"cliquerait": True, "commentaire": "Bon contenu."},
+            },
+        }
+
+    def test_valider_metadonnees_succes(
+        self, script_exemple, meta_exemple, resultat_meta_valide,
+    ):
+        """La validation métadonnées retourne un résultat valide."""
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(resultat_meta_valide, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            resultat = directeur.valider_metadonnees(meta_exemple, script_exemple)
+            assert resultat["verdict"] == "feu_vert"
+            assert resultat["note"] == 8
+
+    def test_valider_metadonnees_echec_parsing(self, script_exemple, meta_exemple):
+        """Échec après tentatives de parsing."""
+        mock_bad = MagicMock()
+        mock_bad.content = [MagicMock(text="pas du JSON")]
+
+        directeur = DirecteurPodcast()
+        with patch(
+            "config.appel_claude_avec_retry", return_value=mock_bad,
+        ), pytest.raises(ValueError, match="impossible de parser"):
+            directeur.valider_metadonnees(meta_exemple, script_exemple, max_retry=1)
+
+    def test_valider_resultat_metadonnees_champ_manquant(self):
+        """Rejet si champ obligatoire manquant."""
+        with pytest.raises(ValueError, match="verdict"):
+            DirecteurPodcast._valider_resultat_metadonnees({"note": 8})
+
+    def test_valider_resultat_metadonnees_verdict_invalide(self):
+        """Rejet si verdict invalide."""
+        with pytest.raises(ValueError, match="Verdict invalide"):
+            DirecteurPodcast._valider_resultat_metadonnees({
+                "verdict": "bof", "note": 5,
+                "titre_avis": "ok", "description_avis": "ok",
+            })
+
+    def test_valider_resultat_metadonnees_ok(self, resultat_meta_valide):
+        """Un résultat valide passe la validation."""
+        DirecteurPodcast._valider_resultat_metadonnees(resultat_meta_valide)
+
+
+# ── Tests Go/No-Go Publication ──────────────────────────────────────────────
+
+class TestGoNoGo:
+    """Tests du go/no-go final avant publication."""
+
+    @pytest.fixture(autouse=True)
+    def _mock_api_key(self, monkeypatch):
+        import config
+        monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "test-key")
+
+    @pytest.fixture
+    def rapport_exemple(self):
+        return {
+            "etapes": {
+                "script": {"score": 8.0, "validation_humaine": True},
+                "directeur_podcast": {"note_globale": 8.0, "verdict": "feu_vert", "note_audience": 7.5},
+                "montage": {"duree_secondes": 1500, "validation_humaine": True},
+                "metadonnees": {"titre": "Le buisson ardent"},
+            },
+            "alertes_post_generation": [],
+            "metriques": {"ratio_biblique": 0.65},
+        }
+
+    @pytest.fixture
+    def resultat_go_valide(self):
+        return {
+            "verdict": "go",
+            "note_globale": 8.5,
+            "synthese": "Épisode prêt pour publication.",
+            "risques": [],
+            "points_forts": ["Narration immersive"],
+            "conditions": [],
+            "personas": {
+                "lina_7ans": {"pret_a_publier": True, "commentaire": "Trop bien !"},
+                "noah_10ans": {"pret_a_publier": True, "commentaire": "Cool."},
+                "sophie_parent": {"pret_a_publier": True, "commentaire": "Recommandé."},
+            },
+        }
+
+    def test_go_no_go_succes(self, rapport_exemple, resultat_go_valide):
+        """Le go/no-go retourne un verdict valide."""
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(resultat_go_valide, ensure_ascii=False)
+        )]
+        meta = {"titre": "Le buisson ardent", "description_courte": "..."}
+
+        directeur = DirecteurPodcast()
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            resultat = directeur.go_no_go_publication(rapport_exemple, meta)
+            assert resultat["verdict"] == "go"
+            assert resultat["note_globale"] == 8.5
+
+    def test_go_no_go_echec_parsing(self, rapport_exemple):
+        """Échec après tentatives de parsing."""
+        mock_bad = MagicMock()
+        mock_bad.content = [MagicMock(text="nope")]
+        meta = {"titre": "Test"}
+
+        directeur = DirecteurPodcast()
+        with patch(
+            "config.appel_claude_avec_retry", return_value=mock_bad,
+        ), pytest.raises(ValueError, match="impossible de parser"):
+            directeur.go_no_go_publication(rapport_exemple, meta, max_retry=1)
+
+    def test_valider_resultat_go_no_go_champ_manquant(self):
+        """Rejet si champ obligatoire manquant."""
+        with pytest.raises(ValueError, match="verdict"):
+            DirecteurPodcast._valider_resultat_go_no_go({"note_globale": 8})
+
+    def test_valider_resultat_go_no_go_verdict_invalide(self):
+        """Rejet si verdict invalide."""
+        with pytest.raises(ValueError, match="Verdict invalide"):
+            DirecteurPodcast._valider_resultat_go_no_go({
+                "verdict": "maybe", "note_globale": 7, "synthese": "test",
+            })
+
+    def test_valider_resultat_go_no_go_ok(self, resultat_go_valide):
+        """Un résultat valide passe la validation."""
+        DirecteurPodcast._valider_resultat_go_no_go(resultat_go_valide)
+
+    def test_go_no_go_verdict_no_go(self, rapport_exemple):
+        """Un verdict no_go est correctement retourné."""
+        resultat_nogo = {
+            "verdict": "no_go",
+            "note_globale": 4.0,
+            "synthese": "Épisode pas prêt.",
+            "risques": ["Script trop faible"],
+            "points_forts": [],
+            "conditions": [],
+            "personas": {
+                "lina_7ans": {"pret_a_publier": False, "commentaire": "Ennuyeux."},
+                "noah_10ans": {"pret_a_publier": False, "commentaire": "Nul."},
+                "sophie_parent": {"pret_a_publier": False, "commentaire": "Pas recommandé."},
+            },
+        }
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(resultat_nogo, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            resultat = directeur.go_no_go_publication(rapport_exemple, {"titre": "Test"})
+            assert resultat["verdict"] == "no_go"
+
+    def test_go_no_go_conditionnel(self, rapport_exemple):
+        """Un verdict conditionnel est correctement retourné."""
+        resultat_cond = {
+            "verdict": "conditionnel",
+            "note_globale": 6.5,
+            "synthese": "Peut passer avec réserves.",
+            "risques": ["Note directeur limite"],
+            "points_forts": ["Bon sujet"],
+            "conditions": ["Améliorer le titre"],
+            "personas": {
+                "lina_7ans": {"pret_a_publier": True, "commentaire": "Ok."},
+                "noah_10ans": {"pret_a_publier": True, "commentaire": "Bof."},
+                "sophie_parent": {"pret_a_publier": True, "commentaire": "Moyen."},
+            },
+        }
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(resultat_cond, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            resultat = directeur.go_no_go_publication(rapport_exemple, {"titre": "Test"})
+            assert resultat["verdict"] == "conditionnel"
+            assert len(resultat["conditions"]) > 0
+
+
+# ── Tests Brief Créatif ─────────────────────────────────────────────────────
+
+class TestBriefCreatif:
+    """Tests du brief créatif pré-génération."""
+
+    @pytest.fixture(autouse=True)
+    def _mock_api_key(self, monkeypatch):
+        import config
+        monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "test-key")
+
+    @pytest.fixture
+    def resultat_brief_valide(self):
+        return {
+            "directives_ton": "Commencer mystérieux, monter en épique, finir tendre.",
+            "accroche_suggestion": "Un feu dans le désert...",
+            "moments_cles": [
+                "Moïse voit le buisson en feu",
+                "Dieu parle depuis les flammes",
+                "Moïse accepte sa mission",
+            ],
+            "sfx_attendus": [
+                "crackling fire in dry desert",
+                "deep reverberant voice from above",
+                "gentle wind through desert sand",
+            ],
+            "ambiances_suggerees": {
+                "acte_1": "calme",
+                "acte_2": "mystere",
+                "acte_3": "solennel",
+            },
+            "pieges_a_eviter": [
+                "Ne pas rendre Dieu effrayant — majestueux mais bienveillant",
+                "Éviter un monologue trop long de Papy",
+            ],
+            "personnages_focus": "Antoine pose des questions pratiques, Noémie s'émerveille.",
+        }
+
+    def test_brief_creatif_succes(self, resultat_brief_valide):
+        """Le brief créatif retourne un résultat valide."""
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(resultat_brief_valide, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            resultat = directeur.brief_creatif(
+                titre="Le buisson ardent",
+                resume="Moïse voit un buisson en feu...",
+                morale="Dieu appelle les humbles.",
+            )
+            assert "directives_ton" in resultat
+            assert len(resultat["moments_cles"]) == 3
+            assert len(resultat["sfx_attendus"]) == 3
+
+    def test_brief_creatif_avec_plan(self, resultat_brief_valide):
+        """Le brief fonctionne avec episode_plan et contexte_saison."""
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(resultat_brief_valide, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            resultat = directeur.brief_creatif(
+                titre="Le buisson ardent",
+                resume="Moïse voit un buisson...",
+                morale="Les humbles sont appelés.",
+                type_episode="ouverture",
+                episode_plan={
+                    "pretexte": "Antoine fait un feu de camp",
+                    "ambiance": "mystere",
+                    "arcs_personnages": {"antoine": "Apprend le courage"},
+                },
+                contexte_saison={
+                    "fil_rouge": "Le courage face à l'inconnu",
+                    "theme": "Les grands voyages",
+                },
+            )
+            assert resultat["directives_ton"]
+
+    def test_brief_creatif_echec_parsing(self):
+        """Échec après tentatives de parsing."""
+        mock_bad = MagicMock()
+        mock_bad.content = [MagicMock(text="invalide")]
+
+        directeur = DirecteurPodcast()
+        with patch(
+            "config.appel_claude_avec_retry", return_value=mock_bad,
+        ), pytest.raises(ValueError, match="impossible de parser"):
+            directeur.brief_creatif(
+                titre="Test", resume="Test", morale="Test", max_retry=1,
+            )
+
+    def test_valider_resultat_brief_champ_manquant(self):
+        """Rejet si champ obligatoire manquant."""
+        with pytest.raises(ValueError, match="directives_ton"):
+            DirecteurPodcast._valider_resultat_brief({"moments_cles": [], "pieges_a_eviter": []})
+
+    def test_valider_resultat_brief_ok(self, resultat_brief_valide):
+        """Un résultat valide passe la validation."""
+        DirecteurPodcast._valider_resultat_brief(resultat_brief_valide)
+
+
+# ── Tests Prompts des nouvelles méthodes ────────────────────────────────────
+
+class TestNouveauxPrompts:
+    """Tests des prompts système des nouvelles méthodes."""
+
+    def test_prompt_metadonnees_contient_personas(self):
+        """Le prompt métadonnées mentionne les personas."""
+        assert "{personas}" in _SYSTEM_PROMPT_METADONNEES
+        prompt = _SYSTEM_PROMPT_METADONNEES.format(personas=_construire_personas_text())
+        assert "LINA" in prompt
+        assert "NOAH" in prompt
+        assert "SOPHIE" in prompt
+
+    def test_prompt_metadonnees_contient_evaluation(self):
+        """Le prompt métadonnées contient les axes d'évaluation."""
+        assert "TITRE" in _SYSTEM_PROMPT_METADONNEES
+        assert "DESCRIPTION" in _SYSTEM_PROMPT_METADONNEES
+        assert "MOTS-CLÉS" in _SYSTEM_PROMPT_METADONNEES
+        assert "COHÉRENCE" in _SYSTEM_PROMPT_METADONNEES
+
+    def test_prompt_go_no_go_contient_verdicts(self):
+        """Le prompt go/no-go contient les 3 verdicts possibles."""
+        assert "go" in _SYSTEM_PROMPT_GO_NO_GO
+        assert "no_go" in _SYSTEM_PROMPT_GO_NO_GO
+        assert "conditionnel" in _SYSTEM_PROMPT_GO_NO_GO
+
+    def test_prompt_go_no_go_mentionne_irréversible(self):
+        """Le prompt go/no-go rappelle que c'est irréversible."""
+        assert "irréversible" in _SYSTEM_PROMPT_GO_NO_GO
+
+    def test_prompt_brief_creatif_contient_directives(self):
+        """Le prompt brief contient les sections attendues."""
+        assert "directives_ton" in _SYSTEM_PROMPT_BRIEF_CREATIF
+        assert "moments_cles" in _SYSTEM_PROMPT_BRIEF_CREATIF
+        assert "sfx_attendus" in _SYSTEM_PROMPT_BRIEF_CREATIF
+        assert "pieges_a_eviter" in _SYSTEM_PROMPT_BRIEF_CREATIF
+        assert "ambiances_suggerees" in _SYSTEM_PROMPT_BRIEF_CREATIF
+
+    def test_prompt_brief_creatif_mentionne_anglais(self):
+        """Le prompt brief rappelle que les SFX doivent être en anglais."""
+        assert "ANGLAIS" in _SYSTEM_PROMPT_BRIEF_CREATIF
+
+    def test_construire_personas_text_contient_3_personas(self):
+        """Le helper construit le texte des 3 personas."""
+        text = _construire_personas_text()
+        assert "LINA" in text
+        assert "NOAH" in text
+        assert "SOPHIE" in text
+        assert "7 ans" in text
+        assert "10 ans" in text
+        assert "45 ans" in text
