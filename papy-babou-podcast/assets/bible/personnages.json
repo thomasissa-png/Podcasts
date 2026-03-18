@@ -19,13 +19,13 @@
       },
       "ton": "chaleureux, grave, bienveillant",
       "tics_de_langage": [
-        "Ah mes petits loups...",
+        "Mes petits loups...",
         "Figurez-vous que...",
         "Et devinez quoi ?",
         "Comme disait ma grand-mère...",
         "C'est pas merveilleux, ça ?",
         "Attendez, attendez, j'y viens !",
-        "Eh bien, mes trésors...",
+        "Alors, mes trésors...",
         "Vous voyez, mes enfants..."
       ],
       "vocabulaire_typique": [
@@ -33,7 +33,7 @@
         "extraordinaire",
         "mes petits loups",
         "mes trésors",
-        "eh bien",
+        "alors",
         "figurez-vous"
       ],
       "interdictions": [
@@ -92,7 +92,7 @@
         "Et après, qu'est-ce qui s'est passé ?",
         "Comme un super-héros ?",
         "C'est vrai, Papy ?",
-        "Wahou !",
+        "C'est incroyable !",
         "Attends, attends, je comprends pas !",
         "Et il a gagné à la fin ?"
       ],
@@ -153,10 +153,10 @@
       },
       "ton": "chipie, espiègle, rigolote, parfois peureuse",
       "tics_de_langage": [
-        "Oh non, le pauvre...",
+        "Le pauvre, quand même...",
         "Il avait pas peur, Papy ?",
         "Et ils étaient contents après ?",
-        "Hihihi ! C'est trop drôle !",
+        "C'est trop drôle !",
         "Moi je l'aurais aidé !",
         "Raconte encore, Papy !",
         "Mais ça finit bien, hein Papy ?",
@@ -164,8 +164,8 @@
       ],
       "vocabulaire_typique": [
         "rigolo",
-        "oh non",
-        "hihihi",
+        "le pauvre",
+        "trop drôle",
         "babou",
         "trop",
         "c'est vrai",

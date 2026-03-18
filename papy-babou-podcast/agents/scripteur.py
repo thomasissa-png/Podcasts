@@ -114,9 +114,26 @@ RÈGLES STRICTES :
     curiosité → montée en tension → climax → résolution → morale apaisante.
     Varie l'intensité des émotions. Place au moins un moment de SURPRISE ou RÉVÉLATION.
 13. DIALOGUES NATURELS : les répliques des enfants doivent être courtes (1-2 phrases max),
-    spontanées, avec parfois des hésitations ("Euh...", "Attends..."). Antoine et Noémie
+    spontanées, avec parfois des hésitations ("Attends...", "Hmm, je sais pas..."). Antoine et Noémie
     interagissent aussi ENTRE EUX, pas seulement avec Papy. Utilise au moins 3 tics de
     langage différents par personnage par épisode.
+15. ADAPTATION VOIX IA — RÈGLE CRITIQUE :
+    Ce script sera lu par des voix de synthèse (ElevenLabs). Les onomatopées écrites
+    sonnent TRÈS MAL avec les voix IA. Tu dois ABSOLUMENT :
+    - INTERDIRE toute onomatopée écrite : pas de "Hahaha", "Hihihi", "Ohlala", "Oh là là",
+      "Oooh", "Aaah", "Hmm", "Euh", "Pfff", "Bah", "Waouh", "Ouah", "Beurk", etc.
+    - REMPLACER les rires par des phrases qui expriment la joie : "C'est trop drôle !",
+      "Ça me fait trop rire !", "J'adore !" plutôt que "Hahaha !" ou "Hihihi !".
+    - REMPLACER les hésitations par des phrases naturelles : "Attends, je réfléchis...",
+      "Je sais pas trop...", "Comment dire..." plutôt que "Euh..." ou "Hmm...".
+    - REMPLACER les exclamations vides par des réactions verbales : "C'est incroyable !",
+      "Ça alors !" plutôt que "Oooh !" ou "Waouh !".
+    - REMPLACER les expressions de dégoût/surprise par des mots : "C'est dégoûtant !",
+      "Quelle surprise !" plutôt que "Beurk !" ou "Oh !".
+    - Les ÉMOTIONS doivent passer par le champ "ton" du segment (joyeux, excite, effrayé, etc.)
+      et par le CONTENU VERBAL, jamais par des onomatopées.
+    - Même les petits mots comme "Ah", "Oh", "Eh" en début de phrase sont à ÉVITER.
+      Préférer des formulations complètes : "Dis donc !", "Tiens !", "Attends voir !".
 14. BACKSTORY DE PAPY : Papy Babou (vrai prénom Jean-Pierre) est né à Dakar au Sénégal,
     a grandi au Liban (où il a rencontré Sonia dans les abris pendant la guerre), puis a vécu
     en Afrique du Sud et en Suisse avant de s'installer en Normandie. Très courageux, très fort,
@@ -404,13 +421,13 @@ def _construire_bible_personnages(numero_saison: int = 1) -> str:
 _BIBLE_FALLBACK = """\
 PERSONNAGES :
 - Papy Babou : grand-père de 66 ans, né à Dakar, grand voyageur (Liban, Afrique du Sud, Suisse), ton chaleureux et grave.
-  Tics de langage : "Ah mes petits loups...", "Figurez-vous que...", "Et devinez quoi ?",
+  Tics de langage : "Mes petits loups...", "Figurez-vous que...", "Et devinez quoi ?",
   "Comme disait ma grand-mère...", "C'est pas merveilleux, ça ?", "Attendez, attendez, j'y viens !"
   Backstory : Gourmand, très courageux et fort, père de Thomas et Nathalie, marié à mamie Sonia.
 - Antoine : petit-fils de 8 ans, curieux et aventurier, fait du judo et du football.
   Tics : "Mais Papy, pourquoi... ?", "Trop cool !", "Et après ?", "Comme un super-héros ?"
 - Noémie : petite-fille de 5 ans, chipie avec un très gros caractère, espiègle et rigolote.
-  Tics : "Oh non, le pauvre...", "Hihihi ! C'est trop drôle !", "Babouuuu ! Encore une histoire !"
+  Tics : "Le pauvre, quand même...", "C'est trop drôle !", "Babouuuu ! Encore une histoire !"
 - Mamie Sonia : épouse de Papy, 65 ans, née en Égypte, architecte d'intérieur, cuisine divinement.
   Apparitions légères : goûter, coucher, commentaire tendre depuis la cuisine."""
 
@@ -1014,6 +1031,9 @@ class Scripteur:
         # Vérifier les mots interdits dans le texte généré
         self._verifier_mots_interdits(script)
 
+        # Nettoyer les onomatopées résiduelles (le LLM n'est pas infaillible)
+        self._nettoyer_onomatopees(script)
+
         nb_mots = self.compter_mots(script)
         mots_cible = format_ep["mots_cible"]
         logger.info(
@@ -1129,6 +1149,97 @@ class Scripteur:
                 "Le LLM n'a pas respecté l'instruction. "
                 "Le reviewer devrait signaler ces occurrences.",
                 ", ".join(trouves),
+            )
+
+    # ── Onomatopées : patterns à nettoyer dans les scripts générés ──────────
+
+    # Onomatopées pures (segment entier = onomatopée) → supprimer le segment
+    _ONOMATOPEES_PURES = re.compile(
+        r"^(?:ha\s*)+!*$|^(?:hi\s*)+!*$|^(?:ho\s*)+!*$|"
+        r"^(?:oh\s*)+(?:la\s*)*!*$|^(?:ah\s*)+!*$|^(?:eh\s*)+!*$|"
+        r"^(?:euh\s*)+\.{0,3}$|^(?:hmm\s*)+\.{0,3}$|^(?:pfff?\s*)+!*$|"
+        r"^(?:bah\s*)+!*$|^(?:waouh?\s*)+!*$|^(?:ouah?\s*)+!*$|"
+        r"^(?:beurk\s*)+!*$|^(?:oooh?\s*)+!*$|^(?:aaah?\s*)+!*$",
+        re.IGNORECASE,
+    )
+
+    # Onomatopées en début de réplique → retirer le préfixe
+    _ONOMATOPEE_PREFIX = re.compile(
+        r"^(?:(?:Ha){2,}|(?:Hi){2,}|(?:Ho){2,}|"
+        r"Oh\s*(?:là\s*là)?|Ah|Eh|Euh|Hmm+|Pfff?|Bah|Waouh?|Ouah?|Oooh?|Aaah?)"
+        r"[\s!.,…]*\s*",
+        re.IGNORECASE,
+    )
+
+    # Onomatopées en milieu de texte (rires, hésitations)
+    _ONOMATOPEE_INLINE = re.compile(
+        r"\s*(?:(?:Ha){2,}|(?:Hi){2,}|(?:Ho){2,})[\s!]*",
+        re.IGNORECASE,
+    )
+
+    @staticmethod
+    def _nettoyer_onomatopees(script: dict) -> None:
+        """Nettoie les onomatopées résiduelles des segments de dialogue.
+
+        Les voix ElevenLabs prononcent littéralement les onomatopées écrites
+        (ex: "hache-i-hache-i"), ce qui sonne très artificiel.
+        Ce filtre post-génération :
+        1. Supprime les segments qui ne contiennent QUE des onomatopées.
+        2. Retire les onomatopées en début ou milieu de réplique.
+        """
+        segments = script.get("episode", {}).get("segments", [])
+        segments_a_supprimer = []
+        nb_nettoyages = 0
+
+        for i, seg in enumerate(segments):
+            if seg.get("personnage") == "sfx":
+                continue
+
+            texte = seg.get("texte", "").strip()
+            if not texte:
+                continue
+
+            # Cas 1 : segment entièrement onomatopée
+            texte_sans_ponct = re.sub(r"[!.,…\s]+", " ", texte).strip()
+            if Scripteur._ONOMATOPEES_PURES.match(texte_sans_ponct):
+                segments_a_supprimer.append(i)
+                nb_nettoyages += 1
+                continue
+
+            # Cas 2 : onomatopée en début de réplique
+            texte_nettoye = Scripteur._ONOMATOPEE_PREFIX.sub("", texte, count=1)
+
+            # Cas 3 : rires/onomatopées inline
+            texte_nettoye = Scripteur._ONOMATOPEE_INLINE.sub(" ", texte_nettoye)
+
+            # Nettoyer espaces multiples et vérifier qu'il reste du contenu
+            texte_nettoye = re.sub(r"\s{2,}", " ", texte_nettoye).strip()
+
+            # Recapitaliser si le début a été retiré
+            if texte_nettoye and texte_nettoye[0].islower():
+                texte_nettoye = texte_nettoye[0].upper() + texte_nettoye[1:]
+
+            if texte_nettoye and texte_nettoye != texte:
+                seg["texte"] = texte_nettoye
+                nb_nettoyages += 1
+            elif not texte_nettoye:
+                # Texte devenu vide après nettoyage
+                segments_a_supprimer.append(i)
+                nb_nettoyages += 1
+
+        # Supprimer les segments vides (en ordre inverse pour ne pas décaler les index)
+        for i in reversed(segments_a_supprimer):
+            removed = segments.pop(i)
+            logger.debug(
+                "Segment %s supprimé (onomatopée pure) : '%s'",
+                removed.get("id", "?"), removed.get("texte", "")[:50],
+            )
+
+        if nb_nettoyages:
+            logger.info(
+                "Onomatopées nettoyées : %d segment(s) corrigé(s) ou supprimé(s) "
+                "pour compatibilité voix IA.",
+                nb_nettoyages,
             )
 
     @staticmethod

@@ -1183,3 +1183,118 @@ class TestAgesPersonnages:
         assert "8 ans" in _BIBLE_FALLBACK
         assert "5 ans" in _BIBLE_FALLBACK
         assert "65 ans" in _BIBLE_FALLBACK
+
+
+class TestNettoyerOnomatopees:
+    """Tests du nettoyage post-génération des onomatopées pour voix IA."""
+
+    @staticmethod
+    def _make_script(segments):
+        """Construit un script minimal avec les segments donnés."""
+        return {"episode": {"segments": segments}}
+
+    def test_segment_pure_onomatopee_supprime(self):
+        """Un segment ne contenant que des onomatopées est supprimé."""
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "noemie", "texte": "Hihihi !", "ton": "joyeux"},
+            {"id": "seg_002", "personnage": "antoine", "texte": "C'est cool !", "ton": "enthousiaste"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        assert len(script["episode"]["segments"]) == 1
+        assert script["episode"]["segments"][0]["id"] == "seg_002"
+
+    def test_onomatopee_debut_replique_retiree(self):
+        """Les onomatopées en début de réplique sont retirées."""
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "noemie", "texte": "Hihihi ! C'est trop drôle !", "ton": "joyeux"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        assert script["episode"]["segments"][0]["texte"] == "C'est trop drôle !"
+
+    def test_onomatopee_inline_retiree(self):
+        """Les rires inline sont retirés."""
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "antoine", "texte": "C'est génial Hahaha on continue", "ton": "joyeux"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        texte = script["episode"]["segments"][0]["texte"]
+        assert "Hahaha" not in texte
+        assert "génial" in texte
+        assert "continue" in texte
+
+    def test_sfx_pas_touche(self):
+        """Les segments SFX ne doivent pas être modifiés."""
+        script = self._make_script([
+            {"id": "sfx_001", "personnage": "sfx", "texte": "children laughing happily", "ton": "ambiance"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        assert len(script["episode"]["segments"]) == 1
+        assert script["episode"]["segments"][0]["texte"] == "children laughing happily"
+
+    def test_oh_lala_retire(self):
+        """'Oh là là' en début de réplique est retiré."""
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "noemie", "texte": "Oh là là ! C'est incroyable !", "ton": "excite"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        assert script["episode"]["segments"][0]["texte"] == "C'est incroyable !"
+
+    def test_euh_hesitation_retiree(self):
+        """'Euh...' en début de réplique est retiré."""
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "antoine", "texte": "Euh... je sais pas trop.", "ton": "neutre"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        assert script["episode"]["segments"][0]["texte"] == "Je sais pas trop."
+
+    def test_recapitalisation(self):
+        """Le texte est recapitalisé après nettoyage du préfixe."""
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "noemie", "texte": "Ah c'est rigolo !", "ton": "joyeux"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        assert script["episode"]["segments"][0]["texte"][0].isupper()
+
+    def test_texte_normal_pas_modifie(self):
+        """Un texte sans onomatopées n'est pas modifié."""
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "papy_babou", "texte": "Mes petits loups, laissez-moi vous raconter.", "ton": "chaleureux"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        assert script["episode"]["segments"][0]["texte"] == "Mes petits loups, laissez-moi vous raconter."
+
+    def test_hahaha_pur_supprime(self):
+        """Un segment 'Hahaha !' pur est supprimé."""
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "antoine", "texte": "Hahaha !", "ton": "joyeux"},
+            {"id": "seg_002", "personnage": "papy_babou", "texte": "Oui, c'est drôle.", "ton": "chaleureux"},
+        ])
+        Scripteur._nettoyer_onomatopees(script)
+        assert len(script["episode"]["segments"]) == 1
+        assert script["episode"]["segments"][0]["id"] == "seg_002"
+
+    def test_multiple_nettoyages(self, caplog):
+        """Plusieurs segments nettoyés doivent être loggés."""
+        import logging
+        script = self._make_script([
+            {"id": "seg_001", "personnage": "noemie", "texte": "Hihihi !", "ton": "joyeux"},
+            {"id": "seg_002", "personnage": "antoine", "texte": "Oh ! C'est super !", "ton": "excite"},
+            {"id": "seg_003", "personnage": "papy_babou", "texte": "Exactement.", "ton": "chaleureux"},
+        ])
+        with caplog.at_level(logging.INFO, logger="agents.scripteur"):
+            Scripteur._nettoyer_onomatopees(script)
+        assert any("Onomatopées nettoyées" in m for m in caplog.messages)
+
+    def test_prompt_contient_regle_voix_ia(self):
+        """Le system prompt doit contenir la règle d'adaptation voix IA."""
+        from agents.scripteur import SYSTEM_PROMPT_BASE
+        assert "ADAPTATION VOIX IA" in SYSTEM_PROMPT_BASE
+        assert "onomatopée" in SYSTEM_PROMPT_BASE.lower()
+        assert "ElevenLabs" in SYSTEM_PROMPT_BASE
+
+    def test_tics_bible_sans_onomatopees(self):
+        """Les tics dans la bible personnages ne doivent plus contenir d'onomatopées."""
+        from agents.scripteur import _BIBLE_FALLBACK
+        assert "Hihihi" not in _BIBLE_FALLBACK
+        assert "Ah mes petits loups" not in _BIBLE_FALLBACK
+        assert "Oh non, le pauvre" not in _BIBLE_FALLBACK
