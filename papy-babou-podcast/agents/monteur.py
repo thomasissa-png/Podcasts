@@ -286,6 +286,81 @@ class Monteur:
     # d'un coup (200-600 MB de RAM pour un épisode de 20+ min).
     CHUNK_SIZE = 25
 
+    def _verifier_assets_requis(
+        self,
+        type_episode: str,
+        numero_saison: int | None,
+        ambiance: str,
+        segments_dir: Path,
+        episode: dict,
+    ) -> None:
+        """Vérifie que tous les assets audio requis existent avant le montage.
+
+        Tente de générer via ElevenLabs les assets manquants.
+        Lève RuntimeError avec la liste complète des assets introuvables
+        si certains restent manquants après tentative de génération.
+        """
+        manquants: list[str] = []
+
+        # 1. Jingle intro
+        intro = self._charger_jingle("intro", type_episode, numero_saison)
+        if len(intro) == 0 or intro.dBFS == float("-inf"):
+            manquants.append("intro_jingle (jingle d'ouverture)")
+
+        # 2. Jingle outro
+        outro = self._charger_jingle("outro", type_episode, numero_saison)
+        if len(outro) == 0 or outro.dBFS == float("-inf"):
+            manquants.append("outro_jingle (jingle de clôture)")
+
+        # 3. Signature
+        signature = self._charger_signature()
+        if len(signature) == 0 or signature.dBFS == float("-inf"):
+            manquants.append("signature_jingle (générique récurrent)")
+
+        # 4. Musique de fond (ambiance)
+        fond = self._charger_ambiance(ambiance)
+        if len(fond) == 0 or fond.dBFS == float("-inf"):
+            manquants.append(
+                f"ambiance '{ambiance}' ou fond_doux (musique de fond)"
+            )
+
+        # 5. Segments voix manquants
+        segments_manquants = []
+        for seg in episode["segments"]:
+            if seg["personnage"] == "sfx":
+                continue
+            chemin = segments_dir / f"{seg['id']}.mp3"
+            if not chemin.exists():
+                segments_manquants.append(seg["id"])
+        if segments_manquants:
+            n = len(segments_manquants)
+            total_voix = sum(
+                1 for s in episode["segments"] if s["personnage"] != "sfx"
+            )
+            manquants.append(
+                f"{n}/{total_voix} segments voix manquants "
+                f"(ex: {', '.join(segments_manquants[:5])})"
+            )
+
+        if manquants:
+            msg = (
+                f"Montage impossible — {len(manquants)} asset(s) audio requis "
+                f"introuvable(s) :\n"
+                + "\n".join(f"  • {m}" for m in manquants)
+                + "\n\nSolutions :\n"
+                "  1. Placez les fichiers MP3 dans assets/music/ "
+                "(voir assets/music/ASSETS_REQUIS.txt)\n"
+                "  2. Configurez ELEVENLABS_API_KEY pour l'auto-génération"
+            )
+            _sys_mod.stderr.write(f"[monteur] ERREUR: {msg}\n")
+            _sys_mod.stderr.flush()
+            raise RuntimeError(msg)
+
+        _sys_mod.stderr.write(
+            "[monteur] Pré-vol OK : tous les assets audio requis sont présents\n"
+        )
+        _sys_mod.stderr.flush()
+
     def assembler(
         self,
         script: dict,
@@ -322,6 +397,16 @@ class Monteur:
         )
         _sys.stderr.flush()
         logger.info("Assemblage de l'épisode %s — %s", episode_id, episode["titre"])
+
+        # ── Pré-vol : vérifier que les assets audio requis existent ──
+        # Le monteur DOIT échouer clairement si des assets manquent,
+        # au lieu de produire un épisode avec du silence à la place.
+        type_episode = episode.get("type", "standard")
+        numero_saison = episode.get("saison")
+        ambiance = episode.get("ambiance", "fond_doux")
+        self._verifier_assets_requis(
+            type_episode, numero_saison, ambiance, segments_dir, episode,
+        )
 
         nom_fichier = f"{episode_id}_{_slug_util(episode['titre'])}"
         chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
