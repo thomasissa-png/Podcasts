@@ -852,67 +852,61 @@ class Monteur:
     @staticmethod
     def _ffmpeg_master_lufs(input_wav: Path, output_wav: Path,
                             lufs_cible: float = -16.0) -> None:
-        """Applique master bus (de-esser + EQ + compression + loudnorm + true peak limiter).
+        """Applique master bus (de-esser + EQ + compression + normalisation + true peak limiter).
 
-        Two-pass loudnorm for broadcast-compliant LUFS normalization:
-        - Pass 1: Measure integrated loudness, LRA, true peak
-        - Pass 2: Apply normalization with measured values (linear mode)
+        Stratégie à 2 niveaux :
+        - Option 1 (préférée) : loudnorm two-pass pour normalisation LUFS broadcast-compliant
+        - Option 2 (fallback) : volumedetect + volume gain si loudnorm échoue/timeout
 
-        Also applies:
-        - De-esser (high shelf reduction on 4-10 kHz to tame sibilance)
-        - EQ boost at 3.5 kHz for voice clarity
-        - Soft compression (ratio 2:1 above -20 dBFS)
-        - True peak limiter at -1 dBTP via alimiter
+        Les deux options appliquent : de-esser + EQ + compression + alimiter.
         """
-        # ── Pass 1: Measure loudness via loudnorm ──────────────────────
+        # Filtres communs (de-esser + EQ + compression)
+        common_filters = (
+            # De-esser: reduce sibilance with high shelf cut above 5 kHz
+            "highshelf=f=5000:g=-3:t=s,"
+            # EQ: voice clarity boost at 3.5 kHz
+            "equalizer=f=3500:t=o:w=1.5:g=2.5,"
+            # Soft compression
+            "acompressor=threshold=-20dB:ratio=2:attack=20:release=200"
+        )
+        # True peak limiter at -1 dBTP (0.891 linear)
+        limiter = "alimiter=limit=0.891:attack=5:release=50:level=disabled"
+
+        # ═══════════════════════════════════════════════════════════════
+        # OPTION 1 : loudnorm two-pass (broadcast-compliant LUFS)
+        # ═══════════════════════════════════════════════════════════════
         try:
+            # Pass 1 : mesurer loudness
             result = _subprocess.run(
                 ["ffmpeg", "-y", "-i", str(input_wav),
                  "-af", f"loudnorm=I={lufs_cible}:TP=-1:LRA=11:print_format=json",
                  "-f", "null", "-"],
                 capture_output=True, text=True, timeout=300,
             )
-        except _subprocess.TimeoutExpired:
-            raise RuntimeError("ffmpeg loudnorm pass 1 timeout après 300s")
 
-        measured = Monteur._parse_loudnorm_stats(result.stderr)
+            measured = Monteur._parse_loudnorm_stats(result.stderr)
 
-        if measured:
-            # ── Two-pass loudnorm with measured values (most accurate) ──
-            loudnorm_filter = (
-                f"loudnorm=I={lufs_cible}:TP=-1:LRA=11"
-                f":measured_I={measured['input_i']}"
-                f":measured_TP={measured['input_tp']}"
-                f":measured_LRA={measured['input_lra']}"
-                f":measured_thresh={measured['input_thresh']}"
-                ":linear=true"
-            )
-            logger.info(
-                "loudnorm pass 1: I=%.1f, TP=%.1f, LRA=%.1f → cible I=%.1f",
-                measured['input_i'], measured['input_tp'],
-                measured['input_lra'], lufs_cible,
-            )
-        else:
-            # Fallback to single-pass loudnorm (less accurate but correct)
-            logger.warning("loudnorm: impossible de parser les mesures — fallback single-pass")
-            loudnorm_filter = f"loudnorm=I={lufs_cible}:TP=-1:LRA=11"
+            if measured:
+                loudnorm_filter = (
+                    f"loudnorm=I={lufs_cible}:TP=-1:LRA=11"
+                    f":measured_I={measured['input_i']}"
+                    f":measured_TP={measured['input_tp']}"
+                    f":measured_LRA={measured['input_lra']}"
+                    f":measured_thresh={measured['input_thresh']}"
+                    ":linear=true"
+                )
+                logger.info(
+                    "loudnorm pass 1: I=%.1f, TP=%.1f, LRA=%.1f → cible I=%.1f",
+                    measured['input_i'], measured['input_tp'],
+                    measured['input_lra'], lufs_cible,
+                )
+            else:
+                # Mesures non parsées — single-pass loudnorm (moins précis)
+                logger.warning("loudnorm: mesures non parsées — single-pass")
+                loudnorm_filter = f"loudnorm=I={lufs_cible}:TP=-1:LRA=11"
 
-        # Build filter chain: de-esser → EQ → compression → loudnorm → limiter
-        af_chain = (
-            # De-esser: reduce sibilance with high shelf cut above 5 kHz
-            "highshelf=f=5000:g=-3:t=s,"
-            # EQ: voice clarity boost at 3.5 kHz
-            "equalizer=f=3500:t=o:w=1.5:g=2.5,"
-            # Soft compression
-            "acompressor=threshold=-20dB:ratio=2:attack=20:release=200,"
-            # LUFS normalization (two-pass or single-pass)
-            f"{loudnorm_filter},"
-            # True peak limiter at -1 dBTP (0.891 linear)
-            "alimiter=limit=0.891:attack=5:release=50:level=disabled"
-        )
-
-        # ── Pass 2: Apply full master chain ────────────────────────────
-        try:
+            # Pass 2 : appliquer la chaîne complète
+            af_chain = f"{common_filters},{loudnorm_filter},{limiter}"
             _subprocess.run(
                 ["ffmpeg", "-y", "-i", str(input_wav),
                  "-af", af_chain,
@@ -921,18 +915,73 @@ class Monteur:
                 capture_output=True, text=True, timeout=600,
                 check=True,
             )
+
+            logger.info(
+                "Master bus (loudnorm) : de-esser + EQ + compression + "
+                "loudnorm (%.1f LUFS) + alimiter (-1 dBTP)",
+                lufs_cible,
+            )
+            return  # Succès — pas besoin du fallback
+
+        except (_subprocess.TimeoutExpired, _subprocess.CalledProcessError, RuntimeError) as e:
+            logger.warning(
+                "loudnorm échoué (%s) — fallback vers volumedetect + alimiter",
+                type(e).__name__,
+            )
+            # Nettoyer un éventuel fichier partiel
+            if output_wav.exists():
+                output_wav.unlink(missing_ok=True)
+
+        # ═══════════════════════════════════════════════════════════════
+        # OPTION 2 (fallback) : volumedetect + volume gain + alimiter
+        # Rapide et fiable sur containers contraints (Replit)
+        # ═══════════════════════════════════════════════════════════════
+        logger.info("Fallback : volumedetect + volume gain + alimiter")
+
+        try:
+            result = _subprocess.run(
+                ["ffmpeg", "-y", "-i", str(input_wav),
+                 "-af", "volumedetect",
+                 "-f", "null", "-"],
+                capture_output=True, text=True, timeout=120,
+            )
+        except _subprocess.TimeoutExpired:
+            raise RuntimeError("ffmpeg volumedetect timeout après 120s")
+
+        mean_volume = Monteur._parse_volumedetect(result.stderr)
+        if mean_volume is not None:
+            gain_db = lufs_cible - mean_volume
+            gain_db = max(-20.0, min(20.0, gain_db))
+            af_chain = f"{common_filters},volume={gain_db:.1f}dB,{limiter}"
+            logger.info(
+                "volumedetect: mean=%.1f dB, gain=%.1f dB → cible %.1f",
+                mean_volume, gain_db, lufs_cible,
+            )
+        else:
+            logger.warning("volumedetect: mean_volume illisible — EQ + limiter seuls")
+            af_chain = f"{common_filters},{limiter}"
+
+        try:
+            _subprocess.run(
+                ["ffmpeg", "-y", "-i", str(input_wav),
+                 "-af", af_chain,
+                 "-ar", "44100", "-ac", "2",
+                 str(output_wav)],
+                capture_output=True, text=True, timeout=300,
+                check=True,
+            )
         except _subprocess.TimeoutExpired as e:
-            logger.error("ffmpeg master+lufs timeout après 600s")
+            logger.error("ffmpeg master+volume timeout après 300s")
             if e.process:
                 e.process.kill()
-            raise RuntimeError("ffmpeg master+lufs timeout après 600s") from e
+            raise RuntimeError("ffmpeg master+volume timeout après 300s") from e
         except _subprocess.CalledProcessError as e:
-            logger.error("ffmpeg master+lufs failed: %s", e.stderr[-500:] if e.stderr else "")
-            raise RuntimeError(f"ffmpeg master+lufs échoué: {e.stderr[-200:]}") from e
+            logger.error("ffmpeg master+volume failed: %s", e.stderr[-500:] if e.stderr else "")
+            raise RuntimeError(f"ffmpeg master+volume échoué: {e.stderr[-200:]}") from e
 
         logger.info(
-            "Master bus appliqué: de-esser + EQ + compression + "
-            "loudnorm (%.1f LUFS) + alimiter (-1 dBTP)",
+            "Master bus (fallback) : de-esser + EQ + compression + "
+            "volumedetect (≈%.1f LUFS) + alimiter (-1 dBTP)",
             lufs_cible,
         )
 
