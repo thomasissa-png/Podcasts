@@ -362,14 +362,42 @@ class Monteur:
             )
 
         if manquants:
+            # Diagnostic : montrer l'état réel des API (pas juste des suggestions)
+            el_ok = bool(config.ELEVENLABS_API_KEY)
+            fs_ok = bool(config.FREESOUND_API_KEY)
+            diag_lines = [
+                f"  ELEVENLABS_API_KEY : {'✓ configurée' if el_ok else '✗ MANQUANTE'}",
+                f"  FREESOUND_API_KEY  : {'✓ configurée' if fs_ok else '✗ MANQUANTE'}",
+            ]
+            if el_ok and fs_ok:
+                diag_lines.append(
+                    "  → Les deux API sont configurées mais les tentatives "
+                    "de génération ont échoué."
+                )
+                diag_lines.append(
+                    "  → Vérifiez les logs ci-dessus pour les erreurs détaillées "
+                    "(timeout, quota, endpoint introuvable…)"
+                )
+            elif not el_ok and not fs_ok:
+                diag_lines.append(
+                    "  → Aucune API configurée — impossible de générer les assets."
+                )
             msg = (
                 f"Montage impossible — {len(manquants)} asset(s) audio requis "
                 f"introuvable(s) :\n"
                 + "\n".join(f"  • {m}" for m in manquants)
+                + "\n\nDiagnostic API :\n"
+                + "\n".join(diag_lines)
                 + "\n\nSolutions :\n"
-                "  1. Configurez ELEVENLABS_API_KEY pour l'auto-génération\n"
-                "  2. Configurez FREESOUND_API_KEY pour le fallback Freesound\n"
-                "  3. Ou placez les fichiers MP3 dans assets/music/"
+                + (
+                    "  1. Vérifiez que les clés API sont valides (pas expirées/révoquées)\n"
+                    "  2. Vérifiez la connectivité réseau vers api.elevenlabs.io et freesound.org\n"
+                    "  3. Ou placez les fichiers MP3 manuellement dans assets/music/"
+                    if el_ok or fs_ok else
+                    "  1. Configurez ELEVENLABS_API_KEY pour l'auto-génération\n"
+                    "  2. Configurez FREESOUND_API_KEY pour le fallback Freesound\n"
+                    "  3. Ou placez les fichiers MP3 dans assets/music/"
+                )
             )
             _sys_mod.stderr.write(f"[monteur] ERREUR: {msg}\n")
             _sys_mod.stderr.flush()
@@ -1184,6 +1212,11 @@ class Monteur:
         """
         api_key = config.ELEVENLABS_API_KEY
         if not api_key:
+            _sys_mod.stderr.write(
+                f"[monteur] ELEVENLABS_API_KEY vide/manquante "
+                f"(valeur brute os.getenv: {repr(os.getenv('ELEVENLABS_API_KEY', '')[:8])}...)\n"
+            )
+            _sys_mod.stderr.flush()
             logger.warning("Clé ElevenLabs manquante — impossible de générer '%s'",
                            chemin_sortie.name)
             return False
@@ -1225,6 +1258,11 @@ class Monteur:
                 return True
 
             except requests.RequestException as e:
+                _sys_mod.stderr.write(
+                    f"[monteur] ElevenLabs SFX tentative {tentative}/{max_tentatives} "
+                    f"échouée pour '{chemin_sortie.name}' : {e}\n"
+                )
+                _sys_mod.stderr.flush()
                 logger.warning(
                     "ElevenLabs asset tentative %d/%d échouée pour '%s' : %s",
                     tentative, max_tentatives, chemin_sortie.name, e,
@@ -1252,6 +1290,11 @@ class Monteur:
         """
         api_key = config.FREESOUND_API_KEY
         if not api_key:
+            _sys_mod.stderr.write(
+                f"[monteur] FREESOUND_API_KEY vide/manquante "
+                f"(valeur brute os.getenv: {repr(os.getenv('FREESOUND_API_KEY'))})\n"
+            )
+            _sys_mod.stderr.flush()
             logger.warning(
                 "Clé Freesound manquante — impossible de chercher '%s'",
                 query_key,
@@ -1303,6 +1346,10 @@ class Monteur:
             return True
 
         except requests.RequestException as e:
+            _sys_mod.stderr.write(
+                f"[monteur] Freesound échoué pour '{query}' : {e}\n"
+            )
+            _sys_mod.stderr.flush()
             logger.warning("Freesound musique échoué pour '%s' : %s", query, e)
             return False
 

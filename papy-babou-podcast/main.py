@@ -2837,6 +2837,12 @@ def _pipeline_inner(
             # Vérifier que les segments voix du script actuel sont présents
             _fichiers_restants = {f.stem for f in segments_episode_dir.glob("*.mp3")}
             _voix_manquants = _voix_ids - _fichiers_restants
+            _sfx_ids = {
+                s["id"] for s in script["episode"]["segments"]
+                if s["personnage"] == "sfx"
+            }
+            _sfx_manquants = _sfx_ids - _fichiers_restants
+
             if len(_voix_manquants) > len(_voix_ids) * 0.5:
                 _log_direct(
                     f"Après nettoyage : {len(_voix_manquants)}/{len(_voix_ids)} "
@@ -2848,6 +2854,18 @@ def _pipeline_inner(
                     len(_voix_manquants), len(_voix_ids),
                 )
                 etape_idx = 2  # Reculer à audio
+            elif _sfx_manquants and len(_voix_manquants) == 0:
+                # Voix OK mais SFX manquants — régénérer uniquement les SFX
+                _log_direct(
+                    f"Segments voix OK, mais {len(_sfx_manquants)}/{len(_sfx_ids)} "
+                    f"segments SFX manquants — régénération SFX nécessaire"
+                )
+                logger.warning(
+                    "Segments SFX manquants après nettoyage : %d/%d — "
+                    "recul à l'étape SFX",
+                    len(_sfx_manquants), len(_sfx_ids),
+                )
+                etape_idx = min(etape_idx, 3)  # Reculer à SFX (pas plus loin)
 
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 
