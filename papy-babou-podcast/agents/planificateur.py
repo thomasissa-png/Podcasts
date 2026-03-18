@@ -556,10 +556,15 @@ class Planificateur:
             "résurrection": 200, "resurrection": 200,
             "ascension": 202, "pentecôte": 204, "pentecote": 204,
             "pierre": 206, "étienne": 208, "etienne": 208,
-            "paul": 210, "philippe": 212, "apocalypse": 220,
+            "paul": 210, "marie-madeleine": 201, "madeleine": 201,
+            "philippe": 212, "jean": 215, "apocalypse": 220,
             # Saints chrétiens (300+)
-            "martin": 310, "patrick": 320, "françois": 330, "francois": 330,
-            "jeanne": 340, "thérèse": 350, "therese": 350, "nicolas": 325,
+            "françois": 330, "francois": 330, "assise": 330,
+            "jeanne": 340, "arc": 340,
+            "nicolas": 325, "myre": 325,
+            "thérèse": 350, "therese": 350, "lisieux": 350,
+            "teresa": 360, "calcutta": 360,
+            "martin": 310, "patrick": 320,
         }
         if histoires:
             ordres_detectes: list[tuple[int, int, str]] = []  # (ep_num, ordre, histoire)

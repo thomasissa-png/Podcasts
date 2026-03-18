@@ -845,34 +845,71 @@ PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
         ],
     },
     2: {
-        "perimetre": "Jésus — de la naissance à la mort — ordre chronologique",
+        "perimetre": "La vie de Jésus — ordre chronologique IMPOSÉ — 10 histoires FIXES",
         "description": (
-            "La vie de Jésus-Christ dans l'ORDRE CHRONOLOGIQUE : "
-            "l'Annonciation → la Nativité → la fuite en Égypte → "
-            "l'enfance à Nazareth (Jésus au Temple à 12 ans) → "
-            "le baptême par Jean-Baptiste → les premiers disciples → "
-            "les miracles (noces de Cana, multiplication des pains, marche sur "
-            "l'eau, guérisons, résurrection de Lazare) → les paraboles majeures "
-            "(le bon Samaritain, le fils prodigue, les talents) → "
-            "l'entrée triomphale à Jérusalem → la Cène → la Passion → "
-            "la Crucifixion. "
-            "Chaque épisode = un moment clé de la vie de Jésus, "
-            "dans l'ordre où il s'est produit."
+            "La vie de Jésus-Christ dans l'ORDRE CHRONOLOGIQUE. "
+            "Les 10 épisodes sont IMPOSÉS dans cet ordre EXACT — NE PAS CHANGER :\n"
+            "  Épisode 1 : L'annonce à Marie — l'ange Gabriel\n"
+            "  Épisode 2 : La naissance à Bethléem\n"
+            "  Épisode 3 : Les rois mages et l'étoile\n"
+            "  Épisode 4 : Jésus enfant au Temple\n"
+            "  Épisode 5 : Le baptême dans le Jourdain\n"
+            "  Épisode 6 : Les noces de Cana — l'eau changée en vin\n"
+            "  Épisode 7 : Le sermon sur la montagne\n"
+            "  Épisode 8 : La multiplication des pains\n"
+            "  Épisode 9 : Lazare — le miracle de la résurrection\n"
+            "  Épisode 10 : La Passion, la mort et la résurrection de Jésus\n"
+            "Tu DOIS utiliser EXACTEMENT ces histoire_biblique pour chaque épisode, "
+            "dans cet ordre. Tu peux choisir les titres, résumés, morales et prétextes "
+            "librement, mais l'histoire_biblique de chaque épisode est FIXÉE. "
+            "AUCUNE histoire de l'Ancien Testament. "
+            "INTERDIT : changer l'ordre, remplacer une histoire, ou ajouter des histoires."
         ),
+        "episodes_imposes": [
+            "L'annonce à Marie — l'ange Gabriel",
+            "La naissance à Bethléem",
+            "Les rois mages et l'étoile",
+            "Jésus enfant au Temple",
+            "Le baptême dans le Jourdain",
+            "Les noces de Cana — l'eau changée en vin",
+            "Le sermon sur la montagne",
+            "La multiplication des pains",
+            "Lazare — le miracle de la résurrection",
+            "La Passion, la mort et la résurrection de Jésus",
+        ],
     },
     3: {
-        "perimetre": "Nouveau Testament (après Jésus) et grands saints — ordre chronologique",
+        "perimetre": "Apôtres et grands saints — ordre chronologique IMPOSÉ — 10 histoires FIXES",
         "description": (
-            "Dans l'ORDRE CHRONOLOGIQUE : la Résurrection et l'Ascension → "
-            "la Pentecôte → Pierre et la première Église → Étienne le premier "
-            "martyr → la conversion de Paul → les voyages missionnaires de Paul → "
-            "Philippe et l'eunuque éthiopien → l'Apocalypse de Jean. "
-            "Puis les grands saints chrétiens par ordre historique : "
-            "Saint Martin (316) → Saint Patrick (385) → Saint François d'Assise "
-            "(1181) → Sainte Jeanne d'Arc (1412) → Sainte Thérèse de Lisieux "
-            "(1873) → Saint Nicolas, etc. "
-            "Chaque épisode = un apôtre, un événement des Actes, ou un grand saint."
+            "Les apôtres, premiers chrétiens et grands saints dans l'ORDRE CHRONOLOGIQUE. "
+            "Les 10 épisodes sont IMPOSÉS dans cet ordre EXACT — NE PAS CHANGER :\n"
+            "  Épisode 1 : Pierre — le pêcheur devenu chef des apôtres\n"
+            "  Épisode 2 : Paul — le persécuteur foudroyé sur le chemin de Damas\n"
+            "  Épisode 3 : Étienne — le premier martyr chrétien\n"
+            "  Épisode 4 : Marie-Madeleine — la première témoin de la résurrection\n"
+            "  Épisode 5 : Jean — l'apôtre qui écrit l'Apocalypse à Patmos\n"
+            "  Épisode 6 : François d'Assise — le riche qui choisit la pauvreté\n"
+            "  Épisode 7 : Jeanne d'Arc — la bergère qui entend des voix\n"
+            "  Épisode 8 : Nicolas de Myre — le saint qui donne en secret\n"
+            "  Épisode 9 : Thérèse de Lisieux — la petite voie vers Dieu\n"
+            "  Épisode 10 : Mère Teresa — servir Dieu dans les rues de Calcutta\n"
+            "Tu DOIS utiliser EXACTEMENT ces histoire_biblique pour chaque épisode, "
+            "dans cet ordre. Tu peux choisir les titres, résumés, morales et prétextes "
+            "librement, mais l'histoire_biblique de chaque épisode est FIXÉE. "
+            "INTERDIT : changer l'ordre, remplacer une histoire, ou ajouter des histoires."
         ),
+        "episodes_imposes": [
+            "Pierre — le pêcheur devenu chef des apôtres",
+            "Paul — le persécuteur foudroyé sur le chemin de Damas",
+            "Étienne — le premier martyr chrétien",
+            "Marie-Madeleine — la première témoin de la résurrection",
+            "Jean — l'apôtre qui écrit l'Apocalypse à Patmos",
+            "François d'Assise — le riche qui choisit la pauvreté",
+            "Jeanne d'Arc — la bergère qui entend des voix",
+            "Nicolas de Myre — le saint qui donne en secret",
+            "Thérèse de Lisieux — la petite voie vers Dieu",
+            "Mère Teresa — servir Dieu dans les rues de Calcutta",
+        ],
     },
 }
 
