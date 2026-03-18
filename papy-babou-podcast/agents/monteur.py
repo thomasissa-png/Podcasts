@@ -1803,6 +1803,135 @@ class Monteur:
         logger.info("Traitement master bus appliqué (EQ + compression + true peak limiter).")
         return audio_master
 
+    @staticmethod
+    def auditer_musiques_fond(script: dict) -> dict:
+        """Audite les fichiers de musique de fond disponibles pour l'épisode.
+
+        Vérifie que chaque ambiance demandée a un fichier valide (ou sera
+        générée), et évalue la qualité audio des fichiers existants.
+
+        Args:
+            script: Script JSON structuré avec ambiance et ambiance_par_acte.
+
+        Returns:
+            Dict avec:
+              - "ok" (bool): True si toutes les ambiances sont couvrables.
+              - "alertes" (list[str]): Problèmes détectés.
+              - "details" (dict): Détail par ambiance.
+        """
+        alertes = []
+        details = {}
+        episode = script.get("episode", {})
+
+        # Collecter toutes les ambiances nécessaires
+        ambiances_requises = set()
+        ambiance_principale = episode.get("ambiance", "fond_doux")
+        ambiances_requises.add(ambiance_principale)
+
+        ambiance_par_acte = episode.get("ambiance_par_acte", [])
+        if isinstance(ambiance_par_acte, list):
+            for a in ambiance_par_acte:
+                ambiances_requises.add(a)
+
+        # Vérifier chaque ambiance
+        for ambiance in sorted(ambiances_requises):
+            detail = {"ambiance": ambiance}
+
+            # Vérifier si l'ambiance est valide
+            if ambiance not in config.AMBIANCES_MUSICALES and ambiance != "fond_doux":
+                alertes.append(
+                    f"Ambiance '{ambiance}' non reconnue. "
+                    f"Valides : {', '.join(config.AMBIANCES_VALIDES)}."
+                )
+                detail["status"] = "inconnue"
+                details[ambiance] = detail
+                continue
+
+            # Vérifier le fichier local
+            chemin = config.AMBIANCES_MUSICALES.get(ambiance)
+            if chemin and chemin.exists():
+                try:
+                    audio = AudioSegment.from_mp3(str(chemin))
+                    duree_s = len(audio) / 1000.0
+                    dbfs = audio.dBFS
+                    detail["fichier"] = str(chemin)
+                    detail["duree_s"] = round(duree_s, 1)
+                    detail["dbfs"] = round(dbfs, 1)
+                    detail["status"] = "ok"
+
+                    # Alertes de qualité
+                    if duree_s < 10:
+                        alertes.append(
+                            f"Ambiance '{ambiance}' très courte ({duree_s:.0f}s). "
+                            f"Sera bouclée — risque de boucle audible."
+                        )
+                        detail["boucle_risque"] = True
+                    elif duree_s < 22:
+                        detail["boucle_risque"] = True
+                        # Pas d'alerte mais signalé (ElevenLabs = 22s max)
+                    else:
+                        detail["boucle_risque"] = False
+
+                    if dbfs < -40:
+                        alertes.append(
+                            f"Ambiance '{ambiance}' très silencieuse "
+                            f"({dbfs:.1f} dBFS avant atténuation). "
+                            f"Sera quasi-inaudible à -15 dB."
+                        )
+                    elif dbfs > -5:
+                        alertes.append(
+                            f"Ambiance '{ambiance}' trop forte "
+                            f"({dbfs:.1f} dBFS). Même avec -15 dB, "
+                            f"elle pourrait masquer les voix."
+                        )
+
+                    del audio
+                except Exception as e:
+                    alertes.append(
+                        f"Ambiance '{ambiance}' : fichier corrompu ({e})."
+                    )
+                    detail["status"] = "corrompu"
+            else:
+                # Fichier absent — sera généré à la volée
+                has_prompt = ambiance in AMBIANCE_PROMPTS
+                detail["status"] = "a_generer"
+                detail["prompt_disponible"] = has_prompt
+                if not has_prompt:
+                    alertes.append(
+                        f"Ambiance '{ambiance}' : pas de fichier ni de prompt "
+                        f"ElevenLabs — fallback vers fond_doux."
+                    )
+
+            details[ambiance] = detail
+
+        # Vérifier le dynamisme de ambiance_par_acte
+        if not ambiance_par_acte or len(ambiance_par_acte) <= 1:
+            alertes.append(
+                "Pas d'ambiance dynamique par acte (ambiance_par_acte absent "
+                "ou un seul élément). La musique sera uniforme — moins immersif."
+            )
+        elif len(set(ambiance_par_acte)) == 1:
+            alertes.append(
+                f"ambiance_par_acte a {len(ambiance_par_acte)} actes mais "
+                f"TOUS avec '{ambiance_par_acte[0]}'. Varier les ambiances "
+                f"entre les actes pour un voyage sonore dynamique."
+            )
+
+        return {
+            "ok": all(
+                d.get("status") in ("ok", "a_generer")
+                for d in details.values()
+            ),
+            "alertes": alertes,
+            "details": details,
+            "stats": {
+                "nb_ambiances": len(ambiances_requises),
+                "nb_ok": sum(1 for d in details.values() if d.get("status") == "ok"),
+                "nb_a_generer": sum(1 for d in details.values() if d.get("status") == "a_generer"),
+                "dynamique": isinstance(ambiance_par_acte, list) and len(set(ambiance_par_acte)) > 1,
+            },
+        }
+
     def _preparer_fond(self, fond: AudioSegment, duree_voix_ms: int) -> AudioSegment:
         """Ajuste la musique de fond à la durée des voix avec le bon volume."""
         if len(fond) == 0:

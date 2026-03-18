@@ -2712,6 +2712,21 @@ def _pipeline_inner(
         except Exception as e:
             logger.warning("Object Storage indisponible pour script : %s", e)
 
+        # ── Validation ambiances musicales ──────────────────────────────
+        ambiance_validation = DirecteurPodcast.valider_ambiances(script)
+        if ambiance_validation["alertes"]:
+            console.print(f"[yellow]  Ambiances musicales — {len(ambiance_validation['alertes'])} alerte(s) :[/yellow]")
+            for a in ambiance_validation["alertes"]:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(ambiance_validation["alertes"])
+        else:
+            stats_amb = ambiance_validation["stats"]
+            dyn = "dynamique" if stats_amb["dynamique"] else "uniforme"
+            console.print(
+                f"  Ambiances : {stats_amb['ambiance_principale']} ({dyn}, "
+                f"{stats_amb['nb_ambiances_distinctes']} variantes)"
+            )
+
         # ── Directeur Podcast — validation créative + audience ────────────
         console.print(f"\n{Typo.etape(2, 8, 'Validation Directeur Podcast')}")
         try:
@@ -3349,6 +3364,29 @@ def _pipeline_inner(
                     )
 
             monteur = Monteur()
+
+            # Audit des musiques de fond avant montage
+            try:
+                audit_musique = Monteur.auditer_musiques_fond(script)
+                stats_mus = audit_musique["stats"]
+                console.print(
+                    f"  Musiques de fond : {stats_mus['nb_ok']} prêtes, "
+                    f"{stats_mus['nb_a_generer']} à générer "
+                    f"({'dynamique' if stats_mus['dynamique'] else 'uniforme'})"
+                )
+                if audit_musique["alertes"]:
+                    console.print(f"[yellow]  {len(audit_musique['alertes'])} alerte(s) musique :[/yellow]")
+                    for a in audit_musique["alertes"][:5]:
+                        console.print(f"    ! {a}")
+                rapport.setdefault("etapes", {}).setdefault("montage", {})["audit_musique"] = {
+                    "ok": audit_musique["ok"],
+                    "nb_ambiances": stats_mus["nb_ambiances"],
+                    "dynamique": stats_mus["dynamique"],
+                }
+                rapport.setdefault("alertes_post_generation", []).extend(audit_musique["alertes"])
+            except Exception as e:
+                logger.warning("Audit musiques de fond échoué : %s", e)
+
             # Vérifier que les segments audio existent avant de lancer le montage
             _seg_dir = config.SEGMENTS_DIR / episode_id
             _seg_count = len(list(_seg_dir.glob("*.mp3"))) if _seg_dir.exists() else 0

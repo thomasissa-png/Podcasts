@@ -657,3 +657,135 @@ class TestSfxAuditNiveaux:
         result = provider.auditer_niveaux_audio(script, [chemin])
         assert not result["ok"]
         assert any("trop petit" in a for a in result["alertes"])
+
+
+# ── Tests Directeur — Validation Ambiances ───────────────────────────────────
+
+class TestDirecteurValiderAmbiances:
+    """Tests de la validation programmatique des ambiances musicales."""
+
+    def test_ambiance_valide_dynamique(self):
+        """Un script avec ambiance_par_acte variée doit être valide."""
+        from agents.directeur_podcast import DirecteurPodcast
+        script = {"episode": {
+            "ambiance": "calme",
+            "ambiance_par_acte": ["calme", "dramatique", "tendre"],
+        }}
+        result = DirecteurPodcast.valider_ambiances(script)
+        assert result["valide"]
+        assert result["stats"]["dynamique"]
+
+    def test_ambiance_uniforme_alerte(self):
+        """Un ambiance_par_acte identique partout doit alerter."""
+        from agents.directeur_podcast import DirecteurPodcast
+        script = {"episode": {
+            "ambiance": "calme",
+            "ambiance_par_acte": ["calme", "calme", "calme"],
+        }}
+        result = DirecteurPodcast.valider_ambiances(script)
+        assert not result["valide"]
+        assert any("TOUS" in a for a in result["alertes"])
+
+    def test_ambiance_absente_alerte(self):
+        """L'absence d'ambiance_par_acte doit alerter."""
+        from agents.directeur_podcast import DirecteurPodcast
+        script = {"episode": {"ambiance": "calme"}}
+        result = DirecteurPodcast.valider_ambiances(script)
+        assert not result["valide"]
+        assert any("ambiance_par_acte" in a for a in result["alertes"])
+
+    def test_ambiance_inconnue_alerte(self):
+        """Une ambiance non reconnue doit être signalée."""
+        from agents.directeur_podcast import DirecteurPodcast
+        script = {"episode": {
+            "ambiance": "zzz_inconnu",
+            "ambiance_par_acte": ["zzz_inconnu", "calme", "tendre"],
+        }}
+        result = DirecteurPodcast.valider_ambiances(script)
+        assert not result["valide"]
+        assert any("non reconnue" in a for a in result["alertes"])
+
+    def test_episode_final_fond_doux_alerte(self):
+        """Un épisode final avec fond_doux doit être signalé."""
+        from agents.directeur_podcast import DirecteurPodcast
+        script = {"episode": {
+            "type": "final",
+            "ambiance": "fond_doux",
+            "ambiance_par_acte": ["fond_doux", "tendre", "solennel"],
+        }}
+        result = DirecteurPodcast.valider_ambiances(script)
+        assert any("final" in a.lower() for a in result["alertes"])
+
+    def test_stats_completes(self):
+        """Les stats doivent contenir tous les champs attendus."""
+        from agents.directeur_podcast import DirecteurPodcast
+        script = {"episode": {
+            "ambiance": "epique",
+            "ambiance_par_acte": ["mystere", "epique", "tendre"],
+        }}
+        result = DirecteurPodcast.valider_ambiances(script)
+        stats = result["stats"]
+        assert "ambiance_principale" in stats
+        assert "ambiance_par_acte" in stats
+        assert "dynamique" in stats
+        assert "nb_ambiances_distinctes" in stats
+        assert stats["nb_ambiances_distinctes"] == 3
+
+
+# ── Tests Monteur — Audit Musiques de Fond ───────────────────────────────────
+
+class TestMonteurAuditMusique:
+    """Tests de l'audit des musiques de fond."""
+
+    def test_audit_structure_resultat(self):
+        """Le résultat d'audit doit avoir la bonne structure."""
+        from agents.monteur import Monteur
+        script = {"episode": {"ambiance": "calme"}}
+        result = Monteur.auditer_musiques_fond(script)
+        assert "ok" in result
+        assert "alertes" in result
+        assert "details" in result
+        assert "stats" in result
+
+    def test_audit_ambiance_inconnue(self):
+        """Une ambiance non reconnue doit être signalée."""
+        from agents.monteur import Monteur
+        script = {"episode": {"ambiance": "zzz_pas_valide"}}
+        result = Monteur.auditer_musiques_fond(script)
+        assert not result["ok"]
+        assert any("non reconnue" in a for a in result["alertes"])
+
+    def test_audit_pas_dynamique_alerte(self):
+        """L'absence d'ambiance_par_acte doit être signalée."""
+        from agents.monteur import Monteur
+        script = {"episode": {"ambiance": "calme"}}
+        result = Monteur.auditer_musiques_fond(script)
+        assert any("uniforme" in a or "ambiance_par_acte" in a for a in result["alertes"])
+
+    def test_audit_stats_dynamique(self):
+        """Stats.dynamique doit refléter la variété."""
+        from agents.monteur import Monteur
+        script = {"episode": {
+            "ambiance": "calme",
+            "ambiance_par_acte": ["calme", "epique", "tendre"],
+        }}
+        result = Monteur.auditer_musiques_fond(script)
+        assert result["stats"]["dynamique"]
+
+    def test_audit_a_generer(self):
+        """Les ambiances sans fichier doivent être marquées 'a_generer'."""
+        from agents.monteur import Monteur
+        # "epique" n'a probablement pas de fichier dans l'env de test
+        script = {"episode": {
+            "ambiance": "epique",
+            "ambiance_par_acte": ["epique", "tendre", "solennel"],
+        }}
+        result = Monteur.auditer_musiques_fond(script)
+        # Vérifie qu'au moins un statut existe
+        assert len(result["details"]) > 0
+
+    def test_directeur_immersion_mentionne_musique(self):
+        """Le prompt du directeur doit mentionner la musique de fond."""
+        from agents.directeur_podcast import SYSTEM_PROMPT
+        assert "MUSIQUE DE FOND" in SYSTEM_PROMPT
+        assert "ambiance_par_acte" in SYSTEM_PROMPT

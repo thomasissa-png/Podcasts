@@ -141,6 +141,12 @@ PERSONAS D'AUDIENCE :
    - Les ambiances par acte créent-elles un voyage sonore ?
    - Les transitions entre scènes sont-elles fluides ?
    - Le sound design compense-t-il les limites des voix IA ?
+   - MUSIQUE DE FOND : le champ "ambiance" et "ambiance_par_acte" sont-ils cohérents
+     avec le contenu du récit ? L'ambiance_par_acte doit varier entre les 3 actes
+     pour créer un vrai voyage émotionnel sonore (ex: calme → dramatique → tendre).
+     Une ambiance uniforme sur tout l'épisode est un DÉFAUT majeur.
+   - Les choix d'ambiance correspondent-ils à l'arc émotionnel ? (ex: "epique" pour
+     les batailles, "tendre" pour les moments familiaux, "mystere" pour les révélations)
 
 2. RYTHME & ACCROCHE (note/10)
    - L'accroche capte-t-elle l'attention dans les 30 premières secondes ?
@@ -468,6 +474,87 @@ class DirecteurPodcast:
             f"[{r.get('priorite', '?')}] {r.get('texte', '')}"
             for r in triees
         ]
+
+    @staticmethod
+    def valider_ambiances(script: dict) -> dict:
+        """Validation programmatique des choix d'ambiance musicale.
+
+        Vérifie la cohérence des ambiances avec le type d'épisode,
+        le dynamisme de ambiance_par_acte, et les ambiances valides.
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Dict avec clés:
+              - "valide" (bool): True si les ambiances sont cohérentes.
+              - "alertes" (list[str]): Problèmes détectés.
+              - "stats" (dict): Statistiques ambiances.
+        """
+        alertes = []
+        episode = script.get("episode", {})
+        ambiance = episode.get("ambiance", "")
+        ambiance_par_acte = episode.get("ambiance_par_acte", [])
+
+        # 1. Ambiance principale présente et valide
+        if not ambiance:
+            alertes.append("Champ 'ambiance' manquant — pas de musique de fond.")
+        elif ambiance not in config.AMBIANCES_VALIDES and ambiance != "fond_doux":
+            alertes.append(
+                f"Ambiance '{ambiance}' non reconnue. "
+                f"Valides : {', '.join(config.AMBIANCES_VALIDES)}."
+            )
+
+        # 2. ambiance_par_acte — dynamisme
+        dynamique = False
+        if not ambiance_par_acte or not isinstance(ambiance_par_acte, list):
+            alertes.append(
+                "Champ 'ambiance_par_acte' absent ou invalide. "
+                "La musique sera uniforme sur tout l'épisode — "
+                "fortement recommandé de varier entre les 3 actes."
+            )
+        elif len(ambiance_par_acte) < 2:
+            alertes.append(
+                "ambiance_par_acte n'a qu'un seul élément — "
+                "devrait avoir 3 ambiances (une par acte)."
+            )
+        elif len(set(ambiance_par_acte)) == 1:
+            alertes.append(
+                f"ambiance_par_acte : les {len(ambiance_par_acte)} actes ont "
+                f"TOUS '{ambiance_par_acte[0]}'. Varier pour un voyage sonore."
+            )
+        else:
+            dynamique = True
+            # Vérifier que chaque ambiance est valide
+            for i, a in enumerate(ambiance_par_acte):
+                if a not in config.AMBIANCES_VALIDES and a != "fond_doux":
+                    alertes.append(
+                        f"ambiance_par_acte[{i}] = '{a}' non reconnue."
+                    )
+
+        # 3. Cohérence ambiance/type d'épisode
+        type_ep = episode.get("type", "standard")
+        if type_ep == "final" and ambiance in ("humoristique", "fond_doux"):
+            alertes.append(
+                f"Épisode final avec ambiance '{ambiance}' — un final "
+                f"mérite une ambiance plus forte (epique, tendre, solennel)."
+            )
+        if type_ep == "ouverture" and ambiance == "fond_doux":
+            alertes.append(
+                "Épisode d'ouverture avec fond_doux — manque d'impact. "
+                "Préférer une ambiance plus engageante (joyeux, mystere, epique)."
+            )
+
+        return {
+            "valide": len(alertes) == 0,
+            "alertes": alertes,
+            "stats": {
+                "ambiance_principale": ambiance,
+                "ambiance_par_acte": ambiance_par_acte,
+                "dynamique": dynamique,
+                "nb_ambiances_distinctes": len(set(ambiance_par_acte)) if ambiance_par_acte else 0,
+            },
+        }
 
     @staticmethod
     def valider_sfx_pour_generation(script: dict) -> dict:
