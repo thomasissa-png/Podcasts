@@ -570,10 +570,11 @@ class Planificateur:
                             f"Ep{ep_num_a} ({hist_a[:40]}) → Ep{ep_num_b} ({hist_b[:40]})"
                         )
                 if inversions:
-                    raise ValueError(
-                        f"Les histoires bibliques ne sont PAS dans l'ordre chronologique. "
-                        f"Inversions détectées : {'; '.join(inversions)}. "
-                        f"Les épisodes doivent suivre l'ordre de la Bible / de l'Histoire."
+                    logger.warning(
+                        "Ordre chronologique biblique non respecté. "
+                        "Inversions détectées : %s. "
+                        "Le directeur podcast ou l'utilisateur pourra réordonner.",
+                        "; ".join(inversions),
                     )
 
     @staticmethod

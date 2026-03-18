@@ -933,15 +933,15 @@ class TestPlanificateurUnSujetParEpisode:
         # Ne doit plus lever d'erreur — juste un warning (Moïse x2 mais histoires différentes)
         Planificateur._valider_plan(plan)
 
-    def test_ordre_chronologique_inverse_rejete(self):
-        """Un plan avec des histoires dans le mauvais ordre chronologique est rejeté."""
+    def test_ordre_chronologique_inverse_warning(self):
+        """Un plan avec des histoires dans le mauvais ordre émet un warning (pas d'erreur)."""
         plan = self._plan([
             "David contre Goliath",
             "Abraham et Isaac",
             "Jonas et la baleine",
         ])
-        with pytest.raises(ValueError, match="chronologique"):
-            Planificateur._valider_plan(plan)
+        # Ne doit PAS lever d'erreur — juste un warning pour correction par le directeur
+        Planificateur._valider_plan(plan)
 
     def test_ordre_chronologique_correct_passe(self):
         """Un plan avec des histoires en ordre chronologique passe."""
