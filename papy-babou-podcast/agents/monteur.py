@@ -387,6 +387,9 @@ class Monteur:
 
                     # Exporter le chunk en WAV et libérer la mémoire
                     chunk_path = _tmp_dir / f"chunk_{chunk_idx:04d}.wav"
+                    # Forcer 44100 Hz pour cohérence inter-chunks
+                    if chunk_audio.frame_rate != 44100:
+                        chunk_audio = chunk_audio.set_frame_rate(44100)
                     chunk_audio.export(str(chunk_path), format="wav")
                     chunk_wavs.append(chunk_path)
 
@@ -482,9 +485,19 @@ class Monteur:
                 gc.collect()
 
                 # Concaténer : signature + intro + voix_fond + outro + signature
+                # Diagnostic : log sample rates pour détecter les incohérences
+                _concat_inputs = [sig_wav, intro_wav, voix_fond_wav, outro_wav, sig_wav]
+                for _ci in _concat_inputs:
+                    _sr = self._ffprobe_sample_rate(_ci)
+                    _d = self._ffprobe_duration(_ci)
+                    _sys.stderr.write(
+                        f"[monteur] concat input: {_ci.name} → {_sr}Hz, {_d:.1f}s\n"
+                    )
+                _sys.stderr.flush()
+
                 episode_wav = _tmp_dir / "episode.wav"
                 self._ffmpeg_concat(
-                    [sig_wav, intro_wav, voix_fond_wav, outro_wav, sig_wav],
+                    _concat_inputs,
                     episode_wav,
                 )
                 _ep_dur = self._ffprobe_duration(episode_wav)
@@ -590,7 +603,15 @@ class Monteur:
 
     @staticmethod
     def _ffmpeg_concat(input_wavs: list[Path], output_wav: Path) -> None:
-        """Concatène des fichiers WAV via ffmpeg concat demuxer (streaming, 0 RAM)."""
+        """Concatène des fichiers WAV via ffmpeg concat demuxer (streaming, 0 RAM).
+
+        IMPORTANT: Force -ar 44100 -ac 2 au lieu de -c copy pour éviter les
+        corruptions de durée quand les fichiers source ont des sample rates
+        différents (ex: jingles à 22050 Hz + voix mixée à 44100 Hz).
+        Avec -c copy, le concat copie les octets bruts avec le header du
+        premier fichier — les données à 44100 Hz interprétées à 22050 Hz
+        doublent la durée apparente.
+        """
         concat_list = output_wav.parent / f"{output_wav.stem}_list.txt"
         with open(concat_list, "w", encoding="utf-8") as f:
             for wav in input_wavs:
@@ -598,15 +619,17 @@ class Monteur:
         try:
             _subprocess.run(
                 ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
-                 "-i", str(concat_list), "-c", "copy", str(output_wav)],
-                capture_output=True, text=True, timeout=120,
+                 "-i", str(concat_list),
+                 "-ar", "44100", "-ac", "2",
+                 str(output_wav)],
+                capture_output=True, text=True, timeout=300,
                 check=True,
             )
         except _subprocess.TimeoutExpired as e:
-            logger.error("ffmpeg concat timeout après 120s")
+            logger.error("ffmpeg concat timeout après 300s")
             if e.process:
                 e.process.kill()
-            raise RuntimeError("ffmpeg concat timeout après 120s") from e
+            raise RuntimeError("ffmpeg concat timeout après 300s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg concat failed: %s", e.stderr[-500:] if e.stderr else "no stderr")
             raise RuntimeError(f"ffmpeg concat échoué: {e.stderr[-200:]}") from e
@@ -622,7 +645,7 @@ class Monteur:
                  "-i", str(input1), "-i", str(input2),
                  "-filter_complex",
                  "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=2:normalize=0",
-                 "-ac", "2", str(output)],
+                 "-ar", "44100", "-ac", "2", str(output)],
                 capture_output=True, text=True, timeout=900,
                 check=True,
             )
@@ -742,6 +765,20 @@ class Monteur:
             del audio
             return dur
 
+    @staticmethod
+    def _ffprobe_sample_rate(path: Path) -> int:
+        """Retourne le sample rate d'un fichier audio via ffprobe."""
+        try:
+            result = _subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries",
+                 "stream=sample_rate",
+                 "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
+                capture_output=True, text=True, timeout=10,
+            )
+            return int(result.stdout.strip())
+        except Exception:
+            return 0
+
     def _export_jingle_wav(self, jingle: AudioSegment, dest: Path, label: str) -> Path:
         """Exporte un jingle en WAV avec fade et formatage correct."""
         if jingle.channels == 1:
@@ -759,6 +796,11 @@ class Monteur:
         elif label == "signature":
             jingle = jingle.fade_in(200).fade_out(300)
 
+        # Forcer 44100 Hz pour cohérence avec le reste du pipeline
+        # (évite les corruptions de durée lors du concat ffmpeg)
+        if jingle.frame_rate != 44100:
+            jingle = jingle.set_frame_rate(44100)
+
         # Ajouter le silence de transition
         silence = AudioSegment.silent(duration=SILENCE_TRANSITION_MS, frame_rate=44100)
         silence = silence.set_channels(2)
@@ -775,6 +817,8 @@ class Monteur:
         duree_ms = int(self._ffprobe_duration(voix_wav) * 1000)
         fond = self._charger_ambiance(ambiance)
         fond = self._preparer_fond(fond, duree_ms)
+        if fond.frame_rate != 44100:
+            fond = fond.set_frame_rate(44100)
         fond.export(str(fond_wav), format="wav")
         del fond
         gc.collect()
@@ -800,6 +844,8 @@ class Monteur:
                 resultat += fond
             del fond
 
+        if resultat.frame_rate != 44100:
+            resultat = resultat.set_frame_rate(44100)
         resultat.export(str(fond_wav), format="wav")
         del resultat
         gc.collect()
@@ -821,6 +867,8 @@ class Monteur:
             room_tone = room_tone * repetitions
         room_tone = room_tone[:duree_ms]
         room_tone = room_tone.fade_in(2000).fade_out(2000)
+        if room_tone.frame_rate != 44100:
+            room_tone = room_tone.set_frame_rate(44100)
         room_tone.export(str(room_wav), format="wav")
         del room_tone
         gc.collect()
