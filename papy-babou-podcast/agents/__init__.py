@@ -9,10 +9,7 @@ from .publisher import Publisher
 from .sfx_provider import SfxProvider
 from .cover_art import CoverArt
 from .planificateur import Planificateur
-try:
-    from .directeur_podcast import DirecteurPodcast
-except ImportError:
-    DirecteurPodcast = None  # type: ignore[assignment,misc]
+from .directeur_podcast import DirecteurPodcast
 
 __all__ = [
     "Scripteur",
