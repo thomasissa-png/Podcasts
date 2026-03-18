@@ -1277,6 +1277,65 @@ def _previsualiser_ambiances_saison(
     return plan
 
 
+def _afficher_retour_directeur_saison(resultat: dict) -> None:
+    """Affiche le retour du directeur podcast sur un plan de saison."""
+    dir_data = resultat.get("directeur_saison", {})
+    note_dir = dir_data.get("note_globale", 0)
+    verdict = dir_data.get("verdict", "?")
+    note_aud = DirecteurPodcast.note_audience_plan(resultat)
+
+    # Verdict avec couleur
+    couleur_verdict = {
+        "feu_vert": Palette.SUCCES,
+        "ajustements_mineurs": "yellow",
+        "retravailler": "red",
+    }.get(verdict, "white")
+    console.print(
+        f"\n  Directeur : [{couleur_verdict}]{verdict.replace('_', ' ').upper()}[/] "
+        f"(note {note_dir}/10, audience {note_aud}/10)"
+    )
+
+    # Synthèse
+    synthese = dir_data.get("synthese", "")
+    if synthese:
+        console.print(f"  {Typo.dim(synthese)}")
+
+    # Axes détaillés
+    for axe_nom, axe_data in dir_data.get("axes", {}).items():
+        axe_label = axe_nom.replace("_", " ").title()
+        axe_note = axe_data.get("note", 0)
+        console.print(f"    {axe_label} : {axe_note}/10")
+
+    # Recommandations
+    recommandations = dir_data.get("recommandations", [])
+    if recommandations:
+        console.print("[yellow]  Recommandations :[/yellow]")
+        priorite_ordre = {"critique": 0, "important": 1, "suggestion": 2}
+        triees = sorted(
+            recommandations,
+            key=lambda r: priorite_ordre.get(r.get("priorite", "suggestion"), 3),
+        )
+        for r in triees:
+            ep = r.get("episode")
+            ep_str = f" (E{ep:02d})" if ep else ""
+            console.print(f"    - [{r.get('priorite', '?')}]{ep_str} {r.get('texte', '')}")
+
+    # Points forts
+    points_forts = dir_data.get("points_forts", [])
+    if points_forts:
+        console.print(f"[{Palette.SUCCES}]  Points forts :[/]")
+        for p in points_forts:
+            console.print(f"    + {p}")
+
+    # Réactions des personas
+    personas = resultat.get("personas", {})
+    for persona_key, persona_data in personas.items():
+        nom = persona_key.replace("_", " ").title()
+        reaction = persona_data.get("reaction", "")
+        p_note = persona_data.get("note", 0)
+        console.print(f"  {Typo.dim(f'{nom} ({p_note}/10) : {reaction}')}")
+
+
 def _validation_plan_saison(
     plan: dict,
     chemin_json: Path,
@@ -1290,6 +1349,9 @@ def _validation_plan_saison(
     archives_saisons: list[dict] | None = None,
 ) -> dict:
     """Point de validation humaine du plan de saison (go/no-go).
+
+    Le directeur podcast évalue le plan à chaque tour (max 3 retours).
+    Au 4e tour, le directeur modifie le plan directement.
 
     Affiche le plan complet et permet au producteur de valider, modifier,
     regenerer ou abandonner avant de lancer la production des episodes.
@@ -1312,6 +1374,9 @@ def _validation_plan_saison(
     Raises:
         ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
     """
+    retours_directeur: list[dict] = []
+    MAX_RETOURS_DIRECTEUR = 3
+
     while True:
         # Afficher un resume compact du plan avant les choix
         saison_data = plan.get("saison", {})
@@ -1324,6 +1389,69 @@ def _validation_plan_saison(
             titre=f"{Icons.SAISON} Résumé du plan de saison",
         ))
 
+        # ── Évaluation du Directeur Podcast ─────────────────────────────
+        nb_retours = len(retours_directeur)
+
+        if nb_retours >= MAX_RETOURS_DIRECTEUR:
+            # 4e tour : le directeur prend la main et corrige directement
+            console.print(
+                f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur podcast a donné "
+                f"{MAX_RETOURS_DIRECTEUR} retours. Il prend la main et corrige "
+                f"le plan directement.[/bold red]"
+            )
+            try:
+                directeur = DirecteurPodcast()
+                plan_corrige = directeur.corriger_plan_saison(
+                    plan, retours_directeur,
+                )
+                plan = plan_corrige
+                _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+                console.print(
+                    f"[{Palette.SUCCES}]  Plan corrigé par le directeur podcast "
+                    f"et sauvegardé (DB + Object Storage).[/]"
+                )
+                _afficher_plan_saison(plan)
+                plan["saison"].setdefault("decisions_humaines", []).append({
+                    "action": "correction_directeur_podcast",
+                    "timestamp": datetime.now().isoformat(),
+                    "nb_retours_avant_correction": MAX_RETOURS_DIRECTEUR,
+                })
+                # Réinitialiser les retours — le directeur a corrigé
+                retours_directeur = []
+            except Exception as e:
+                logger.warning("Directeur Podcast (correction plan) indisponible : %s", e)
+                console.print(
+                    f"[yellow]  Correction directeur non disponible : {e}[/yellow]"
+                )
+        else:
+            # Tours 1-3 : le directeur évalue et donne ses retours
+            tour_label = f"Tour {nb_retours + 1}/{MAX_RETOURS_DIRECTEUR}"
+            console.print(
+                f"\n  {Icons.REVIEW} Évaluation Directeur Podcast ({tour_label})..."
+            )
+            try:
+                directeur = DirecteurPodcast()
+                resultat_directeur = directeur.evaluer_plan_saison(
+                    plan, retours_precedents=retours_directeur or None,
+                )
+                retours_directeur.append(resultat_directeur)
+                _afficher_retour_directeur_saison(resultat_directeur)
+
+                # Stocker dans le plan
+                plan["saison"].setdefault("retours_directeur", []).append({
+                    "tour": nb_retours + 1,
+                    "note_globale": resultat_directeur.get("directeur_saison", {}).get("note_globale"),
+                    "verdict": resultat_directeur.get("directeur_saison", {}).get("verdict"),
+                    "note_audience": DirecteurPodcast.note_audience_plan(resultat_directeur),
+                    "timestamp": datetime.now().isoformat(),
+                })
+            except Exception as e:
+                logger.warning("Directeur Podcast (évaluation plan) indisponible : %s", e)
+                console.print(
+                    f"[yellow]  Évaluation directeur non disponible : {e}[/yellow]"
+                )
+
+        # ── Menu de validation humaine ──────────────────────────────────
         console.print(panel_validation([
             ("v", "Valider le plan — lancer la production"),
             ("m", "Modifier le fichier JSON manuellement"),

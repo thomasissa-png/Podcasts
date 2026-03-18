@@ -330,6 +330,253 @@ def _construire_user_prompt(script: dict, contexte: dict | None = None) -> str:
     return "\n".join(parts)
 
 
+# ── System Prompt — Évaluation de plan de saison ─────────────────────────────
+
+SYSTEM_PROMPT_PLAN_SAISON = """\
+Tu es Marc Delacroix, le directeur podcast le plus reconnu en France pour les \
+contenus audio destinés aux enfants de 6 à 10 ans. Tu as dirigé des productions \
+primées et tu maîtrises la narration sérielle, les arcs de personnages, et la \
+fidélisation d'audience sur une saison entière.
+
+Tu révises le PLAN DE SAISON du podcast "Les Histoires de Papy Babou" — un podcast \
+SÉRIEL pour enfants de 6 à 10 ans basé sur des histoires bibliques.
+
+TON RÔLE :
+1. Évaluer le plan de saison en tant que directeur créatif expert
+2. Simuler les réactions de 3 auditeurs-types (personas) sur la SAISON ENTIÈRE
+3. Donner un verdict final avec des recommandations actionnables
+
+PERSONAS D'AUDIENCE :
+{personas}
+
+ÉVALUATION EN 5 AXES (chacun noté sur 10) :
+
+1. COHÉRENCE NARRATIVE (note/10)
+   - Le fil rouge tient-il sur toute la saison ?
+   - Les épisodes forment-ils un arc cohérent avec progression thématique ?
+   - Les liens entre épisodes (teasing, rappels) sont-ils naturels ?
+   - L'ouverture pose-t-elle bien le décor ? Le final conclut-il les arcs ?
+
+2. VARIÉTÉ DES THÈMES (note/10)
+   - Les histoires bibliques sont-elles suffisamment diversifiées ?
+   - Les ambiances varient-elles d'un épisode à l'autre ?
+   - Les prétextes (scènes de vie) sont-ils variés et crédibles ?
+   - Y a-t-il un bon équilibre action/émotion/humour sur la saison ?
+
+3. ARCS DE PERSONNAGES (note/10)
+   - Les arcs d'Antoine, Noémie et Papy sont-ils crédibles et progressifs ?
+   - Les personnages secondaires sont-ils bien introduits et utiles ?
+   - Les évolutions émotionnelles sont-elles adaptées aux âges des personnages ?
+   - Les tics de langage et rituels renforcent-ils l'identité de chaque personnage ?
+
+4. RYTHME DE SAISON (note/10)
+   - L'alternance des types d'épisodes (ouverture, standard, mi-saison, final) est-elle judicieuse ?
+   - Les durées sont-elles adaptées aux moments de la saison ?
+   - Y a-t-il des temps forts bien espacés pour maintenir l'engagement ?
+   - Le rythme de la saison correspond-il à l'attention d'un enfant (pas de tunnel ennuyeux) ?
+
+5. POTENTIEL AUDIENCE (note/10)
+   - Cette saison va-t-elle fidéliser les auditeurs existants ?
+   - Les sujets bibliques choisis sont-ils attractifs pour des enfants de 6-10 ans ?
+   - Y a-t-il des "épisodes événements" qui peuvent attirer de nouveaux auditeurs ?
+   - Le plan génère-t-il l'envie de binge-écouter la saison ?
+
+FORMAT DE RÉPONSE — JSON STRICT :
+{{
+  "directeur_saison": {{
+    "note_globale": 8.0,
+    "verdict": "feu_vert|ajustements_mineurs|retravailler",
+    "synthese": "Résumé en 3-4 phrases de l'avis global du directeur sur la saison.",
+    "axes": {{
+      "coherence_narrative": {{
+        "note": 8,
+        "commentaire": "..."
+      }},
+      "variete_themes": {{
+        "note": 7,
+        "commentaire": "..."
+      }},
+      "arcs_personnages": {{
+        "note": 9,
+        "commentaire": "..."
+      }},
+      "rythme_saison": {{
+        "note": 8,
+        "commentaire": "..."
+      }},
+      "potentiel_audience": {{
+        "note": 7,
+        "commentaire": "..."
+      }}
+    }},
+    "recommandations": [
+      {{
+        "priorite": "critique|important|suggestion",
+        "episode": null,
+        "texte": "Description actionnable. Si 'episode' est un numéro, la recommandation concerne cet épisode spécifique."
+      }}
+    ],
+    "points_forts": ["Ce qui fonctionne très bien dans ce plan"]
+  }},
+  "personas": {{
+    "lina_7ans": {{
+      "reaction": "Réaction de Lina sur la saison entière (ÉCRITE COMME SI C'ÉTAIT LINA).",
+      "episodes_preferes": [1, 5],
+      "episodes_moins_attractifs": [3],
+      "accrocherait_toute_la_saison": true,
+      "note": 8
+    }},
+    "noah_10ans": {{
+      "reaction": "Réaction de Noah sur la saison entière (ÉCRITE COMME SI C'ÉTAIT NOAH).",
+      "episodes_preferes": [2, 10],
+      "episodes_moins_attractifs": [],
+      "accrocherait_toute_la_saison": true,
+      "note": 7
+    }},
+    "sophie_parent": {{
+      "reaction": "Réaction de Sophie sur la saison entière.",
+      "episodes_preferes": [1, 5, 10],
+      "reserves": ["Ce qui la gêne"],
+      "recommanderait_la_saison": true,
+      "note": 8
+    }}
+  }},
+  "note_audience": 7.7
+}}
+
+La "note_audience" est la MOYENNE pondérée : Lina (30%), Noah (30%), Sophie (40%).
+
+Le "verdict" suit cette grille :
+- "feu_vert" : note_globale >= 7.5 ET note_audience >= 7 ET aucune recommandation critique
+- "ajustements_mineurs" : note_globale >= 6 OU recommandations non-critiques uniquement
+- "retravailler" : note_globale < 6 OU note_audience < 6 OU recommandation critique
+
+Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
+"""
+
+# ── System Prompt — Correction directe du plan ───────────────────────────────
+
+SYSTEM_PROMPT_CORRECTION_PLAN = """\
+Tu es Marc Delacroix, le directeur podcast le plus reconnu en France pour les \
+contenus audio destinés aux enfants de 6 à 10 ans.
+
+Tu as déjà donné 3 retours sur ce plan de saison. Le producteur n'a pas réussi \
+à intégrer toutes tes recommandations. C'est maintenant TOI qui prends la main \
+et qui modifies le plan DIRECTEMENT.
+
+MISSION : Réécrire le plan de saison en appliquant TOUTES tes recommandations \
+cumulées des 3 retours précédents. Tu produis le plan FINAL, prêt pour la production.
+
+RÈGLES :
+1. Conserve la STRUCTURE JSON identique au plan d'entrée (clé "saison" avec les mêmes champs)
+2. Conserve le thème et le numéro de saison
+3. Conserve le nombre d'épisodes
+4. Applique TOUTES tes recommandations critiques et importantes des 3 retours
+5. Améliore ce qui peut l'être pour les suggestions aussi
+6. Un sujet biblique par épisode, COMPLET de A à Z (pas de multi-parties)
+7. Ordre chronologique biblique respecté
+8. Chaque épisode garde les champs obligatoires : numero, titre, type, histoire_biblique, \
+resume, morale, ambiance, duree_cible_minutes, pretexte, personnages_presents, \
+personnages_secondaires_presents, arc_personnage_focus, progression_arc, \
+lien_episode_precedent, teasing_episode_suivant, elements_fil_rouge, \
+moments_cles, questions_ouvertes
+
+Réponds UNIQUEMENT avec le plan JSON corrigé (clé racine "saison"), sans texte ni commentaire.
+"""
+
+
+def _construire_system_prompt_plan_saison() -> str:
+    """Construit le system prompt plan saison avec les personas injectées."""
+    personas_text = []
+    for key, persona in PERSONAS.items():
+        personas_text.append(
+            f"PERSONA {persona['nom'].upper()} ({persona['age']} ans, {persona['profil']}) :\n"
+            f"{persona['description']}\n"
+            f"Critères d'évaluation :\n"
+            + "\n".join(f"  - {c}" for c in persona["criteres"])
+        )
+    return SYSTEM_PROMPT_PLAN_SAISON.format(personas="\n\n".join(personas_text))
+
+
+def _construire_system_prompt_correction_plan() -> str:
+    """Retourne le system prompt pour la correction directe du plan."""
+    return SYSTEM_PROMPT_CORRECTION_PLAN
+
+
+def _construire_user_prompt_plan(
+    plan: dict,
+    retours_precedents: list[dict] | None = None,
+) -> str:
+    """Construit le prompt utilisateur pour l'évaluation d'un plan de saison.
+
+    Args:
+        plan: Plan de saison complet.
+        retours_precedents: Retours précédents du directeur (mémoire cumulative).
+    """
+    parts = []
+
+    if retours_precedents:
+        parts.append(
+            f"RETOURS PRÉCÉDENTS DU DIRECTEUR ({len(retours_precedents)} tour(s)) :"
+        )
+        for i, retour in enumerate(retours_precedents, 1):
+            dir_data = retour.get("directeur_saison", {})
+            parts.append(f"\n--- Tour {i} (note {dir_data.get('note_globale', '?')}/10, "
+                         f"verdict: {dir_data.get('verdict', '?')}) ---")
+            synthese = dir_data.get("synthese", "")
+            if synthese:
+                parts.append(f"Synthèse : {synthese}")
+            recommandations = dir_data.get("recommandations", [])
+            for r in recommandations:
+                parts.append(f"  [{r.get('priorite', '?')}] {r.get('texte', '')}")
+        parts.append("")
+        parts.append(
+            "IMPORTANT : Tiens compte de tes retours précédents. "
+            "NE RÉPÈTE PAS les mêmes remarques si elles ont été corrigées. "
+            "Concentre-toi sur ce qui reste à améliorer."
+        )
+        parts.append("")
+
+    parts.append("PLAN DE SAISON À ÉVALUER :")
+    parts.append(json.dumps(plan, ensure_ascii=False, indent=2))
+
+    return "\n".join(parts)
+
+
+def _construire_user_prompt_correction(
+    plan: dict,
+    retours_precedents: list[dict],
+) -> str:
+    """Construit le prompt pour la correction directe du plan par le directeur.
+
+    Args:
+        plan: Plan de saison à corriger.
+        retours_precedents: Les 3 retours précédents du directeur.
+    """
+    parts = []
+
+    parts.append(
+        f"TES 3 RETOURS PRÉCÉDENTS (à appliquer INTÉGRALEMENT) :"
+    )
+    for i, retour in enumerate(retours_precedents, 1):
+        dir_data = retour.get("directeur_saison", {})
+        parts.append(f"\n--- Tour {i} (note {dir_data.get('note_globale', '?')}/10) ---")
+        synthese = dir_data.get("synthese", "")
+        if synthese:
+            parts.append(f"Synthèse : {synthese}")
+        recommandations = dir_data.get("recommandations", [])
+        for r in recommandations:
+            ep = r.get("episode")
+            ep_str = f" (épisode {ep})" if ep else ""
+            parts.append(f"  [{r.get('priorite', '?')}]{ep_str} {r.get('texte', '')}")
+    parts.append("")
+
+    parts.append("PLAN DE SAISON À CORRIGER :")
+    parts.append(json.dumps(plan, ensure_ascii=False, indent=2))
+
+    return "\n".join(parts)
+
+
 class DirecteurPodcast:
     """Directeur créatif — validation finale et retours d'audience simulés."""
 
@@ -700,11 +947,177 @@ class DirecteurPodcast:
             },
         }
 
+    def evaluer_plan_saison(
+        self,
+        plan: dict,
+        retours_precedents: list[dict] | None = None,
+        max_retry: int = 3,
+    ) -> dict:
+        """Évalue un plan de saison en tant que directeur créatif + personas.
+
+        Analyse la cohérence narrative, la variété, les arcs de personnages,
+        le rythme de la saison, et simule les réactions des 3 personas.
+
+        Args:
+            plan: Plan de saison (dict avec clé "saison").
+            retours_precedents: Liste des retours précédents du directeur
+                (pour mémoire cumulative, éviter de répéter les mêmes remarques).
+            max_retry: Nombre de tentatives de parsing JSON.
+
+        Returns:
+            Dict avec clés "directeur_saison", "personas", "note_audience".
+        """
+        system_prompt = _construire_system_prompt_plan_saison()
+        user_prompt = _construire_user_prompt_plan(plan, retours_precedents)
+
+        max_tokens = 8192
+
+        derniere_erreur = None
+        for tentative in range(1, max_retry + 1):
+            response = config.appel_claude_avec_retry(
+                self.client,
+                model=config.CLAUDE_MODEL,
+                max_tokens=max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            texte_brut = response.content[0].text.strip()
+
+            try:
+                resultat = parser_json_llm(texte_brut)
+                self._valider_resultat_plan(resultat)
+                return resultat
+            except (json.JSONDecodeError, ValueError, KeyError) as e:
+                derniere_erreur = e
+                if tentative < max_retry:
+                    logger.warning(
+                        "Directeur plan saison — parsing JSON tentative %d/%d : %s",
+                        tentative, max_retry, e,
+                    )
+                    continue
+                raise ValueError(
+                    f"Directeur Podcast (plan saison) : impossible de parser le résultat "
+                    f"après {max_retry} tentatives. Dernière erreur : {derniere_erreur}"
+                ) from derniere_erreur
+
+        raise ValueError("Directeur Podcast (plan saison) : aucun résultat obtenu.")  # pragma: no cover
+
+    def corriger_plan_saison(
+        self,
+        plan: dict,
+        retours_precedents: list[dict],
+        max_retry: int = 3,
+    ) -> dict:
+        """Corrige directement un plan de saison (intervention directe, 4e tour).
+
+        Le directeur ne donne plus de retours — il modifie lui-même le plan
+        en appliquant toutes ses recommandations cumulées.
+
+        Args:
+            plan: Plan de saison à corriger (dict avec clé "saison").
+            retours_precedents: Les 3 retours précédents du directeur.
+            max_retry: Nombre de tentatives de parsing JSON.
+
+        Returns:
+            Plan de saison corrigé (même structure que l'entrée).
+        """
+        system_prompt = _construire_system_prompt_correction_plan()
+        user_prompt = _construire_user_prompt_correction(plan, retours_precedents)
+
+        max_tokens = 12000
+
+        derniere_erreur = None
+        for tentative in range(1, max_retry + 1):
+            response = config.appel_claude_avec_retry(
+                self.client,
+                model=config.CLAUDE_MODEL,
+                max_tokens=max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            texte_brut = response.content[0].text.strip()
+
+            try:
+                plan_corrige = parser_json_llm(texte_brut)
+                # Valider que c'est bien un plan de saison complet
+                if "saison" not in plan_corrige:
+                    raise ValueError("Le plan corrigé ne contient pas la clé 'saison'.")
+                if "episodes" not in plan_corrige.get("saison", {}):
+                    raise ValueError("Le plan corrigé ne contient pas d'épisodes.")
+                return plan_corrige
+            except (json.JSONDecodeError, ValueError, KeyError) as e:
+                derniere_erreur = e
+                if tentative < max_retry:
+                    logger.warning(
+                        "Directeur correction plan — parsing JSON tentative %d/%d : %s",
+                        tentative, max_retry, e,
+                    )
+                    continue
+                raise ValueError(
+                    f"Directeur Podcast (correction plan) : impossible de parser "
+                    f"après {max_retry} tentatives. Dernière erreur : {derniere_erreur}"
+                ) from derniere_erreur
+
+        raise ValueError("Directeur Podcast (correction plan) : aucun résultat obtenu.")  # pragma: no cover
+
+    @staticmethod
+    def _valider_resultat_plan(resultat: dict) -> None:
+        """Vérifie la structure minimale du résultat d'évaluation de plan.
+
+        Raises:
+            ValueError: Si la structure est invalide.
+        """
+        if "directeur_saison" not in resultat:
+            raise ValueError("Clé 'directeur_saison' manquante dans le résultat.")
+        if "personas" not in resultat:
+            raise ValueError("Clé 'personas' manquante dans le résultat.")
+
+        directeur = resultat["directeur_saison"]
+        for champ in ("note_globale", "verdict", "axes", "recommandations"):
+            if champ not in directeur:
+                raise ValueError(f"Champ 'directeur_saison.{champ}' manquant.")
+
+        axes_attendus = {
+            "coherence_narrative", "variete_themes", "arcs_personnages",
+            "rythme_saison", "potentiel_audience",
+        }
+        axes_presents = set(directeur.get("axes", {}).keys())
+        manquants = axes_attendus - axes_presents
+        if manquants:
+            raise ValueError(f"Axes manquants : {', '.join(sorted(manquants))}")
+
+        if directeur["verdict"] not in ("feu_vert", "ajustements_mineurs", "retravailler"):
+            raise ValueError(
+                f"Verdict invalide : '{directeur['verdict']}'. "
+                "Attendu : feu_vert, ajustements_mineurs, retravailler."
+            )
+
+        personas_attendues = {"lina_7ans", "noah_10ans", "sophie_parent"}
+        personas_presentes = set(resultat.get("personas", {}).keys())
+        manquantes = personas_attendues - personas_presentes
+        if manquantes:
+            raise ValueError(f"Personas manquantes : {', '.join(sorted(manquantes))}")
+
     @staticmethod
     def note_audience(resultat: dict) -> float:
         """Calcule la note audience pondérée à partir des personas.
 
         Pondération : Lina 30%, Noah 30%, Sophie 40%.
+
+        Returns:
+            Note sur 10.
+        """
+        personas = resultat.get("personas", {})
+        lina = personas.get("lina_7ans", {}).get("note", 0)
+        noah = personas.get("noah_10ans", {}).get("note", 0)
+        sophie = personas.get("sophie_parent", {}).get("note", 0)
+        return round(lina * 0.3 + noah * 0.3 + sophie * 0.4, 1)
+
+    @staticmethod
+    def note_audience_plan(resultat: dict) -> float:
+        """Calcule la note audience pondérée pour un plan de saison.
+
+        Même pondération que pour les scripts : Lina 30%, Noah 30%, Sophie 40%.
 
         Returns:
             Note sur 10.

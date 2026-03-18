@@ -437,3 +437,364 @@ class TestEvaluer:
         monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "")
         with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
             DirecteurPodcast()
+
+
+# ── Fixtures Plan Saison ────────────────────────────────────────────────────
+
+@pytest.fixture
+def plan_saison_exemple():
+    """Plan de saison minimal pour les tests."""
+    return {
+        "saison": {
+            "numero": 1,
+            "theme": "Les grands voyages de la Bible",
+            "description": "De la Création au sacrifice d'Abraham",
+            "fil_rouge": "La découverte de la foi à travers les voyages",
+            "arcs_personnages": {
+                "antoine": {"depart": "Curieux", "evolution": "Apprend le courage", "arrivee": "Courageux"},
+                "noemie": {"depart": "Timide", "evolution": "Gagne en confiance", "arrivee": "Confiante"},
+                "papy_babou": {"depart": "Conteur", "evolution": "Transmet sa sagesse", "arrivee": "Fier"},
+            },
+            "personnages_secondaires": [],
+            "rituels": {
+                "accroche": "Mes petits loups, installez-vous bien...",
+                "au_revoir": "À la prochaine histoire !",
+            },
+            "episodes": [
+                {
+                    "numero": 1, "titre": "Au commencement", "type": "ouverture",
+                    "histoire_biblique": "La Création du monde",
+                    "resume": "Dieu crée le monde en 7 jours.",
+                    "morale": "La beauté de la création",
+                    "ambiance": "mystere", "duree_cible_minutes": 30,
+                    "pretexte": "Jour de pluie chez Papy",
+                    "personnages_presents": ["papy_babou", "antoine", "noemie"],
+                    "personnages_secondaires_presents": [],
+                    "arc_personnage_focus": "antoine",
+                    "progression_arc": "Antoine découvre l'émerveillement",
+                    "lien_episode_precedent": "",
+                    "teasing_episode_suivant": "Papy promet de raconter l'histoire d'un grand bateau",
+                    "elements_fil_rouge": "Premier voyage : la naissance du monde",
+                    "moments_cles": ["Création de la lumière", "Création des animaux"],
+                    "questions_ouvertes": ["Pourquoi Dieu s'est-il reposé le 7e jour ?"],
+                },
+                {
+                    "numero": 2, "titre": "Le grand déluge", "type": "standard",
+                    "histoire_biblique": "Noé et l'arche",
+                    "resume": "Noé construit l'arche et sauve les animaux.",
+                    "morale": "La fidélité et l'obéissance",
+                    "ambiance": "dramatique", "duree_cible_minutes": 25,
+                    "pretexte": "Orage dehors, Antoine a un peu peur",
+                    "personnages_presents": ["papy_babou", "antoine", "noemie"],
+                    "personnages_secondaires_presents": [],
+                    "arc_personnage_focus": "noemie",
+                    "progression_arc": "Noémie apprend qu'on peut avoir peur et être courageux",
+                    "lien_episode_precedent": "Rappel de la Création",
+                    "teasing_episode_suivant": "Papy promet de raconter un long voyage",
+                    "elements_fil_rouge": "Voyage sur les eaux",
+                    "moments_cles": ["Construction de l'arche", "L'arc-en-ciel"],
+                    "questions_ouvertes": ["Comment les animaux tenaient-ils tous dans l'arche ?"],
+                },
+            ],
+        }
+    }
+
+
+@pytest.fixture
+def resultat_directeur_plan_valide():
+    """Résultat de directeur valide pour un plan de saison."""
+    return {
+        "directeur_saison": {
+            "note_globale": 8.0,
+            "verdict": "feu_vert",
+            "synthese": "Plan solide avec une bonne progression.",
+            "axes": {
+                "coherence_narrative": {"note": 8, "commentaire": "Bon fil rouge."},
+                "variete_themes": {"note": 7, "commentaire": "Bonne diversité."},
+                "arcs_personnages": {"note": 9, "commentaire": "Arcs crédibles."},
+                "rythme_saison": {"note": 8, "commentaire": "Bon rythme."},
+                "potentiel_audience": {"note": 7, "commentaire": "Attractif."},
+            },
+            "recommandations": [
+                {"priorite": "suggestion", "episode": 2, "texte": "Renforcer le teasing."},
+            ],
+            "points_forts": ["Fil rouge cohérent", "Arcs de personnages progressifs"],
+        },
+        "personas": {
+            "lina_7ans": {
+                "reaction": "J'ai trop hâte d'écouter l'histoire de Noé !",
+                "episodes_preferes": [1],
+                "episodes_moins_attractifs": [],
+                "accrocherait_toute_la_saison": True,
+                "note": 8,
+            },
+            "noah_10ans": {
+                "reaction": "Le déluge c'est cool, j'espère qu'il y a de l'action.",
+                "episodes_preferes": [2],
+                "episodes_moins_attractifs": [],
+                "accrocherait_toute_la_saison": True,
+                "note": 7,
+            },
+            "sophie_parent": {
+                "reaction": "Une bonne progression dans l'histoire biblique.",
+                "episodes_preferes": [1, 2],
+                "reserves": [],
+                "recommanderait_la_saison": True,
+                "note": 9,
+            },
+        },
+        "note_audience": 8.1,
+    }
+
+
+# ── Tests Plan Saison — Prompts ─────────────────────────────────────────────
+
+from agents.directeur_podcast import (
+    _construire_system_prompt_plan_saison,
+    _construire_user_prompt_plan,
+    _construire_user_prompt_correction,
+    SYSTEM_PROMPT_PLAN_SAISON,
+    SYSTEM_PROMPT_CORRECTION_PLAN,
+)
+
+
+class TestPromptsplanSaison:
+    """Tests des prompts pour l'évaluation de plan de saison."""
+
+    def test_system_prompt_contient_personas(self):
+        """Le system prompt injecte les 3 personas."""
+        prompt = _construire_system_prompt_plan_saison()
+        assert "LINA" in prompt
+        assert "NOAH" in prompt
+        assert "SOPHIE" in prompt
+
+    def test_system_prompt_contient_5_axes(self):
+        """Le system prompt contient les 5 axes d'évaluation."""
+        prompt = _construire_system_prompt_plan_saison()
+        assert "COHÉRENCE NARRATIVE" in prompt
+        assert "VARIÉTÉ DES THÈMES" in prompt
+        assert "ARCS DE PERSONNAGES" in prompt
+        assert "RYTHME DE SAISON" in prompt
+        assert "POTENTIEL AUDIENCE" in prompt
+
+    def test_user_prompt_plan_contient_json(self, plan_saison_exemple):
+        """Le prompt utilisateur contient le plan en JSON."""
+        prompt = _construire_user_prompt_plan(plan_saison_exemple)
+        assert "PLAN DE SAISON À ÉVALUER" in prompt
+        assert "Les grands voyages de la Bible" in prompt
+
+    def test_user_prompt_plan_avec_retours(self, plan_saison_exemple, resultat_directeur_plan_valide):
+        """Le prompt intègre les retours précédents."""
+        prompt = _construire_user_prompt_plan(
+            plan_saison_exemple,
+            retours_precedents=[resultat_directeur_plan_valide],
+        )
+        assert "RETOURS PRÉCÉDENTS DU DIRECTEUR (1 tour(s))" in prompt
+        assert "Tour 1" in prompt
+        assert "NE RÉPÈTE PAS" in prompt
+
+    def test_user_prompt_correction_contient_retours(
+        self, plan_saison_exemple, resultat_directeur_plan_valide,
+    ):
+        """Le prompt de correction contient les 3 retours cumulés."""
+        retours = [resultat_directeur_plan_valide] * 3
+        prompt = _construire_user_prompt_correction(plan_saison_exemple, retours)
+        assert "TES 3 RETOURS PRÉCÉDENTS" in prompt
+        assert "Tour 1" in prompt
+        assert "Tour 2" in prompt
+        assert "Tour 3" in prompt
+        assert "PLAN DE SAISON À CORRIGER" in prompt
+
+    def test_system_prompt_correction_demande_reecriture(self):
+        """Le prompt de correction demande une réécriture directe."""
+        assert "TOI qui prends la main" in SYSTEM_PROMPT_CORRECTION_PLAN
+        assert "TOUTES tes recommandations" in SYSTEM_PROMPT_CORRECTION_PLAN
+
+
+# ── Tests Plan Saison — Validation ───────────────────────────────────────────
+
+class TestValidationPlanSaison:
+    """Tests de la validation de résultat de plan de saison."""
+
+    def test_resultat_plan_valide(self, resultat_directeur_plan_valide):
+        """Un résultat plan valide passe la validation."""
+        DirecteurPodcast._valider_resultat_plan(resultat_directeur_plan_valide)
+
+    def test_cle_directeur_saison_manquante(self):
+        """Rejet si clé directeur_saison manquante."""
+        with pytest.raises(ValueError, match="directeur_saison"):
+            DirecteurPodcast._valider_resultat_plan({"personas": {}})
+
+    def test_cle_personas_manquante(self, resultat_directeur_plan_valide):
+        """Rejet si clé personas manquante."""
+        del resultat_directeur_plan_valide["personas"]
+        with pytest.raises(ValueError, match="personas"):
+            DirecteurPodcast._valider_resultat_plan(resultat_directeur_plan_valide)
+
+    def test_axe_manquant(self, resultat_directeur_plan_valide):
+        """Rejet si un axe est manquant."""
+        del resultat_directeur_plan_valide["directeur_saison"]["axes"]["coherence_narrative"]
+        with pytest.raises(ValueError, match="coherence_narrative"):
+            DirecteurPodcast._valider_resultat_plan(resultat_directeur_plan_valide)
+
+    def test_verdict_invalide(self, resultat_directeur_plan_valide):
+        """Rejet si verdict invalide."""
+        resultat_directeur_plan_valide["directeur_saison"]["verdict"] = "moyen"
+        with pytest.raises(ValueError, match="Verdict invalide"):
+            DirecteurPodcast._valider_resultat_plan(resultat_directeur_plan_valide)
+
+    def test_persona_manquante(self, resultat_directeur_plan_valide):
+        """Rejet si une persona est manquante."""
+        del resultat_directeur_plan_valide["personas"]["lina_7ans"]
+        with pytest.raises(ValueError, match="lina_7ans"):
+            DirecteurPodcast._valider_resultat_plan(resultat_directeur_plan_valide)
+
+    def test_champ_directeur_manquant(self, resultat_directeur_plan_valide):
+        """Rejet si un champ requis du directeur est manquant."""
+        del resultat_directeur_plan_valide["directeur_saison"]["recommandations"]
+        with pytest.raises(ValueError, match="recommandations"):
+            DirecteurPodcast._valider_resultat_plan(resultat_directeur_plan_valide)
+
+
+# ── Tests Plan Saison — Utilitaires ──────────────────────────────────────────
+
+class TestUtilitairesPlanSaison:
+    """Tests des utilitaires pour plan de saison."""
+
+    def test_note_audience_plan_ponderation(self):
+        """La note audience plan respecte Lina 30%, Noah 30%, Sophie 40%."""
+        resultat = {
+            "personas": {
+                "lina_7ans": {"note": 10},
+                "noah_10ans": {"note": 10},
+                "sophie_parent": {"note": 0},
+            }
+        }
+        assert DirecteurPodcast.note_audience_plan(resultat) == 6.0
+
+    def test_note_audience_plan_sophie_poids_fort(self):
+        """Sophie à 10 seule donne 4.0 (40%)."""
+        resultat = {
+            "personas": {
+                "lina_7ans": {"note": 0},
+                "noah_10ans": {"note": 0},
+                "sophie_parent": {"note": 10},
+            }
+        }
+        assert DirecteurPodcast.note_audience_plan(resultat) == 4.0
+
+    def test_note_audience_plan_parfaite(self):
+        """Toutes les notes à 10 donnent 10.0."""
+        resultat = {
+            "personas": {
+                "lina_7ans": {"note": 10},
+                "noah_10ans": {"note": 10},
+                "sophie_parent": {"note": 10},
+            }
+        }
+        assert DirecteurPodcast.note_audience_plan(resultat) == 10.0
+
+
+# ── Tests Plan Saison — Evaluer & Corriger ───────────────────────────────────
+
+class TestEvaluerPlanSaison:
+    """Tests d'évaluation de plan de saison via API mockée."""
+
+    @pytest.fixture(autouse=True)
+    def _mock_api_key(self, monkeypatch):
+        import config
+        monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "test-key")
+
+    def test_evaluer_plan_saison_succes(self, plan_saison_exemple, resultat_directeur_plan_valide):
+        """L'évaluation retourne un résultat valide."""
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(resultat_directeur_plan_valide, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            resultat = directeur.evaluer_plan_saison(plan_saison_exemple)
+            assert resultat["directeur_saison"]["verdict"] == "feu_vert"
+            assert resultat["directeur_saison"]["note_globale"] == 8.0
+
+    def test_evaluer_plan_saison_avec_retours(
+        self, plan_saison_exemple, resultat_directeur_plan_valide,
+    ):
+        """L'évaluation avec retours précédents fonctionne."""
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(resultat_directeur_plan_valide, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            resultat = directeur.evaluer_plan_saison(
+                plan_saison_exemple,
+                retours_precedents=[resultat_directeur_plan_valide],
+            )
+            assert "directeur_saison" in resultat
+
+    def test_evaluer_plan_saison_echec_parsing(self, plan_saison_exemple):
+        """L'évaluation échoue après toutes les tentatives."""
+        mock_bad = MagicMock()
+        mock_bad.content = [MagicMock(text="pas du JSON")]
+
+        directeur = DirecteurPodcast()
+        with patch(
+            "config.appel_claude_avec_retry",
+            return_value=mock_bad,
+        ), pytest.raises(ValueError, match="impossible de parser"):
+            directeur.evaluer_plan_saison(plan_saison_exemple, max_retry=2)
+
+    def test_corriger_plan_saison_succes(
+        self, plan_saison_exemple, resultat_directeur_plan_valide,
+    ):
+        """La correction retourne un plan valide."""
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps(plan_saison_exemple, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        retours = [resultat_directeur_plan_valide] * 3
+        with patch("config.appel_claude_avec_retry", return_value=mock_response):
+            plan_corrige = directeur.corriger_plan_saison(
+                plan_saison_exemple, retours,
+            )
+            assert "saison" in plan_corrige
+            assert "episodes" in plan_corrige["saison"]
+
+    def test_corriger_plan_saison_structure_invalide(
+        self, plan_saison_exemple, resultat_directeur_plan_valide,
+    ):
+        """La correction échoue si le résultat n'est pas un plan."""
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(
+            text=json.dumps({"invalid": "data"}, ensure_ascii=False)
+        )]
+
+        directeur = DirecteurPodcast()
+        retours = [resultat_directeur_plan_valide] * 3
+        with patch(
+            "config.appel_claude_avec_retry",
+            return_value=mock_response,
+        ), pytest.raises(ValueError, match="impossible de parser"):
+            directeur.corriger_plan_saison(plan_saison_exemple, retours, max_retry=1)
+
+    def test_corriger_plan_saison_echec_parsing(
+        self, plan_saison_exemple, resultat_directeur_plan_valide,
+    ):
+        """La correction échoue sur JSON invalide."""
+        mock_bad = MagicMock()
+        mock_bad.content = [MagicMock(text="pas du json")]
+
+        directeur = DirecteurPodcast()
+        retours = [resultat_directeur_plan_valide] * 3
+        with patch(
+            "config.appel_claude_avec_retry",
+            return_value=mock_bad,
+        ), pytest.raises(ValueError, match="impossible de parser"):
+            directeur.corriger_plan_saison(
+                plan_saison_exemple, retours, max_retry=1,
+            )
