@@ -60,6 +60,25 @@ AMBIANCE_PROMPTS = {
     "fond_doux": "Soft gentle ambient background music for children's podcast, very quiet warm pads and light harp, barely noticeable",
 }
 
+# Requêtes Freesound pour les ambiances musicales (fallback si ElevenLabs échoue)
+FREESOUND_MUSIC_QUERIES = {
+    "joyeux": "happy cheerful acoustic guitar children",
+    "dramatique": "dramatic soft strings tension",
+    "calme": "calm peaceful piano ambient",
+    "mystere": "mysterious gentle woodwind ambient",
+    "epique": "epic orchestral adventure gentle",
+    "tendre": "tender warm piano strings lullaby",
+    "humoristique": "playful whimsical pizzicato bouncy",
+    "solennel": "solemn peaceful organ choir sacred",
+    "fond_doux": "soft gentle ambient background pad",
+    "intro_jingle": "cheerful jingle intro children podcast",
+    "outro_jingle": "gentle outro jingle ending peaceful",
+    "signature_jingle": "short jingle music box bells children",
+    "transition": "magical chime transition short",
+}
+
+FREESOUND_SEARCH_URL = "https://freesound.org/apiv2/search/text/"
+
 # Prompt pour la transition sonore entre actes narratifs
 TRANSITION_PROMPT = (
     "Short magical transition sound for children's storytelling podcast, "
@@ -348,9 +367,9 @@ class Monteur:
                 f"introuvable(s) :\n"
                 + "\n".join(f"  • {m}" for m in manquants)
                 + "\n\nSolutions :\n"
-                "  1. Placez les fichiers MP3 dans assets/music/ "
-                "(voir assets/music/ASSETS_REQUIS.txt)\n"
-                "  2. Configurez ELEVENLABS_API_KEY pour l'auto-génération"
+                "  1. Configurez ELEVENLABS_API_KEY pour l'auto-génération\n"
+                "  2. Configurez FREESOUND_API_KEY pour le fallback Freesound\n"
+                "  3. Ou placez les fichiers MP3 dans assets/music/"
             )
             _sys_mod.stderr.write(f"[monteur] ERREUR: {msg}\n")
             _sys_mod.stderr.flush()
@@ -1216,6 +1235,77 @@ class Monteur:
 
         return False
 
+    def _telecharger_freesound_musique(
+        self, query_key: str, chemin_sortie: Path,
+        duree_min: float = 5.0, duree_max: float = 120.0,
+    ) -> bool:
+        """Télécharge un son/musique depuis Freesound.org comme fallback.
+
+        Args:
+            query_key: Clé dans FREESOUND_MUSIC_QUERIES ou requête libre.
+            chemin_sortie: Chemin de sauvegarde du fichier MP3.
+            duree_min: Durée minimum en secondes.
+            duree_max: Durée maximum en secondes.
+
+        Returns:
+            True si le téléchargement a réussi.
+        """
+        api_key = config.FREESOUND_API_KEY
+        if not api_key:
+            logger.warning(
+                "Clé Freesound manquante — impossible de chercher '%s'",
+                query_key,
+            )
+            return False
+
+        query = FREESOUND_MUSIC_QUERIES.get(query_key, query_key)
+        params = {
+            "query": query,
+            "filter": f"duration:[{duree_min} TO {duree_max}]",
+            "sort": "rating_desc",
+            "fields": "id,name,previews,duration",
+            "page_size": 5,
+            "token": api_key,
+        }
+
+        try:
+            response = requests.get(
+                FREESOUND_SEARCH_URL, params=params, timeout=15,
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            if not data.get("results"):
+                logger.warning("Freesound : aucun résultat pour '%s'", query)
+                return False
+
+            son = data["results"][0]
+            preview_url = son["previews"].get(
+                "preview-hq-mp3",
+                son["previews"].get("preview-lq-mp3", ""),
+            )
+            if not preview_url:
+                logger.warning("Freesound : pas de preview MP3 pour '%s'", son["name"])
+                return False
+
+            resp_audio = requests.get(preview_url, timeout=30)
+            resp_audio.raise_for_status()
+
+            chemin_sortie.parent.mkdir(parents=True, exist_ok=True)
+            with open(chemin_sortie, "wb") as f:
+                f.write(resp_audio.content)
+
+            logger.info(
+                "Musique Freesound téléchargée : '%s' (%.1fs, %.1f KB)",
+                son["name"], son.get("duration", 0),
+                len(resp_audio.content) / 1024,
+            )
+            return True
+
+        except requests.RequestException as e:
+            logger.warning("Freesound musique échoué pour '%s' : %s", query, e)
+            return False
+
     def _charger_jingle(
         self, position: str, type_episode: str,
         numero_saison: int | None = None,
@@ -1275,7 +1365,15 @@ class Monteur:
             if self._generer_asset_elevenlabs(prompt, duree_s, chemin):
                 return AudioSegment.from_mp3(str(chemin))
 
-        # 4. Dernier recours : silence
+        # 4. Fallback Freesound
+        if not chemin:
+            chemin = config.ASSETS_DIR / "music" / f"{asset_nom}.mp3"
+        if self._telecharger_freesound_musique(
+            asset_nom, chemin, duree_min=3.0, duree_max=30.0,
+        ):
+            return AudioSegment.from_mp3(str(chemin))
+
+        # 5. Dernier recours : silence (le pré-vol bloquera si nécessaire)
         logger.warning("Jingle %s introuvable et non générable — silence.", position)
         duree_fallback = config.PRODUCTION.get(
             f"{position}_jingle_duree_ms", 10_000
@@ -1301,6 +1399,14 @@ class Monteur:
             }.get(nom, 10.0)
             if self._generer_asset_elevenlabs(prompt, duree, chemin):
                 return AudioSegment.from_mp3(str(chemin))
+
+        # Fallback Freesound
+        freesound_key = nom
+        duree_fs = {"fond_doux": 300.0}.get(nom, 30.0)
+        if chemin and self._telecharger_freesound_musique(
+            freesound_key, chemin, duree_min=3.0, duree_max=duree_fs,
+        ):
+            return AudioSegment.from_mp3(str(chemin))
 
         logger.warning(
             "Asset '%s' introuvable et non générable — silence de remplacement.",
@@ -1331,6 +1437,13 @@ class Monteur:
                 logger.info("Ambiance '%s' générée via ElevenLabs", ambiance)
                 return AudioSegment.from_mp3(str(chemin))
 
+        # Fallback Freesound pour l'ambiance demandée
+        if chemin and self._telecharger_freesound_musique(
+            ambiance, chemin, duree_min=10.0, duree_max=300.0,
+        ):
+            logger.info("Ambiance '%s' téléchargée via Freesound", ambiance)
+            return AudioSegment.from_mp3(str(chemin))
+
         # Fallback vers fond_doux
         if ambiance != "fond_doux":
             logger.warning(
@@ -1339,7 +1452,14 @@ class Monteur:
             )
             return self._charger_asset("fond_doux")
 
-        # Dernier recours : silence
+        # Freesound pour fond_doux
+        chemin_fond = config.AMBIANCES_MUSICALES.get("fond_doux")
+        if chemin_fond and self._telecharger_freesound_musique(
+            "fond_doux", chemin_fond, duree_min=10.0, duree_max=300.0,
+        ):
+            return AudioSegment.from_mp3(str(chemin_fond))
+
+        # Dernier recours : silence (le pré-vol bloquera si nécessaire)
         logger.warning("Aucune musique de fond disponible — silence.")
         return AudioSegment.silent(duration=60_000)
 
@@ -1387,7 +1507,13 @@ class Monteur:
         if self._generer_asset_elevenlabs(TRANSITION_PROMPT, 2.0, chemin):
             return AudioSegment.from_mp3(str(chemin))
 
-        # Fallback : court silence
+        # Fallback Freesound
+        if self._telecharger_freesound_musique(
+            "transition", chemin, duree_min=1.0, duree_max=5.0,
+        ):
+            return AudioSegment.from_mp3(str(chemin))
+
+        # Fallback : court silence (transition non critique)
         logger.debug("Transition entre actes : silence de remplacement.")
         return AudioSegment.silent(duration=500)
 
@@ -1402,6 +1528,12 @@ class Monteur:
             return AudioSegment.from_mp3(str(chemin))
 
         if self._generer_asset_elevenlabs(SIGNATURE_JINGLE_PROMPT, 5.0, chemin):
+            return AudioSegment.from_mp3(str(chemin))
+
+        # Fallback Freesound
+        if self._telecharger_freesound_musique(
+            "signature_jingle", chemin, duree_min=2.0, duree_max=10.0,
+        ):
             return AudioSegment.from_mp3(str(chemin))
 
         logger.warning("Signature jingle non disponible — silence.")
