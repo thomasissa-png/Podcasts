@@ -46,9 +46,9 @@ RÈGLES DE PLANIFICATION :
     Le plan sera REJETÉ automatiquement si un personnage apparaît dans plus d'1 épisode.
     Pour chaque personnage, choisir le moment le PLUS emblématique et raconter l'histoire
     COMPLÈTE de A à Z en un seul épisode (25-35 min = largement suffisant).
-    Exemples CORRECTS (10 épisodes, 10 personnages différents) :
-    Ep1=Création, Ep2=Noé, Ep3=Abraham, Ep4=Jacob, Ep5=Joseph,
-    Ep6=Moïse, Ep7=Josué, Ep8=Samson, Ep9=David, Ep10=Daniel.
+    Exemples CORRECTS (10 épisodes, 10 personnages/histoires différents) :
+    Ep1=Création du monde, Ep2=Adam et Ève, Ep3=Noé, Ep4=Abraham,
+    Ep5=Joseph, Ep6=Moïse, Ep7=David, Ep8=Salomon, Ep9=Daniel, Ep10=Jonas.
     Exemples INTERDITS :
     Ep1=Moïse et le buisson, Ep2=Moïse et l'Exode, Ep3=Moïse et la mer Rouge (3x Moïse!)
     Ep1=Joseph vendu, Ep2=Joseph en Égypte, Ep3=Joseph viceroy (3x Joseph!)
@@ -57,8 +57,8 @@ RÈGLES DE PLANIFICATION :
 12. ORDRE CHRONOLOGIQUE — RÈGLE ABSOLUE : Les histoires bibliques DOIVENT être
     présentées dans l'ordre chronologique de la Bible / de l'Histoire. C'est un
     podcast éducatif pour enfants : on suit le fil de l'Histoire de manière
-    progressive. Exemples pour l'Ancien Testament : Création → Noé → Abraham →
-    Isaac → Jacob → Joseph → Moïse → Josué → Juges → David → Salomon → Prophètes.
+    progressive. Exemples pour l'Ancien Testament : Création → Adam et Ève →
+    Noé → Abraham → Joseph → Moïse → David → Salomon → Daniel → Jonas.
     Exemples pour la vie de Jésus : Annonciation → Nativité → Fuite en Égypte →
     Baptême → Premiers miracles → Paraboles → Entrée à Jérusalem → Cène → Passion.
     JAMAIS un épisode tardif de la saison sur un événement antérieur à l'épisode 1.
@@ -179,6 +179,7 @@ class Planificateur:
 
         # Injecter le périmètre biblique de la saison (si défini)
         perimetre = config.PERIMETRES_SAISONS.get(numero_saison)
+        episodes_imposes = None
         if perimetre:
             prompt += (
                 f"\n⚠️ PÉRIMÈTRE BIBLIQUE OBLIGATOIRE pour la saison {numero_saison} :\n"
@@ -186,6 +187,7 @@ class Planificateur:
                 f"  {perimetre['description']}\n"
                 f"  Toute histoire hors de ce périmètre sera REJETÉE.\n\n"
             )
+            episodes_imposes = perimetre.get("episodes_imposes")
 
         if personnages_secondaires:
             prompt += (
@@ -375,6 +377,19 @@ class Planificateur:
                 )
             break
 
+        # Forcer les histoire_biblique imposées (si définies dans le périmètre)
+        if episodes_imposes:
+            plan_eps = plan["saison"]["episodes"]
+            for idx, histoire in enumerate(episodes_imposes):
+                if idx < len(plan_eps):
+                    ancien = plan_eps[idx].get("histoire_biblique", "")
+                    if ancien != histoire:
+                        logger.info(
+                            "Épisode %d : histoire_biblique forcée '%s' → '%s'",
+                            idx + 1, ancien, histoire,
+                        )
+                    plan_eps[idx]["histoire_biblique"] = histoire
+
         logger.info(
             "Saison %d planifiée : %d épisodes, thème '%s'",
             numero_saison,
@@ -526,7 +541,7 @@ class Planificateur:
             "saül": 36, "saul": 36, "david": 38, "goliath": 38,
             "salomon": 40, "temple": 40,
             "élie": 45, "elie": 45, "élisée": 46, "elisee": 46,
-            "jonas": 48, "daniel": 50, "esther": 52,
+            "daniel": 48, "jonas": 50, "esther": 52,
             # Nouveau Testament — Jésus (100-199)
             "annonciation": 100, "nativité": 101, "nativite": 101,
             "mages": 102, "bethléem": 101, "bethleem": 101,

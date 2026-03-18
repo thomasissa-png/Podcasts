@@ -811,22 +811,38 @@ def liste_saisons() -> list[int]:
 # Injecté automatiquement dans le prompt du planificateur.
 PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
     1: {
-        "perimetre": "Ancien Testament uniquement — ordre chronologique — UN épisode par personnage biblique",
+        "perimetre": "Ancien Testament uniquement — ordre chronologique IMPOSÉ — 10 histoires FIXES",
         "description": (
-            "Histoires de l'Ancien Testament exclusivement, dans l'ORDRE "
-            "CHRONOLOGIQUE de la Bible. CHAQUE ÉPISODE = UN PERSONNAGE BIBLIQUE DIFFÉRENT. "
-            "Exemples de bonne répartition pour 10 épisodes : "
-            "La Création du monde → Noé et le Déluge → Abraham et le sacrifice d'Isaac → "
-            "Jacob et l'échelle céleste → Joseph vendu par ses frères → "
-            "Moïse et le buisson ardent → Josué et les murs de Jéricho → "
-            "Samson le colosse → David contre Goliath → Daniel dans la fosse aux lions. "
-            "INTERDIT : plusieurs épisodes sur le même personnage (ex: 3 épisodes "
-            "sur Moïse ou 2 épisodes sur Joseph). Choisir le moment le PLUS "
-            "emblématique de chaque personnage et raconter l'histoire COMPLÈTE en 1 épisode. "
+            "Histoires de l'Ancien Testament exclusivement. "
+            "Les 10 épisodes sont IMPOSÉS dans cet ordre EXACT — NE PAS CHANGER :\n"
+            "  Épisode 1 : La création du monde\n"
+            "  Épisode 2 : Adam et Ève — le fruit défendu\n"
+            "  Épisode 3 : Noé et le déluge\n"
+            "  Épisode 4 : Abraham — quitter tout par confiance\n"
+            "  Épisode 5 : Joseph et la tunique de couleurs\n"
+            "  Épisode 6 : Moïse — l'enfant du Nil et la mer qui s'ouvre\n"
+            "  Épisode 7 : David et Goliath\n"
+            "  Épisode 8 : Salomon — le roi sage\n"
+            "  Épisode 9 : Daniel dans la fosse aux lions\n"
+            "  Épisode 10 : Jonas — avalé par une baleine\n"
+            "Tu DOIS utiliser EXACTEMENT ces histoire_biblique pour chaque épisode, "
+            "dans cet ordre. Tu peux choisir les titres, résumés, morales et prétextes "
+            "librement, mais l'histoire_biblique de chaque épisode est FIXÉE. "
             "AUCUNE histoire du Nouveau Testament. "
-            "L'épisode 1 DOIT commencer au début (Genèse) et le dernier "
-            "DOIT se situer chronologiquement après tous les précédents."
+            "INTERDIT : changer l'ordre, remplacer une histoire, ou ajouter des histoires."
         ),
+        "episodes_imposes": [
+            "La création du monde",
+            "Adam et Ève — le fruit défendu",
+            "Noé et le déluge",
+            "Abraham — quitter tout par confiance",
+            "Joseph et la tunique de couleurs",
+            "Moïse — l'enfant du Nil et la mer qui s'ouvre",
+            "David et Goliath",
+            "Salomon — le roi sage",
+            "Daniel dans la fosse aux lions",
+            "Jonas — avalé par une baleine",
+        ],
     },
     2: {
         "perimetre": "Jésus — de la naissance à la mort — ordre chronologique",

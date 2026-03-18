@@ -590,12 +590,31 @@ PERSONAS D'AUDIENCE :
 {personas}
 
 ÉVALUATION :
-1. TITRE — Est-il accrocheur, court (<60 chars), évocateur pour un enfant ET un parent ?
-   Éviter les titres génériques ("L'histoire de..."), préférer l'intrigue ou l'émotion.
+1. TITRE — DEUX critères OBLIGATOIRES :
+   a) ACCROCHEUR : court (<60 chars), évocateur pour un enfant ET un parent.
+      Éviter les titres génériques ("L'histoire de..."), préférer l'intrigue ou l'émotion.
+   b) CHERCHABLE / SEO PODCAST : Un parent qui cherche "histoire biblique enfant",
+      "David Goliath podcast", "bible enfant" ou le nom du personnage biblique sur
+      Apple Podcasts / Spotify DOIT pouvoir trouver cet épisode.
+      Le titre DOIT contenir le nom du personnage ou de l'histoire biblique de manière
+      explicite et reconnaissable. Exemples :
+      BON : "David contre Goliath — le berger qui terrasse un géant"
+        → Cherchable (David, Goliath) + Accrocheur (intrigue)
+      BON : "Jonas et la baleine — avalé en pleine mer !"
+        → Cherchable (Jonas, baleine) + Accrocheur (suspense)
+      MAUVAIS : "Le courage d'un petit berger"
+        → Accrocheur mais INTROUVABLE (pas de nom biblique)
+      MAUVAIS : "Épisode 7 : David"
+        → Cherchable mais pas accrocheur
+      CRITIQUE : Si le titre ne contient PAS le nom du personnage/histoire biblique,
+      c'est un défaut BLOQUANT — verdict "retravailler".
 2. DESCRIPTION COURTE — Donne-t-elle envie d'écouter en 2-3 phrases ?
    Un parent scroll vite — la 1ère phrase doit captiver.
+   La description doit aussi contenir des mots-clés cherchables (nom biblique,
+   thème, "podcast enfant", "histoire biblique").
 3. MOTS-CLÉS — Sont-ils pertinents pour le SEO podcast ?
-   Inclure : thème biblique, personnages, émotion principale.
+   Inclure : thème biblique, personnages, émotion principale, "bible enfant",
+   "histoire biblique", "podcast chrétien enfant".
 4. COHÉRENCE — Les métadonnées reflètent-elles fidèlement le contenu ?
    Pas de promesses non tenues (clickbait).
 
@@ -604,9 +623,11 @@ FORMAT DE RÉPONSE — JSON STRICT :
   "verdict": "feu_vert|ajustements_mineurs|retravailler",
   "note": 8,
   "titre_avis": "Avis sur le titre — ce qui fonctionne et ce qui pourrait être amélioré.",
+  "titre_cherchable": true,
+  "titre_contient_nom_biblique": true,
   "description_avis": "Avis sur la description.",
   "suggestions": {{
-    "titres_alternatifs": ["Titre alternatif 1", "Titre alternatif 2"],
+    "titres_alternatifs": ["Titre alternatif 1 (accrocheur ET cherchable)", "Titre alternatif 2"],
     "description_amelioree": "Version améliorée de la description si nécessaire.",
     "mots_cles_manquants": ["mot-clé 1"]
   }},

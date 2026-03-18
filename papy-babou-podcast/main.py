@@ -4970,8 +4970,12 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
     ))
 
     # Charger les saisons précédentes pour continuité
+    # IMPORTANT : exclure la saison courante pour éviter que le LLM
+    # ne l'interprète comme "déjà existante" et incrémente le numéro
     saisons_prec = []
     for num in config.liste_saisons():
+        if num >= saison:
+            continue
         plan_prec = config.charger_saison(num)
         if plan_prec:
             saison_data_prec = plan_prec.get("saison", {})
@@ -4985,6 +4989,8 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
     # Charger les archives de saisons précédentes pour continuité renforcée
     archives_saisons = []
     for num in config.liste_saisons():
+        if num >= saison:
+            continue
         chemin_archive = config.ARCHIVES_DIR / f"archive_saison_{num:02d}.json"
         if chemin_archive.exists():
             try:
@@ -5017,6 +5023,9 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
             nb_episodes=nb_episodes,
             archives_saisons=archives_saisons or None,
         )
+
+        # Forcer le numéro de saison dans le plan (le LLM peut l'avoir changé)
+        plan.setdefault("saison", {})["numero"] = saison
 
         # Intégrer les événements spéciaux dans le plan
         plan = Planificateur.integrer_evenements_speciaux(plan)
