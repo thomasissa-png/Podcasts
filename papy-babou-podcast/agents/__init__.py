@@ -9,6 +9,7 @@ from .publisher import Publisher
 from .sfx_provider import SfxProvider
 from .cover_art import CoverArt
 from .planificateur import Planificateur
+from .directeur_podcast import DirecteurPodcast
 
 __all__ = [
     "Scripteur",
@@ -20,4 +21,5 @@ __all__ = [
     "Publisher",
     "CoverArt",
     "Planificateur",
+    "DirecteurPodcast",
 ]

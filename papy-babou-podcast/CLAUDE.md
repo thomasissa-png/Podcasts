@@ -12,9 +12,10 @@ papy-babou-podcast/
 ├── config.py                # Central config, API keys, rate limiters, season mgmt
 ├── utils.py                 # Shared utilities: JSON parsing, file locking, secret masking
 ├── agents/
-│   ├── __init__.py          # Exports all 9 agents
+│   ├── __init__.py          # Exports all 10 agents
 │   ├── scripteur.py         # Script generation (Claude API) — serial-aware
 │   ├── reviewer.py          # Script review (Claude API) — type-aware criteria
+│   ├── directeur_podcast.py # Creative director + audience personas validation (Claude API)
 │   ├── producteur_audio.py  # TTS via ElevenLabs (parallel, per-character voices)
 │   ├── sfx_provider.py      # SFX: ElevenLabs → Freesound → silence fallback
 │   ├── monteur.py           # Audio assembly: jingles, mixing, LUFS, chapters
@@ -1221,3 +1222,62 @@ Root cause diagnosis of 18 consecutive montage failures: invisible subprocess lo
 
 ### Tests (Session 18)
 - Full suite: 579 passed, 3 skipped (ffmpeg), 0 failures
+
+## Onomatopoeia Removal & Directeur Podcast Agent (Session 19)
+
+### Onomatopoeia Removal for AI Voice Compatibility
+ElevenLabs voices pronounce onomatopoeia literally ("hache-i-hache-i"), sounding unnatural.
+
+- **Rule 15 in scripteur prompt**: "ADAPTATION VOIX IA" — explicitly prohibits all written onomatopoeia (hahaha, hihihi, euh, oh là là, etc.) with verbal alternatives
+- **`Scripteur._nettoyer_onomatopees()`**: Post-generation filter that:
+  - Removes pure-onomatopoeia segments (e.g., "Hihihi !")
+  - Strips onomatopoeia prefixes (e.g., "Ah c'est rigolo" → "C'est rigolo")
+  - Cleans inline laughs (e.g., "C'est super Hahaha on continue" → "C'est super on continue")
+  - Recapitalizes after prefix removal
+- **Bible updates**: Tics de langage cleaned in `personnages.json` and `_BIBLE_FALLBACK`:
+  - "Hihihi ! C'est trop drôle !" → "C'est trop drôle !"
+  - "Ah mes petits loups" → "Mes petits loups"
+  - "Oh non, le pauvre" → "Le pauvre, quand même"
+  - "Wahou !" → "C'est incroyable !"
+
+### Directeur Podcast Agent — Creative Director + Audience Personas
+New agent `DirecteurPodcast` (`agents/directeur_podcast.py`) for final creative validation.
+
+**Role**: "Marc Delacroix", the #1 French children's podcast director. Validates scripts after the Reviewer, as a creative quality gate.
+
+**5 Evaluation Axes** (each scored /10):
+1. **Immersion sonore**: SFX placement, ambiance transitions, sound design
+2. **Rythme & accroche**: Hook quality, pacing, attention retention
+3. **Émotion & personnages**: Character depth, emotional arc, humor
+4. **Valeur éducative**: Biblical fidelity, educational richness, moral delivery
+5. **Compatibilité voix IA**: Segment optimization for ElevenLabs, tone variety, pauses
+
+**3 Verdicts**: `feu_vert` (≥7.5 + no critiques), `ajustements_mineurs`, `retravailler` (<6)
+
+**3 Audience Personas**:
+- **Lina (7 ans, fille)**: CE1, attention 15-20min, loves Noémie, sensitive to fear. Criteria: vocabulary, curiosity, humor, rhythm, SFX immersion. Weight: 30%.
+- **Noah (10 ans, garçon)**: CM2, finds "baby stuff" boring, action-oriented, compares with Les Odyssées. Criteria: sophistication, learning, action, credibility, production quality. Weight: 30%.
+- **Sophie (45 ans, parent catholique)**: 3 children, exigent on biblical fidelity, wants joyful faith transmission not moralization. Criteria: fidelity, tone, discussion triggers, multi-age, quality. Weight: 40%.
+
+Note audience = Lina×0.3 + Noah×0.3 + Sophie×0.4 (parent weighs more).
+
+**Pipeline Integration**: Runs after reviewer post-generation checks, before human validation. Results in `rapport["etapes"]["directeur_podcast"]`. Wrapped in try/except — failure doesn't block pipeline.
+
+### When modifying directeur_podcast.py
+- System prompt uses `{{` / `}}` for `.format()` compatibility (like reviewer)
+- Always use `config.appel_claude_avec_retry()` for API calls
+- Always use `parser_json_llm()` from utils.py
+- `_MAX_TOKENS_PAR_TYPE` mirrors scripteur pattern (final=8192, standard=4096)
+- `_valider_resultat()` checks all 5 axes + all 3 personas + valid verdict
+- Pipeline catches all exceptions — agent failure is non-blocking
+
+### When modifying main.py (Session 19)
+- `DirecteurPodcast` imported alongside other agents
+- Directeur evaluation runs AFTER reviewer post-generation checks and BEFORE `_log_step_duration("Script + Review")`
+- Contexte dict passed: `type_episode`, `score_reviewer`, `alertes`, `metriques`
+- Results stored in `rapport["etapes"]["directeur_podcast"]` with: `note_globale`, `verdict`, `note_audience`, `axes`, `nb_recommandations_critiques`, `personas`
+
+### Tests (Session 19)
+- 12 new tests in test_scripteur.py (TestNettoyerOnomatopees)
+- 34 new tests in test_directeur_podcast.py: TestPersonas (7), TestPrompts (7), TestValidation (7), TestUtilitaires (9), TestEvaluer (5)
+- Full scripteur + directeur suite: 123 passed, 0 failures

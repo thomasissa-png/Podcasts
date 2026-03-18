@@ -37,7 +37,7 @@ import config
 from utils import fichier_lock, ouvrir_fichier, slug as _slug
 from agents import (
     Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur,
-    Metadonnees, Publisher, CoverArt, Planificateur,
+    Metadonnees, Publisher, CoverArt, Planificateur, DirecteurPodcast,
 )
 from theme import (
     Palette, Icons, Typo, NOMS_PERSONNAGES_STYLED,
@@ -2704,6 +2704,87 @@ def _pipeline_inner(
                 rapport["etapes"]["script"]["object_storage"] = script_key
         except Exception as e:
             logger.warning("Object Storage indisponible pour script : %s", e)
+
+        # ── Directeur Podcast — validation créative + audience ────────────
+        console.print(f"\n{Typo.etape(2, 8, 'Validation Directeur Podcast')}")
+        try:
+            directeur = DirecteurPodcast()
+            contexte_directeur = {
+                "type_episode": type_episode,
+                "score_reviewer": score,
+                "alertes": rapport.get("alertes_post_generation", []),
+                "metriques": rapport.get("metriques", {}),
+            }
+            resultat_directeur = directeur.evaluer(script, contexte=contexte_directeur)
+            dir_data = resultat_directeur.get("directeur", {})
+            note_dir = dir_data.get("note_globale", 0)
+            verdict = dir_data.get("verdict", "?")
+            note_aud = directeur.note_audience(resultat_directeur)
+
+            # Affichage verdict
+            couleur_verdict = {
+                "feu_vert": Palette.SUCCES,
+                "ajustements_mineurs": "yellow",
+                "retravailler": "red",
+            }.get(verdict, "white")
+            console.print(
+                f"  Directeur : [{couleur_verdict}]{verdict.replace('_', ' ').upper()}[/] "
+                f"(note {note_dir}/10, audience {note_aud}/10)"
+            )
+
+            # Synthèse
+            if dir_data.get("synthese"):
+                console.print(f"  {Typo.dim(dir_data['synthese'])}")
+
+            # Axes détaillés
+            for axe_nom, axe_data in dir_data.get("axes", {}).items():
+                axe_label = axe_nom.replace("_", " ").title()
+                axe_note = axe_data.get("note", 0)
+                console.print(f"    {axe_label} : {axe_note}/10")
+
+            # Recommandations
+            recommandations = directeur.extraire_recommandations(resultat_directeur)
+            if recommandations:
+                console.print("[yellow]  Recommandations :[/yellow]")
+                for r in recommandations:
+                    console.print(f"    - {r}")
+
+            # Points forts
+            points_forts = dir_data.get("points_forts", [])
+            if points_forts:
+                console.print(f"[{Palette.SUCCES}]  Points forts :[/]")
+                for p in points_forts:
+                    console.print(f"    + {p}")
+
+            # Réactions des personas
+            personas = resultat_directeur.get("personas", {})
+            for persona_key, persona_data in personas.items():
+                nom = persona_key.replace("_", " ").title()
+                reaction = persona_data.get("reaction", "")
+                p_note = persona_data.get("note", 0)
+                console.print(f"  {Typo.dim(f'{nom} ({p_note}/10) : {reaction}')}")
+
+            # Sauvegarder dans le rapport
+            rapport["etapes"]["directeur_podcast"] = {
+                "note_globale": note_dir,
+                "verdict": verdict,
+                "note_audience": note_aud,
+                "axes": {
+                    k: v.get("note", 0) for k, v in dir_data.get("axes", {}).items()
+                },
+                "nb_recommandations_critiques": sum(
+                    1 for r in dir_data.get("recommandations", [])
+                    if r.get("priorite") == "critique"
+                ),
+                "personas": {
+                    k: {"note": v.get("note", 0)}
+                    for k, v in personas.items()
+                },
+            }
+
+        except Exception as e:
+            logger.warning("Directeur Podcast indisponible : %s", e)
+            console.print(f"[yellow]  Directeur Podcast non disponible : {e}[/yellow]")
 
         _log_step_duration("Script + Review")
 
