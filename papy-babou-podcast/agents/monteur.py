@@ -313,37 +313,60 @@ class Monteur:
         segments_dir: Path,
         episode: dict,
     ) -> None:
-        """Vérifie que tous les assets audio requis existent avant le montage.
+        """Vérifie que les segments voix requis existent avant le montage.
 
-        Tente de générer via ElevenLabs les assets manquants.
-        Lève RuntimeError avec la liste complète des assets introuvables
-        si certains restent manquants après tentative de génération.
+        Seuls les segments voix sont bloquants — les jingles et ambiances
+        ont un fallback silence intégré et sont générés à la volée pendant
+        le montage via ElevenLabs/Freesound. Les bloquer ici empêche
+        le montage de s'exécuter sur un container sans assets locaux.
         """
         manquants: list[str] = []
 
-        # 1. Jingle intro
-        intro = self._charger_jingle("intro", type_episode, numero_saison)
-        if len(intro) == 0 or intro.dBFS == float("-inf"):
-            manquants.append("intro_jingle (jingle d'ouverture)")
+        # ── Jingles/ambiance : tentative de pré-chargement (non bloquant) ──
+        # On tente de charger/générer les assets musicaux pour diagnostic,
+        # mais on ne bloque PAS si ça échoue — le montage utilisera du silence.
+        assets_warns: list[str] = []
+        try:
+            intro = self._charger_jingle("intro", type_episode, numero_saison)
+            if len(intro) == 0 or intro.dBFS == float("-inf"):
+                assets_warns.append("intro_jingle")
+        except Exception as e:
+            assets_warns.append(f"intro_jingle ({e})")
 
-        # 2. Jingle outro
-        outro = self._charger_jingle("outro", type_episode, numero_saison)
-        if len(outro) == 0 or outro.dBFS == float("-inf"):
-            manquants.append("outro_jingle (jingle de clôture)")
+        try:
+            outro = self._charger_jingle("outro", type_episode, numero_saison)
+            if len(outro) == 0 or outro.dBFS == float("-inf"):
+                assets_warns.append("outro_jingle")
+        except Exception as e:
+            assets_warns.append(f"outro_jingle ({e})")
 
-        # 3. Signature
-        signature = self._charger_signature()
-        if len(signature) == 0 or signature.dBFS == float("-inf"):
-            manquants.append("signature_jingle (générique récurrent)")
+        try:
+            signature = self._charger_signature()
+            if len(signature) == 0 or signature.dBFS == float("-inf"):
+                assets_warns.append("signature_jingle")
+        except Exception as e:
+            assets_warns.append(f"signature_jingle ({e})")
 
-        # 4. Musique de fond (ambiance)
-        fond = self._charger_ambiance(ambiance)
-        if len(fond) == 0 or fond.dBFS == float("-inf"):
-            manquants.append(
-                f"ambiance '{ambiance}' ou fond_doux (musique de fond)"
+        try:
+            fond = self._charger_ambiance(ambiance)
+            if len(fond) == 0 or fond.dBFS == float("-inf"):
+                assets_warns.append(f"ambiance '{ambiance}'")
+        except Exception as e:
+            assets_warns.append(f"ambiance '{ambiance}' ({e})")
+
+        if assets_warns:
+            warn_msg = (
+                f"[monteur] AVERTISSEMENT : {len(assets_warns)} asset(s) musicaux "
+                f"non disponibles (silence utilisé) : {', '.join(assets_warns)}\n"
+            )
+            _sys_mod.stderr.write(warn_msg)
+            _sys_mod.stderr.flush()
+            logger.warning(
+                "Assets musicaux manquants (fallback silence) : %s",
+                ", ".join(assets_warns),
             )
 
-        # 5. Segments voix manquants
+        # ── Segments voix : vérification BLOQUANTE ──
         segments_manquants = []
         for seg in episode["segments"]:
             if seg["personnage"] == "sfx":
@@ -362,42 +385,10 @@ class Monteur:
             )
 
         if manquants:
-            # Diagnostic : montrer l'état réel des API (pas juste des suggestions)
-            el_ok = bool(config.ELEVENLABS_API_KEY)
-            fs_ok = bool(config.FREESOUND_API_KEY)
-            diag_lines = [
-                f"  ELEVENLABS_API_KEY : {'✓ configurée' if el_ok else '✗ MANQUANTE'}",
-                f"  FREESOUND_API_KEY  : {'✓ configurée' if fs_ok else '✗ MANQUANTE'}",
-            ]
-            if el_ok and fs_ok:
-                diag_lines.append(
-                    "  → Les deux API sont configurées mais les tentatives "
-                    "de génération ont échoué."
-                )
-                diag_lines.append(
-                    "  → Vérifiez les logs ci-dessus pour les erreurs détaillées "
-                    "(timeout, quota, endpoint introuvable…)"
-                )
-            elif not el_ok and not fs_ok:
-                diag_lines.append(
-                    "  → Aucune API configurée — impossible de générer les assets."
-                )
             msg = (
-                f"Montage impossible — {len(manquants)} asset(s) audio requis "
-                f"introuvable(s) :\n"
+                f"Montage impossible — {len(manquants)} problème(s) bloquant(s) :\n"
                 + "\n".join(f"  • {m}" for m in manquants)
-                + "\n\nDiagnostic API :\n"
-                + "\n".join(diag_lines)
-                + "\n\nSolutions :\n"
-                + (
-                    "  1. Vérifiez que les clés API sont valides (pas expirées/révoquées)\n"
-                    "  2. Vérifiez la connectivité réseau vers api.elevenlabs.io et freesound.org\n"
-                    "  3. Ou placez les fichiers MP3 manuellement dans assets/music/"
-                    if el_ok or fs_ok else
-                    "  1. Configurez ELEVENLABS_API_KEY pour l'auto-génération\n"
-                    "  2. Configurez FREESOUND_API_KEY pour le fallback Freesound\n"
-                    "  3. Ou placez les fichiers MP3 dans assets/music/"
-                )
+                + "\n\nSolution : relancez la production audio (étape 3)"
             )
             _sys_mod.stderr.write(f"[monteur] ERREUR: {msg}\n")
             _sys_mod.stderr.flush()
