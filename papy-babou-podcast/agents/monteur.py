@@ -346,8 +346,17 @@ class Monteur:
                 _dur = float(_probe.stdout.strip())
                 if _dur < 10:
                     raise ValueError(f"WAV trop court ({_dur:.1f}s)")
+                # Vérifier le sample rate — WAV créés avec l'ancien -c copy
+                # peuvent avoir des sample rates incohérents
+                _sr = self._ffprobe_sample_rate(chemin_wav_intermediaire)
+                if _sr != 0 and _sr != 44100:
+                    raise ValueError(
+                        f"WAV sample rate incohérent ({_sr}Hz, attendu 44100Hz) "
+                        f"— probablement créé avec l'ancien code -c copy"
+                    )
                 logger.info(
-                    "  WAV intermédiaire trouvé — skip vers export (%.1fs)", _dur,
+                    "  WAV intermédiaire trouvé — skip vers export (%.1fs, %dHz)",
+                    _dur, _sr,
                 )
                 _skip_to_export = True
             except Exception as e_wav_load:
