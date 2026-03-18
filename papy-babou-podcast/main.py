@@ -2143,6 +2143,13 @@ def pipeline(
         raise
     except Exception as e:
         # Marquer la production comme échouée en DB (BUG 29)
+        import traceback as _tb_pipeline
+        sys.stderr.write(
+            f"[pipeline {episode_id}] ERREUR FATALE dans pipeline(): "
+            f"{type(e).__name__}: {e}\n"
+            f"{_tb_pipeline.format_exc()}\n"
+        )
+        sys.stderr.flush()
         logger.error("Pipeline échoué pour %s : %s", episode_id, e)
         _pid = getattr(_production_local, 'production_id', None)
         if _use_db() and _pid:
@@ -4277,7 +4284,10 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
     except SystemExit:
         raise  # Ne pas intercepter sys.exit() du SIGTERM handler
     except Exception as e:
+        import traceback as _tb
+        _full_tb = _tb.format_exc()
         _log_direct(f"ERREUR FATALE : {type(e).__name__}: {e}")
+        _log_direct(f"TRACEBACK COMPLET:\n{_full_tb}")
         console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
         logger.exception("Erreur lors de la reprise")
         # CRITICAL: Marquer la production 'failed' en DB pour éviter que
