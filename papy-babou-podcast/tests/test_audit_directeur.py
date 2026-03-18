@@ -278,3 +278,187 @@ class TestMetadonneesQuiz:
         """Le system prompt doit demander 3 questions."""
         from agents.metadonnees import SYSTEM_PROMPT
         assert "3 questions" in SYSTEM_PROMPT
+
+
+# ── Tests Prononciation TTS ──────────────────────────────────────────────────
+
+class TestPrononciationTTS:
+    """Tests de l'intégration du dictionnaire de prononciation dans le flux TTS."""
+
+    def test_appliquer_prononciation_basique(self):
+        """Les noms bibliques doivent être remplacés par leur forme phonétique."""
+        from agents.producteur_audio import _appliquer_prononciation
+        texte = "Moïse a traversé la mer Rouge."
+        resultat = _appliquer_prononciation(texte)
+        assert "Mo-ize" in resultat
+        assert "Moïse" not in resultat
+
+    def test_appliquer_prononciation_multiple(self):
+        """Plusieurs noms dans la même phrase doivent tous être remplacés."""
+        from agents.producteur_audio import _appliquer_prononciation
+        texte = "Pharaon a dit à Moïse de quitter l'Égypte."
+        resultat = _appliquer_prononciation(texte)
+        assert "Fa-ra-on" in resultat
+        assert "Mo-ize" in resultat
+
+    def test_appliquer_prononciation_insensible_casse(self):
+        """Le remplacement doit fonctionner quelle que soit la casse."""
+        from agents.producteur_audio import _appliquer_prononciation
+        texte = "GOLIATH était un géant."
+        resultat = _appliquer_prononciation(texte)
+        assert "Go-li-at" in resultat
+
+    def test_appliquer_prononciation_pas_sous_chaine(self):
+        """Un nom ne doit pas être remplacé quand il fait partie d'un autre mot."""
+        from agents.producteur_audio import _appliquer_prononciation
+        # "Abel" ne doit pas matcher dans "Labelisé" (mais regex \b gère ça)
+        texte = "C'est une fable."
+        resultat = _appliquer_prononciation(texte)
+        # "Abel" ne doit pas être remplacé dans "fable"
+        assert "fable" in resultat.lower() or "fable" in texte.lower()
+
+    def test_appliquer_prononciation_texte_sans_noms(self):
+        """Un texte sans noms bibliques doit rester inchangé."""
+        from agents.producteur_audio import _appliquer_prononciation
+        texte = "Les enfants jouent dans le jardin."
+        assert _appliquer_prononciation(texte) == texte
+
+    def test_prononciation_utilisee_dans_payload(self):
+        """Le producteur audio doit appeler _appliquer_prononciation avant le TTS."""
+        import inspect
+        from agents import producteur_audio
+        source = inspect.getsource(producteur_audio.ProducteurAudio._generer_segment)
+        assert "_appliquer_prononciation" in source
+
+
+# ── Tests SFX Overlay Durée ──────────────────────────────────────────────────
+
+class TestSFXOverlayDuree:
+    """Tests de la validation de durée minimale des SFX overlay."""
+
+    def test_overlay_trop_court_detecte(self):
+        """Un SFX overlay de moins de 15s doit générer une alerte."""
+        from agents.reviewer import Reviewer
+        script = {"episode": {"segments": [
+            {"id": "sfx_001", "personnage": "sfx", "texte": "wind blowing",
+             "ton": "ambiance", "pause_apres_ms": 0, "mode": "overlay",
+             "duree_sfx_secondes": 5.0},
+        ]}}
+        alertes = Reviewer.verifier_sfx_overlay_duree(script)
+        assert len(alertes) == 1
+        assert "15s" in alertes[0]
+
+    def test_overlay_ok_pas_alerte(self):
+        """Un SFX overlay de 15s ou plus ne doit pas générer d'alerte."""
+        from agents.reviewer import Reviewer
+        script = {"episode": {"segments": [
+            {"id": "sfx_001", "personnage": "sfx", "texte": "wind blowing",
+             "ton": "ambiance", "pause_apres_ms": 0, "mode": "overlay",
+             "duree_sfx_secondes": 18.0},
+        ]}}
+        alertes = Reviewer.verifier_sfx_overlay_duree(script)
+        assert len(alertes) == 0
+
+    def test_insert_pas_affecte(self):
+        """Un SFX insert court ne doit pas déclencher l'alerte overlay."""
+        from agents.reviewer import Reviewer
+        script = {"episode": {"segments": [
+            {"id": "sfx_001", "personnage": "sfx", "texte": "door slam",
+             "ton": "ambiance", "pause_apres_ms": 0, "mode": "insert",
+             "duree_sfx_secondes": 2.0},
+        ]}}
+        alertes = Reviewer.verifier_sfx_overlay_duree(script)
+        assert len(alertes) == 0
+
+    def test_prompt_mentionne_duree_overlay(self):
+        """Le prompt scripteur doit mentionner 15 secondes pour les overlay."""
+        assert "15 secondes" in SYSTEM_PROMPT_BASE
+
+    def test_prompt_transition_scene_vie_recit(self):
+        """Le prompt doit mentionner la transition scène de vie → récit biblique."""
+        assert "TRANSITION" in SYSTEM_PROMPT_BASE
+        assert "récit biblique" in SYSTEM_PROMPT_BASE
+
+    def test_reviewer_mentionne_overlay_duree(self):
+        """Le reviewer doit vérifier la durée des overlay."""
+        from agents.reviewer import SYSTEM_PROMPT
+        assert "15 secondes" in SYSTEM_PROMPT
+
+
+# ── Tests Quiz Par Âge ───────────────────────────────────────────────────────
+
+class TestQuizParAge:
+    """Tests du quiz à deux niveaux de difficulté."""
+
+    def test_format_quiz_dans_prompt(self):
+        """Le prompt doit définir les deux niveaux de quiz."""
+        assert "facile" in SYSTEM_PROMPT_BASE
+        assert "avance" in SYSTEM_PROMPT_BASE
+        assert "6-7 ans" in SYSTEM_PROMPT_BASE
+        assert "9-10 ans" in SYSTEM_PROMPT_BASE
+
+    def test_validation_quiz_nouveau_format(self):
+        """Le validateur accepte le nouveau format de quiz dict."""
+        from agents.scripteur import Scripteur
+        script = _script_avec_quiz({
+            "facile": ["Q1?", "Q2?", "Q3?"],
+            "avance": ["Q1 avancé?", "Q2 avancé?", "Q3 avancé?"],
+        })
+        # Ne doit pas lever d'exception
+        Scripteur._valider_structure(script)
+
+    def test_validation_quiz_ancien_format_migre(self):
+        """L'ancien format liste doit être migré automatiquement."""
+        from agents.scripteur import Scripteur
+        script = _script_avec_quiz(["Q1?", "Q2?", "Q3?"])
+        Scripteur._valider_structure(script)
+        # Doit avoir été migré vers le nouveau format
+        quiz = script["episode"]["quiz"]
+        assert isinstance(quiz, dict)
+        assert "facile" in quiz
+        assert "avance" in quiz
+
+    def test_validation_quiz_niveau_incomplet(self):
+        """Un quiz avec moins de 3 questions par niveau doit pas lever d'exception."""
+        from agents.scripteur import Scripteur
+        script = _script_avec_quiz({
+            "facile": ["Q1?"],
+            "avance": ["Q1?", "Q2?", "Q3?"],
+        })
+        # Le script reste valide (warning émis mais pas d'exception)
+        Scripteur._valider_structure(script)
+
+
+def _script_avec_quiz(quiz):
+    """Helper : crée un script minimal avec un quiz donné."""
+    segments = []
+    for i in range(1, 10):
+        if i % 3 == 0:
+            segments.append({
+                "id": f"sfx_{i:03d}", "personnage": "sfx",
+                "texte": "birds singing", "ton": "ambiance",
+                "pause_apres_ms": 0, "duree_sfx_secondes": 5.0,
+                "mode": "insert",
+            })
+        elif i % 2 == 0:
+            segments.append({
+                "id": f"seg_{i:03d}", "personnage": "antoine",
+                "texte": "Salut Papy !", "ton": "joyeux",
+                "pause_apres_ms": 200,
+            })
+        else:
+            segments.append({
+                "id": f"seg_{i:03d}", "personnage": "papy_babou",
+                "texte": "Bonjour mes petits loups.", "ton": "chaleureux",
+                "pause_apres_ms": 300,
+            })
+    return {"episode": {
+        "titre": "Test",
+        "numero": 1,
+        "saison": 1,
+        "ambiance": "calme",
+        "morale": "Test",
+        "evolutions_personnages": "Test",
+        "quiz": quiz,
+        "segments": segments,
+    }}

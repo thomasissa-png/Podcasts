@@ -87,10 +87,13 @@ RÈGLES STRICTES :
     Les SFX sont ESSENTIELS pour compenser les limites des voix IA et créer une immersion totale.
     - Le champ "texte" contient une description courte du son EN ANGLAIS (pour l'API de génération).
       Exemples : "door creaking open slowly", "birds singing in morning sun", "thunder rumbling".
-    - Le champ "duree_sfx_secondes" indique la durée souhaitée (2 à 10 secondes).
+    - Le champ "duree_sfx_secondes" indique la durée souhaitée (2 à 10 secondes pour les "insert",
+      15 à 20 secondes pour les "overlay" d'ambiance continue).
     - Le champ "mode" indique "overlay" (superposé aux voix suivantes) ou "insert" (séquentiel).
       Utilise "overlay" pour les ambiances de fond (vent, pluie, nature) et "insert" pour les
       effets ponctuels (tonnerre, porte qui claque, cri d'animal).
+    - DURÉE MINIMALE OVERLAY : les SFX "overlay" d'ambiance doivent durer au moins 15 secondes
+      pour couvrir les passages de narration. Une ambiance de 3 secondes ne sert à rien.
     - OBLIGATOIRE : au minimum 25 bruitages par épisode, idéalement 30-35. Chaque acte doit avoir
       au moins 8 bruitages. Les SFX doivent être CONTINUS — il ne doit JAMAIS y avoir plus de
       2 minutes sans un bruitage "overlay" ou "insert".
@@ -109,6 +112,12 @@ RÈGLES STRICTES :
       * Scène de combat : "swords clashing, shields banging, crowd shouting in distance"
       * Transition de lieu : "magical whooshing transition, soft wind chime"
       * Moment d'émotion : "soft gentle heartbeat sound, warm quiet ambiance"
+    - TRANSITION SCÈNE DE VIE → RÉCIT BIBLIQUE : à chaque fois que Papy commence à raconter
+      l'histoire biblique (passage du salon normand au monde biblique), insérer un SFX "insert"
+      de transition (ex: "magical dreamlike transition whoosh, soft harp glissando, entering
+      ancient world"). Ce SFX marque le changement d'univers pour l'auditeur. De même, quand
+      on revient du récit à la scène de vie, un SFX de retour (ex: "gentle return transition,
+      warm room ambiance fading in, clock ticking softly").
 11. AMBIANCE MUSICALE : choisis l'ambiance générale de l'épisode parmi :
     "joyeux", "dramatique", "calme", "mystere", "epique", "tendre", "humoristique", "solennel".
     Indique-la dans le champ "ambiance" de l'épisode.
@@ -215,11 +224,18 @@ FORMAT DE SORTIE — JSON STRICT :
     "personnages_presents": ["papy_babou", "antoine", "noemie"],
     "moments_cles": ["Moment important 1", "Moment important 2"],
     "evolutions_personnages": "Résumé en 1-2 phrases de comment les personnages ont évolué dans cet épisode (émotions, apprentissages, relations).",
-    "quiz": [
-      "Question 1 sur l'histoire biblique (réponse courte possible pour un enfant)",
-      "Question 2 sur un personnage ou un lieu de l'histoire",
-      "Question 3 sur la morale ou la leçon de vie"
-    ],
+    "quiz": {{
+      "facile": [
+        "Question factuelle simple pour 6-7 ans (réponse en 1-2 mots)",
+        "Question sur un personnage ou un lieu (réponse évidente dans l'épisode)",
+        "Question sur l'émotion ou la morale (réponse intuitive)"
+      ],
+      "avance": [
+        "Question factuelle détaillée pour 9-10 ans (requiert attention aux détails)",
+        "Question de compréhension (pourquoi un personnage a agi ainsi ?)",
+        "Question de réflexion (lien avec la vie quotidienne ou autre histoire)"
+      ]
+    }},
     "segments": [
       {{
         "id": "seg_001",
@@ -1463,3 +1479,25 @@ class Scripteur:
                 "l'historique inter-épisodes perdra la trace de l'évolution "
                 "des personnages pour cet épisode."
             )
+
+        # Vérifier le quiz à deux niveaux (facile/avancé)
+        quiz = ep.get("quiz")
+        if quiz is None:
+            logger.warning("Champ 'quiz' manquant dans le script.")
+        elif isinstance(quiz, list):
+            # Ancien format (liste simple) — migrer vers le nouveau format
+            logger.warning(
+                "Quiz au format liste simple — migration vers format facile/avancé."
+            )
+            ep["quiz"] = {
+                "facile": quiz[:3] if len(quiz) >= 3 else quiz,
+                "avance": quiz[:3] if len(quiz) >= 3 else quiz,
+            }
+        elif isinstance(quiz, dict):
+            for niveau in ("facile", "avance"):
+                questions = quiz.get(niveau, [])
+                if not questions or len(questions) < 3:
+                    logger.warning(
+                        "Quiz niveau '%s' : %d questions (minimum 3).",
+                        niveau, len(questions) if questions else 0,
+                    )

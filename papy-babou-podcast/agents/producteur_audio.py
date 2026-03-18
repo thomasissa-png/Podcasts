@@ -2,6 +2,7 @@
 
 import logging
 import random
+import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -37,6 +38,26 @@ TONE_VOICE_ADJUSTMENTS: dict[str, dict[str, float]] = {
     "effrayé":       {"stability": -0.20, "similarity_boost": +0.05, "style": +0.20},
     "ambiance":      {"stability": 0.0,   "similarity_boost": 0.0,   "style": 0.0},
 }
+
+
+def _appliquer_prononciation(texte: str) -> str:
+    """Remplace les noms bibliques par leur prononciation phonétique pour ElevenLabs.
+
+    Utilise le dictionnaire PRONONCIATION_BIBLIQUE de config.py pour transformer
+    les noms difficiles en graphies phonétiques que la TTS prononce correctement.
+
+    Args:
+        texte: Texte du segment à transformer.
+
+    Returns:
+        Texte avec les noms remplacés par leur prononciation phonétique.
+    """
+    resultat = texte
+    for orthographe, phonetique in config.PRONONCIATION_BIBLIQUE.items():
+        # Remplacement insensible à la casse, mot entier uniquement
+        pattern = r"\b" + re.escape(orthographe) + r"\b"
+        resultat = re.sub(pattern, phonetique, resultat, flags=re.IGNORECASE)
+    return resultat
 
 
 class ProducteurAudio:
@@ -199,6 +220,9 @@ class ProducteurAudio:
             adj_similarity = base_similarity
             adj_style = base_style
 
+        # Appliquer le dictionnaire de prononciation pour les noms bibliques
+        texte_tts = _appliquer_prononciation(segment["texte"])
+
         url = ELEVENLABS_TTS_URL.format(voice_id=voice_id)
         headers = {
             "xi-api-key": self.api_key,
@@ -206,7 +230,7 @@ class ProducteurAudio:
             "Accept": "audio/mpeg",
         }
         payload = {
-            "text": segment["texte"],
+            "text": texte_tts,
             "model_id": "eleven_multilingual_v2",
             "voice_settings": {
                 "stability": adj_stability,

@@ -2672,6 +2672,13 @@ def _pipeline_inner(
                 console.print(f"    ! {a}")
             rapport.setdefault("alertes_post_generation", []).extend(alertes_pauses)
 
+        alertes_sfx_overlay = Reviewer.verifier_sfx_overlay_duree(script)
+        if alertes_sfx_overlay:
+            console.print("[yellow]  Alertes SFX overlay trop courts :[/yellow]")
+            for a in alertes_sfx_overlay:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_sfx_overlay)
+
         # Marquer comme validé en DB
         if _use_db():
             try:

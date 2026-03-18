@@ -69,6 +69,8 @@ CRITÈRES D'ÉVALUATION (note sur 14, ramenée à 10) :
    - Chaque segment SFX doit avoir un champ "mode" : "overlay" (superposé aux voix)
      ou "insert" (inséré séquentiellement entre les segments voix).
    - Chaque segment SFX doit avoir un champ "duree_sfx_secondes" (durée en secondes).
+   - Les SFX "overlay" d'ambiance doivent durer au moins 15 secondes pour couvrir la narration.
+   - Un SFX de transition doit marquer le passage scène de vie → récit biblique et vice versa.
 
 7. CRÉATIVITÉ NARRATIVE (2 pts)
    - L'épisode suit-il un arc émotionnel clair (curiosité → tension → climax → résolution) ?
@@ -516,6 +518,30 @@ class Reviewer:
                 f"{pauses_nulles} segments n'ont aucune pause (0ms). "
                 f"Le rythme risque d'être trop rapide."
             )
+        return alertes
+
+    @staticmethod
+    def verifier_sfx_overlay_duree(script: dict) -> list[str]:
+        """Vérifie que les SFX overlay d'ambiance durent au moins 15 secondes.
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Liste d'alertes pour les overlay trop courts.
+        """
+        alertes = []
+        for seg in script["episode"]["segments"]:
+            if seg["personnage"] != "sfx":
+                continue
+            mode = seg.get("mode", "insert")
+            duree = seg.get("duree_sfx_secondes", 5.0)
+            if mode == "overlay" and duree < 15.0:
+                alertes.append(
+                    f"SFX overlay '{seg.get('texte', '')[:50]}' ({seg['id']}) "
+                    f"ne dure que {duree}s — minimum recommandé : 15s pour "
+                    f"couvrir la narration."
+                )
         return alertes
 
     @staticmethod
