@@ -1118,12 +1118,9 @@ class DirecteurPodcast:
         """Calcule la note audience pondérée pour un plan de saison.
 
         Même pondération que pour les scripts : Lina 30%, Noah 30%, Sophie 40%.
+        Délègue à note_audience() pour éviter la duplication (M2).
 
         Returns:
             Note sur 10.
         """
-        personas = resultat.get("personas", {})
-        lina = personas.get("lina_7ans", {}).get("note", 0)
-        noah = personas.get("noah_10ans", {}).get("note", 0)
-        sophie = personas.get("sophie_parent", {}).get("note", 0)
-        return round(lina * 0.3 + noah * 0.3 + sophie * 0.4, 1)
+        return DirecteurPodcast.note_audience(resultat)

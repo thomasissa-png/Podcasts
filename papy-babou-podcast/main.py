@@ -1290,21 +1290,26 @@ def _afficher_retour_directeur_saison(resultat: dict) -> None:
         "ajustements_mineurs": "yellow",
         "retravailler": "red",
     }.get(verdict, "white")
-    console.print(
-        f"\n  Directeur : [{couleur_verdict}]{verdict.replace('_', ' ').upper()}[/] "
-        f"(note {note_dir}/10, audience {note_aud}/10)"
+
+    # Construire le contenu du panel (M4: cohérence thème)
+    lignes = []
+    lignes.append(
+        f"[{couleur_verdict}]{verdict.replace('_', ' ').upper()}[/] "
+        f"— note {note_dir}/10, audience {note_aud}/10"
     )
 
     # Synthèse
     synthese = dir_data.get("synthese", "")
     if synthese:
-        console.print(f"  {Typo.dim(synthese)}")
+        lignes.append(f"\n{Typo.dim(synthese)}")
 
     # Axes détaillés
     for axe_nom, axe_data in dir_data.get("axes", {}).items():
         axe_label = axe_nom.replace("_", " ").title()
         axe_note = axe_data.get("note", 0)
-        console.print(f"    {axe_label} : {axe_note}/10")
+        lignes.append(f"  {axe_label} : {axe_note}/10")
+
+    console.print(panel_info("\n".join(lignes), titre=f"{Icons.REVIEW} Avis du Directeur Podcast"))
 
     # Recommandations
     recommandations = dir_data.get("recommandations", [])
@@ -1317,7 +1322,8 @@ def _afficher_retour_directeur_saison(resultat: dict) -> None:
         )
         for r in triees:
             ep = r.get("episode")
-            ep_str = f" (E{ep:02d})" if ep else ""
+            # M1: guard against non-int episode values from LLM
+            ep_str = f" (E{int(ep):02d})" if isinstance(ep, (int, float)) and ep else ""
             console.print(f"    - [{r.get('priorite', '?')}]{ep_str} {r.get('texte', '')}")
 
     # Points forts
@@ -1376,6 +1382,15 @@ def _validation_plan_saison(
     """
     retours_directeur: list[dict] = []
     MAX_RETOURS_DIRECTEUR = 3
+    MAX_ECHECS_DIRECTEUR = 3
+    echecs_directeur = 0
+
+    # Instancier le directeur une seule fois (H2)
+    try:
+        directeur = DirecteurPodcast()
+    except Exception as e:
+        logger.warning("Directeur Podcast non disponible : %s", e)
+        directeur = None
 
     while True:
         # Afficher un resume compact du plan avant les choix
@@ -1392,7 +1407,14 @@ def _validation_plan_saison(
         # ── Évaluation du Directeur Podcast ─────────────────────────────
         nb_retours = len(retours_directeur)
 
-        if nb_retours >= MAX_RETOURS_DIRECTEUR:
+        if directeur is None or echecs_directeur >= MAX_ECHECS_DIRECTEUR:
+            # Directeur indisponible ou trop d'échecs consécutifs — on skip
+            if echecs_directeur >= MAX_ECHECS_DIRECTEUR:
+                console.print(
+                    f"[yellow]  Directeur indisponible après {echecs_directeur} échecs "
+                    f"consécutifs — évaluation désactivée.[/yellow]"
+                )
+        elif nb_retours >= MAX_RETOURS_DIRECTEUR:
             # 4e tour : le directeur prend la main et corrige directement
             console.print(
                 f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur podcast a donné "
@@ -1400,7 +1422,6 @@ def _validation_plan_saison(
                 f"le plan directement.[/bold red]"
             )
             try:
-                directeur = DirecteurPodcast()
                 plan_corrige = directeur.corriger_plan_saison(
                     plan, retours_directeur,
                 )
@@ -1418,7 +1439,9 @@ def _validation_plan_saison(
                 })
                 # Réinitialiser les retours — le directeur a corrigé
                 retours_directeur = []
+                echecs_directeur = 0
             except Exception as e:
+                echecs_directeur += 1
                 logger.warning("Directeur Podcast (correction plan) indisponible : %s", e)
                 console.print(
                     f"[yellow]  Correction directeur non disponible : {e}[/yellow]"
@@ -1430,25 +1453,26 @@ def _validation_plan_saison(
                 f"\n  {Icons.REVIEW} Évaluation Directeur Podcast ({tour_label})..."
             )
             try:
-                directeur = DirecteurPodcast()
                 resultat_directeur = directeur.evaluer_plan_saison(
                     plan, retours_precedents=retours_directeur or None,
                 )
                 retours_directeur.append(resultat_directeur)
                 _afficher_retour_directeur_saison(resultat_directeur)
+                echecs_directeur = 0
 
                 # Stocker dans le plan
                 plan["saison"].setdefault("retours_directeur", []).append({
                     "tour": nb_retours + 1,
                     "note_globale": resultat_directeur.get("directeur_saison", {}).get("note_globale"),
                     "verdict": resultat_directeur.get("directeur_saison", {}).get("verdict"),
-                    "note_audience": DirecteurPodcast.note_audience_plan(resultat_directeur),
+                    "note_audience": directeur.note_audience_plan(resultat_directeur),
                     "timestamp": datetime.now().isoformat(),
                 })
             except Exception as e:
+                echecs_directeur += 1
                 logger.warning("Directeur Podcast (évaluation plan) indisponible : %s", e)
                 console.print(
-                    f"[yellow]  Évaluation directeur non disponible : {e}[/yellow]"
+                    f"[yellow]  Évaluation directeur non disponible ({echecs_directeur}/{MAX_ECHECS_DIRECTEUR}) : {e}[/yellow]"
                 )
 
         # ── Menu de validation humaine ──────────────────────────────────
@@ -1513,6 +1537,9 @@ def _validation_plan_saison(
             _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
             console.print(f"[{Palette.SUCCES}]  Nouveau plan généré et sauvegardé (DB + Object Storage).[/]")
             _afficher_plan_saison(plan)
+            # H1: réinitialiser les retours directeur — le plan est entièrement nouveau
+            retours_directeur = []
+            echecs_directeur = 0
 
         elif choix in ("i", "instructions"):
             console.print(
@@ -1556,6 +1583,9 @@ def _validation_plan_saison(
                 _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
                 console.print(f"[{Palette.SUCCES}]  Nouveau plan généré avec vos instructions (DB + Object Storage).[/]")
                 _afficher_plan_saison(plan)
+                # H1: réinitialiser les retours directeur — le plan est entièrement nouveau
+                retours_directeur = []
+                echecs_directeur = 0
 
         elif choix in ("a", "abandonner"):
             plan["saison"].setdefault("decisions_humaines", []).append({
