@@ -159,6 +159,45 @@ def charger_historique() -> list[dict]:
     return []
 
 
+def _episodes_deja_produits(
+    saison_num: int,
+    episodes_plan: list[dict],
+) -> set[str]:
+    """Retourne les episode_id déjà produits ET dont l'histoire n'a pas changé.
+
+    Compare l'histoire_biblique du plan actuel avec celle de l'historique.
+    Si le plan a changé (nouvelle histoire pour le même numéro), l'épisode
+    est considéré comme NON produit — il faut le re-produire.
+    """
+    historique = charger_historique()
+
+    # Index historique : episode_id → titre de l'historique
+    hist_par_id: dict[str, str] = {}
+    for h in historique:
+        eid = h.get("episode_id", "")
+        if eid.startswith(f"S{saison_num:02d}"):
+            hist_par_id[eid] = h.get("titre", "")
+
+    deja: set[str] = set()
+    for ep in episodes_plan:
+        ep_id = f"S{saison_num:02d}E{ep['numero']:02d}"
+        if ep_id not in hist_par_id:
+            continue
+        # Comparer le titre du plan avec celui de l'historique
+        titre_plan = ep.get("titre", "")
+        titre_hist = hist_par_id[ep_id]
+        # Si le titre a changé, l'épisode a changé → pas "déjà produit"
+        if titre_plan and titre_hist and titre_plan != titre_hist:
+            logger.info(
+                "Épisode %s : plan changé ('%s' → '%s') — sera re-produit",
+                ep_id, titre_hist, titre_plan,
+            )
+            continue
+        deja.add(ep_id)
+
+    return deja
+
+
 def sauvegarder_historique(historique: list[dict]) -> None:
     """Sauvegarde l'historique des épisodes (JSON — rétrocompatibilité).
 
@@ -4525,12 +4564,8 @@ def _interactif_saison(saisons_existantes: list[int]):
     saison_data = plan["saison"]
     episodes_plan = saison_data["episodes"]
 
-    # Détecter les épisodes déjà produits
-    historique = charger_historique()
-    deja_produits = {
-        h["episode_id"] for h in historique
-        if h.get("episode_id", "").startswith(f"S{saison_num:02d}")
-    }
+    # Détecter les épisodes déjà produits (en vérifiant que le plan n'a pas changé)
+    deja_produits = _episodes_deja_produits(saison_num, episodes_plan)
 
     # Afficher les épisodes disponibles
     console.print(f"\n  [{Palette.BLEU_CIEL}]Saison {saison_num} — {saison_data.get('theme', '')}[/]")
@@ -5058,6 +5093,30 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
         planificateur.sauvegarder(plan, chemin_json)
         console.print(f"  Plan sauvegarde : {chemin_json}")
 
+        # Purger l'historique des épisodes de cette saison dont le titre a changé
+        # (sinon, produire-saison les skip comme "déjà produits")
+        try:
+            historique = charger_historique()
+            prefix = f"S{saison:02d}"
+            titres_plan = {}
+            for ep in plan.get("saison", {}).get("episodes", []):
+                ep_id = f"S{saison:02d}E{ep['numero']:02d}"
+                titres_plan[ep_id] = ep.get("titre", "")
+            historique_filtre = [
+                h for h in historique
+                if not h.get("episode_id", "").startswith(prefix)
+                or h.get("titre", "") == titres_plan.get(h.get("episode_id", ""), "")
+            ]
+            if len(historique_filtre) < len(historique):
+                nb_purge = len(historique) - len(historique_filtre)
+                sauvegarder_historique(historique_filtre)
+                console.print(
+                    f"  [yellow]{nb_purge} épisode(s) obsolète(s) supprimé(s) de l'historique "
+                    f"(plan changé)[/yellow]"
+                )
+        except Exception as e:
+            logger.warning("Purge historique échouée : %s", e)
+
         # Afficher le plan complet
         _afficher_plan_saison(plan)
 
@@ -5153,11 +5212,9 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
             sys.exit(1)
 
     # Detecter les episodes deja produits pour les skipper
-    historique = charger_historique()
-    deja_produits = {
-        h["episode_id"] for h in historique
-        if h.get("episode_id", "").startswith(f"S{saison:02d}")
-    }
+    # (en vérifiant que le plan n'a pas changé — si l'histoire a changé,
+    #  l'épisode est considéré comme non produit et sera re-produit)
+    deja_produits = _episodes_deja_produits(saison, episodes_plan)
     episodes_a_produire = []
     episodes_skipped = []
     for ep in episodes_plan:
