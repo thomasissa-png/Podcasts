@@ -124,6 +124,22 @@ class SfxProvider:
                 fichiers.append(chemin)
                 continue
 
+            # Vérifier la bibliothèque SFX curatée (descriptions pré-validées)
+            description_curatee = self._chercher_sfx_curatee(segment["texte"])
+            if description_curatee:
+                segment_curate = dict(segment)
+                segment_curate["texte"] = description_curatee
+                logger.info(
+                    "  SFX '%s' → description curatée : '%s'",
+                    segment["texte"], description_curatee,
+                )
+                if self.elevenlabs_api_key:
+                    ok = self._generer_elevenlabs(segment_curate, chemin, chemin_cache)
+                    if ok:
+                        self.stats[segment["id"]] = f"curatee ({description_curatee[:30]})"
+                        fichiers.append(chemin)
+                        continue
+
             # Essayer ElevenLabs SFX d'abord
             if self.elevenlabs_api_key:
                 ok = self._generer_elevenlabs(segment, chemin, chemin_cache)
@@ -444,6 +460,43 @@ class SfxProvider:
                 ) if niveaux else None,
             },
         }
+
+    @staticmethod
+    def _chercher_sfx_curatee(description: str) -> str | None:
+        """Cherche une description curatée pour un bruitage dans la bibliothèque.
+
+        Compare la description du scripteur (en anglais) avec les clés de
+        SFX_CURATES. Utilise un matching par mots-clés pour trouver la
+        meilleure correspondance.
+
+        Args:
+            description: Description SFX du scripteur (en anglais).
+
+        Returns:
+            Description curatée anglaise ou None si pas de correspondance.
+        """
+        desc_lower = description.lower().strip()
+
+        # 1. Correspondance exacte par clé
+        for cle, desc_curatee in config.SFX_CURATES.items():
+            if cle in desc_lower or desc_lower in cle:
+                return desc_curatee
+
+        # 2. Correspondance par mots-clés (au moins 2 mots en commun)
+        desc_mots = set(desc_lower.replace("_", " ").split())
+        meilleur_score = 0
+        meilleur_match = None
+
+        for cle, desc_curatee in config.SFX_CURATES.items():
+            cle_mots = set(cle.replace("_", " ").split())
+            curatee_mots = set(desc_curatee.lower().split())
+            # Score = mots en commun avec la clé + mots en commun avec la description
+            score = len(desc_mots & cle_mots) * 3 + len(desc_mots & curatee_mots)
+            if score > meilleur_score and score >= 3:
+                meilleur_score = score
+                meilleur_match = desc_curatee
+
+        return meilleur_match
 
     def _logger_stats(self, episode_id: str) -> None:
         """Affiche un résumé des sources SFX utilisées."""

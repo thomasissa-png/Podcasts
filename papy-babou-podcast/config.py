@@ -209,6 +209,34 @@ VOICE_GAIN_DB = {
     "sfx": 0.0,
 }
 
+# ── Vitesse vocale par personnage ──────────────────────────────────────────────
+# Facteur de vitesse pour ElevenLabs TTS (0.7 = lent, 1.0 = normal, 1.3 = rapide)
+# Un grand-père parle plus lentement que des enfants excités.
+VOICE_SPEED = {
+    "papy_babou": 0.92,    # Grand-père de 66 ans — rythme posé et chaleureux
+    "antoine": 1.05,        # Garçon de 9 ans — dynamique
+    "noemie": 1.08,         # Fille de 6 ans — enthousiaste et rapide
+    "mamie_sonia": 0.95,    # Grand-mère — calme et douce
+    "narrateur": 1.0,       # Vitesse standard
+}
+
+# ── Voice cloning — IDs des voix clonées (Professional Voice Cloning) ────────
+# Si configuré, ces voix sont utilisées à la place des voix standard.
+# Pour cloner : utiliser l'API ElevenLabs /v1/voices/add avec des échantillons
+# audio d'un comédien professionnel.
+VOICE_CLONED_IDS = {
+    "papy_babou": os.getenv("ELEVENLABS_CLONED_PAPY", ""),
+    "antoine": os.getenv("ELEVENLABS_CLONED_ANTOINE", ""),
+    "noemie": os.getenv("ELEVENLABS_CLONED_NOEMIE", ""),
+    "mamie_sonia": os.getenv("ELEVENLABS_CLONED_MAMIE_SONIA", ""),
+    "narrateur": os.getenv("ELEVENLABS_CLONED_NARRATEUR", ""),
+}
+
+# ── Speech Marks (timestamps ElevenLabs) ─────────────────────────────────────
+# Active l'endpoint with-timestamps pour obtenir les timestamps mot-par-mot.
+# Utile pour : sync SFX, sous-titres, format vidéo/YouTube.
+SPEECH_MARKS_ENABLED = os.getenv("SPEECH_MARKS_ENABLED", "false").lower() == "true"
+
 # ── Limites de longueur de segment (mots) pour voix IA ────────────────────────
 SEGMENT_MAX_MOTS_ENFANT = 40   # Antoine, Noémie
 SEGMENT_MAX_MOTS_ADULTE = 60   # Papy Babou, Mamie Sonia
@@ -335,6 +363,68 @@ SFX_CONFIG = {
     "sfx_duree_defaut_secondes": 5.0,
     "sfx_duree_max_secondes": 22.0,
     "sfx_fade_ms": 300,
+}
+
+# ── Bibliothèque SFX curatée ────────────────────────────────────────────────
+# Descriptions pré-validées (en anglais pour ElevenLabs) pour les bruitages
+# récurrents. Le sfx_provider cherche ici AVANT de générer via l'API.
+# Clé = mot-clé français que le scripteur utilise, Valeur = description anglaise.
+SFX_CURATES = {
+    # ── Maison de Papy Babou ──
+    "cheminee": "warm crackling fireplace with occasional wood pops, cozy atmosphere",
+    "horloge": "antique grandfather clock ticking slowly, gentle and rhythmic",
+    "chat_ronronne": "cat purring softly and contentedly, warm and soothing",
+    "pas_bois": "gentle footsteps on old wooden floor, warm creaking",
+    "porte_bois": "old wooden door creaking open slowly, warm hinges",
+    "pluie_fenetre": "gentle rain on window panes, cozy indoor atmosphere",
+    "escalier_bois": "footsteps going up old wooden stairs, gentle creaking",
+    "fenetre_ouvre": "window opening to let fresh air in, birds outside",
+    "clochette_porte": "small door bell jingling as someone enters",
+    "chaise_bois": "wooden chair creaking as someone sits down",
+    "bouilloire": "kettle whistling softly, warm kitchen sounds",
+    "cuillere_tasse": "spoon stirring in ceramic cup, gentle clinking",
+    "bol_pose": "ceramic bowl being placed on wooden table gently",
+    "tissu_froisse": "fabric rustling softly, someone adjusting clothes",
+    "bruit_cuisine": "gentle kitchen sounds, pots and pans quietly clinking",
+    # ── Nature et campagne normande ──
+    "oiseaux_jardin": "garden birds singing in the morning, French countryside",
+    "vent_arbres": "soft wind through leaves and branches, peaceful",
+    "tonnerre_lointain": "distant thunder rumbling softly, not scary",
+    "eau_ruisseau": "gentle stream flowing over pebbles, peaceful nature",
+    "grillons_nuit": "crickets chirping at night, peaceful summer evening",
+    "pluie_douce": "light rain falling on leaves, gentle and calming",
+    "orage_lointain": "distant storm with soft thunder, safe indoors feeling",
+    # ── Moments familiaux ──
+    "rire_enfant": "child laughing happily and warmly, genuine joy",
+    "bisou": "gentle kiss on the cheek, sweet and warm",
+    "soupir_content": "contented sigh, relaxed and happy",
+    "applaudissements": "warm applause from a small family group",
+    "gateau_four": "oven door opening with warm bakery atmosphere",
+    "bougies_souffle": "birthday candles being blown out with soft cheers",
+    "emballage_cadeau": "gift wrapping paper being torn open excitedly",
+    "berceuse_fredonnee": "grandmother humming a gentle lullaby quietly",
+    "bebe_pleure": "baby crying softly then gradually calming down",
+    # ── Bruitages bibliques ──
+    "feu_camp": "campfire crackling under the stars, desert night",
+    "chevaux_galop": "horses galloping on a dirt road, distant",
+    "vagues_douces": "gentle ocean waves lapping on a sandy shore",
+    "trompettes_fanfare": "triumphant trumpet fanfare, heroic and bright",
+    "epee_metal": "sword being drawn from a sheath, metallic ring",
+    "marche_desert": "footsteps trudging through sand in hot desert",
+    "foule_marche": "crowd murmuring in an ancient marketplace",
+    "ane_brait": "donkey braying in the distance, rural",
+    "moutons_bele": "sheep bleating softly in a green field",
+    "harpe_celeste": "ethereal harp glissando, heavenly and magical",
+    "corne_berger": "shepherd horn echoing across rolling hills",
+    "pierres_tombent": "stones falling and tumbling down a rocky cliff",
+    "porte_temple": "massive stone temple door opening with reverb",
+    "chorale_lointaine": "distant choir singing softly, sacred atmosphere",
+    "eclair": "lightning crack followed by distant rolling thunder",
+    "puits_eau": "drawing water from a stone well with rope and bucket",
+    "chameau": "camel groaning and walking on sand, caravan",
+    "marteau_forgeron": "blacksmith hammer hitting metal rhythmically",
+    "cloches_eglise": "church bells ringing in the distance, French village",
+    "pages_livre": "turning pages of an old book carefully, paper rustling",
 }
 
 # ── Mots interdits (vocabulaire inapproprié pour 6-10 ans) ───────────────────

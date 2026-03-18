@@ -60,6 +60,47 @@ def _appliquer_prononciation(texte: str) -> str:
     return resultat
 
 
+def _injecter_ssml_breaks(texte: str, ton: str = "neutre") -> str:
+    """Injecte des balises SSML <break> pour les pauses dramatiques intra-segment.
+
+    ElevenLabs supporte les balises <break time="Xs"/> dans le texte.
+    Cette fonction ajoute des pauses naturelles basées sur la ponctuation
+    et le ton du segment.
+
+    Args:
+        texte: Texte du segment.
+        ton: Ton du segment (dramatique, chuchotant, etc.).
+
+    Returns:
+        Texte enrichi avec des balises <break>.
+    """
+    # Pauses plus longues pour les tons dramatiques/chuchotants
+    pause_ellipsis = "0.8s" if ton in ("dramatique", "mystérieux", "solennel") else "0.5s"
+    pause_dash = "0.4s" if ton in ("dramatique", "mystérieux") else "0.3s"
+
+    # Remplacer "..." par une pause SSML (sauf en début/fin de segment)
+    resultat = texte.strip()
+
+    # Points de suspension → pause dramatique
+    resultat = re.sub(
+        r'\.{3,}',
+        f' <break time="{pause_ellipsis}"/> ',
+        resultat,
+    )
+
+    # Tiret cadratin/long → courte pause
+    resultat = re.sub(
+        r'\s*[—–]\s*',
+        f' <break time="{pause_dash}"/> ',
+        resultat,
+    )
+
+    # Nettoyer les espaces multiples
+    resultat = re.sub(r'\s{2,}', ' ', resultat).strip()
+
+    return resultat
+
+
 class ProducteurAudio:
     """Orchestre les appels ElevenLabs pour générer les segments audio."""
 
@@ -223,11 +264,29 @@ class ProducteurAudio:
         # Appliquer le dictionnaire de prononciation pour les noms bibliques
         texte_tts = _appliquer_prononciation(segment["texte"])
 
-        url = ELEVENLABS_TTS_URL.format(voice_id=voice_id)
+        # Injecter les balises SSML <break> pour les pauses dramatiques
+        texte_tts = _injecter_ssml_breaks(texte_tts, ton)
+
+        # Utiliser la voix clonée si disponible (priorité sur la voix standard)
+        cloned_id = config.VOICE_CLONED_IDS.get(personnage, "")
+        if cloned_id:
+            voice_id = cloned_id
+            logger.debug("Utilisation de la voix clonée pour '%s'", personnage)
+
+        # Vitesse vocale par personnage
+        speed = config.VOICE_SPEED.get(personnage, 1.0)
+
+        # Choisir l'endpoint : with-timestamps (speech marks) ou standard
+        use_timestamps = config.SPEECH_MARKS_ENABLED
+        if use_timestamps:
+            url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/with-timestamps"
+        else:
+            url = ELEVENLABS_TTS_URL.format(voice_id=voice_id)
+
         headers = {
             "xi-api-key": self.api_key,
             "Content-Type": "application/json",
-            "Accept": "audio/mpeg",
+            "Accept": "application/json" if use_timestamps else "audio/mpeg",
         }
         payload = {
             "text": texte_tts,
@@ -240,6 +299,10 @@ class ProducteurAudio:
             },
         }
 
+        # Ajouter la vitesse si différente de 1.0
+        if speed != 1.0:
+            payload["speed"] = speed
+
         nb_chars = len(segment["texte"])
 
         max_tentatives = config.PRODUCTION["max_retry_tts"]
@@ -251,8 +314,32 @@ class ProducteurAudio:
                 )
                 response.raise_for_status()
 
-                with open(chemin_sortie, "wb") as f:
-                    f.write(response.content)
+                if use_timestamps:
+                    # Endpoint with-timestamps retourne du JSON
+                    import base64
+                    data = response.json()
+                    audio_bytes = base64.b64decode(data["audio_base64"])
+                    with open(chemin_sortie, "wb") as f:
+                        f.write(audio_bytes)
+
+                    # Sauvegarder les timestamps (speech marks) en JSON
+                    alignment = data.get("alignment", {})
+                    if alignment:
+                        chemin_timestamps = chemin_sortie.with_suffix(".timestamps.json")
+                        import json
+                        with open(chemin_timestamps, "w", encoding="utf-8") as f:
+                            json.dump({
+                                "segment_id": segment["id"],
+                                "personnage": personnage,
+                                "texte": segment["texte"],
+                                "alignment": alignment,
+                            }, f, ensure_ascii=False, indent=2)
+                        logger.debug(
+                            "  Speech marks sauvegardés : %s", chemin_timestamps,
+                        )
+                else:
+                    with open(chemin_sortie, "wb") as f:
+                        f.write(response.content)
 
                 # Compter les caractères après succès uniquement
                 with self._compteur_lock:
@@ -261,10 +348,12 @@ class ProducteurAudio:
                     )
 
                 logger.info(
-                    "  → Segment %s généré (%d caractères, %.1f KB)",
+                    "  → Segment %s généré (%d caractères, %.1f KB, speed=%.2f%s)",
                     segment["id"],
                     nb_chars,
-                    len(response.content) / 1024,
+                    (len(audio_bytes) if use_timestamps else len(response.content)) / 1024,
+                    speed,
+                    ", +timestamps" if use_timestamps else "",
                 )
                 return
 

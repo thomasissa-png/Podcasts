@@ -126,11 +126,28 @@ TRANSITION_PROMPT = (
 )
 
 # Prompt pour le générique signature récurrent (identique à chaque épisode)
+# Ce prompt est très spécifique pour créer une mélodie distinctive et mémorisable
+# que les enfants peuvent chantonner.
 SIGNATURE_JINGLE_PROMPT = (
     "Very short 5-second signature jingle for children's Bible storytelling podcast, "
-    "distinctive catchy melody with bright glockenspiel, soft acoustic guitar strum, "
-    "and warm bell, instantly recognizable, adventurous yet cozy, "
-    "French grandfather storytelling atmosphere"
+    "a catchy ascending 5-note melody DO-MI-SOL-LA-DO played on bright glockenspiel, "
+    "followed by a warm descending answer on acoustic guitar, ending on a single "
+    "resonant tubular bell. The melody must be simple enough for a 6-year-old to hum. "
+    "Warm, cozy, instantly recognizable like a music box, adventurous yet intimate, "
+    "French countryside grandfather storytelling atmosphere"
+)
+
+# Prompt pour le thème musical principal (plus long, 15s, pour intro/outro de saison)
+THEME_MUSICAL_PROMPT = (
+    "A memorable 15-second main theme for a premium French children's Bible storytelling "
+    "podcast. Begins with the signature 5-note ascending glockenspiel melody DO-MI-SOL-LA-DO, "
+    "then expands into a full orchestral arrangement: warm strings carry the melody, "
+    "gentle French horn adds depth, soft choir hums underneath, light hand claps on beats "
+    "2 and 4 give a playful bounce. The melody builds to a mini-climax with a bright "
+    "trumpet flourish, then resolves warmly with fingerpicked acoustic guitar and the "
+    "signature bell. Must feel like a theme song children will sing along to. "
+    "Warm, adventurous, distinctly French countryside atmosphere, like a grandfather "
+    "opening a magical storybook by the fireplace"
 )
 
 # Constantes audio (en ms sauf mention contraire)
@@ -732,6 +749,22 @@ class Monteur:
         _sys.stderr.flush()
         logger.info("Épisode exporté : %s (%.0f sec)", chemin_hq, duree_sec)
 
+        # 9b. Analyse conformité broadcast du fichier final
+        _sys.stderr.write("[monteur] Analyse conformité broadcast...\n")
+        _sys.stderr.flush()
+        analyse = self.analyser_fichier_final(chemin_hq)
+        if analyse["alertes"]:
+            for alerte in analyse["alertes"]:
+                logger.warning("Analyse finale : %s", alerte)
+                _sys.stderr.write(f"[monteur] ⚠ {alerte}\n")
+            _sys.stderr.flush()
+        else:
+            _sys.stderr.write(
+                f"[monteur] ✓ Conforme broadcast : "
+                f"LUFS={analyse['lufs']}, TP={analyse['true_peak']} dBTP\n"
+            )
+            _sys.stderr.flush()
+
         # Nettoyer le WAV intermédiaire
         try:
             if chemin_wav_intermediaire.exists():
@@ -754,6 +787,7 @@ class Monteur:
             "taille_bytes": chemin_hq.stat().st_size,
             "chapitres": chapitres,
             "chemin_chapitres": chemin_chapitres,
+            "analyse_broadcast": analyse,
         }
 
     # ── Helpers ffmpeg pour le montage memory-safe ──────────────────────────
@@ -818,62 +852,113 @@ class Monteur:
     @staticmethod
     def _ffmpeg_master_lufs(input_wav: Path, output_wav: Path,
                             lufs_cible: float = -16.0) -> None:
-        """Applique master bus (EQ + compression) + normalisation volume.
+        """Applique master bus (de-esser + EQ + compression + loudnorm + true peak limiter).
 
-        Uses volumedetect (instant) instead of loudnorm (too slow on
-        constrained containers like Replit).  The gain is computed from
-        mean_volume so that the result lands close to *lufs_cible*.
+        Two-pass loudnorm for broadcast-compliant LUFS normalization:
+        - Pass 1: Measure integrated loudness, LRA, true peak
+        - Pass 2: Apply normalization with measured values (linear mode)
+
+        Also applies:
+        - De-esser (high shelf reduction on 4-10 kHz to tame sibilance)
+        - EQ boost at 3.5 kHz for voice clarity
+        - Soft compression (ratio 2:1 above -20 dBFS)
+        - True peak limiter at -1 dBTP via alimiter
         """
-        eq_comp = (
-            "equalizer=f=3500:t=o:w=1.5:g=2.5,"
-            "acompressor=threshold=-20dB:ratio=2:attack=20:release=200"
-        )
-
-        # ── Detect current mean volume (very fast) ──────────────────────
+        # ── Pass 1: Measure loudness via loudnorm ──────────────────────
         try:
             result = _subprocess.run(
                 ["ffmpeg", "-y", "-i", str(input_wav),
-                 "-af", "volumedetect",
+                 "-af", f"loudnorm=I={lufs_cible}:TP=-1:LRA=11:print_format=json",
                  "-f", "null", "-"],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, timeout=300,
             )
         except _subprocess.TimeoutExpired:
-            raise RuntimeError("ffmpeg volumedetect timeout après 120s")
+            raise RuntimeError("ffmpeg loudnorm pass 1 timeout après 300s")
 
-        mean_volume = Monteur._parse_volumedetect(result.stderr)
-        if mean_volume is not None:
-            gain_db = lufs_cible - mean_volume
-            # Clamp gain to avoid extreme amplification or attenuation
-            gain_db = max(-20.0, min(20.0, gain_db))
-            af_chain = f"{eq_comp},volume={gain_db:.1f}dB"
-            logger.info("volumedetect: mean=%.1f dB, gain=%.1f dB → cible %.1f",
-                        mean_volume, gain_db, lufs_cible)
+        measured = Monteur._parse_loudnorm_stats(result.stderr)
+
+        if measured:
+            # ── Two-pass loudnorm with measured values (most accurate) ──
+            loudnorm_filter = (
+                f"loudnorm=I={lufs_cible}:TP=-1:LRA=11"
+                f":measured_I={measured['input_i']}"
+                f":measured_TP={measured['input_tp']}"
+                f":measured_LRA={measured['input_lra']}"
+                f":measured_thresh={measured['input_thresh']}"
+                ":linear=true"
+            )
+            logger.info(
+                "loudnorm pass 1: I=%.1f, TP=%.1f, LRA=%.1f → cible I=%.1f",
+                measured['input_i'], measured['input_tp'],
+                measured['input_lra'], lufs_cible,
+            )
         else:
-            logger.warning("volumedetect: impossible de lire mean_volume, EQ seul")
-            af_chain = eq_comp
+            # Fallback to single-pass loudnorm (less accurate but correct)
+            logger.warning("loudnorm: impossible de parser les mesures — fallback single-pass")
+            loudnorm_filter = f"loudnorm=I={lufs_cible}:TP=-1:LRA=11"
 
-        # ── Single-pass: EQ + compressor + volume adjust ────────────────
+        # Build filter chain: de-esser → EQ → compression → loudnorm → limiter
+        af_chain = (
+            # De-esser: reduce sibilance with high shelf cut above 5 kHz
+            "highshelf=f=5000:g=-3:t=s,"
+            # EQ: voice clarity boost at 3.5 kHz
+            "equalizer=f=3500:t=o:w=1.5:g=2.5,"
+            # Soft compression
+            "acompressor=threshold=-20dB:ratio=2:attack=20:release=200,"
+            # LUFS normalization (two-pass or single-pass)
+            f"{loudnorm_filter},"
+            # True peak limiter at -1 dBTP (0.891 linear)
+            "alimiter=limit=0.891:attack=5:release=50:level=disabled"
+        )
+
+        # ── Pass 2: Apply full master chain ────────────────────────────
         try:
             _subprocess.run(
                 ["ffmpeg", "-y", "-i", str(input_wav),
                  "-af", af_chain,
                  "-ar", "44100", "-ac", "2",
                  str(output_wav)],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True, text=True, timeout=600,
                 check=True,
             )
         except _subprocess.TimeoutExpired as e:
-            logger.error("ffmpeg master+volume timeout après 300s")
+            logger.error("ffmpeg master+lufs timeout après 600s")
             if e.process:
                 e.process.kill()
-            raise RuntimeError("ffmpeg master+volume timeout après 300s") from e
+            raise RuntimeError("ffmpeg master+lufs timeout après 600s") from e
         except _subprocess.CalledProcessError as e:
-            logger.error("ffmpeg master+volume failed: %s", e.stderr[-500:] if e.stderr else "")
-            raise RuntimeError(f"ffmpeg master+volume échoué: {e.stderr[-200:]}") from e
+            logger.error("ffmpeg master+lufs failed: %s", e.stderr[-500:] if e.stderr else "")
+            raise RuntimeError(f"ffmpeg master+lufs échoué: {e.stderr[-200:]}") from e
+
+        logger.info(
+            "Master bus appliqué: de-esser + EQ + compression + "
+            "loudnorm (%.1f LUFS) + alimiter (-1 dBTP)",
+            lufs_cible,
+        )
+
+    @staticmethod
+    def _parse_loudnorm_stats(stderr: str) -> dict | None:
+        """Parse loudnorm JSON measurement stats from ffmpeg stderr."""
+        if not stderr:
+            return None
+        try:
+            # loudnorm outputs a JSON block at the end of stderr
+            json_start = stderr.rfind('{')
+            json_end = stderr.rfind('}')
+            if json_start < 0 or json_end < 0:
+                return None
+            json_str = stderr[json_start:json_end + 1]
+            data = json.loads(json_str)
+            required = ['input_i', 'input_tp', 'input_lra', 'input_thresh']
+            if all(k in data for k in required):
+                return {k: float(data[k]) for k in required}
+        except (json.JSONDecodeError, ValueError, KeyError):
+            pass
+        return None
 
     @staticmethod
     def _parse_volumedetect(stderr: str) -> float | None:
-        """Extract mean_volume from ffmpeg volumedetect output."""
+        """Extract mean_volume from ffmpeg volumedetect output (legacy fallback)."""
         if not stderr:
             return None
         m = re.search(r"mean_volume:\s*([-\d.]+)\s*dB", stderr)
@@ -1607,6 +1692,36 @@ class Monteur:
         logger.warning("Signature jingle non disponible — silence.")
         return AudioSegment.silent(duration=3000)
 
+    def _charger_theme_musical(self) -> AudioSegment:
+        """Charge ou génère le thème musical principal (15s).
+
+        Le thème est une version étendue de la signature jingle,
+        utilisable pour les intros/outros de saison et les moments
+        marquants. Il partage la même mélodie que la signature
+        pour une identité sonore cohérente.
+        """
+        chemin = config.ASSETS_DIR / "music" / "theme_musical.mp3"
+        if chemin.exists():
+            return AudioSegment.from_mp3(str(chemin))
+
+        if self._generer_asset_elevenlabs(THEME_MUSICAL_PROMPT, 15.0, chemin):
+            return AudioSegment.from_mp3(str(chemin))
+
+        # Fallback Freesound
+        if self._telecharger_freesound_musique(
+            "signature_jingle", chemin, duree_min=10.0, duree_max=20.0,
+        ):
+            return AudioSegment.from_mp3(str(chemin))
+
+        # Dernier recours : utiliser la signature jingle en boucle
+        logger.warning("Thème musical non disponible — utilisation de la signature en boucle.")
+        signature = self._charger_signature()
+        if len(signature) > 0:
+            repetitions = max(1, 15000 // len(signature))
+            theme = signature * repetitions
+            return theme[:15000].fade_in(500).fade_out(1000)
+        return AudioSegment.silent(duration=15000)
+
     @staticmethod
     def _generer_micro_respiration() -> AudioSegment:
         """Génère un bruit léger simulant une respiration entre répliques.
@@ -2048,6 +2163,101 @@ class Monteur:
             temps_courant_ms += duree_ms + seg.get("pause_apres_ms", 0)
 
         return chapitres
+
+    @staticmethod
+    def analyser_fichier_final(chemin_mp3: Path) -> dict:
+        """Analyse le fichier MP3 final pour vérifier la conformité broadcast.
+
+        Mesure via ffmpeg :
+        - LUFS intégré (cible : -16 ±1)
+        - True peak en dBTP (cible : < -1 dBTP)
+        - Détection de silences excessifs (> 5s consécutives)
+
+        Returns:
+            Dict avec :
+              - "conforme" (bool) : True si LUFS et true peak dans les normes.
+              - "lufs" (float | None) : LUFS intégré mesuré.
+              - "true_peak" (float | None) : True peak en dBTP.
+              - "duree_s" (float) : Durée totale en secondes.
+              - "silences_excessifs" (int) : Nombre de silences > 5s.
+              - "alertes" (list[str]) : Problèmes détectés.
+        """
+        alertes = []
+        lufs = None
+        true_peak = None
+        silences_excessifs = 0
+
+        # 1. Mesurer LUFS et true peak via loudnorm
+        try:
+            result = _subprocess.run(
+                ["ffmpeg", "-y", "-i", str(chemin_mp3),
+                 "-af", "loudnorm=I=-16:TP=-1:LRA=11:print_format=json",
+                 "-f", "null", "-"],
+                capture_output=True, text=True, timeout=120,
+            )
+            stats = Monteur._parse_loudnorm_stats(result.stderr)
+            if stats:
+                lufs = stats["input_i"]
+                true_peak = stats["input_tp"]
+        except Exception as e:
+            alertes.append(f"Impossible de mesurer LUFS/TP : {e}")
+
+        # 2. Détecter les silences > 5s via silencedetect
+        try:
+            result = _subprocess.run(
+                ["ffmpeg", "-y", "-i", str(chemin_mp3),
+                 "-af", "silencedetect=noise=-50dB:d=5",
+                 "-f", "null", "-"],
+                capture_output=True, text=True, timeout=120,
+            )
+            silences_excessifs = result.stderr.count("silence_end")
+        except Exception:
+            pass
+
+        # 3. Durée
+        duree_s = Monteur._ffprobe_duration(chemin_mp3)
+
+        # 4. Vérifier la conformité
+        conforme = True
+
+        if lufs is not None:
+            if lufs < -17 or lufs > -15:
+                alertes.append(
+                    f"LUFS hors norme : {lufs:.1f} (cible : -16 ±1). "
+                    f"{'Trop silencieux' if lufs < -17 else 'Trop fort'} "
+                    f"pour Apple Podcasts / Spotify."
+                )
+                conforme = False
+            else:
+                logger.info("LUFS conforme : %.1f (cible -16 ±1)", lufs)
+
+        if true_peak is not None:
+            if true_peak > -1.0:
+                alertes.append(
+                    f"True peak trop élevé : {true_peak:.1f} dBTP (max : -1.0 dBTP). "
+                    f"Fichier risque d'être rejeté par les plateformes."
+                )
+                conforme = False
+            else:
+                logger.info("True peak conforme : %.1f dBTP (max -1.0)", true_peak)
+
+        if silences_excessifs > 0:
+            alertes.append(
+                f"{silences_excessifs} silence(s) > 5 secondes détecté(s). "
+                f"Vérifier les pauses entre segments."
+            )
+
+        if duree_s < 60:
+            alertes.append(f"Durée très courte : {duree_s:.0f}s. Épisode incomplet ?")
+
+        return {
+            "conforme": conforme,
+            "lufs": round(lufs, 1) if lufs is not None else None,
+            "true_peak": round(true_peak, 1) if true_peak is not None else None,
+            "duree_s": round(duree_s, 1),
+            "silences_excessifs": silences_excessifs,
+            "alertes": alertes,
+        }
 
     @staticmethod
     def _slug(texte: str) -> str:
