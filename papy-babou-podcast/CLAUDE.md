@@ -1221,3 +1221,74 @@ Root cause diagnosis of 18 consecutive montage failures: invisible subprocess lo
 
 ### Tests (Session 18)
 - Full suite: 579 passed, 3 skipped (ffmpeg), 0 failures
+
+## Pre-Flight & Missing Segments Fix (Session 19)
+
+### Branch: `claude/fix-audio-loudnorm-8FX5G`
+
+### STATUS: PRODUCTION STILL CRASHING — NEED TRACEBACK
+- Production S01E01 keeps failing with "marquée 'failed' après crash dans reprendre()"
+- The **actual error message is invisible** — `logger.error()` wasn't reaching Replit deployment logs
+- Last commit adds **full traceback to sys.stderr** in both `pipeline()` and `reprendre()` error handlers
+- **NEXT STEP**: Re-run production, check Deployment Logs for `ERREUR FATALE` line, fix the actual crash
+
+### ROOT CAUSE 1: Pre-flight blocked on jingles/ambiance (FIXED)
+- `_verifier_assets_requis()` in monteur.py called `_charger_jingle()` etc. which tried ElevenLabs → Freesound
+- Both APIs failed (timeout/error) on Replit container → silence fallback → pre-flight detected silence → **blocked entire montage**
+- Jingles have built-in silence fallback in `_charger_jingle()` / `_charger_ambiance()` — blocking was redundant
+- **Fix**: Pre-flight now ONLY checks voice segments. Jingles/ambiance loaded on-demand during assembly
+- **No more pre-loading jingles** — saves up to 12 minutes of API timeout (4 assets × 3 retries × 60s)
+
+### ROOT CAUSE 2: 16 deleted segments (seg_089-seg_104) not regenerated (FIXED)
+- User accidentally deleted segments 89-104 from Object Storage thinking they were stale
+- Script has 104 segments total — the deleted ones may be voice OR SFX (can't verify locally, script stub)
+- Pipeline guard only checked "are there ANY mp3s?" → 88 present → passed → no regeneration triggered
+- **Fix**: Guard now compares segment IDs against script, detects missing voice AND SFX separately
+- Missing voice → reset to audio step (etape_idx=2)
+- Missing SFX only → reset to SFX step (etape_idx=3)
+
+### ROOT CAUSE 3: Audio regeneration re-generated ALL segments (FIXED)
+- `producteur_audio.produire_episode()` had no skip-if-exists logic
+- Resetting to audio step would regenerate all 88 voice segments (wasting ~20 min + ElevenLabs credits)
+- **Fix**: Added skip-if-exists check — skips segments that already have an mp3 file (>100 bytes)
+
+### ROOT CAUSE 4: Pre-flight too strict on voice segments (FIXED)
+- Monteur pre-flight blocked on ANY missing voice segment (even 1/104 = 1%)
+- Main.py guard used 50% threshold, but monteur didn't — inconsistent
+- **Fix**: Monteur pre-flight now uses same 50% threshold. ≤50% missing = WARNING + silence fallback (BUG 11)
+
+### ROOT CAUSE 5: Crash errors invisible in deployment logs (FIXED)
+- `pipeline()` error handler used `logger.error()` only — not visible when Python logging is misconfigured
+- `reprendre()` error handler wrote to stderr but without full traceback
+- **Fix**: Both handlers now write **full traceback** to `sys.stderr` directly (bypasses logging framework)
+
+### Commits (Session 19)
+1. `e8abda8` — Pre-flight moved after WAV checkpoint (skip on valid WAV)
+2. `221144f` — Diagnostic API keys + SFX-only regeneration detection
+3. `660b7f2` — Jingles/ambiance non-blocking (warning only)
+4. `fbaa825` — Remove jingle pre-loading entirely (timeout risk)
+5. `b6dcf48` — 50% threshold for voice + skip-if-exists for audio regen
+6. `711bde0` — Full traceback on stderr in both error handlers
+
+### When modifying monteur.py (Session 19)
+- `_verifier_assets_requis()` ONLY checks voice segments — jingles/ambiance are NOT pre-loaded
+- Pre-flight blocks only if >50% voice segments missing (aligned with main.py guard)
+- SFX segments are NEVER blocking — `_assembler_segments()` replaces missing with silence (BUG 11)
+- ElevenLabs SFX failures logged to `sys.stderr` directly (not just logger)
+- Freesound failures logged to `sys.stderr` with raw `os.getenv()` value for FREESOUND_API_KEY
+
+### When modifying main.py (Session 19)
+- Segment guard (line ~2837) checks BOTH voice AND SFX IDs against script
+- Missing voice (any amount) → reset to audio step (etape_idx=2)
+- Missing SFX only → reset to SFX step (etape_idx=3)
+- Audio step now only regenerates missing segments (skip-if-exists in producteur_audio)
+- `pipeline()` error handler writes full traceback to stderr
+- `reprendre()` error handler writes full traceback to stderr
+
+### When modifying producteur_audio.py (Session 19)
+- `produire_episode()` skips segments that already exist as mp3 files (>100 bytes)
+- On partial resume, only regenerates the missing segments (saves time + API credits)
+- Returns list of ALL segment paths (existing + newly generated)
+
+### Tests (Session 19)
+- Full suite: 587 passed, 3 skipped (ffmpeg), 0 failures
