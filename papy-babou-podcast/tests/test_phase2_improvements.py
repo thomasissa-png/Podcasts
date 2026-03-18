@@ -918,11 +918,11 @@ class TestPlanificateurUnSujetParEpisode:
         with pytest.raises(ValueError, match="doublon"):
             Planificateur._valider_plan(plan)
 
-    def test_doublon_meme_personnage_avertissement(self):
-        """Plusieurs épisodes sur le même personnage émettent un avertissement (pas une erreur).
+    def test_doublon_meme_personnage_rejete(self):
+        """Plusieurs épisodes sur le même personnage biblique sont rejetés.
 
-        Un même personnage biblique (ex: Abraham, Moïse) peut légitimement apparaître
-        dans plusieurs épisodes s'il s'agit d'histoires différentes.
+        Même si les histoires sont différentes (ex: Moïse buisson + Moïse mer Rouge),
+        un personnage ne doit apparaître que dans UN seul épisode.
         """
         plan = self._plan([
             "Abraham quitte son pays",
@@ -930,7 +930,33 @@ class TestPlanificateurUnSujetParEpisode:
             "Moïse traverse la mer Rouge",
             "Jonas et la baleine",
         ])
-        # Ne doit plus lever d'erreur — juste un warning (Moïse x2 mais histoires différentes)
+        with pytest.raises(ValueError, match="DOUBLONS"):
+            Planificateur._valider_plan(plan)
+
+    def test_doublon_trois_joseph_rejete(self):
+        """3 épisodes sur Joseph doivent être rejetés."""
+        plan = self._plan([
+            "Joseph et ses frères",
+            "Joseph vendu en Égypte",
+            "Joseph viceroy d'Égypte",
+        ])
+        with pytest.raises(ValueError, match="DOUBLONS"):
+            Planificateur._valider_plan(plan)
+
+    def test_plan_personnages_tous_differents_passe(self):
+        """Un plan avec 10 personnages tous différents passe."""
+        plan = self._plan([
+            "La Création du monde",
+            "Noé et le Déluge",
+            "Abraham et le sacrifice d'Isaac",
+            "Jacob et l'échelle céleste",
+            "Joseph vendu par ses frères",
+            "Moïse et le buisson ardent",
+            "Josué et les murs de Jéricho",
+            "Samson le colosse",
+            "David contre Goliath",
+            "Daniel dans la fosse aux lions",
+        ])
         Planificateur._valider_plan(plan)
 
     def test_ordre_chronologique_inverse_warning(self):
@@ -953,11 +979,11 @@ class TestPlanificateurUnSujetParEpisode:
         ])
         Planificateur._valider_plan(plan)
 
-    def test_prompt_contient_regle_un_sujet(self):
-        """Le system prompt doit contenir la règle un sujet par épisode."""
+    def test_prompt_contient_regle_un_personnage(self):
+        """Le system prompt doit contenir la règle un personnage par épisode."""
         from agents.planificateur import SYSTEM_PROMPT
-        assert "UN SUJET PAR ÉPISODE" in SYSTEM_PROMPT
-        assert "JAMAIS" in SYSTEM_PROMPT
+        assert "UN PERSONNAGE BIBLIQUE PAR ÉPISODE" in SYSTEM_PROMPT
+        assert "INTERDIT" in SYSTEM_PROMPT
         assert "partie 1" in SYSTEM_PROMPT
 
     def test_prompt_contient_regle_chronologique(self):

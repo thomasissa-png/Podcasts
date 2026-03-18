@@ -357,8 +357,13 @@ PERSONAS D'AUDIENCE :
    - Les liens entre épisodes (teasing, rappels) sont-ils naturels ?
    - L'ouverture pose-t-elle bien le décor ? Le final conclut-il les arcs ?
 
-2. VARIÉTÉ DES THÈMES (note/10)
-   - Les histoires bibliques sont-elles suffisamment diversifiées ?
+2. VARIÉTÉ DES THÈMES (note/10) — AXE CRITIQUE
+   - RÈGLE ABSOLUE : chaque épisode DOIT couvrir un PERSONNAGE BIBLIQUE DIFFÉRENT.
+     Si tu détectes 2 épisodes ou plus sur le même personnage (ex: 2 épisodes sur
+     Moïse, 3 sur Joseph), c'est un DÉFAUT ÉLIMINATOIRE → note ≤ 3 et verdict
+     "retravailler" automatique, quelle que soit la qualité du reste.
+     Un enfant qui entend 3 épisodes sur Moïse va DÉCROCHER. La variété est la clé
+     de la fidélisation : chaque semaine = un nouveau héros, une nouvelle aventure.
    - Les ambiances varient-elles d'un épisode à l'autre ?
    - Les prétextes (scènes de vie) sont-ils variés et crédibles ?
    - Y a-t-il un bon équilibre action/émotion/humour sur la saison ?
@@ -473,7 +478,9 @@ RÈGLES :
 3. Conserve le nombre d'épisodes
 4. Applique TOUTES tes recommandations critiques et importantes des 3 retours
 5. Améliore ce qui peut l'être pour les suggestions aussi
-6. Un sujet biblique par épisode, COMPLET de A à Z (pas de multi-parties)
+6. UN PERSONNAGE BIBLIQUE PAR ÉPISODE — chaque épisode couvre un personnage DIFFÉRENT.
+   INTERDIT : 2+ épisodes sur le même personnage (ex: 2 Moïse, 3 Joseph).
+   Choisir le moment le plus emblématique et raconter l'histoire COMPLÈTE en 1 épisode.
 7. Ordre chronologique biblique respecté
 8. Chaque épisode garde les champs obligatoires : numero, titre, type, histoire_biblique, \
 resume, morale, ambiance, duree_cible_minutes, pretexte, personnages_presents, \

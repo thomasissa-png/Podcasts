@@ -39,17 +39,21 @@ RÈGLES DE PLANIFICATION :
    Varier les prétextes d'un épisode à l'autre.
 10. DURÉES par type : ouverture ~30 min, standard ~25 min, mi-saison ~30 min,
     final ~35 min, bonus ~20 min. Indiquer la durée correspondante au type.
-11. UN SUJET PAR ÉPISODE — RÈGLE ABSOLUE : Chaque épisode doit traiter UNE SEULE
-    histoire biblique de manière COMPLÈTE, de A à Z. JAMAIS de "partie 1 / partie 2".
-    JAMAIS le même personnage biblique sur plusieurs épisodes consécutifs.
-    Les épisodes sont longs (25-35 min), donc il y a largement le temps de couvrir
-    une histoire entière. Exemples de BONNE planification : Épisode 1 = David contre
-    Goliath (complet), Épisode 2 = Abraham et Isaac (complet), Épisode 3 = Moïse et
-    le buisson ardent (complet). Exemples de MAUVAISE planification : Épisode 1 =
-    Abraham partie 1, Épisode 2 = Abraham partie 2, Épisode 3 = Abraham partie 3.
-    Le fil rouge et l'arc narratif de la saison passent par les PERSONNAGES RÉCURRENTS
-    (Papy, Antoine, Noémie) et le THÈME de la saison, PAS par la répétition du même
-    sujet biblique.
+11. UN PERSONNAGE BIBLIQUE PAR ÉPISODE — RÈGLE ABSOLUE :
+    Chaque épisode doit couvrir UN personnage biblique DIFFÉRENT de manière COMPLÈTE.
+    INTERDIT : plusieurs épisodes sur le même personnage (ex: Moïse épisode 1 + Moïse
+    épisode 5, ou Joseph épisode 3 + Joseph épisode 4). INTERDIT : "partie 1 / partie 2".
+    Le plan sera REJETÉ automatiquement si un personnage apparaît dans plus d'1 épisode.
+    Pour chaque personnage, choisir le moment le PLUS emblématique et raconter l'histoire
+    COMPLÈTE de A à Z en un seul épisode (25-35 min = largement suffisant).
+    Exemples CORRECTS (10 épisodes, 10 personnages différents) :
+    Ep1=Création, Ep2=Noé, Ep3=Abraham, Ep4=Jacob, Ep5=Joseph,
+    Ep6=Moïse, Ep7=Josué, Ep8=Samson, Ep9=David, Ep10=Daniel.
+    Exemples INTERDITS :
+    Ep1=Moïse et le buisson, Ep2=Moïse et l'Exode, Ep3=Moïse et la mer Rouge (3x Moïse!)
+    Ep1=Joseph vendu, Ep2=Joseph en Égypte, Ep3=Joseph viceroy (3x Joseph!)
+    Le fil rouge passe par les PERSONNAGES RÉCURRENTS (Papy, Antoine, Noémie) et le
+    THÈME de la saison, PAS par la répétition du même personnage biblique.
 12. ORDRE CHRONOLOGIQUE — RÈGLE ABSOLUE : Les histoires bibliques DOIVENT être
     présentées dans l'ordre chronologique de la Bible / de l'Histoire. C'est un
     podcast éducatif pour enfants : on suit le fil de l'Histoire de manière
@@ -494,17 +498,16 @@ class Planificateur:
             compteur = Counter(_sujets_principaux)
             repetitions = {s: c for s, c in compteur.items() if c > 1}
             if repetitions:
-                # Vérifier si ce sont des histoires réellement identiques ou
-                # des histoires différentes impliquant le même personnage.
-                # Ex: "Abraham quitte son pays" et "Le sacrifice d'Isaac" sont
-                # deux histoires distinctes même si Abraham est le personnage dominant.
+                details = []
                 for sujet, count in repetitions.items():
                     eps = [histoires[i] for i, s in enumerate(_sujets_principaux) if s == sujet]
-                    logger.warning(
-                        "Personnage '%s' apparaît dans %d épisodes : %s. "
-                        "Vérifiez que ce sont bien des histoires bibliques DIFFÉRENTES.",
-                        sujet, count, eps,
-                    )
+                    details.append(f"'{sujet}' dans {count} épisodes : {eps}")
+                raise ValueError(
+                    f"DOUBLONS DE PERSONNAGES BIBLIQUES — chaque épisode doit couvrir "
+                    f"un personnage biblique DIFFÉRENT. "
+                    f"{'; '.join(details)}. "
+                    f"Choisir le moment le plus emblématique de chaque personnage."
+                )
 
         # Vérifier l'ordre chronologique des histoires bibliques
         # Dictionnaire de personnages/événements bibliques → ordre approximatif

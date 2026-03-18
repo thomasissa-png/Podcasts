@@ -811,15 +811,18 @@ def liste_saisons() -> list[int]:
 # Injecté automatiquement dans le prompt du planificateur.
 PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
     1: {
-        "perimetre": "Ancien Testament uniquement — ordre chronologique",
+        "perimetre": "Ancien Testament uniquement — ordre chronologique — UN épisode par personnage biblique",
         "description": (
             "Histoires de l'Ancien Testament exclusivement, dans l'ORDRE "
-            "CHRONOLOGIQUE de la Bible : Création du monde → Noé et le Déluge → "
-            "Abraham (sacrifice d'Isaac) → Jacob (échelle de Jacob) → "
-            "Joseph (vendu par ses frères, en Égypte) → Moïse (buisson ardent, "
-            "Exode, mer Rouge, dix commandements) → Josué (Jéricho) → "
-            "les Juges (Samson, Gédéon) → Samuel → les Rois (David contre Goliath, "
-            "Salomon et le temple) → les Prophètes (Élie, Élisée, Jonas, Daniel). "
+            "CHRONOLOGIQUE de la Bible. CHAQUE ÉPISODE = UN PERSONNAGE BIBLIQUE DIFFÉRENT. "
+            "Exemples de bonne répartition pour 10 épisodes : "
+            "La Création du monde → Noé et le Déluge → Abraham et le sacrifice d'Isaac → "
+            "Jacob et l'échelle céleste → Joseph vendu par ses frères → "
+            "Moïse et le buisson ardent → Josué et les murs de Jéricho → "
+            "Samson le colosse → David contre Goliath → Daniel dans la fosse aux lions. "
+            "INTERDIT : plusieurs épisodes sur le même personnage (ex: 3 épisodes "
+            "sur Moïse ou 2 épisodes sur Joseph). Choisir le moment le PLUS "
+            "emblématique de chaque personnage et raconter l'histoire COMPLÈTE en 1 épisode. "
             "AUCUNE histoire du Nouveau Testament. "
             "L'épisode 1 DOIT commencer au début (Genèse) et le dernier "
             "DOIT se situer chronologiquement après tous les précédents."
