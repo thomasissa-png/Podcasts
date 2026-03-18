@@ -1282,7 +1282,7 @@ def _afficher_retour_directeur_saison(resultat: dict) -> None:
     dir_data = resultat.get("directeur_saison", {})
     note_dir = dir_data.get("note_globale", 0)
     verdict = dir_data.get("verdict", "?")
-    note_aud = DirecteurPodcast.note_audience_plan(resultat)
+    note_aud = DirecteurPodcast.note_audience_plan(resultat) if DirecteurPodcast else 0
 
     # Verdict avec couleur
     couleur_verdict = {
@@ -1387,6 +1387,8 @@ def _validation_plan_saison(
 
     # Instancier le directeur une seule fois (H2)
     try:
+        if DirecteurPodcast is None:
+            raise ImportError("DirecteurPodcast non disponible")
         directeur = DirecteurPodcast()
     except Exception as e:
         logger.warning("Directeur Podcast non disponible : %s", e)
@@ -2871,7 +2873,7 @@ def _pipeline_inner(
             logger.warning("Object Storage indisponible pour script : %s", e)
 
         # ── Validation ambiances musicales ──────────────────────────────
-        ambiance_validation = DirecteurPodcast.valider_ambiances(script)
+        ambiance_validation = DirecteurPodcast.valider_ambiances(script) if DirecteurPodcast else {"alertes": [], "stats": {"dynamique": False, "nb_ambiances": 0}}
         if ambiance_validation["alertes"]:
             console.print(f"[yellow]  Ambiances musicales — {len(ambiance_validation['alertes'])} alerte(s) :[/yellow]")
             for a in ambiance_validation["alertes"]:
@@ -2888,6 +2890,8 @@ def _pipeline_inner(
         # ── Directeur Podcast — validation créative + audience ────────────
         console.print(f"\n{Typo.etape(2, 8, 'Validation Directeur Podcast')}")
         try:
+            if DirecteurPodcast is None:
+                raise ImportError("DirecteurPodcast non disponible")
             directeur = DirecteurPodcast()
             contexte_directeur = {
                 "type_episode": type_episode,
@@ -3289,7 +3293,7 @@ def _pipeline_inner(
             console.print(f"\n{Typo.etape(4, 8, f'SFX Bruitages ({nb_sfx})')}")
 
             # Pré-validation SFX par le directeur podcast
-            sfx_validation = DirecteurPodcast.valider_sfx_pour_generation(script)
+            sfx_validation = DirecteurPodcast.valider_sfx_pour_generation(script) if DirecteurPodcast else {"alertes": [], "stats": {"nb_sfx": 0, "nb_overlay": 0, "nb_insert": 0}}
             stats_sfx_pre = sfx_validation["stats"]
             console.print(
                 f"  Pré-validation SFX : {stats_sfx_pre['nb_sfx']} SFX "
