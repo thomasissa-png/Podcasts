@@ -291,15 +291,7 @@ _MAX_TOKENS_PAR_TYPE = {
 
 def _construire_system_prompt_directeur() -> str:
     """Construit le system prompt avec les personas injectées."""
-    personas_text = []
-    for key, persona in PERSONAS.items():
-        personas_text.append(
-            f"PERSONA {persona['nom'].upper()} ({persona['age']} ans, {persona['profil']}) :\n"
-            f"{persona['description']}\n"
-            f"Critères d'évaluation :\n"
-            + "\n".join(f"  - {c}" for c in persona["criteres"])
-        )
-    return SYSTEM_PROMPT.format(personas="\n\n".join(personas_text))
+    return SYSTEM_PROMPT.format(personas=_construire_personas_text())
 
 
 def _construire_user_prompt(script: dict, contexte: dict | None = None) -> str:
@@ -1343,13 +1335,12 @@ class DirecteurPodcast:
             f"- Nombre de segments : {len(episode.get('segments', []))}\n"
         )
 
-        client = anthropic.Anthropic()
         derniere_erreur = None
 
         for tentative in range(1, max_retry + 1):
             try:
                 response = config.appel_claude_avec_retry(
-                    client,
+                    self.client,
                     model=config.CLAUDE_MODEL,
                     max_tokens=2048,
                     system=system_prompt,
@@ -1467,13 +1458,12 @@ class DirecteurPodcast:
 
         user_prompt += "Donne ton verdict GO / NO-GO / CONDITIONNEL pour la publication."
 
-        client = anthropic.Anthropic()
         derniere_erreur = None
 
         for tentative in range(1, max_retry + 1):
             try:
                 response = config.appel_claude_avec_retry(
-                    client,
+                    self.client,
                     model=config.CLAUDE_MODEL,
                     max_tokens=2048,
                     system=system_prompt,
@@ -1566,13 +1556,12 @@ class DirecteurPodcast:
             "produise un épisode de qualité broadcast."
         )
 
-        client = anthropic.Anthropic()
         derniere_erreur = None
 
         for tentative in range(1, max_retry + 1):
             try:
                 response = config.appel_claude_avec_retry(
-                    client,
+                    self.client,
                     model=config.CLAUDE_MODEL,
                     max_tokens=2048,
                     system=system_prompt,

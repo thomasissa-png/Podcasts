@@ -3117,6 +3117,10 @@ def _pipeline_inner(
         else:
             directeur_ok = True  # dry-run → pas de validation directeur
 
+        # Enregistrer le statut directeur dans le rapport
+        if "directeur_podcast" in rapport.get("etapes", {}):
+            rapport["etapes"]["directeur_podcast"]["approuve"] = directeur_ok
+
         _log_step_duration("Script + Review")
 
         # Checkpoint après script (inclut le chemin du script validé)
@@ -4090,7 +4094,11 @@ def _pipeline_inner(
                     instructions_dir.append(f"Avis description : {desc_avis}")
 
                 try:
-                    meta = metadonnees.generer(script, duree_secondes)
+                    # Injecter les instructions du directeur dans le script pour le LLM
+                    script_enrichi = dict(script)
+                    if instructions_dir:
+                        script_enrichi["_instructions_metadonnees"] = "\n".join(instructions_dir)
+                    meta = metadonnees.generer(script_enrichi, duree_secondes)
                     # Appliquer le titre alternatif suggéré par le directeur si disponible
                     if titres_alt:
                         meta["titre"] = titres_alt[0]
