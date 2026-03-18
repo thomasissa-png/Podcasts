@@ -462,3 +462,198 @@ def _script_avec_quiz(quiz):
         "quiz": quiz,
         "segments": segments,
     }}
+
+
+# ── Tests Directeur Podcast — Validation SFX ────────────────────────────────
+
+class TestDirecteurValiderSFX:
+    """Tests de la validation programmatique SFX du directeur."""
+
+    def _script_avec_sfx(self, sfx_segments):
+        """Helper : crée un script avec des segments voix + SFX."""
+        segs = []
+        # Ajouter des segments voix pour le contexte
+        for i in range(1, 30):
+            segs.append({
+                "id": f"seg_{i:03d}", "personnage": "papy_babou",
+                "texte": "Il était une fois dans un pays lointain un homme très courageux.",
+                "ton": "chaleureux", "pause_apres_ms": 300,
+            })
+        # Insérer les SFX
+        for j, sfx in enumerate(sfx_segments):
+            sfx.setdefault("id", f"sfx_{j+1:03d}")
+            sfx.setdefault("personnage", "sfx")
+            sfx.setdefault("ton", "ambiance")
+            sfx.setdefault("pause_apres_ms", 0)
+            segs.insert(j * 3 + 1, sfx)
+        return {"episode": {"segments": segs}}
+
+    def test_sfx_francais_detecte(self):
+        """Les descriptions SFX en français doivent être détectées."""
+        from agents.directeur_podcast import DirecteurPodcast
+        sfx = [{"texte": "le vent dans les arbres", "mode": "overlay",
+                "duree_sfx_secondes": 15.0}] * 25
+        result = DirecteurPodcast.valider_sfx_pour_generation(
+            self._script_avec_sfx(sfx)
+        )
+        fr_alertes = [a for a in result["alertes"] if "français" in a]
+        assert len(fr_alertes) > 0
+
+    def test_sfx_anglais_ok(self):
+        """Les descriptions SFX en anglais ne doivent pas déclencher d'alerte langue."""
+        from agents.directeur_podcast import DirecteurPodcast
+        sfx = [
+            {"texte": f"gentle wind blowing through trees variant {i}",
+             "mode": "overlay", "duree_sfx_secondes": 15.0}
+            for i in range(25)
+        ]
+        result = DirecteurPodcast.valider_sfx_pour_generation(
+            self._script_avec_sfx(sfx)
+        )
+        fr_alertes = [a for a in result["alertes"] if "français" in a]
+        assert len(fr_alertes) == 0
+
+    def test_sfx_trop_vague_detecte(self):
+        """Les SFX avec < 3 mots doivent être signalés."""
+        from agents.directeur_podcast import DirecteurPodcast
+        sfx = [{"texte": "wind", "mode": "insert", "duree_sfx_secondes": 3.0}]
+        sfx += [{"texte": f"detailed sound description variant {i}",
+                 "mode": "insert", "duree_sfx_secondes": 3.0}
+                for i in range(24)]
+        result = DirecteurPodcast.valider_sfx_pour_generation(
+            self._script_avec_sfx(sfx)
+        )
+        vague_alertes = [a for a in result["alertes"] if "vague" in a]
+        assert len(vague_alertes) >= 1
+
+    def test_sfx_doublon_detecte(self):
+        """Les descriptions SFX dupliquées doivent être signalées."""
+        from agents.directeur_podcast import DirecteurPodcast
+        sfx = [{"texte": "birds singing in morning sun",
+                "mode": "insert", "duree_sfx_secondes": 3.0}] * 5
+        sfx += [{"texte": f"unique sound {i}", "mode": "insert",
+                 "duree_sfx_secondes": 3.0} for i in range(20)]
+        result = DirecteurPodcast.valider_sfx_pour_generation(
+            self._script_avec_sfx(sfx)
+        )
+        doublon_alertes = [a for a in result["alertes"] if "doublon" in a]
+        assert len(doublon_alertes) >= 1
+        assert not result["valide"]  # Doublons = critiques
+
+    def test_sfx_nb_insuffisant(self):
+        """Moins de 25 SFX doit déclencher une alerte."""
+        from agents.directeur_podcast import DirecteurPodcast
+        sfx = [{"texte": f"sound effect {i}", "mode": "insert",
+                "duree_sfx_secondes": 3.0} for i in range(5)]
+        result = DirecteurPodcast.valider_sfx_pour_generation(
+            self._script_avec_sfx(sfx)
+        )
+        nb_alertes = [a for a in result["alertes"] if "25" in a]
+        assert len(nb_alertes) >= 1
+
+    def test_sfx_pas_overlay_detecte(self):
+        """L'absence totale d'overlay doit être signalée."""
+        from agents.directeur_podcast import DirecteurPodcast
+        sfx = [{"texte": f"door slam variant {i}", "mode": "insert",
+                "duree_sfx_secondes": 3.0} for i in range(25)]
+        result = DirecteurPodcast.valider_sfx_pour_generation(
+            self._script_avec_sfx(sfx)
+        )
+        overlay_alertes = [a for a in result["alertes"] if "overlay" in a.lower()]
+        assert len(overlay_alertes) >= 1
+
+    def test_sfx_stats_completes(self):
+        """Les stats doivent contenir tous les champs."""
+        from agents.directeur_podcast import DirecteurPodcast
+        sfx = [{"texte": f"sound {i}", "mode": "overlay" if i % 3 == 0 else "insert",
+                "duree_sfx_secondes": 15.0 if i % 3 == 0 else 3.0}
+               for i in range(25)]
+        result = DirecteurPodcast.valider_sfx_pour_generation(
+            self._script_avec_sfx(sfx)
+        )
+        stats = result["stats"]
+        assert "nb_sfx" in stats
+        assert "nb_overlay" in stats
+        assert "nb_insert" in stats
+        assert stats["nb_sfx"] == 25
+
+    def test_directeur_6_axes_dans_prompt(self):
+        """Le system prompt du directeur doit mentionner 6 axes."""
+        from agents.directeur_podcast import SYSTEM_PROMPT
+        assert "6 AXES" in SYSTEM_PROMPT
+
+    def test_directeur_qualite_sfx_dans_axes(self):
+        """L'axe qualite_sfx doit être dans la validation."""
+        from agents.directeur_podcast import DirecteurPodcast
+        # Test que _valider_resultat attend le 6ème axe
+        resultat_incomplet = {
+            "directeur": {
+                "note_globale": 8, "verdict": "feu_vert",
+                "axes": {
+                    "immersion_sonore": {"note": 8},
+                    "rythme_accroche": {"note": 8},
+                    "emotion_personnages": {"note": 8},
+                    "valeur_educative": {"note": 8},
+                    "compatibilite_voix_ia": {"note": 8},
+                    # qualite_sfx manquant
+                },
+                "recommandations": [],
+            },
+            "personas": {
+                "lina_7ans": {"note": 8, "reaction": ""},
+                "noah_10ans": {"note": 8, "reaction": ""},
+                "sophie_parent": {"note": 8, "reaction": ""},
+            },
+        }
+        with pytest.raises(ValueError, match="qualite_sfx"):
+            DirecteurPodcast._valider_resultat(resultat_incomplet)
+
+
+# ── Tests SfxProvider — Audit Niveaux Audio ──────────────────────────────────
+
+class TestSfxAuditNiveaux:
+    """Tests de l'audit des niveaux audio SFX."""
+
+    def test_fichier_manquant_detecte(self):
+        """Un fichier SFX manquant doit être signalé."""
+        from agents.sfx_provider import SfxProvider
+        provider = SfxProvider()
+        script = {"episode": {"segments": [
+            {"id": "sfx_001", "personnage": "sfx", "texte": "wind",
+             "ton": "ambiance", "pause_apres_ms": 0,
+             "duree_sfx_secondes": 5.0, "mode": "insert"},
+        ]}}
+        chemin_inexistant = Path("/tmp/nonexistent_sfx_test.mp3")
+        result = provider.auditer_niveaux_audio(script, [chemin_inexistant])
+        assert not result["ok"]
+        assert any("manquant" in a for a in result["alertes"])
+
+    def test_audit_structure_resultat(self):
+        """Le résultat d'audit doit avoir la bonne structure."""
+        from agents.sfx_provider import SfxProvider
+        provider = SfxProvider()
+        result = provider.auditer_niveaux_audio(
+            {"episode": {"segments": []}}, []
+        )
+        assert "ok" in result
+        assert "alertes" in result
+        assert "details" in result
+        assert "stats" in result
+        assert "nb_sfx_audites" in result["stats"]
+        assert "nb_ok" in result["stats"]
+
+    def test_audit_fichier_trop_petit(self, tmp_path):
+        """Un fichier de moins de 1KB doit être détecté comme problématique."""
+        from agents.sfx_provider import SfxProvider
+        provider = SfxProvider()
+        # Créer un fichier quasi-vide
+        chemin = tmp_path / "sfx_001.mp3"
+        chemin.write_bytes(b"tiny")
+        script = {"episode": {"segments": [
+            {"id": "sfx_001", "personnage": "sfx", "texte": "test",
+             "ton": "ambiance", "pause_apres_ms": 0,
+             "duree_sfx_secondes": 5.0, "mode": "insert"},
+        ]}}
+        result = provider.auditer_niveaux_audio(script, [chemin])
+        assert not result["ok"]
+        assert any("trop petit" in a for a in result["alertes"])

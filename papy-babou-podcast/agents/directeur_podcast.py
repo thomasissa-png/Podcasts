@@ -134,7 +134,7 @@ Ce podcast utilise des voix ElevenLabs (synthèse). Tu sais que :
 PERSONAS D'AUDIENCE :
 {personas}
 
-ÉVALUATION EN 5 AXES (chacun noté sur 10) :
+ÉVALUATION EN 6 AXES (chacun noté sur 10) :
 
 1. IMMERSION SONORE (note/10)
    - Les SFX sont-ils bien placés, variés, et immersifs ?
@@ -167,6 +167,27 @@ PERSONAS D'AUDIENCE :
    - Reste-t-il des onomatopées ou formulations problématiques ?
    - Les segments ne sont-ils pas trop longs pour la voix IA (>80 mots) ?
 
+6. QUALITÉ SFX POUR GÉNÉRATION AUDIO (note/10) — NOUVEL AXE
+   Tu sais que les SFX seront générés automatiquement via ElevenLabs Sound Effects.
+   La QUALITÉ des descriptions SFX dans le script détermine directement la qualité du son produit.
+   Vérifie :
+   - Les descriptions SFX sont-elles EN ANGLAIS ? (obligatoire pour ElevenLabs)
+   - Sont-elles DESCRIPTIVES et SPÉCIFIQUES ? ("gentle warm breeze through olive trees at sunset"
+     est excellent, "wind" est trop vague et donnera un résultat générique)
+   - Les durées sont-elles cohérentes ? (overlay d'ambiance ≥ 15s, insert ponctuel 2-5s)
+   - Les modes "overlay" vs "insert" sont-ils bien choisis ?
+     * overlay = ambiance de fond continue (nature, lieu, atmosphère)
+     * insert = effet ponctuel (porte, tonnerre, réaction)
+   - Y a-t-il une VARIÉTÉ suffisante ? (pas 3 fois "wind blowing" — varier les descriptions)
+   - Les SFX sont-ils DYNAMIQUES ? Le paysage sonore évolue-t-il au fil de l'épisode ?
+     * Changement d'ambiance quand le lieu de l'histoire change
+     * Intensification des SFX pendant les moments dramatiques
+     * Retour au calme pendant les moments tendres
+   - Y a-t-il un SFX de TRANSITION entre la scène de vie et le récit biblique ?
+   - Le rythme SFX est-il régulier ? (jamais plus de 2 minutes sans un SFX)
+   - Les SFX ponctuent-ils les moments clés ? (révélations, actions, émotions)
+   - ANTI-RÉPÉTITION : chaque description SFX est-elle unique dans l'épisode ?
+
 FORMAT DE RÉPONSE — JSON STRICT :
 {{
   "directeur": {{
@@ -193,6 +214,17 @@ FORMAT DE RÉPONSE — JSON STRICT :
       "compatibilite_voix_ia": {{
         "note": 7,
         "commentaire": "..."
+      }},
+      "qualite_sfx": {{
+        "note": 8,
+        "commentaire": "...",
+        "sfx_problematiques": [
+          {{
+            "id": "sfx_003",
+            "probleme": "Description trop vague — 'wind' devrait être 'gentle warm breeze through olive trees'",
+            "suggestion": "hot dry desert wind blowing sand over ancient dunes"
+          }}
+        ]
       }}
     }},
     "recommandations": [
@@ -381,7 +413,7 @@ class DirecteurPodcast:
 
         axes_attendus = {
             "immersion_sonore", "rythme_accroche", "emotion_personnages",
-            "valeur_educative", "compatibilite_voix_ia",
+            "valeur_educative", "compatibilite_voix_ia", "qualite_sfx",
         }
         axes_presents = set(directeur.get("axes", {}).keys())
         manquants = axes_attendus - axes_presents
@@ -436,6 +468,150 @@ class DirecteurPodcast:
             f"[{r.get('priorite', '?')}] {r.get('texte', '')}"
             for r in triees
         ]
+
+    @staticmethod
+    def valider_sfx_pour_generation(script: dict) -> dict:
+        """Validation programmatique des SFX avant envoi au SfxProvider.
+
+        Vérifie la qualité des descriptions, les durées, les modes,
+        la variété et le dynamisme du paysage sonore.
+
+        Args:
+            script: Script JSON structuré avec segments SFX.
+
+        Returns:
+            Dict avec clés:
+              - "valide" (bool): True si tous les checks critiques passent.
+              - "alertes" (list[str]): Problèmes détectés.
+              - "stats" (dict): Statistiques SFX.
+        """
+        alertes = []
+        segments = script.get("episode", {}).get("segments", [])
+        sfx_segments = [s for s in segments if s.get("personnage") == "sfx"]
+        non_sfx = [s for s in segments if s.get("personnage") != "sfx"]
+
+        # ── Stats de base ──
+        nb_sfx = len(sfx_segments)
+        nb_overlay = sum(1 for s in sfx_segments if s.get("mode") == "overlay")
+        nb_insert = sum(1 for s in sfx_segments if s.get("mode") == "insert")
+
+        # 1. Nombre minimum de SFX
+        if nb_sfx < 25:
+            alertes.append(
+                f"Seulement {nb_sfx} SFX (minimum 25, idéal 30-35). "
+                f"L'épisode risque d'être plat sans habillage sonore continu."
+            )
+
+        # 2. Descriptions en anglais (détection de mots français courants)
+        mots_fr = {"le", "la", "les", "un", "une", "des", "du", "de",
+                    "et", "ou", "qui", "que", "dans", "sur", "avec"}
+        for seg in sfx_segments:
+            texte = seg.get("texte", "")
+            mots = set(texte.lower().split())
+            nb_fr = len(mots & mots_fr)
+            if nb_fr >= 2:
+                alertes.append(
+                    f"SFX '{seg['id']}' semble en français : \"{texte[:60]}\". "
+                    f"Les descriptions doivent être EN ANGLAIS pour ElevenLabs."
+                )
+
+        # 3. Descriptions trop courtes (< 3 mots = trop vague)
+        for seg in sfx_segments:
+            texte = seg.get("texte", "")
+            if len(texte.split()) < 3:
+                alertes.append(
+                    f"SFX '{seg['id']}' trop vague : \"{texte}\". "
+                    f"Ajouter des détails (lieu, intensité, texture)."
+                )
+
+        # 4. Durée overlay < 15s
+        for seg in sfx_segments:
+            if seg.get("mode") == "overlay":
+                duree = seg.get("duree_sfx_secondes", 5.0)
+                if duree < 15.0:
+                    alertes.append(
+                        f"SFX overlay '{seg['id']}' ne dure que {duree}s "
+                        f"(minimum 15s pour couvrir la narration)."
+                    )
+
+        # 5. Variété — descriptions dupliquées
+        descriptions = [s.get("texte", "").lower().strip() for s in sfx_segments]
+        vus = set()
+        for i, desc in enumerate(descriptions):
+            if desc in vus:
+                alertes.append(
+                    f"SFX '{sfx_segments[i]['id']}' est un doublon : \"{desc[:50]}\". "
+                    f"Chaque SFX doit être unique."
+                )
+            vus.add(desc)
+
+        # 6. Dynamisme — vérifier qu'il n'y a pas de trous > 2min sans SFX
+        # Estimer la position temporelle des segments
+        position_ms = 0
+        dernier_sfx_ms = 0
+        trous = []
+        for seg in segments:
+            if seg.get("personnage") == "sfx":
+                dernier_sfx_ms = position_ms
+                position_ms += int(seg.get("duree_sfx_secondes", 5.0) * 1000)
+            else:
+                nb_mots = len(seg.get("texte", "").split())
+                mpm = 100 if seg.get("personnage") in ("antoine", "noemie") else 120
+                position_ms += int((nb_mots / mpm) * 60 * 1000)
+            position_ms += seg.get("pause_apres_ms", 0)
+
+            ecart = position_ms - dernier_sfx_ms
+            if ecart > 120_000 and seg.get("personnage") != "sfx":
+                trous.append((ecart // 1000, seg.get("id", "?")))
+
+        for ecart_s, seg_id in trous:
+            alertes.append(
+                f"Trou de {ecart_s}s sans SFX avant segment '{seg_id}'. "
+                f"Maximum recommandé : 120s."
+            )
+
+        # 7. Équilibre overlay/insert
+        if nb_sfx > 0 and nb_overlay == 0:
+            alertes.append(
+                "Aucun SFX overlay (ambiance). L'épisode manquera "
+                "d'ambiances de fond continues."
+            )
+        if nb_sfx > 0 and nb_insert == 0:
+            alertes.append(
+                "Aucun SFX insert (ponctuel). L'épisode manquera "
+                "d'effets ponctuels qui marquent l'action."
+            )
+
+        # 8. Transition scène de vie → récit biblique
+        descriptions_lower = " ".join(descriptions)
+        has_transition = any(
+            mot in descriptions_lower
+            for mot in ("transition", "whoosh", "entering", "return")
+        )
+        if not has_transition and nb_sfx > 0:
+            alertes.append(
+                "Pas de SFX de transition entre scène de vie et récit biblique. "
+                "Ajouter un 'magical transition whoosh' pour marquer le changement d'univers."
+            )
+
+        # Validation globale
+        critiques = [a for a in alertes if "français" in a.lower() or "doublon" in a.lower()]
+        valide = len(critiques) == 0
+
+        return {
+            "valide": valide,
+            "alertes": alertes,
+            "stats": {
+                "nb_sfx": nb_sfx,
+                "nb_overlay": nb_overlay,
+                "nb_insert": nb_insert,
+                "nb_alertes": len(alertes),
+                "nb_critiques": len(critiques),
+                "duree_estimee_sfx_s": sum(
+                    s.get("duree_sfx_secondes", 5.0) for s in sfx_segments
+                ),
+            },
+        }
 
     @staticmethod
     def note_audience(resultat: dict) -> float:

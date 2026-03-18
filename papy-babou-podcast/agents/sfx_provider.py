@@ -314,6 +314,137 @@ class SfxProvider:
         """
         return SFX_PAR_AMBIANCE.get(ambiance, SFX_PAR_AMBIANCE.get("calme", []))
 
+    def auditer_niveaux_audio(
+        self, script: dict, fichiers_sfx: list[Path]
+    ) -> dict:
+        """Audite les niveaux audio des SFX générés.
+
+        Vérifie que chaque fichier SFX a un volume correct, une durée
+        cohérente avec la cible, et n'est pas du silence pur.
+
+        Args:
+            script: Script JSON structuré (pour les durées cibles).
+            fichiers_sfx: Liste des chemins vers les fichiers SFX générés.
+
+        Returns:
+            Dict avec clés:
+              - "ok" (bool): True si tous les SFX sont exploitables.
+              - "alertes" (list[str]): Problèmes détectés.
+              - "details" (list[dict]): Détails par SFX.
+        """
+        from pydub import AudioSegment
+
+        alertes = []
+        details = []
+
+        # Construire la map segment_id → segment pour les durées cibles
+        sfx_map = {}
+        for seg in script.get("episode", {}).get("segments", []):
+            if seg.get("personnage") == "sfx":
+                sfx_map[seg["id"]] = seg
+
+        for chemin in fichiers_sfx:
+            seg_id = chemin.stem
+            segment_info = sfx_map.get(seg_id, {})
+            duree_cible = segment_info.get("duree_sfx_secondes", 5.0)
+            mode = segment_info.get("mode", "insert")
+
+            detail = {
+                "id": seg_id,
+                "fichier": str(chemin),
+                "mode": mode,
+                "duree_cible_s": duree_cible,
+            }
+
+            try:
+                if not chemin.exists():
+                    alertes.append(
+                        f"SFX '{seg_id}' : fichier manquant ({chemin})."
+                    )
+                    detail["status"] = "manquant"
+                    details.append(detail)
+                    continue
+
+                # Vérifier la taille (< 1KB = probablement vide/corrompu)
+                taille = chemin.stat().st_size
+                detail["taille_kb"] = round(taille / 1024, 1)
+                if taille < 1024:
+                    alertes.append(
+                        f"SFX '{seg_id}' : fichier trop petit ({taille} octets), "
+                        f"probablement du silence ou corrompu."
+                    )
+                    detail["status"] = "trop_petit"
+                    details.append(detail)
+                    continue
+
+                audio = AudioSegment.from_mp3(str(chemin))
+                duree_reelle = len(audio) / 1000.0
+                detail["duree_reelle_s"] = round(duree_reelle, 1)
+
+                # Niveau sonore (dBFS)
+                dbfs = audio.dBFS
+                detail["dbfs"] = round(dbfs, 1)
+
+                # Vérifier si c'est du silence pur (< -50 dBFS)
+                if dbfs < -50:
+                    alertes.append(
+                        f"SFX '{seg_id}' : niveau trop bas ({dbfs:.1f} dBFS), "
+                        f"quasi-silence. Le SFX sera inaudible."
+                    )
+                    detail["status"] = "silence"
+                elif dbfs > -3:
+                    alertes.append(
+                        f"SFX '{seg_id}' : niveau trop élevé ({dbfs:.1f} dBFS), "
+                        f"risque de saturation et de masquer les voix."
+                    )
+                    detail["status"] = "trop_fort"
+                else:
+                    detail["status"] = "ok"
+
+                # Vérifier l'écart de durée (> 50% d'écart)
+                if duree_cible > 0:
+                    ecart = abs(duree_reelle - duree_cible) / duree_cible
+                    detail["ecart_duree_pct"] = round(ecart * 100, 0)
+                    if ecart > 0.5:
+                        alertes.append(
+                            f"SFX '{seg_id}' : durée réelle {duree_reelle:.1f}s "
+                            f"vs cible {duree_cible:.1f}s (écart {ecart:.0%})."
+                        )
+
+            except Exception as e:
+                alertes.append(
+                    f"SFX '{seg_id}' : erreur de lecture ({e})."
+                )
+                detail["status"] = "erreur"
+
+            details.append(detail)
+
+        # Vérifier la cohérence globale des niveaux
+        niveaux = [d["dbfs"] for d in details if "dbfs" in d]
+        if len(niveaux) >= 2:
+            ecart_max = max(niveaux) - min(niveaux)
+            if ecart_max > 20:
+                alertes.append(
+                    f"Écart de volume entre SFX trop important : "
+                    f"{ecart_max:.1f} dB (de {min(niveaux):.1f} à "
+                    f"{max(niveaux):.1f} dBFS). Normaliser les niveaux."
+                )
+
+        nb_problemes = sum(1 for d in details if d.get("status") not in ("ok",))
+        return {
+            "ok": nb_problemes == 0,
+            "alertes": alertes,
+            "details": details,
+            "stats": {
+                "nb_sfx_audites": len(details),
+                "nb_ok": sum(1 for d in details if d.get("status") == "ok"),
+                "nb_problemes": nb_problemes,
+                "dbfs_moyen": round(
+                    sum(niveaux) / len(niveaux), 1
+                ) if niveaux else None,
+            },
+        }
+
     def _logger_stats(self, episode_id: str) -> None:
         """Affiche un résumé des sources SFX utilisées."""
         if not self.stats:

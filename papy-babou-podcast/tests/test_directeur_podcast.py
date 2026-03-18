@@ -79,6 +79,7 @@ def resultat_directeur_valide():
                 "emotion_personnages": {"note": 9, "commentaire": "Personnages vivants."},
                 "valeur_educative": {"note": 8, "commentaire": "Contenu riche."},
                 "compatibilite_voix_ia": {"note": 8, "commentaire": "Bien adapté."},
+                "qualite_sfx": {"note": 8, "commentaire": "SFX bien décrits.", "sfx_problematiques": []},
             },
             "recommandations": [
                 {"priorite": "suggestion", "texte": "Ajouter un SFX de vent."},
@@ -263,7 +264,7 @@ class TestValidation:
                     "axes": {
                         "immersion_sonore": {}, "rythme_accroche": {},
                         "emotion_personnages": {}, "valeur_educative": {},
-                        "compatibilite_voix_ia": {},
+                        "compatibilite_voix_ia": {}, "qualite_sfx": {},
                     },
                     "recommandations": [],
                 },

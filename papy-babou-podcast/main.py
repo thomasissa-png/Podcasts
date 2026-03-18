@@ -3114,6 +3114,22 @@ def _pipeline_inner(
             rapport["etapes"]["sfx"] = {"status": "no sfx segments", "nb_sfx": 0}
         else:
             console.print(f"\n{Typo.etape(4, 8, f'SFX Bruitages ({nb_sfx})')}")
+
+            # Pré-validation SFX par le directeur podcast
+            sfx_validation = DirecteurPodcast.valider_sfx_pour_generation(script)
+            stats_sfx_pre = sfx_validation["stats"]
+            console.print(
+                f"  Pré-validation SFX : {stats_sfx_pre['nb_sfx']} SFX "
+                f"({stats_sfx_pre['nb_overlay']} overlay, {stats_sfx_pre['nb_insert']} insert)"
+            )
+            if sfx_validation["alertes"]:
+                console.print(f"[yellow]  {len(sfx_validation['alertes'])} alerte(s) SFX :[/yellow]")
+                for a in sfx_validation["alertes"][:10]:
+                    console.print(f"    ! {a}")
+                if len(sfx_validation["alertes"]) > 10:
+                    console.print(f"    ... et {len(sfx_validation['alertes']) - 10} autres")
+            rapport.setdefault("alertes_post_generation", []).extend(sfx_validation["alertes"])
+
             sfx_provider = SfxProvider()
             fichiers_sfx = sfx_provider.produire_sfx(script)
 
@@ -3124,7 +3140,31 @@ def _pipeline_inner(
             rapport["etapes"]["sfx"] = {
                 "nb_sfx": len(fichiers_sfx),
                 "sources": dict(sfx_provider.stats),
+                "pre_validation": sfx_validation["stats"],
             }
+
+            # Audit niveaux audio des SFX générés
+            if fichiers_sfx:
+                try:
+                    audit_sfx = sfx_provider.auditer_niveaux_audio(script, fichiers_sfx)
+                    stats_audit = audit_sfx["stats"]
+                    console.print(
+                        f"  Audit audio : {stats_audit['nb_ok']}/{stats_audit['nb_sfx_audites']} "
+                        f"SFX OK (niveau moyen {stats_audit.get('dbfs_moyen', '?')} dBFS)"
+                    )
+                    if audit_sfx["alertes"]:
+                        console.print(f"[yellow]  {len(audit_sfx['alertes'])} alerte(s) audio :[/yellow]")
+                        for a in audit_sfx["alertes"][:5]:
+                            console.print(f"    ! {a}")
+                    rapport["etapes"]["sfx"]["audit_audio"] = {
+                        "ok": audit_sfx["ok"],
+                        "nb_ok": stats_audit["nb_ok"],
+                        "nb_problemes": stats_audit["nb_problemes"],
+                        "dbfs_moyen": stats_audit.get("dbfs_moyen"),
+                    }
+                    rapport.setdefault("alertes_post_generation", []).extend(audit_sfx["alertes"])
+                except Exception as e:
+                    logger.warning("Audit audio SFX échoué : %s", e)
 
             # Enregistrer les SFX en DB
             if _use_db():
