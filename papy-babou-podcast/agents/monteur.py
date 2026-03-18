@@ -403,7 +403,16 @@ class Monteur:
                 _sys.stderr.flush()
                 voix_wav = _tmp_dir / "voix_complet.wav"
                 self._ffmpeg_concat(chunk_wavs, voix_wav)
-                logger.info("  [2/9] Voix concaténées : %s", voix_wav)
+                _voix_dur = self._ffprobe_duration(voix_wav)
+                _sys.stderr.write(
+                    f"[monteur] [2/9] Voix concaténées : {_voix_dur:.1f}s "
+                    f"({_voix_dur/60:.1f} min)\n"
+                )
+                _sys.stderr.flush()
+                logger.info(
+                    "  [2/9] Voix concaténées : %s (%.1fs = %.1f min)",
+                    voix_wav, _voix_dur, _voix_dur / 60,
+                )
 
                 # Supprimer les chunks (libérer espace disque)
                 for cp in chunk_wavs:
@@ -428,9 +437,18 @@ class Monteur:
                 _sys.stderr.flush()
                 voix_fond_wav = _tmp_dir / "voix_fond.wav"
                 self._ffmpeg_mix(voix_wav, fond_wav, voix_fond_wav)
+                _mix_dur = self._ffprobe_duration(voix_fond_wav)
+                _sys.stderr.write(
+                    f"[monteur] [4/9] Voix + fond mixés : {_mix_dur:.1f}s "
+                    f"({_mix_dur/60:.1f} min)\n"
+                )
+                _sys.stderr.flush()
                 voix_wav.unlink(missing_ok=True)
                 fond_wav.unlink(missing_ok=True)
-                logger.info("  [4/9] Voix + fond mixés")
+                logger.info(
+                    "  [4/9] Voix + fond mixés (%.1fs = %.1f min)",
+                    _mix_dur, _mix_dur / 60,
+                )
 
                 # 5. Room tone
                 _sys.stderr.write("[monteur] [5/9] Room tone...\n")
@@ -469,9 +487,18 @@ class Monteur:
                     [sig_wav, intro_wav, voix_fond_wav, outro_wav, sig_wav],
                     episode_wav,
                 )
+                _ep_dur = self._ffprobe_duration(episode_wav)
+                _sys.stderr.write(
+                    f"[monteur] [6/9] Épisode assemblé : {_ep_dur:.1f}s "
+                    f"({_ep_dur/60:.1f} min)\n"
+                )
+                _sys.stderr.flush()
                 for f in [intro_wav, outro_wav, sig_wav, voix_fond_wav]:
                     f.unlink(missing_ok=True)
-                logger.info("  [6/9] Épisode assemblé")
+                logger.info(
+                    "  [6/9] Épisode assemblé (%.1fs = %.1f min)",
+                    _ep_dur, _ep_dur / 60,
+                )
 
                 # 7-8. Master bus + LUFS via ffmpeg (écriture atomique)
                 _sys.stderr.write("[monteur] [7-8/9] Master bus + LUFS via ffmpeg...\n")
@@ -819,6 +846,11 @@ class Monteur:
 
         dernier_ton: str = ""
         total_segments = len(segments)
+        # Compteurs de diagnostic durée
+        _total_voix_ms = 0
+        _total_sfx_ms = 0
+        _total_pause_ms = 0
+        _total_silence_fallback_ms = 0
 
         for i, seg in enumerate(segments):
             # Log de progression tous les 20 segments (visible en temps réel)
@@ -864,8 +896,15 @@ class Monteur:
                     chemin, duree_ms,
                 )
                 audio = AudioSegment.silent(duration=duree_ms)
+                _total_silence_fallback_ms += duree_ms
             else:
                 audio = AudioSegment.from_mp3(str(chemin))
+
+            _seg_dur_ms = len(audio)
+            if seg["personnage"] == "sfx":
+                _total_sfx_ms += _seg_dur_ms
+            else:
+                _total_voix_ms += _seg_dur_ms
 
             if seg["personnage"] == "sfx":
                 # Volume SFX contextuel selon le ton du segment précédent (A8)
@@ -938,6 +977,7 @@ class Monteur:
                 pause_ms = MAX_PAUSE_MS
             if pause_ms > 0:
                 resultat += AudioSegment.silent(duration=pause_ms)
+                _total_pause_ms += pause_ms
 
             segments_depuis_transition += 1
 
@@ -951,6 +991,20 @@ class Monteur:
                 sfx_overlay = _appliquer_pan(sfx_overlay, config.STEREO_PAN.get("sfx", 0.0))
                 resultat += sfx_overlay
             overlays_pending.clear()
+
+        # ── Diagnostic durée ──
+        _resultat_dur = len(resultat) / 1000.0
+        _diag = (
+            f"[monteur] DIAGNOSTIC chunk {total_segments} segments : "
+            f"voix={_total_voix_ms/1000:.1f}s, "
+            f"sfx={_total_sfx_ms/1000:.1f}s, "
+            f"pauses={_total_pause_ms/1000:.1f}s, "
+            f"silence_fallback={_total_silence_fallback_ms/1000:.1f}s, "
+            f"total_resultat={_resultat_dur:.1f}s ({_resultat_dur/60:.1f}min)"
+        )
+        _sys_mod.stderr.write(_diag + "\n")
+        _sys_mod.stderr.flush()
+        logger.info(_diag)
 
         return resultat
 
