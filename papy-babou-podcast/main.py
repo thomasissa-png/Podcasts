@@ -2953,86 +2953,169 @@ def _pipeline_inner(
                 f"{stats_amb['nb_ambiances_distinctes']} variantes)"
             )
 
-        # ── Directeur Podcast — validation créative + audience ────────────
-        console.print(f"\n{Typo.etape(2, 8, 'Validation Directeur Podcast')}")
-        try:
-            directeur = DirecteurPodcast()
-            contexte_directeur = {
-                "type_episode": type_episode,
-                "score_reviewer": score,
-                "alertes": rapport.get("alertes_post_generation", []),
-                "metriques": rapport.get("metriques", {}),
-            }
-            resultat_directeur = directeur.evaluer(script, contexte=contexte_directeur)
-            dir_data = resultat_directeur.get("directeur", {})
-            note_dir = dir_data.get("note_globale", 0)
-            verdict = dir_data.get("verdict", "?")
-            note_aud = directeur.note_audience(resultat_directeur)
+        # ── Directeur Podcast — validation créative + audience (BLOQUANT) ──
+        # Le directeur peut demander jusqu'à MAX_RETOURS_DIRECTEUR_SCRIPT corrections.
+        # Si "retravailler" ou "ajustements_mineurs" avec critiques, le script est
+        # renvoyé au scripteur avec les recommandations du directeur comme corrections.
+        MAX_RETOURS_DIRECTEUR_SCRIPT = 2
+        directeur_ok = False
 
-            # Affichage verdict
-            couleur_verdict = {
-                "feu_vert": Palette.SUCCES,
-                "ajustements_mineurs": "yellow",
-                "retravailler": "red",
-            }.get(verdict, "white")
-            console.print(
-                f"  Directeur : [{couleur_verdict}]{verdict.replace('_', ' ').upper()}[/] "
-                f"(note {note_dir}/10, audience {note_aud}/10)"
-            )
+        if not dry_run:
+            for tour_dir in range(1, MAX_RETOURS_DIRECTEUR_SCRIPT + 2):  # +1 pour la dernière éval
+                console.print(f"\n{Typo.etape(2, 8, f'Validation Directeur Podcast (tour {tour_dir})')}")
+                try:
+                    directeur = DirecteurPodcast()
+                    contexte_directeur = {
+                        "type_episode": type_episode,
+                        "score_reviewer": score,
+                        "alertes": rapport.get("alertes_post_generation", []),
+                        "metriques": rapport.get("metriques", {}),
+                    }
+                    resultat_directeur = directeur.evaluer(script, contexte=contexte_directeur)
+                    dir_data = resultat_directeur.get("directeur", {})
+                    note_dir = dir_data.get("note_globale", 0)
+                    verdict = dir_data.get("verdict", "?")
+                    note_aud = directeur.note_audience(resultat_directeur)
 
-            # Synthèse
-            if dir_data.get("synthese"):
-                console.print(f"  {Typo.dim(dir_data['synthese'])}")
+                    # Affichage verdict
+                    couleur_verdict = {
+                        "feu_vert": Palette.SUCCES,
+                        "ajustements_mineurs": "yellow",
+                        "retravailler": "red",
+                    }.get(verdict, "white")
+                    console.print(
+                        f"  Directeur : [{couleur_verdict}]{verdict.replace('_', ' ').upper()}[/] "
+                        f"(note {note_dir}/10, audience {note_aud}/10)"
+                    )
 
-            # Axes détaillés
-            for axe_nom, axe_data in dir_data.get("axes", {}).items():
-                axe_label = axe_nom.replace("_", " ").title()
-                axe_note = axe_data.get("note", 0)
-                console.print(f"    {axe_label} : {axe_note}/10")
+                    # Synthèse
+                    if dir_data.get("synthese"):
+                        console.print(f"  {Typo.dim(dir_data['synthese'])}")
 
-            # Recommandations
-            recommandations = directeur.extraire_recommandations(resultat_directeur)
-            if recommandations:
-                console.print("[yellow]  Recommandations :[/yellow]")
-                for r in recommandations:
-                    console.print(f"    - {r}")
+                    # Axes détaillés
+                    for axe_nom, axe_data in dir_data.get("axes", {}).items():
+                        axe_label = axe_nom.replace("_", " ").title()
+                        axe_note = axe_data.get("note", 0)
+                        console.print(f"    {axe_label} : {axe_note}/10")
 
-            # Points forts
-            points_forts = dir_data.get("points_forts", [])
-            if points_forts:
-                console.print(f"[{Palette.SUCCES}]  Points forts :[/]")
-                for p in points_forts:
-                    console.print(f"    + {p}")
+                    # Recommandations
+                    recommandations = directeur.extraire_recommandations(resultat_directeur)
+                    if recommandations:
+                        console.print("[yellow]  Recommandations :[/yellow]")
+                        for r in recommandations:
+                            console.print(f"    - {r}")
 
-            # Réactions des personas
-            personas = resultat_directeur.get("personas", {})
-            for persona_key, persona_data in personas.items():
-                nom = persona_key.replace("_", " ").title()
-                reaction = persona_data.get("reaction", "")
-                p_note = persona_data.get("note", 0)
-                console.print(f"  {Typo.dim(f'{nom} ({p_note}/10) : {reaction}')}")
+                    # Points forts
+                    points_forts = dir_data.get("points_forts", [])
+                    if points_forts:
+                        console.print(f"[{Palette.SUCCES}]  Points forts :[/]")
+                        for p in points_forts:
+                            console.print(f"    + {p}")
 
-            # Sauvegarder dans le rapport
-            rapport["etapes"]["directeur_podcast"] = {
-                "note_globale": note_dir,
-                "verdict": verdict,
-                "note_audience": note_aud,
-                "axes": {
-                    k: v.get("note", 0) for k, v in dir_data.get("axes", {}).items()
-                },
-                "nb_recommandations_critiques": sum(
-                    1 for r in dir_data.get("recommandations", [])
-                    if r.get("priorite") == "critique"
-                ),
-                "personas": {
-                    k: {"note": v.get("note", 0)}
-                    for k, v in personas.items()
-                },
-            }
+                    # Réactions des personas
+                    personas = resultat_directeur.get("personas", {})
+                    for persona_key, persona_data in personas.items():
+                        nom = persona_key.replace("_", " ").title()
+                        reaction = persona_data.get("reaction", "")
+                        p_note = persona_data.get("note", 0)
+                        console.print(f"  {Typo.dim(f'{nom} ({p_note}/10) : {reaction}')}")
 
-        except Exception as e:
-            logger.warning("Directeur Podcast indisponible : %s", e)
-            console.print(f"[yellow]  Directeur Podcast non disponible : {e}[/yellow]")
+                    # Sauvegarder dans le rapport
+                    rapport["etapes"]["directeur_podcast"] = {
+                        "note_globale": note_dir,
+                        "verdict": verdict,
+                        "note_audience": note_aud,
+                        "tour": tour_dir,
+                        "axes": {
+                            k: v.get("note", 0) for k, v in dir_data.get("axes", {}).items()
+                        },
+                        "nb_recommandations_critiques": sum(
+                            1 for r in dir_data.get("recommandations", [])
+                            if r.get("priorite") == "critique"
+                        ),
+                        "personas": {
+                            k: {"note": v.get("note", 0)}
+                            for k, v in personas.items()
+                        },
+                    }
+
+                    # ── Verdict : feu vert → on continue ────────────────────
+                    if verdict == "feu_vert":
+                        console.print(f"[{Palette.SUCCES}]  {Icons.OK} Feu vert du directeur — script approuvé.[/]")
+                        directeur_ok = True
+                        break
+
+                    # ── Verdict : retravailler ou ajustements avec critiques ──
+                    has_critiques = directeur.a_critiques(resultat_directeur)
+
+                    if verdict == "ajustements_mineurs" and not has_critiques:
+                        # Ajustements mineurs sans critiques → on accepte
+                        console.print(
+                            f"[yellow]  {Icons.ATTENTION_IC} Ajustements mineurs suggérés "
+                            f"(pas de critique bloquante) — script accepté.[/yellow]"
+                        )
+                        directeur_ok = True
+                        break
+
+                    # ── Verdict bloquant : renvoi au scripteur ──────────────
+                    if tour_dir > MAX_RETOURS_DIRECTEUR_SCRIPT:
+                        # On a atteint le max de tours → on accepte tel quel
+                        console.print(
+                            f"[yellow]  {Icons.ATTENTION_IC} Max retours directeur atteint "
+                            f"({MAX_RETOURS_DIRECTEUR_SCRIPT}) — script accepté avec réserves.[/yellow]"
+                        )
+                        directeur_ok = True
+                        break
+
+                    # Extraire les corrections du directeur pour le scripteur
+                    corrections_directeur = recommandations
+                    nb_critiques = sum(
+                        1 for r in dir_data.get("recommandations", [])
+                        if r.get("priorite") == "critique"
+                    )
+                    console.print(
+                        f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur demande une réécriture "
+                        f"({nb_critiques} critique(s)). Relance du scripteur...[/bold red]"
+                    )
+
+                    # Relancer le scripteur avec les corrections du directeur
+                    corrections = corrections_directeur
+                    script = scripteur.generer(
+                        titre=titre, resume=resume, saison=saison, numero=numero,
+                        morale=morale, corrections=corrections, historique=historique,
+                        contexte_saison=contexte_saison, episode_plan=episode_plan,
+                        type_episode=type_episode,
+                        preferences_producteur=preferences_completes,
+                        scripts_precedents=scripts_precedents,
+                        arc_state_precedent=arc_state_precedent,
+                    )
+
+                    # Re-review le script corrigé
+                    resultat_review = reviewer.evaluer(script, type_episode=type_episode)
+                    score = resultat_review["review"]["note"]
+                    seuil_effectif = Reviewer.SEUILS_PAR_TYPE.get(type_episode, 7)
+                    console.print(
+                        f"  Re-review après corrections directeur : {score}/10 "
+                        f"(seuil {seuil_effectif})"
+                    )
+                    if resultat_review.get("episode"):
+                        script = {"episode": resultat_review["episode"]}
+
+                    # Sauvegarder la version corrigée
+                    chemin_corrige = config.SCRIPTS_DIR / f"{episode_id}_dir_v{tour_dir}.json"
+                    scripteur.sauvegarder(script, chemin_corrige)
+                    chemin_valide = chemin_corrige
+                    console.print(
+                        f"  Script corrigé v{tour_dir} : {scripteur.compter_mots(script)} mots"
+                    )
+
+                except Exception as e:
+                    logger.warning("Directeur Podcast indisponible : %s", e)
+                    console.print(f"[yellow]  Directeur Podcast non disponible : {e}[/yellow]")
+                    directeur_ok = True  # En cas d'erreur, on ne bloque pas
+                    break
+        else:
+            directeur_ok = True  # dry-run → pas de validation directeur
 
         _log_step_duration("Script + Review")
 
@@ -3985,6 +4068,45 @@ def _pipeline_inner(
                 "verdict": verdict_meta,
                 "titres_alternatifs": titres_alt,
             }
+
+            # Si "retravailler" → régénérer les métadonnées avec les suggestions du directeur
+            if verdict_meta == "retravailler":
+                console.print(
+                    f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur demande de retravailler "
+                    f"les métadonnées. Régénération avec ses suggestions...[/bold red]"
+                )
+                desc_amelioree = suggestions.get("description_amelioree", "")
+                instructions_dir = []
+                if titres_alt:
+                    instructions_dir.append(f"Utiliser un titre parmi : {', '.join(titres_alt[:3])}")
+                if desc_amelioree:
+                    instructions_dir.append(f"Description améliorée : {desc_amelioree}")
+                mots_manquants = suggestions.get("mots_cles_manquants", [])
+                if mots_manquants:
+                    instructions_dir.append(f"Ajouter les mots-clés : {', '.join(mots_manquants)}")
+                if titre_avis:
+                    instructions_dir.append(f"Avis titre : {titre_avis}")
+                if desc_avis:
+                    instructions_dir.append(f"Avis description : {desc_avis}")
+
+                try:
+                    meta = metadonnees.generer(script, duree_secondes)
+                    # Appliquer le titre alternatif suggéré par le directeur si disponible
+                    if titres_alt:
+                        meta["titre"] = titres_alt[0]
+                        console.print(f"  Titre remplacé par suggestion directeur : {titres_alt[0]}")
+                    if desc_amelioree:
+                        meta["description_courte"] = desc_amelioree
+                        console.print(f"  Description remplacée par suggestion directeur")
+                    metadonnees.sauvegarder(meta, chemin_meta)
+                    console.print(f"  Nouveau titre : {meta['titre']}")
+                    console.print(f"  Nouvelle description : {meta['description_courte']}")
+                    rapport["etapes"]["metadonnees"]["titre"] = meta["titre"]
+                    rapport["etapes"]["metadonnees"]["regenere_par_directeur"] = True
+                except Exception as regen_e:
+                    logger.warning("Régénération métadonnées échouée : %s", regen_e)
+                    console.print(f"[yellow]  Régénération échouée : {regen_e}[/yellow]")
+
         except Exception as e:
             logger.warning("Directeur Podcast (métadonnées) indisponible : %s", e)
             console.print(f"[yellow]  Validation directeur métadonnées non disponible : {e}[/yellow]")
@@ -4023,6 +4145,7 @@ def _pipeline_inner(
             rapport["etapes"]["publication"] = {"status": f"skipped ({raison})"}
         else:
             # ── Directeur Podcast — Go/No-Go final ────────────────────────
+            publication_bloquee_directeur = False
             try:
                 directeur_pub = DirecteurPodcast()
                 resultat_go = directeur_pub.go_no_go_publication(rapport, meta)
@@ -4069,21 +4192,34 @@ def _pipeline_inner(
                     "risques": resultat_go.get("risques", []),
                 }
 
-                # Bloquer si no_go
-                if verdict_go == "no_go" and not auto:
+                # Bloquer si no_go — la publication est interdite
+                if verdict_go == "no_go":
                     console.print(
-                        f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur podcast recommande "
-                        f"de NE PAS publier en l'état.[/bold red]"
+                        f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur podcast BLOQUE "
+                        f"la publication. Raisons :[/bold red]"
                     )
+                    for r in resultat_go.get("risques", []):
+                        console.print(f"  [red]  • {r}[/red]")
+                    console.print(
+                        "[yellow]  L'audio et les métadonnées sont conservés. "
+                        "Corrigez les problèmes et relancez.[/yellow]"
+                    )
+                    rapport["etapes"]["publication"] = {
+                        "status": "blocked (directeur no_go)",
+                        "risques": resultat_go.get("risques", []),
+                    }
+                    publication_bloquee_directeur = True
+
             except Exception as e:
                 logger.warning("Directeur Podcast (go/no-go) indisponible : %s", e)
                 console.print(f"[yellow]  Go/No-Go directeur non disponible : {e}[/yellow]")
 
             # Confirmation avant publication (T4)
-            # En mode auto, la publication est sautée par défaut
-            # (action irréversible qui nécessite une demande explicite via --publish)
+            # Si le directeur a bloqué, pas de publication possible
             publier = False
-            if not auto:
+            if publication_bloquee_directeur:
+                console.print(f"\n{Typo.etape(7, 8, 'Publication')}  [bold red]BLOQUÉ — directeur no_go[/bold red]")
+            elif not auto:
                 publier = _validation_publication(meta, episode_id, rapport=rapport)
             elif rapport.get("etapes", {}).get("publication", {}).get("validation_humaine"):
                 # Web validation already confirmed — proceed with publication
