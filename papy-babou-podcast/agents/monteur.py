@@ -417,16 +417,6 @@ class Monteur:
         _sys.stderr.flush()
         logger.info("Assemblage de l'épisode %s — %s", episode_id, episode["titre"])
 
-        # ── Pré-vol : vérifier que les assets audio requis existent ──
-        # Le monteur DOIT échouer clairement si des assets manquent,
-        # au lieu de produire un épisode avec du silence à la place.
-        type_episode = episode.get("type", "standard")
-        numero_saison = episode.get("saison")
-        ambiance = episode.get("ambiance", "fond_doux")
-        self._verifier_assets_requis(
-            type_episode, numero_saison, ambiance, segments_dir, episode,
-        )
-
         nom_fichier = f"{episode_id}_{_slug_util(episode['titre'])}"
         chemin_hq = output_dir / f"{nom_fichier}_192k.mp3"
         chemin_preview = output_dir / f"{nom_fichier}_128k.mp3"
@@ -470,6 +460,16 @@ class Monteur:
                 chemin_wav_intermediaire.unlink(missing_ok=True)
 
         if not _skip_to_export:
+            # ── Pré-vol : vérifier que les assets audio requis existent ──
+            # Le monteur DOIT échouer clairement si des assets manquent,
+            # au lieu de produire un épisode avec du silence à la place.
+            type_episode = episode.get("type", "standard")
+            numero_saison = episode.get("saison")
+            ambiance = episode.get("ambiance", "fond_doux")
+            self._verifier_assets_requis(
+                type_episode, numero_saison, ambiance, segments_dir, episode,
+            )
+
             # ── Assemblage par morceaux (memory-safe) ──
             # Au lieu de charger tout en RAM, on traite par chunks de 25 segments,
             # exporte chaque chunk en WAV, puis utilise ffmpeg pour tout assembler.
