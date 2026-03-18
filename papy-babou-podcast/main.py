@@ -2843,29 +2843,38 @@ def _pipeline_inner(
             }
             _sfx_manquants = _sfx_ids - _fichiers_restants
 
+            _total_attendus = len(_ids_attendus)
+            _total_presents = len(_fichiers_restants)
+            _total_manquants = len(_voix_manquants) + len(_sfx_manquants)
+
+            if _total_manquants > 0:
+                _log_direct(
+                    f"Segments : {_total_presents}/{_total_attendus} présents, "
+                    f"{len(_voix_manquants)} voix manquants, "
+                    f"{len(_sfx_manquants)} SFX manquants"
+                )
+
             if len(_voix_manquants) > len(_voix_ids) * 0.5:
+                # >50% voix manquants → régénérer tout l'audio
                 _log_direct(
                     f"Après nettoyage : {len(_voix_manquants)}/{len(_voix_ids)} "
                     f"segments voix manquants — régénération audio nécessaire"
                 )
-                logger.warning(
-                    "Segments voix insuffisants après nettoyage : %d/%d manquants — "
-                    "recul à l'étape audio",
-                    len(_voix_manquants), len(_voix_ids),
-                )
                 etape_idx = 2  # Reculer à audio
-            elif _sfx_manquants and len(_voix_manquants) == 0:
-                # Voix OK mais SFX manquants — régénérer uniquement les SFX
-                _log_direct(
-                    f"Segments voix OK, mais {len(_sfx_manquants)}/{len(_sfx_ids)} "
-                    f"segments SFX manquants — régénération SFX nécessaire"
-                )
-                logger.warning(
-                    "Segments SFX manquants après nettoyage : %d/%d — "
-                    "recul à l'étape SFX",
-                    len(_sfx_manquants), len(_sfx_ids),
-                )
-                etape_idx = min(etape_idx, 3)  # Reculer à SFX (pas plus loin)
+            elif _voix_manquants or _sfx_manquants:
+                # Quelques segments manquants (voix ≤50% + SFX) → régénérer audio+SFX
+                if _voix_manquants:
+                    _log_direct(
+                        f"{len(_voix_manquants)}/{len(_voix_ids)} segments voix manquants "
+                        f"+ {len(_sfx_manquants)} SFX — régénération audio nécessaire"
+                    )
+                    etape_idx = 2  # Régénérer voix (l'étape audio ne regénère que les manquants)
+                elif _sfx_manquants:
+                    _log_direct(
+                        f"Voix OK, {len(_sfx_manquants)}/{len(_sfx_ids)} SFX manquants "
+                        f"— régénération SFX nécessaire"
+                    )
+                    etape_idx = min(etape_idx, 3)  # SFX seulement
 
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 

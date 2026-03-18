@@ -318,8 +318,12 @@ class Monteur:
         Seuls les segments voix sont vérifiés ici. Les jingles et ambiances
         sont chargés à la demande pendant l'assemblage avec fallback silence
         intégré — inutile de les pré-charger (et risque de timeout API).
+
+        Bloque uniquement si >50% des segments voix sont manquants.
+        Les segments manquants individuels sont remplacés par du silence
+        dans _assembler_segments() (BUG 11 fallback).
         """
-        # ── Segments voix : vérification BLOQUANTE ──
+        # ── Segments voix : vérification ──
         segments_manquants = []
         for seg in episode["segments"]:
             if seg["personnage"] == "sfx":
@@ -328,19 +332,37 @@ class Monteur:
             if not chemin.exists():
                 segments_manquants.append(seg["id"])
 
+        total_voix = sum(
+            1 for s in episode["segments"] if s["personnage"] != "sfx"
+        )
+
         if segments_manquants:
             n = len(segments_manquants)
-            total_voix = sum(
-                1 for s in episode["segments"] if s["personnage"] != "sfx"
-            )
-            msg = (
-                f"Montage impossible — {n}/{total_voix} segments voix manquants "
-                f"(ex: {', '.join(segments_manquants[:5])})\n"
-                f"Solution : relancez la production audio (étape 3)"
-            )
-            _sys_mod.stderr.write(f"[monteur] ERREUR: {msg}\n")
-            _sys_mod.stderr.flush()
-            raise RuntimeError(msg)
+            ratio = n / total_voix if total_voix > 0 else 1.0
+
+            if ratio > 0.5:
+                # >50% manquants → BLOQUANT (épisode inutilisable)
+                msg = (
+                    f"Montage impossible — {n}/{total_voix} segments voix manquants "
+                    f"({ratio:.0%})\n"
+                    f"(ex: {', '.join(segments_manquants[:5])})\n"
+                    f"Solution : relancez la production audio (étape 3)"
+                )
+                _sys_mod.stderr.write(f"[monteur] ERREUR: {msg}\n")
+                _sys_mod.stderr.flush()
+                raise RuntimeError(msg)
+            else:
+                # ≤50% manquants → WARNING (silence en fallback, BUG 11)
+                _sys_mod.stderr.write(
+                    f"[monteur] AVERTISSEMENT : {n}/{total_voix} segments voix manquants "
+                    f"({ratio:.0%}) — silence en fallback. "
+                    f"Manquants: {', '.join(segments_manquants[:10])}\n"
+                )
+                _sys_mod.stderr.flush()
+                logger.warning(
+                    "Segments voix manquants : %d/%d (%s) — silence en fallback",
+                    n, total_voix, ", ".join(segments_manquants[:10]),
+                )
 
         # Log SFX manquants comme avertissement (non bloquant — silence en fallback)
         sfx_manquants = []

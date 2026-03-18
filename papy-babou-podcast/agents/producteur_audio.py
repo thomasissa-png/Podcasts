@@ -76,11 +76,32 @@ class ProducteurAudio:
 
         fichiers: list[Path] = []
 
+        # Filtrer les segments déjà générés (skip-if-exists)
+        # Permet de ne régénérer que les manquants sur un resume partiel
+        segments_a_generer = []
+        for seg in segments_voix:
+            chemin = dossier_episode / f"{seg['id']}.mp3"
+            if chemin.exists() and chemin.stat().st_size > 100:
+                fichiers.append(chemin)  # Déjà généré
+            else:
+                segments_a_generer.append(seg)
+
+        if segments_a_generer:
+            nb_skip = total_segments - len(segments_a_generer)
+            if nb_skip > 0:
+                logger.info(
+                    "[%s] %d/%d segments déjà générés — %d à (re)générer",
+                    episode_id, nb_skip, total_segments, len(segments_a_generer),
+                )
+        else:
+            logger.info("[%s] Tous les %d segments déjà générés — skip", episode_id, total_segments)
+            return fichiers
+
         if max_workers <= 1:
-            for i, segment in enumerate(segments_voix, 1):
+            for i, segment in enumerate(segments_a_generer, 1):
                 logger.info(
                     "[%s] Segment %d/%d — %s : %s...",
-                    episode_id, i, total_segments,
+                    episode_id, i, len(segments_a_generer),
                     segment["personnage"], segment["texte"][:50],
                 )
                 chemin = dossier_episode / f"{segment['id']}.mp3"
@@ -89,11 +110,11 @@ class ProducteurAudio:
         else:
             logger.info(
                 "[%s] Génération parallèle de %d segments (max %d workers)",
-                episode_id, total_segments, max_workers,
+                episode_id, len(segments_a_generer), max_workers,
             )
             futures = {}
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                for i, segment in enumerate(segments_voix, 1):
+                for i, segment in enumerate(segments_a_generer, 1):
                     chemin = dossier_episode / f"{segment['id']}.mp3"
                     future = executor.submit(self._generer_segment, segment, chemin)
                     futures[future] = (i, segment, chemin)
