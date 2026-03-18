@@ -178,7 +178,7 @@ class TestScripteurBiblePersonnages:
     def test_system_prompt_contient_mots_interdits(self):
         """Le system prompt doit inclure les mots interdits."""
         prompt = _construire_system_prompt()
-        assert "tuer" in prompt
+        assert "massacre" in prompt
         assert "MOTS INTERDITS" in prompt
 
     def test_system_prompt_contient_3_actes(self):
@@ -595,7 +595,7 @@ class TestVerifierMotsInterdits:
         script = {
             "episode": {
                 "segments": [
-                    {"personnage": "papy_babou", "texte": "Il allait mourir dans le désert."},
+                    {"personnage": "papy_babou", "texte": "Il allait torturer le prisonnier."},
                 ],
             }
         }

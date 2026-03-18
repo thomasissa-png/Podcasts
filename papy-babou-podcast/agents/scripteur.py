@@ -83,24 +83,32 @@ RÈGLES STRICTES :
 9. Terminer par la leçon de vie spécifiée et un au revoir chaleureux et naturel.
    Ne JAMAIS dire "à la prochaine saison" ou "dans le prochain épisode". Préférer :
    "La prochaine fois que vous viendrez...", "Un jour je vous raconterai...", "On en reparlera..."
-10. BRUITAGES : insère des segments avec personnage "sfx" pour enrichir l'ambiance.
+10. BRUITAGES — HABILLAGE SONORE CONTINU :
+    Les SFX sont ESSENTIELS pour compenser les limites des voix IA et créer une immersion totale.
     - Le champ "texte" contient une description courte du son EN ANGLAIS (pour l'API de génération).
       Exemples : "door creaking open slowly", "birds singing in morning sun", "thunder rumbling".
     - Le champ "duree_sfx_secondes" indique la durée souhaitée (2 à 10 secondes).
     - Le champ "mode" indique "overlay" (superposé aux voix suivantes) ou "insert" (séquentiel).
       Utilise "overlay" pour les ambiances de fond (vent, pluie, nature) et "insert" pour les
       effets ponctuels (tonnerre, porte qui claque, cri d'animal).
-    - Place les bruitages aux moments clés : entrée des enfants, moments dramatiques,
-      transitions de scène, et pour illustrer les éléments de l'histoire.
-    - OBLIGATOIRE : au minimum 8 bruitages par épisode, maximum 12. Chaque acte doit avoir
-      au moins 2 bruitages. Privilégie les bruitages "insert" pour les moments d'action, et
-      "overlay" pour les ambiances de fond.
+    - OBLIGATOIRE : au minimum 25 bruitages par épisode, idéalement 30-35. Chaque acte doit avoir
+      au moins 8 bruitages. Les SFX doivent être CONTINUS — il ne doit JAMAIS y avoir plus de
+      2 minutes sans un bruitage "overlay" ou "insert".
+    - AMBIANCES CONTINUES : pendant le récit biblique, place des "overlay" qui tournent en
+      fond TOUT AU LONG du récit (bruit du désert, marché antique, mer, vent dans les oliviers).
+      Ces ambiances changent quand le LIEU de l'histoire change.
+    - PONCTUATIONS : les "insert" marquent les moments clés : réactions, révélations, actions.
     - Exemples de bruitages contextuels :
-      * Entrée des enfants : "children's footsteps running, door opening"
-      * Scène en extérieur : "gentle wind blowing through trees, birds chirping"
-      * Moment dramatique : "deep thunder in the distance"
-      * Transition de scène : "soft magical chime, page turning"
-      * Scène de repas : "gentle clinking of dishes, pouring water"
+      * Scène de vie chez Papy : "cozy fireplace crackling, cat purring softly"
+      * Entrée des enfants : "children's footsteps running on wooden floor, door opening"
+      * Récit dans le désert : "hot dry desert wind blowing sand, distant eagle cry"
+      * Marché antique : "bustling ancient marketplace, distant voices, donkeys braying"
+      * Bord de mer : "gentle waves lapping on shore, seagulls calling"
+      * Moment dramatique : "deep thunder rumbling in dark clouds"
+      * Révélation divine : "ethereal heavenly choir sound, warm golden light ambiance"
+      * Scène de combat : "swords clashing, shields banging, crowd shouting in distance"
+      * Transition de lieu : "magical whooshing transition, soft wind chime"
+      * Moment d'émotion : "soft gentle heartbeat sound, warm quiet ambiance"
 11. AMBIANCE MUSICALE : choisis l'ambiance générale de l'épisode parmi :
     "joyeux", "dramatique", "calme", "mystere", "epique", "tendre", "humoristique", "solennel".
     Indique-la dans le champ "ambiance" de l'épisode.
@@ -134,6 +142,33 @@ RÈGLES STRICTES :
       et par le CONTENU VERBAL, jamais par des onomatopées.
     - Même les petits mots comme "Ah", "Oh", "Eh" en début de phrase sont à ÉVITER.
       Préférer des formulations complètes : "Dis donc !", "Tiens !", "Attends voir !".
+16. COLD OPEN — ACCROCHE IMMÉDIATE :
+    Chaque épisode COMMENCE par un extrait du moment le plus intense de l'histoire biblique
+    (15-20 secondes, 2-3 segments max). C'est Papy qui parle au milieu du récit, avec un ton
+    dramatique ou émerveillé. Puis on coupe avec un SFX de transition et on revient à la scène
+    de vie (le prétexte naturel). Cela accroche immédiatement l'auditeur.
+    Exemple de cold open : "Et c'est à ce moment-là que le buisson a pris feu ! Mais attention...
+    ce n'était PAS un feu ordinaire..." → [SFX: magical transition sound] → Scène de vie.
+    Le cold open doit venir des segments qui apparaîtront plus tard dans le récit.
+17. LONGUEUR DES SEGMENTS — RÈGLE CRITIQUE VOIX IA :
+    Les voix IA deviennent monotones sur les segments trop longs. RESPECTER ces limites :
+    - Antoine et Noémie : 40 MOTS MAXIMUM par segment (enfants = phrases courtes)
+    - Papy Babou et Mamie Sonia : 60 MOTS MAXIMUM par segment (adultes)
+    Si Papy a beaucoup à raconter, COUPER en plusieurs segments entrecoupés de :
+      * Un SFX ("overlay" d'ambiance ou "insert" ponctuel)
+      * Une réaction courte d'un enfant (question, exclamation)
+      * Un changement de ton (passer de "chaleureux" à "mystérieux" par exemple)
+    Cela crée un rythme vivant et évite l'effet "robot qui lit un texte".
+18. RÉCAP DE FIN — ANCRAGE PÉDAGOGIQUE :
+    Juste avant l'au revoir, Papy demande aux enfants "Alors, qu'est-ce que vous avez retenu ?"
+    Antoine et Noémie reformulent chacun 1-2 points clés de l'histoire dans leurs mots.
+    Antoine reformule les faits et l'action, Noémie reformule les émotions et la morale.
+    Ce récap dure 30-45 secondes (4-6 segments). C'est OBLIGATOIRE pour ancrer l'apprentissage.
+19. MAMIE SONIA — ENRICHISSEMENT :
+    Mamie Sonia doit avoir AU MOINS un vrai moment par épisode (pas juste apporter le goûter).
+    Elle peut : réagir à l'histoire ("Quand j'étais petite au Caire..."), ajouter un détail
+    culturel ou culinaire, commenter tendrement, ou contredire gentiment Papy sur un souvenir.
+    Ses interventions enrichissent l'histoire et cassent le rythme Papy-monologue.
 14. BACKSTORY DE PAPY : Papy Babou (vrai prénom Jean-Pierre) est né à Dakar au Sénégal,
     a grandi au Liban (où il a rencontré Sonia dans les abris pendant la guerre), puis a vécu
     en Afrique du Sud et en Suisse avant de s'installer en Normandie. Très courageux, très fort,
@@ -180,6 +215,11 @@ FORMAT DE SORTIE — JSON STRICT :
     "personnages_presents": ["papy_babou", "antoine", "noemie"],
     "moments_cles": ["Moment important 1", "Moment important 2"],
     "evolutions_personnages": "Résumé en 1-2 phrases de comment les personnages ont évolué dans cet épisode (émotions, apprentissages, relations).",
+    "quiz": [
+      "Question 1 sur l'histoire biblique (réponse courte possible pour un enfant)",
+      "Question 2 sur un personnage ou un lieu de l'histoire",
+      "Question 3 sur la morale ou la leçon de vie"
+    ],
     "segments": [
       {{
         "id": "seg_001",
@@ -209,91 +249,116 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 
 STRUCTURES_NARRATIVES = {
     "ouverture": """\
-1. ACCROCHE NATURELLE (4-5 min) :
-   - Scène de vie : un prétexte naturel amène les enfants chez Papy (ou Papy chez eux).
+0. COLD OPEN (15-20 secondes) :
+   - Extrait du moment le plus INTENSE de l'épisode, comme si on était au milieu de l'histoire.
+   - 2-3 segments de Papy avec un ton dramatique/émerveillé + un SFX immersif.
+   - Coupe nette avec un SFX de transition → retour à la scène de vie.
+
+1. ACCROCHE NATURELLE (90 secondes max) :
+   - Scène de vie COURTE : un prétexte naturel amène les enfants chez Papy.
    - Quelque chose éveille la curiosité des enfants et Papy commence à raconter.
-   - Les enfants réagissent avec enthousiasme et curiosité.
    - {ritual_accroche}
 
-2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (20-22 min) :
+2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (22-25 min) :
    - Première grande histoire biblique, racontée EN PROFONDEUR par Papy Babou.
    - Papy raconte avec des détails vivants : lieux, personnages, dialogues reconstitués.
    - Il inclut des anecdotes historiques et géographiques (ex: "À cette époque, en Mésopotamie...").
+   - SFX d'ambiance CONTINUS ("overlay") pendant tout le récit biblique.
    - Les péripéties sont développées une par une, pas résumées.
+   - Mamie Sonia intervient AU MOINS UNE FOIS pour enrichir le récit.
    - Les enfants réagissent aux moments clés et posent des questions qui approfondissent le récit.
    - L'histoire ouvre naturellement sur d'autres histoires à venir.
 {running_gag}
 
-3. CONCLUSION (4-5 min) :
+3. RÉCAP + CONCLUSION (2-3 min) :
    - Résolution de l'histoire.
+   - RÉCAP OBLIGATOIRE : Papy demande "Qu'avez-vous retenu ?" — les enfants reformulent.
    - Leçon de vie que Papy tire naturellement du récit.
    - Papy laisse entendre qu'il a d'autres histoires à raconter ("La prochaine fois...").
    - {ritual_au_revoir}""",
 
     "standard": """\
-1. ACCROCHE (3-4 min) :
-   - {previously_on}
-   - Scène de vie : un prétexte naturel amène l'histoire (goûter, pluie, promenade, coucher...).
-   - {ritual_accroche}
-   - Papy plante le décor de l'histoire avec un élément d'intrigue.
+0. COLD OPEN (15-20 secondes) :
+   - Extrait du moment le plus INTENSE de l'épisode, comme si on était au milieu de l'histoire.
+   - 2-3 segments de Papy avec un ton dramatique/émerveillé + un SFX immersif.
+   - Coupe nette avec un SFX de transition → retour à la scène de vie.
 
-2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (17-19 min) :
+1. ACCROCHE (90 secondes max) :
+   - {previously_on}
+   - Scène de vie COURTE : un prétexte naturel amène l'histoire. Pas de bavardage.
+   - {ritual_accroche}
+   - Papy lance l'histoire rapidement avec un élément d'intrigue.
+
+2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (18-20 min) :
    - Récit principal de l'histoire biblique raconté EN PROFONDEUR et en détail par Papy Babou.
    - Papy raconte les événements un par un, avec des descriptions vivantes des lieux et personnages.
    - Il reconstitue les DIALOGUES des personnages bibliques (ex: "Et Dieu dit à Abraham...").
    - Il ajoute des détails historiques et géographiques qui enrichissent le récit.
    - Les péripéties sont développées, pas résumées en une phrase.
+   - SFX d'ambiance CONTINUS ("overlay") pendant tout le récit : bruits du lieu biblique.
    - Moments de tension dramatique (bruitages d'ambiance, silences).
    - Les enfants réagissent aux moments clés : Antoine sur l'action, Noémie sur l'émotion.
+   - Mamie Sonia intervient AU MOINS UNE FOIS pour enrichir (souvenir, anecdote, détail culturel).
    - Leurs questions font AVANCER l'histoire ("Et après, qu'est-ce qui s'est passé ?").
    - Papy explique les mots difficiles avec des analogies adaptées.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION (3-4 min) :
+3. RÉCAP + CONCLUSION (2-3 min) :
    - Résolution de l'histoire.
+   - RÉCAP OBLIGATOIRE : Papy demande "Qu'avez-vous retenu ?" — Antoine reformule les faits,
+     Noémie reformule les émotions/la morale. (30-45 secondes, 4-6 segments)
    - Leçon de vie claire et mémorable pour les enfants.
    - {teasing}
    - {ritual_au_revoir}""",
 
     "mi-saison": """\
-1. ACCROCHE (4-5 min) :
-   - {previously_on}
-   - Scène de vie naturelle. Les enfants font naturellement le lien avec les histoires précédentes.
-   - {ritual_accroche}
-   - Les enfants se souviennent de ce qu'ils ont appris et veulent en savoir plus.
+0. COLD OPEN (15-20 secondes) :
+   - Extrait du moment le plus INTENSE de l'épisode + SFX → transition → scène de vie.
 
-2. DÉVELOPPEMENT — TOURNANT BIBLIQUE DÉTAILLÉ (20-22 min) :
+1. ACCROCHE (90 secondes max) :
+   - {previously_on}
+   - Scène de vie COURTE. Les enfants font le lien avec les histoires précédentes.
+   - {ritual_accroche}
+
+2. DÉVELOPPEMENT — TOURNANT BIBLIQUE DÉTAILLÉ (22-25 min) :
    - Histoire biblique qui représente un tournant important dans le thème abordé.
    - Le récit est raconté EN PROFONDEUR avec tous les détails narratifs par Papy Babou.
    - Dialogues reconstitués, descriptions des lieux, contexte historique.
+   - SFX d'ambiance CONTINUS pendant tout le récit.
+   - Mamie Sonia intervient AU MOINS UNE FOIS.
    - Moment de surprise ou de révélation pour les enfants.
-   - Approfondissement du thème central à travers les détails de l'histoire.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION (4-5 min) :
+3. RÉCAP + CONCLUSION (2-3 min) :
    - La résolution ouvre de nouvelles questions.
+   - RÉCAP OBLIGATOIRE : les enfants reformulent les points clés.
    - Leçon de vie que Papy tire naturellement du récit.
    - {teasing}
    - {ritual_au_revoir}""",
 
     "final": """\
-1. ACCROCHE ÉMOTIONNELLE (4-5 min) :
+0. COLD OPEN (15-20 secondes) :
+   - Extrait du moment le plus ÉMOUVANT de l'épisode + SFX → transition → scène de vie.
+
+1. ACCROCHE ÉMOTIONNELLE (90 secondes max) :
    - {previously_on}
-   - Scène de vie avec un prétexte spécial (moment intime, occasion particulière).
-   - Les enfants montrent naturellement combien ils ont grandi grâce aux histoires.
+   - Scène de vie COURTE avec un prétexte spécial (moment intime, occasion particulière).
    - {ritual_accroche}
 
-2. DÉVELOPPEMENT — CLIMAX BIBLIQUE DÉTAILLÉ (24-26 min) :
+2. DÉVELOPPEMENT — CLIMAX BIBLIQUE DÉTAILLÉ (27-30 min) :
    - Dernière grande histoire biblique du thème, racontée EN PROFONDEUR par Papy Babou.
    - Le récit est le plus développé : détails, dialogues, péripéties secondaires.
+   - SFX d'ambiance CONTINUS pendant tout le récit.
+   - Mamie Sonia a un MOMENT IMPORTANT (pas juste une apparition légère).
    - Moment émotionnel fort : les personnages montrent leur évolution.
    - Résolution de toutes les questions ouvertes des histoires précédentes.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION CHALEUREUSE (4-5 min) :
+3. RÉCAP + CONCLUSION CHALEUREUSE (3-4 min) :
+   - RÉCAP OBLIGATOIRE : les enfants reformulent ce qu'ils ont appris de TOUTE la série.
    - Grande leçon de vie que Papy tire de toutes les histoires racontées.
    - Moment d'émotion entre Papy et les enfants.
    - Au revoir tendre, avec l'idée que d'autres histoires viendront un jour.""",
@@ -1034,6 +1099,9 @@ class Scripteur:
         # Nettoyer les onomatopées résiduelles (le LLM n'est pas infaillible)
         self._nettoyer_onomatopees(script)
 
+        # Valider la longueur des segments (voix IA = segments courts)
+        self._valider_longueur_segments(script)
+
         nb_mots = self.compter_mots(script)
         mots_cible = format_ep["mots_cible"]
         logger.info(
@@ -1240,6 +1308,43 @@ class Scripteur:
                 "Onomatopées nettoyées : %d segment(s) corrigé(s) ou supprimé(s) "
                 "pour compatibilité voix IA.",
                 nb_nettoyages,
+            )
+
+    @staticmethod
+    def _valider_longueur_segments(script: dict) -> None:
+        """Vérifie et signale les segments trop longs pour les voix IA.
+
+        Les voix ElevenLabs deviennent monotones au-delà de 40-60 mots.
+        Émet un warning pour chaque segment dépassant la limite.
+        """
+        segments = script.get("episode", {}).get("segments", [])
+        segments_trop_longs = 0
+
+        for seg in segments:
+            if seg.get("personnage") == "sfx":
+                continue
+            texte = seg.get("texte", "")
+            nb_mots = len(texte.split())
+            personnage = seg.get("personnage", "")
+
+            if personnage in config.PERSONNAGES_ENFANTS:
+                limite = config.SEGMENT_MAX_MOTS_ENFANT
+            else:
+                limite = config.SEGMENT_MAX_MOTS_ADULTE
+
+            if nb_mots > limite:
+                segments_trop_longs += 1
+                logger.warning(
+                    "Segment %s trop long pour voix IA : %d mots (limite %d pour %s). "
+                    "Risque de monotonie en synthèse vocale.",
+                    seg.get("id", "?"), nb_mots, limite, personnage,
+                )
+
+        if segments_trop_longs:
+            logger.warning(
+                "Longueur segments : %d segment(s) dépassent la limite voix IA. "
+                "Le directeur podcast recommande de découper en segments plus courts.",
+                segments_trop_longs,
             )
 
     @staticmethod

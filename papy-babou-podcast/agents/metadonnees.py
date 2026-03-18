@@ -24,8 +24,17 @@ FORMAT DE RÉPONSE — JSON STRICT :
   "tags": ["Histoires bibliques", "Enfants", "Famille", "Moïse"],
   "categories_itunes": ["Kids & Family", "Religion & Spirituality"],
   "sous_categories_itunes": ["Stories for Kids"],
-  "cover_art_prompt": "Description courte pour générer une illustration d'épisode (ex: 'Moïse devant le buisson ardent dans le désert, style illustration enfant')"
+  "cover_art_prompt": "Description courte pour générer une illustration d'épisode (ex: 'Moïse devant le buisson ardent dans le désert, style illustration enfant')",
+  "quiz": [
+    {"question": "Question 1 sur l'histoire biblique (adaptée 6-10 ans)", "reponse": "Réponse courte et claire"},
+    {"question": "Question 2 sur un personnage ou un lieu de l'histoire", "reponse": "Réponse courte"},
+    {"question": "Question 3 sur la morale ou la leçon de vie", "reponse": "Réponse courte"}
+  ]
 }
+
+Le quiz contient 3 questions pour les parents à poser après l'écoute.
+Les questions doivent être simples, ludiques, et vérifier que l'enfant a compris l'histoire.
+Mélanger : 1 question factuelle (qui/quoi/où), 1 question de compréhension, 1 question de réflexion.
 
 Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 """

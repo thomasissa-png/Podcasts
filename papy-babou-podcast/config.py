@@ -191,11 +191,59 @@ VOICE_FALLBACK_CHAIN = ["narrateur", "papy_babou", "antoine", "noemie", "mamie_s
 
 STEREO_PAN = {
     "papy_babou": 0.0,
-    "antoine": -0.4,
-    "noemie": 0.4,
-    "mamie_sonia": 0.3,
+    "antoine": -0.2,
+    "noemie": 0.2,
+    "mamie_sonia": 0.15,
     "narrateur": 0.0,
     "sfx": 0.0,
+}
+
+# ── Gain de normalisation par personnage (dB) ─────────────────────────────────
+# Compense les différences de volume entre voix ElevenLabs pour un rendu homogène.
+VOICE_GAIN_DB = {
+    "papy_babou": 0.0,
+    "antoine": 1.5,
+    "noemie": 2.0,
+    "mamie_sonia": 1.0,
+    "narrateur": 0.0,
+    "sfx": 0.0,
+}
+
+# ── Limites de longueur de segment (mots) pour voix IA ────────────────────────
+SEGMENT_MAX_MOTS_ENFANT = 40   # Antoine, Noémie
+SEGMENT_MAX_MOTS_ADULTE = 60   # Papy Babou, Mamie Sonia
+PERSONNAGES_ENFANTS = {"antoine", "noemie"}
+
+# ── Dictionnaire de prononciation pour noms bibliques ─────────────────────────
+# Format : "orthographe" → "prononciation phonétique pour ElevenLabs"
+PRONONCIATION_BIBLIQUE = {
+    "Nebuchadnezzar": "Né-bu-cad-né-tsar",
+    "Nabuchodonosor": "Na-bu-co-do-no-zor",
+    "Melchisédech": "Mel-ki-zé-dèk",
+    "Béershéba": "Bé-èr-ché-ba",
+    "Bethléem": "Bèt-lé-em",
+    "Nazareth": "Na-za-rèt",
+    "Gethsémani": "Guèt-sé-ma-ni",
+    "Golgotha": "Gol-go-ta",
+    "Capharnaüm": "Ka-far-na-om",
+    "Pharaon": "Fa-ra-on",
+    "Moïse": "Mo-ize",
+    "Noé": "No-é",
+    "Josué": "Jo-zu-é",
+    "Ézéchiel": "É-zé-ki-èl",
+    "Jéricho": "Jé-ri-ko",
+    "Isaïe": "I-za-i",
+    "Éphèse": "É-fèze",
+    "Canaan": "Ka-na-an",
+    "Sinaï": "Si-na-i",
+    "Goliath": "Go-li-at",
+    "Zachée": "Za-ché",
+    "Lazare": "La-zar",
+    "Bartimée": "Bar-ti-mé",
+    "Caïn": "Ka-in",
+    "Abel": "A-bèl",
+    "Samson": "Sam-son",
+    "Dalila": "Da-li-la",
 }
 
 # ── Paramètres de production ──────────────────────────────────────────────────
@@ -292,22 +340,26 @@ SFX_CONFIG = {
 # ── Mots interdits (vocabulaire inapproprié pour 6-10 ans) ───────────────────
 
 MOTS_INTERDITS = [
-    "tuer", "massacre", "massacrer", "égorger", "assassiner", "meurtre",
-    "sang", "sanglant", "ensanglante", "cadavre", "dépouille",
+    # Violence graphique (contexte violent interdit, pas le concept factuel)
+    "massacre", "massacrer", "égorger", "assassiner", "meurtre",
+    "sanglant", "ensanglante", "cadavre", "dépouille",
     "enfer", "damnation", "damné", "châtiment éternel",
     "horreur", "horrible", "terrifiant", "terrifier", "cauchemar",
-    "mourir", "mort", "mortelle", "agoniser", "agonie",
-    "vengeance", "venger", "punition", "punir sévèrement",
-    "haine", "haïr", "détester",
+    "agoniser", "agonie",
+    # NOTE : "mourir", "mort" sont AUTORISÉS en contexte factuel biblique
+    # ("Abraham est mort à 175 ans", "Moïse est mort sur le mont Nébo")
+    # Cruauté et vengeance
+    "vengeance", "venger", "haine", "haïr",
+    # Insultes
     "idiot", "stupide", "imbécile", "crétin",
+    # Thèmes adultes
     "sexuel", "sexualité", "prostitution",
     "alcool", "ivre", "soûl",
-    "esclave", "esclavage",
+    # Violence physique graphique
     "torturer", "torture", "supplicier", "supplice",
     "décapiter", "mutiler", "amputer",
-    # Variantes et mots bibliques violents
-    "crever", "lapider", "brûler vif", "abomination",
-    "exterminer", "anéantir", "fléau", "peste",
+    "crever", "lapider", "brûler vif",
+    "exterminer", "anéantir",
     "concubine", "fornication",
     # Mots méta interdits dans les dialogues (cassent l'immersion)
     "saison", "épisode", "podcast", "série", "émission",

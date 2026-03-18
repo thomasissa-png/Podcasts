@@ -142,7 +142,7 @@
       "annee_naissance": 2019,
       "age": 5,
       "age_par_saison": {"1": 5, "2": 6, "3": 6, "4": 7},
-      "description": "Petite fille vraiment très chipie, avec un très gros caractère. Aime faire des blagues et n'est pas toujours très courageuse. Adore embêter tout le monde gentiment et rigole beaucoup. Adore son Babou plus que tout.",
+      "description": "Petite fille chipie et maligne, avec un très gros caractère. Futée et observatrice pour son âge — elle pose des questions surprenantes qui montrent qu'elle comprend plus qu'on ne croit. Aime faire des blagues intelligentes et n'est pas toujours courageuse. Adore embêter tout le monde gentiment. Adore son Babou plus que tout.",
       "apparence": {
         "cheveux": "blonds bouclés, souvent attachés avec un ruban rose ou une barrette fleur",
         "yeux": "bleus comme Papy, grands et expressifs",
@@ -176,7 +176,7 @@
         "Pas de phrases longues (max 10-12 mots par réplique)",
         "Pas d'émotions trop sombres ou angoissantes"
       ],
-      "backstory": "Noémie est la petite sœur chipie. Elle a un très gros caractère et dit toujours ce qu'elle pense sans filtre. Elle adore faire des blagues, embêter Antoine gentiment, et se blottir contre son Babou dans le grand fauteuil. Pas toujours courageuse, elle serre son doudou lapin quand les histoires deviennent intenses. Mais quand elle se sent en sécurité avec Papy, elle est la plus rigolote de la famille.",
+      "backstory": "Noémie est la petite sœur chipie ET maligne. Elle a un très gros caractère et dit toujours ce qu'elle pense sans filtre. Derrière ses airs de petite chipie, elle est plus observatrice qu'on ne le croit — elle fait parfois des remarques qui surprennent Papy par leur pertinence. Elle adore faire des blagues, embêter Antoine gentiment, et se blottir contre son Babou dans le grand fauteuil. Pas toujours courageuse, elle serre son doudou lapin quand les histoires deviennent intenses. Mais quand elle se sent en sécurité avec Papy, elle est la plus rigolote de la famille.",
       "famille": {
         "pere": "Thomas (né en 1986)",
         "grand_frere": "Antoine (3 ans plus vieux)",
@@ -207,7 +207,7 @@
       "nom_complet": "Mamie Sonia",
       "role": "secondaire",
       "premiere_apparition": "S01E02",
-      "frequence": "apparitions régulières mais légères — amener le goûter, annoncer l'heure du coucher, parfois rester un moment",
+      "frequence": "AU MOINS une vraie intervention par épisode — pas juste le goûter : réagir à l'histoire, ajouter un souvenir personnel, un détail culturel, ou contredire gentiment Papy",
       "age": 65,
       "age_par_saison": {"1": 65, "2": 66, "3": 66, "4": 67},
       "description": "La plus gentille mamie du monde. Attentionnée, douce, adore ses petits-enfants plus que tout. Cuisine extrêmement bien. Architecte d'intérieur de métier.",
@@ -223,10 +223,12 @@
         {"lieu": "France (Normandie)", "periode": "actuel"}
       ],
       "interventions_typiques": [
-        "Apporte le goûter ou un gâteau fait maison",
-        "Annonce que c'est l'heure de se coucher",
-        "Commente tendrement depuis la cuisine",
-        "Reste parfois écouter l'histoire un moment"
+        "Réagit à l'histoire en ajoutant un souvenir personnel ('Quand j'étais petite au Caire...')",
+        "Ajoute un détail culturel, culinaire ou géographique lié à l'histoire biblique",
+        "Contredit gentiment Papy sur un détail ou un souvenir ('Mon chéri, c'était pas exactement comme ça...')",
+        "Apporte le goûter ou un gâteau en lien avec l'histoire ('Tiens, j'ai fait des galettes, comme dans le récit !')",
+        "Commente avec tendresse et sagesse, souvent en écho avec sa propre enfance en Égypte/Liban",
+        "Reste écouter l'histoire un moment et pose une question qui enrichit le récit"
       ],
       "anecdotes_possibles": [
         "Sa naissance au Caire en Égypte",

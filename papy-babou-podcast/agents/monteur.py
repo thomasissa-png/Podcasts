@@ -30,66 +30,107 @@ ELEVENLABS_SFX_URL = "https://api.elevenlabs.io/v1/sound-generation"
 # Descriptions ElevenLabs pour les jingles
 JINGLE_PROMPTS = {
     "intro_jingle": (
-        "Warm cheerful children's podcast intro jingle, acoustic guitar "
-        "and soft bells, inviting and magical, French storytelling mood"
+        "Adventurous warm children's podcast intro jingle, bright acoustic guitar "
+        "with glockenspiel melody, building excitement, magical book opening sound, "
+        "like the start of an amazing journey, French storytelling atmosphere"
     ),
     "outro_jingle": (
-        "Gentle children's podcast outro jingle, soft music box and light "
-        "harp, warm goodbye feeling, soothing and peaceful ending"
+        "Warm cozy children's podcast outro jingle, gentle music box melody fading "
+        "into soft harp, like closing a storybook by the fireplace, comforting and "
+        "peaceful, leaves you wanting more stories"
     ),
     "intro_saison": (
-        "Epic and warm children's podcast season opening jingle, orchestral "
-        "with gentle bells, magical adventure beginning, French fairy tale mood"
+        "Grand cinematic children's podcast season opening, orchestral fanfare "
+        "with French horns and bright strings, magical adventure awaits, "
+        "heroic and wonder-filled, like opening the gates to an ancient world"
     ),
     "outro_saison": (
-        "Emotional children's podcast season finale outro, gentle piano and "
-        "strings, warm and nostalgic, hopeful ending, soft and magical"
+        "Emotional cinematic children's podcast season finale, soaring violin "
+        "melody over gentle piano, warm nostalgia and hope, bittersweet and "
+        "beautiful, like the last page of an unforgettable book"
     ),
 }
 
 # Descriptions ElevenLabs pour les ambiances musicales
 AMBIANCE_PROMPTS = {
-    "joyeux": "Happy cheerful background music loop for children's podcast, light acoustic guitar and ukulele, playful and warm",
-    "dramatique": "Dramatic soft background music for children's storytelling, gentle tension with strings and low piano, not scary",
-    "calme": "Calm peaceful background music for children's podcast, soft piano and nature sounds, relaxing and gentle",
-    "mystere": "Mysterious gentle background music for children's storytelling, soft woodwinds and light celesta, curious and magical",
-    "epique": "Epic adventure background music for children's podcast, orchestral with gentle drums and brass, heroic but not loud",
-    "tendre": "Tender warm background music for children's podcast, soft strings and piano, emotional and gentle, lullaby-like",
-    "humoristique": "Fun playful background music for children's podcast, pizzicato strings and light percussion, whimsical and bouncy",
-    "solennel": "Solemn reverent background music for children's religious storytelling, soft organ and choir, peaceful and sacred",
-    "fond_doux": "Soft gentle ambient background music for children's podcast, very quiet warm pads and light harp, barely noticeable",
+    "joyeux": (
+        "Upbeat adventure background music for children's podcast, bright acoustic guitar, "
+        "ukulele strumming, hand claps, playful glockenspiel melody, warm and energetic, "
+        "like setting off on a fun treasure hunt with friends"
+    ),
+    "dramatique": (
+        "Cinematic tension background music for children's storytelling, building orchestral "
+        "strings, deep cello pulses, soft timpani rolls, suspenseful but not scary, "
+        "like Indiana Jones for kids, keeps you on the edge of your seat"
+    ),
+    "calme": (
+        "Gentle world music background for children's podcast, soft oud and kalimba, "
+        "light flute melody, warm acoustic pads, peaceful and contemplative, "
+        "like watching a beautiful sunset from a hilltop"
+    ),
+    "mystere": (
+        "Magical mystery background music for children's storytelling, enchanting celesta "
+        "arpeggios, soft duduk melody, shimmering strings, curious and wonder-filled, "
+        "like discovering a secret passage in an ancient temple"
+    ),
+    "epique": (
+        "Epic orchestral adventure music for children's podcast, bold French horns, "
+        "soaring violin melody, triumphant percussion, heroic choir accents, "
+        "grand and cinematic like a Bible hero marching into battle, inspiring courage"
+    ),
+    "tendre": (
+        "Warm emotional background music for children's podcast, gentle fingerpicked guitar, "
+        "soft cello melody, light harp arpeggios, intimate and heartfelt, "
+        "like a grandfather telling stories by the fireplace"
+    ),
+    "humoristique": (
+        "Playful comedic background music for children's podcast, bouncy pizzicato strings, "
+        "silly woodwind melodies, xylophone runs, kazoo accents, light and funny, "
+        "like cartoon chase music but gentler"
+    ),
+    "solennel": (
+        "Sacred reverent background music for Bible storytelling, ethereal choir pads, "
+        "soft pipe organ, gentle brass ensemble, majestic but intimate, "
+        "like the warm light streaming through stained glass windows"
+    ),
+    "fond_doux": (
+        "Minimal ambient background for children's podcast, very soft warm synthesizer pads, "
+        "distant music box notes, barely perceptible gentle harp, subtle and unobtrusive"
+    ),
 }
 
 # Requêtes Freesound pour les ambiances musicales (fallback si ElevenLabs échoue)
 FREESOUND_MUSIC_QUERIES = {
-    "joyeux": "happy cheerful acoustic guitar children",
-    "dramatique": "dramatic soft strings tension",
-    "calme": "calm peaceful piano ambient",
-    "mystere": "mysterious gentle woodwind ambient",
-    "epique": "epic orchestral adventure gentle",
-    "tendre": "tender warm piano strings lullaby",
-    "humoristique": "playful whimsical pizzicato bouncy",
-    "solennel": "solemn peaceful organ choir sacred",
-    "fond_doux": "soft gentle ambient background pad",
-    "intro_jingle": "cheerful jingle intro children podcast",
-    "outro_jingle": "gentle outro jingle ending peaceful",
-    "signature_jingle": "short jingle music box bells children",
-    "transition": "magical chime transition short",
+    "joyeux": "upbeat adventure acoustic guitar ukulele children happy",
+    "dramatique": "cinematic tension orchestral strings suspense children",
+    "calme": "gentle world music oud kalimba flute peaceful",
+    "mystere": "magical mystery celesta enchanting curious children",
+    "epique": "epic orchestral adventure horns heroic cinematic children",
+    "tendre": "warm emotional fingerpicked guitar cello gentle",
+    "humoristique": "playful comedic pizzicato xylophone bouncy funny",
+    "solennel": "sacred choir organ reverent majestic gentle",
+    "fond_doux": "soft ambient warm pad minimal background",
+    "intro_jingle": "cheerful adventure jingle intro children podcast",
+    "outro_jingle": "gentle outro jingle ending peaceful warm",
+    "signature_jingle": "short jingle music box bells children catchy",
+    "transition": "magical whoosh transition short cinematic",
 }
 
 FREESOUND_SEARCH_URL = "https://freesound.org/apiv2/search/text/"
 
 # Prompt pour la transition sonore entre actes narratifs
 TRANSITION_PROMPT = (
-    "Short magical transition sound for children's storytelling podcast, "
-    "soft chime and gentle harp glissando, page turning feeling, 2 seconds"
+    "Cinematic scene transition sound for children's storytelling podcast, "
+    "magical whoosh with soft wind chime tail, like turning a page in an "
+    "ancient book, warm and wonder-filled, 2 seconds"
 )
 
 # Prompt pour le générique signature récurrent (identique à chaque épisode)
 SIGNATURE_JINGLE_PROMPT = (
-    "Very short 5-second signature jingle for children's podcast, "
-    "distinctive warm melody with music box and soft bells, "
-    "recognizable and catchy, French fairy tale atmosphere"
+    "Very short 5-second signature jingle for children's Bible storytelling podcast, "
+    "distinctive catchy melody with bright glockenspiel, soft acoustic guitar strum, "
+    "and warm bell, instantly recognizable, adventurous yet cozy, "
+    "French grandfather storytelling atmosphere"
 )
 
 # Constantes audio (en ms sauf mention contraire)
@@ -1089,6 +1130,11 @@ class Monteur:
             else:
                 pan = config.STEREO_PAN.get(seg["personnage"], 0.0)
                 audio = _appliquer_pan(audio, pan)
+
+                # Normalisation de volume par personnage (compense les différences ElevenLabs)
+                gain_db = config.VOICE_GAIN_DB.get(seg["personnage"], 0.0)
+                if gain_db != 0.0:
+                    audio = audio + gain_db
 
                 # Appliquer les SFX overlay avec ducking voix (A2)
                 if overlays_pending:
