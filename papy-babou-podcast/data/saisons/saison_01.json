@@ -1,0 +1,473 @@
+{
+  "saison": {
+    "numero": 1,
+    "theme": "Les grandes aventures de l'Ancien Testament",
+    "description": "Papy Babou fait découvrir à Antoine et Noémie les plus belles histoires de l'Ancien Testament, de la Création du monde jusqu'à Jonas. Chaque visite chez Papy est l'occasion d'un voyage extraordinaire dans le temps, où les enfants découvrent des héros de la Bible qui ont fait confiance à Dieu malgré les épreuves.",
+    "fil_rouge": "Antoine et Noémie découvrent progressivement que chaque héros biblique a dû faire confiance à Dieu dans des moments difficiles — tout comme eux dans leur propre vie. En parallèle, la famille attend l'arrivée d'un bébé (Lucas), ce qui colore les réactions des enfants au fil de la saison.",
+    "arcs_personnages": {
+      "antoine": {
+        "depart": "Antoine (8 ans) est curieux mais parfois impatient. Il veut tout comprendre tout de suite et a du mal avec les choses qu'il ne peut pas voir ou toucher. Il est un peu jaloux à l'idée d'avoir un petit frère.",
+        "evolution": "Au fil des histoires, Antoine apprend que le courage n'est pas l'absence de peur, mais la confiance malgré la peur. Il commence à poser des questions plus profondes et à faire des liens entre les histoires bibliques et sa propre vie.",
+        "arrivee": "Antoine a compris que la confiance et la patience sont des formes de courage. Il accueille l'arrivée de Lucas avec joie, prêt à être un grand frère protecteur comme les héros de la Bible."
+      },
+      "noemie": {
+        "depart": "Noémie (5 ans) est espiègle, pleine d'imagination et d'énergie. Elle adore les animaux et les histoires avec des rebondissements. Elle ne comprend pas encore bien ce que signifie l'arrivée du bébé.",
+        "evolution": "Noémie s'identifie aux personnages les plus vulnérables des histoires (le petit Moïse dans son panier, le jeune David face au géant). Elle développe sa capacité d'émerveillement et commence à comprendre ce que signifie prendre soin de quelqu'un.",
+        "arrivee": "Noémie a grandi en empathie. Elle est impatiente de rencontrer Lucas et veut lui raconter toutes les histoires de Papy quand il sera grand."
+      },
+      "papy_babou": {
+        "depart": "Papy Babou est un conteur passionné qui adapte chaque histoire au vécu de ses petits-enfants. Il sent que cette saison est spéciale car la famille va s'agrandir.",
+        "evolution": "Papy choisit ses histoires avec soin pour préparer les enfants aux changements à venir. Il révèle progressivement sa propre émotion face à l'arrivée de son nouveau petit-enfant.",
+        "arrivee": "Papy est ému et fier de voir Antoine et Noémie grandir. L'arrivée de Lucas lui donne envie de continuer à transmettre ces histoires à une nouvelle génération."
+      }
+    },
+    "personnages_secondaires": [
+      {
+        "id": "mamie_sonia",
+        "nom_complet": "Mamie Sonia",
+        "description": "Épouse de Papy Babou. Douce, chaleureuse, elle apporte un regard complémentaire sur les histoires. Elle prépare toujours de bons goûters et intervient parfois pour nuancer ou enrichir le récit de Papy.",
+        "apparait_episode": 2,
+        "ton": "doux, chaleureux, taquin",
+        "relation": "Épouse de Papy Babou, complice et parfois moqueuse de ses exagérations",
+        "tics_de_langage": [
+          "Mes petits chéris...",
+          "Votre Papy exagère toujours un peu...",
+          "Qui veut une part de gâteau ?"
+        ]
+      }
+    ],
+    "rituels": {
+      "accroche": "Mes petits loups, installez-vous bien confortablement, Papy a une histoire extraordinaire à vous raconter aujourd'hui...",
+      "au_revoir": "Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace...",
+      "running_gag": "Noémie qui interrompt toujours Papy au moment le plus palpitant pour demander ce qu'il y a au goûter, et Antoine qui lui dit 'Chut, laisse Papy finir !'",
+      "segment_recurrent": "Le petit mot de Papy — à la fin de chaque épisode, Papy pose une question aux enfants qui les fait réfléchir sur la morale de l'histoire"
+    },
+    "episodes": [
+      {
+        "numero": 1,
+        "titre": "La création du monde — quand Dieu a tout inventé",
+        "type": "ouverture",
+        "histoire_biblique": "La création du monde",
+        "resume": "Papy raconte comment Dieu a créé le monde en six jours : la lumière, le ciel, la mer, les plantes, les étoiles, les animaux, et enfin l'homme et la femme. Chaque jour apporte une nouvelle merveille. Le septième jour, Dieu se repose et contemple son œuvre. Les enfants découvrent que tout dans la nature a été voulu et pensé avec amour.",
+        "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
+        "ambiance": "joyeux",
+        "duree_cible_minutes": 30,
+        "pretexte": "C'est la rentrée. Antoine et Noémie arrivent chez Papy pour la première fois depuis les vacances. En explorant le jardin, Noémie demande : 'Papy, c'est qui qui a fait les fleurs ?'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [],
+        "arc_personnage_focus": "noemie",
+        "progression_arc": "Noémie s'émerveille devant chaque création et commence à poser des questions sur l'origine des choses. Son sens de l'émerveillement est le moteur de l'épisode.",
+        "lien_episode_precedent": "",
+        "teasing_episode_suivant": "Papy promet de raconter la prochaine fois ce qui s'est passé dans le plus beau jardin du monde — et pourquoi on n'y habite plus.",
+        "elements_fil_rouge": "Premier épisode chez Papy. Les enfants découvrent le rituel des histoires. Antoine mentionne que Maman a un gros ventre mais ne comprend pas encore bien ce que ça signifie.",
+        "moments_cles": [
+          "Noémie qui imite les animaux au fur et à mesure que Papy les nomme",
+          "Antoine fasciné par les étoiles et qui demande combien il y en a",
+          "Le premier 'petit mot de Papy' qui demande aux enfants quel est leur moment préféré de la création"
+        ],
+        "questions_ouvertes": [
+          "Que s'est-il passé dans le jardin d'Éden ?",
+          "Pourquoi Dieu s'est-il reposé le septième jour ?"
+        ]
+      },
+      {
+        "numero": 2,
+        "titre": "Adam et Ève — le fruit défendu du jardin merveilleux",
+        "type": "standard",
+        "histoire_biblique": "Adam et Ève — le fruit défendu",
+        "resume": "Papy raconte l'histoire d'Adam et Ève dans le jardin d'Éden. Ils vivent heureux au milieu d'arbres magnifiques et d'animaux dociles. Dieu leur a tout donné, sauf un arbre dont ils ne doivent pas manger le fruit. Le serpent rusé convainc Ève de goûter, et Adam la suit. Ils découvrent alors la honte et doivent quitter le jardin. Mais Dieu ne les abandonne pas — il leur fait des vêtements et veille sur eux.",
+        "morale": "Les règles existent pour nous protéger, pas pour nous punir. Quand on fait une bêtise, on peut toujours se relever.",
+        "ambiance": "mystere",
+        "duree_cible_minutes": 25,
+        "pretexte": "Mamie Sonia a fait un magnifique gâteau au chocolat mais interdit d'y toucher avant le goûter. Noémie a terriblement envie d'en prendre un morceau en cachette. Papy sourit : 'Ça me rappelle une histoire...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [
+          "mamie_sonia"
+        ],
+        "arc_personnage_focus": "antoine",
+        "progression_arc": "Antoine comprend que les règles ne sont pas là pour embêter mais pour protéger. Il fait le parallèle avec les consignes de ses parents.",
+        "lien_episode_precedent": "Papy reprend là où il s'était arrêté : le beau jardin de la création, et ce qui s'y est passé ensuite.",
+        "teasing_episode_suivant": "Papy annonce que la prochaine fois, il racontera l'histoire du plus grand bateau jamais construit — et pourquoi il a fallu le construire.",
+        "elements_fil_rouge": "Mamie Sonia apparaît pour la première fois. Elle taquine Papy sur sa façon de raconter. Noémie demande si le bébé dans le ventre de Maman a aussi le droit de manger du gâteau.",
+        "moments_cles": [
+          "Le serpent qui parle — Noémie a un frisson",
+          "Adam et Ève qui se cachent de Dieu — Antoine trouve ça rigolo",
+          "Mamie Sonia qui dit 'Votre Papy exagère toujours un peu' quand Papy décrit le jardin"
+        ],
+        "questions_ouvertes": [
+          "Qu'est devenu le jardin d'Éden ?",
+          "Est-ce que Dieu était vraiment fâché ou plutôt triste ?"
+        ]
+      },
+      {
+        "numero": 3,
+        "titre": "Noé et le déluge — l'arche qui a sauvé le monde",
+        "type": "standard",
+        "histoire_biblique": "Noé et le déluge",
+        "resume": "Les hommes sont devenus méchants et Dieu est triste. Il choisit Noé, un homme juste, et lui demande de construire un immense bateau — une arche — pour sauver sa famille et un couple de chaque animal. Tout le monde se moque de Noé, mais il obéit. La pluie tombe pendant quarante jours. Puis l'eau se retire, une colombe rapporte un rameau d'olivier, et l'arc-en-ciel apparaît comme promesse de Dieu.",
+        "morale": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
+        "ambiance": "dramatique",
+        "duree_cible_minutes": 25,
+        "pretexte": "Il pleut des cordes dehors. Les enfants sont coincés à l'intérieur chez Papy et regardent la pluie tomber par la fenêtre. Antoine soupire. Papy dit : 'Vous savez, il a plu bien plus fort que ça un jour...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [],
+        "arc_personnage_focus": "antoine",
+        "progression_arc": "Antoine est touché par le courage de Noé face aux moqueries. Il fait le lien avec une situation à l'école où on s'est moqué de lui.",
+        "lien_episode_precedent": "Papy explique que les descendants d'Adam et Ève ont oublié les leçons du jardin — les hommes sont devenus égoïstes.",
+        "teasing_episode_suivant": "Papy promet de raconter l'histoire d'un homme qui a tout quitté — sa maison, sa famille, son pays — juste parce que Dieu le lui a demandé.",
+        "elements_fil_rouge": "Antoine demande si le bébé aura peur de l'orage. Papy le rassure : un grand frère, c'est là pour protéger.",
+        "moments_cles": [
+          "Noémie qui veut savoir comment les girafes sont entrées dans l'arche",
+          "Le moment où la pluie s'arrête enfin — silence puis joie",
+          "L'arc-en-ciel comme promesse — Noémie court à la fenêtre chercher un vrai arc-en-ciel"
+        ],
+        "questions_ouvertes": [
+          "Combien de temps Noé a-t-il mis à construire l'arche ?",
+          "Est-ce que tous les animaux se sont bien entendus dans l'arche ?"
+        ]
+      },
+      {
+        "numero": 4,
+        "titre": "Abraham — celui qui a tout quitté par confiance",
+        "type": "standard",
+        "histoire_biblique": "Abraham — quitter tout par confiance",
+        "resume": "Dieu appelle Abraham (alors nommé Abram) et lui demande de quitter son pays, sa famille et tout ce qu'il connaît pour partir vers une terre inconnue. Abraham obéit malgré la peur et l'incertitude. Dieu lui promet une descendance aussi nombreuse que les étoiles du ciel. Abraham et Sara attendent longtemps, très longtemps, et finissent par avoir un fils, Isaac, dans leur vieillesse. La promesse de Dieu se réalise.",
+        "morale": "Faire confiance, c'est parfois partir sans savoir où l'on va. Les plus belles aventures commencent par un acte de foi.",
+        "ambiance": "calme",
+        "duree_cible_minutes": 25,
+        "pretexte": "La famille d'Antoine et Noémie va bientôt déménager dans une maison plus grande pour accueillir le bébé. Antoine est inquiet de changer d'école. Papy lui dit : 'Tu sais, un homme a fait un voyage bien plus grand que ça...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [
+          "mamie_sonia"
+        ],
+        "arc_personnage_focus": "antoine",
+        "progression_arc": "Antoine comprend qu'on peut avoir peur du changement et avancer quand même. Le déménagement lui fait moins peur après l'histoire d'Abraham.",
+        "lien_episode_precedent": "Après le déluge, la terre s'est repeuplée. Des générations plus tard, Dieu choisit un homme pour commencer une grande histoire.",
+        "teasing_episode_suivant": "Papy dit que la prochaine fois, il racontera l'histoire d'un garçon qui avait un manteau tellement beau que ses frères en étaient jaloux — et ça a mal tourné.",
+        "elements_fil_rouge": "Mamie Sonia raconte qu'elle aussi a eu peur quand Papy et elle ont déménagé. Le parallèle avec le déménagement familial est explicite.",
+        "moments_cles": [
+          "Abraham qui regarde les étoiles et essaie de les compter",
+          "Noémie qui demande si Sara était aussi vieille que Mamie",
+          "Le moment où Isaac naît enfin — la joie après l'attente"
+        ],
+        "questions_ouvertes": [
+          "Qu'est devenu Isaac en grandissant ?",
+          "Abraham a-t-il jamais regretté d'être parti ?"
+        ]
+      },
+      {
+        "numero": 5,
+        "titre": "Joseph et la tunique de couleurs — trahi par ses frères",
+        "type": "standard",
+        "histoire_biblique": "Joseph et la tunique de couleurs",
+        "resume": "Joseph est le fils préféré de Jacob. Son père lui offre une magnifique tunique de couleurs, ce qui rend ses frères terriblement jaloux. Ils le vendent comme esclave en Égypte. Là-bas, Joseph traverse la prison mais garde confiance en Dieu. Grâce à son don d'interpréter les rêves, il devient le bras droit du Pharaon et sauve l'Égypte de la famine. Quand ses frères viennent chercher du blé, Joseph les reconnaît et choisit le pardon.",
+        "morale": "Le pardon est plus fort que la rancune. Même dans les épreuves les plus dures, quelque chose de beau peut naître.",
+        "ambiance": "dramatique",
+        "duree_cible_minutes": 25,
+        "pretexte": "Antoine est fâché contre un copain qui a été méchant avec lui à l'école. Il ne veut plus jamais lui parler. Papy lui dit : 'Je connais quelqu'un à qui on a fait bien pire, et pourtant il a pardonné...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [],
+        "arc_personnage_focus": "antoine",
+        "progression_arc": "Antoine est bouleversé par la trahison des frères mais touché par le choix de Joseph de pardonner. Il commence à envisager de pardonner à son copain.",
+        "lien_episode_precedent": "Joseph est un descendant d'Abraham — la promesse continue de génération en génération.",
+        "teasing_episode_suivant": "Papy annonce qu'il racontera l'histoire d'un bébé trouvé dans un panier sur un fleuve — et ce bébé a fait quelque chose d'incroyable en grandissant.",
+        "elements_fil_rouge": "Noémie demande si le bébé qui va arriver aura aussi un manteau de couleurs. Antoine réfléchit à ce que signifie être un grand frère — les frères de Joseph n'étaient pas de bons grands frères.",
+        "moments_cles": [
+          "Les frères qui déchirent la tunique — Noémie est révoltée",
+          "Joseph en prison qui garde espoir",
+          "Les retrouvailles et le pardon — Antoine a les yeux qui brillent"
+        ],
+        "questions_ouvertes": [
+          "Est-ce que les frères de Joseph ont regretté ?",
+          "Comment fait-on pour pardonner quelque chose de très grave ?"
+        ]
+      },
+      {
+        "numero": 6,
+        "titre": "Moïse — l'enfant du Nil et la mer qui s'ouvre",
+        "type": "mi-saison",
+        "histoire_biblique": "Moïse — l'enfant du Nil et la mer qui s'ouvre",
+        "resume": "Le Pharaon veut tuer tous les bébés hébreux. La mère de Moïse le cache dans un panier sur le Nil. La fille du Pharaon le trouve et l'élève comme un prince. Devenu adulte, Moïse découvre ses origines. Dieu lui parle dans un buisson ardent et lui confie une mission : libérer son peuple. Après les dix plaies d'Égypte, Moïse guide le peuple vers la liberté. Face à la mer Rouge, Dieu ouvre les eaux. Le peuple traverse à pied sec.",
+        "morale": "Dieu choisit les petits et les humbles pour accomplir de grandes choses. Le courage, c'est dire oui même quand on a peur.",
+        "ambiance": "dramatique",
+        "duree_cible_minutes": 30,
+        "pretexte": "C'est l'anniversaire de Noémie ! Elle a 6 ans. Mamie Sonia a préparé un gâteau magnifique. Noémie demande une histoire spéciale comme cadeau d'anniversaire. Papy dit : 'Pour ton anniversaire, je vais te raconter l'histoire d'un bébé qui a changé le monde...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [
+          "mamie_sonia"
+        ],
+        "arc_personnage_focus": "noemie",
+        "progression_arc": "Noémie s'identifie au bébé Moïse dans son panier. Elle comprend que même les plus petits peuvent faire de grandes choses. Son anniversaire marque un tournant : elle commence à se sentir 'grande'.",
+        "lien_episode_precedent": "Les descendants de Joseph vivent en Égypte depuis longtemps, mais un nouveau Pharaon les a réduits en esclavage.",
+        "teasing_episode_suivant": "Papy dit que la prochaine fois, il racontera comment un petit berger avec juste une fronde a affronté le plus grand guerrier du monde.",
+        "elements_fil_rouge": "L'anniversaire de Noémie. Elle souffle ses bougies pendant que Papy raconte le buisson ardent ('une flamme qui ne s'éteint jamais, comme les bougies de Noémie !'). La naissance de Moïse fait écho au bébé qui va arriver dans la famille.",
+        "moments_cles": [
+          "Le panier sur le Nil — Noémie retient son souffle",
+          "Le buisson ardent — les enfants sont fascinés",
+          "La mer qui s'ouvre — Noémie applaudit",
+          "Mamie Sonia apporte le gâteau au moment du passage de la mer Rouge"
+        ],
+        "questions_ouvertes": [
+          "Qu'est-ce que Moïse a fait ensuite dans le désert ?",
+          "Est-ce que le Pharaon a regretté ?"
+        ],
+        "evenement_special": {
+          "type": "anniversaire",
+          "personnage": "noemie",
+          "details": "C'est l'anniversaire de Noémie ! Elle a 6 ans aujourd'hui."
+        }
+      },
+      {
+        "numero": 7,
+        "titre": "David et Goliath — le berger qui a terrassé un géant",
+        "type": "standard",
+        "histoire_biblique": "David et Goliath",
+        "resume": "Les Philistins menacent Israël. Leur champion Goliath, un géant terrifiant, défie quiconque de l'affronter. Tous les soldats tremblent de peur. Le jeune David, un simple berger venu apporter du pain à ses frères, s'indigne que personne n'ose se lever. Armé de sa fronde et de cinq pierres, il affronte Goliath au nom de Dieu. Une seule pierre suffit. David terrasse le géant et donne courage à tout le peuple.",
+        "morale": "Ce n'est pas la taille ou la force qui compte, mais le courage et la foi. Les plus petits peuvent accomplir les plus grandes choses.",
+        "ambiance": "joyeux",
+        "duree_cible_minutes": 25,
+        "pretexte": "Antoine a un tournoi de foot ce week-end et l'équipe adverse est réputée imbattable. Il est découragé. Papy lui dit : 'Tu sais, il y a eu un match encore plus déséquilibré que ça dans l'histoire...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [],
+        "arc_personnage_focus": "antoine",
+        "progression_arc": "Antoine retrouve confiance. L'histoire de David lui montre qu'on peut gagner même quand tout semble perdu. Il comprend que le courage vient de l'intérieur.",
+        "lien_episode_precedent": "Après Moïse, le peuple d'Israël s'est installé sur sa terre. Mais les ennemis menacent toujours.",
+        "teasing_episode_suivant": "Papy dit que David est devenu roi, et que son fils a été encore plus célèbre — le roi le plus sage de tous les temps.",
+        "elements_fil_rouge": "Noémie dit que le bébé sera petit comme David au début. Antoine promet de protéger son petit frère comme David a protégé son peuple.",
+        "moments_cles": [
+          "La description de Goliath — Antoine et Noémie ont les yeux écarquillés",
+          "David qui refuse l'armure du roi et prend juste sa fronde",
+          "Le moment du lancer de pierre — silence puis explosion de joie"
+        ],
+        "questions_ouvertes": [
+          "David est-il devenu roi tout de suite après ?",
+          "Est-ce qu'il a eu d'autres combats ?"
+        ]
+      },
+      {
+        "numero": 8,
+        "titre": "Salomon — le roi qui a demandé la sagesse",
+        "type": "standard",
+        "histoire_biblique": "Salomon — le roi sage",
+        "resume": "David est mort et son fils Salomon devient roi. Dieu lui apparaît en rêve et lui propose de demander ce qu'il veut. Au lieu de la richesse ou la puissance, Salomon demande la sagesse pour bien gouverner son peuple. Dieu, touché, lui accorde la sagesse ET la richesse. Salomon rend des jugements brillants — comme celui des deux mères qui réclament le même bébé. Il construit aussi le magnifique Temple de Jérusalem pour honorer Dieu.",
+        "morale": "La vraie richesse, c'est la sagesse — savoir faire les bons choix. Demander de l'aide pour bien agir est une preuve d'intelligence, pas de faiblesse.",
+        "ambiance": "calme",
+        "duree_cible_minutes": 25,
+        "pretexte": "Noémie et Antoine se disputent pour savoir qui aura la plus grande chambre dans la nouvelle maison. Mamie Sonia leur dit d'aller demander à Papy, qui est 'le plus sage'. Papy rit : 'Moi, sage ? Je connais quelqu'un de bien plus sage...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [
+          "mamie_sonia"
+        ],
+        "arc_personnage_focus": "noemie",
+        "progression_arc": "Noémie est fascinée par l'idée qu'on puisse choisir la sagesse plutôt que des jouets. Elle commence à comprendre que grandir, c'est aussi faire des choix réfléchis.",
+        "lien_episode_precedent": "Salomon est le fils de David, le petit berger devenu roi. La lignée continue.",
+        "teasing_episode_suivant": "Papy promet de raconter l'histoire d'un homme jeté dans une fosse pleine de lions — et qui en est sorti vivant.",
+        "elements_fil_rouge": "Le jugement de Salomon avec le bébé résonne avec l'arrivée prochaine de Lucas. Antoine et Noémie résolvent leur dispute de chambre en trouvant un compromis sage.",
+        "moments_cles": [
+          "Le rêve de Salomon — Noémie dit qu'elle aurait demandé un poney",
+          "Le jugement des deux mères — les enfants sont en haleine",
+          "La construction du Temple — Antoine impressionné par les dimensions"
+        ],
+        "questions_ouvertes": [
+          "Salomon est-il resté sage toute sa vie ?",
+          "Le Temple existe-t-il encore aujourd'hui ?"
+        ]
+      },
+      {
+        "numero": 9,
+        "titre": "Daniel dans la fosse aux lions — la foi plus forte que la peur",
+        "type": "standard",
+        "histoire_biblique": "Daniel dans la fosse aux lions",
+        "resume": "Daniel est un jeune homme juif exilé à Babylone. Grâce à sa sagesse et sa droiture, il devient conseiller du roi. Mais des courtisans jaloux piègent Daniel : ils font adopter une loi interdisant de prier un autre dieu que le roi. Daniel refuse de cesser de prier. Il est jeté dans la fosse aux lions. Toute la nuit, Daniel prie. Au matin, le roi accourt : Daniel est vivant, les lions ne l'ont pas touché. Dieu a envoyé un ange pour fermer la gueule des lions.",
+        "morale": "Rester fidèle à ce en quoi on croit, même quand c'est dangereux. La foi donne une force que rien ne peut briser.",
+        "ambiance": "mystere",
+        "duree_cible_minutes": 25,
+        "pretexte": "C'est le soir, les enfants dorment chez Papy et Mamie. Antoine dit qu'il a un peu peur du noir. Papy le rassure et lui dit : 'Tu sais, je connais quelqu'un qui a passé toute une nuit dans le noir, entouré de lions...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [
+          "mamie_sonia"
+        ],
+        "arc_personnage_focus": "antoine",
+        "progression_arc": "Antoine surmonte sa peur du noir en s'inspirant de Daniel. Il comprend que la prière et la confiance en Dieu sont des forces intérieures qui protègent.",
+        "lien_episode_precedent": "Après Salomon, le royaume s'est divisé et le peuple a été exilé à Babylone. Daniel fait partie de ces exilés.",
+        "teasing_episode_suivant": "Papy dit que pour la dernière histoire de cette série, il racontera quelque chose d'extraordinaire : un homme avalé par un énorme poisson — et ce qui lui est arrivé à l'intérieur.",
+        "elements_fil_rouge": "Mamie apporte du lait chaud et des couvertures. L'ambiance cocooning du soir. Antoine demande si le bébé Lucas aura peur du noir lui aussi, et promet de le protéger.",
+        "moments_cles": [
+          "Daniel qui prie malgré l'interdiction — Antoine admire son courage",
+          "La descente dans la fosse — Noémie se blottit contre Papy",
+          "Le matin et les lions dociles — soulagement et émerveillement"
+        ],
+        "questions_ouvertes": [
+          "Qu'est devenu Daniel après la fosse ?",
+          "Le roi a-t-il cru en Dieu après ça ?"
+        ]
+      },
+      {
+        "numero": 10,
+        "titre": "Jonas — avalé par une baleine, rattrapé par l'amour de Dieu",
+        "type": "final",
+        "histoire_biblique": "Jonas — avalé par une baleine",
+        "resume": "Dieu demande à Jonas d'aller prêcher à Ninive, une ville méchante. Jonas a peur et fuit sur un bateau en direction opposée. Une terrible tempête éclate. Jonas comprend que c'est à cause de lui et demande aux marins de le jeter à la mer. Un énorme poisson l'avale. Pendant trois jours dans le ventre du poisson, Jonas prie et regrette sa fuite. Le poisson le recrache sur la plage. Jonas va finalement à Ninive, et la ville entière se repent. Dieu pardonne à Ninive — et Jonas apprend que l'amour de Dieu est pour tous.",
+        "morale": "On ne peut pas fuir ses responsabilités, mais on peut toujours revenir sur le bon chemin. L'amour de Dieu est pour tout le monde, même ceux qu'on croit méchants.",
+        "ambiance": "joyeux",
+        "duree_cible_minutes": 35,
+        "pretexte": "C'est un jour très spécial : Lucas est né ! Toute la famille est réunie chez Papy et Mamie pour fêter l'arrivée du bébé. Noémie et Antoine sont surexcités. Papy prend Lucas dans ses bras et dit : 'Pour fêter cette nouvelle vie, je vais vous raconter une dernière histoire extraordinaire...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [
+          "mamie_sonia"
+        ],
+        "arc_personnage_focus": "papy_babou",
+        "progression_arc": "Papy est ému par l'arrivée de Lucas. Il conclut la saison en montrant que chaque vie est un cadeau de Dieu, et que transmettre ces histoires est sa plus grande joie. L'histoire de Jonas — sur les secondes chances et l'amour inconditionnel — est son message final.",
+        "lien_episode_precedent": "Jonas clôture le voyage à travers l'Ancien Testament. Papy fait un bref rappel de tous les héros rencontrés cette saison.",
+        "teasing_episode_suivant": "Papy dit à Lucas endormi dans ses bras : 'Mon petit bonhomme, quand tu seras grand, je te raconterai toutes ces histoires... et bien d'autres encore. Car il y a un homme dont je n'ai pas encore parlé — le plus grand de tous.'",
+        "elements_fil_rouge": "La naissance de Lucas clôture l'arc familial de la saison. Antoine est fier d'être grand frère. Noémie veut déjà raconter les histoires à Lucas. Papy est ému aux larmes. Le fil rouge sur la confiance trouve son aboutissement : accueillir un nouveau-né, c'est le plus grand acte de foi.",
+        "moments_cles": [
+          "Jonas dans le ventre du poisson — Noémie demande si ça sent mauvais",
+          "Jonas à Ninive — les enfants comprennent le pardon universel",
+          "Papy qui berce Lucas en concluant l'histoire",
+          "Le rappel de toutes les histoires de la saison — les enfants nomment leurs préférées"
+        ],
+        "questions_ouvertes": [
+          "Qui est cet homme 'le plus grand de tous' dont Papy parlera en saison 2 ?",
+          "Est-ce que Lucas aimera les histoires de Papy autant qu'Antoine et Noémie ?"
+        ],
+        "evenement_special": {
+          "type": "naissance",
+          "personnage": "lucas",
+          "details": "Lucas est né ! C'est le dernier épisode de la saison 1."
+        }
+      }
+    ]
+  },
+  "validation_directeur": {
+    "directeur_saison": {
+      "note_globale": 8.8,
+      "verdict": "feu_vert",
+      "commentaire_general": "Plan de saison solide et bien structuré. Les 10 histoires imposées de l'Ancien Testament sont parfaitement ordonnées chronologiquement. Le fil rouge familial (attente de Lucas) est excellent — il ancre chaque histoire biblique dans le quotidien des enfants. Les prétextes sont variés et naturels. Les arcs de personnages sont crédibles et bien distribués entre Antoine (courage, confiance) et Noémie (émerveillement, empathie). Le final avec la naissance de Lucas est un coup de maître narratif. Quelques ajustements mineurs recommandés, mais rien de bloquant.",
+      "axes": {
+        "coherence_narrative": {
+          "note": 9.0,
+          "commentaire": "Arc narratif remarquable. Le fil rouge sur la confiance en Dieu se décline naturellement dans chaque épisode. La progression E01 (émerveillement) → E10 (accueil de la vie) est fluide. Les liens inter-épisodes sont logiques et respectent la chronologie biblique."
+        },
+        "variete_themes": {
+          "note": 8.5,
+          "commentaire": "Bonne variété d'ambiances (joyeux, mystère, dramatique, calme). 4 ambiances distinctes sur 10 épisodes, c'est bien. Attention : 3 épisodes 'dramatique' consécutifs (E05, E06, E07 pour E05-E06) — recommandation : vérifier l'alternance au montage. Les prétextes sont variés et toujours ancrés dans le quotidien enfantin."
+        },
+        "arcs_personnages": {
+          "note": 9.0,
+          "commentaire": "Antoine : 5 épisodes focus, arc cohérent courage/confiance/grand frère. Noémie : 3 épisodes focus, arc émerveillement/empathie/grandir. Papy : 1 épisode focus (E10) mais présence forte partout. Mamie Sonia : bien dosée (4 apparitions), jamais envahissante. Lucas : fil rouge discret mais efficace, payoff magnifique en E10."
+        },
+        "rythme_saison": {
+          "note": 8.5,
+          "commentaire": "Ouverture douce (Création) → montée progressive → mi-saison épique (Moïse) → redescente (Salomon calme) → tension (Daniel) → final joyeux (Jonas + Lucas). Bon rythme global. L'anniversaire de Noémie en E06 est parfaitement placé comme pivot de mi-saison."
+        },
+        "potentiel_audience": {
+          "note": 9.0,
+          "commentaire": "Excellent potentiel de rétention. Les teasings sont naturels et donnent envie. Le fil rouge familial crée un attachement émotionnel fort. Les histoires choisies sont les plus connues et les plus visuelles de l'AT — parfait pour un premier podcast biblique pour enfants."
+        }
+      },
+      "recommandations": [
+        {
+          "type": "mineur",
+          "episode": 5,
+          "suggestion": "L'ambiance 'dramatique' de Joseph pourrait basculer en 'mystère' pour éviter 2 dramatiques consécutifs avec Moïse (E06)."
+        },
+        {
+          "type": "mineur",
+          "episode": 7,
+          "suggestion": "David et Goliath en 'joyeux' est un bon choix mais attention au combat — le ton doit rester adapté aux 6 ans (Lina). Bien doser la violence de Goliath."
+        },
+        {
+          "type": "mineur",
+          "episode": null,
+          "suggestion": "Le running gag (Noémie/goûter) est charmant mais veiller à le faire évoluer au fil de la saison pour éviter la lassitude — à partir de l'E06 (anniversaire), Noémie pourrait poser des questions plus profondes au lieu de demander le goûter."
+        }
+      ]
+    },
+    "personas": {
+      "lina_7ans": {
+        "note": 8.5,
+        "verdict": "J'adore !",
+        "commentaire": "Les histoires sont racontées avec plein d'images et de moments rigolos ! J'aime bien quand Noémie interrompt Papy pour le goûter, ça me fait rire. Les animaux dans l'arche de Noé et le bébé Moïse dans son panier, c'est trop bien. Par contre, Jonas dans le ventre du poisson, c'est un peu dégoûtant. Et Daniel avec les lions, j'aurais un peu peur si Papy ne me rassurait pas. J'ai hâte d'écouter ! Mon épisode préféré ce sera la Création ou Noé.",
+        "episodes_preferes": [
+          1,
+          3,
+          6
+        ],
+        "alertes": [
+          "E09 (Daniel) : attention au niveau de peur — les lions qui rugissent dans le noir",
+          "E05 (Joseph) : la trahison par les frères est un sujet sensible pour les plus jeunes"
+        ]
+      },
+      "noah_10ans": {
+        "note": 8.5,
+        "verdict": "Pas mal du tout",
+        "commentaire": "David et Goliath, ça c'est une vraie histoire ! Un combat de guerriers ! Joseph et la prison c'est aussi intéressant — on dirait un film. Daniel et les lions c'est impressionnant. Par contre la Création et Adam et Ève, je connais déjà — faudra que ce soit bien raconté pour que ce soit pas ennuyeux. Salomon avec le jugement du bébé c'est malin, j'aime les énigmes. Si les bruitages sont bien faits (la tempête, les lions, la mer qui s'ouvre), ça peut être vraiment bien.",
+        "episodes_preferes": [
+          7,
+          5,
+          9
+        ],
+        "alertes": [
+          "E01 (Création) : risque de 'déjà vu' pour les 10 ans — besoin de détails surprenants",
+          "E08 (Salomon) : ambiance 'calme' — attention à ne pas perdre les garçons de 10 ans"
+        ]
+      },
+      "sophie_parent": {
+        "note": 9.0,
+        "verdict": "Exactement ce que je cherchais",
+        "commentaire": "Enfin un podcast qui respecte le texte biblique tout en le rendant vivant et joyeux ! Le fil rouge avec le bébé Lucas est brillant — ça va parler à mes enfants. Les morales sont justes sans être moralisatrices. J'apprécie que chaque épisode se termine par une question de réflexion — ça va créer des discussions en famille. L'anniversaire de Noémie en E06 et la naissance de Lucas en E10, c'est touchant. La progression chronologique de l'Ancien Testament est parfaite pour l'éducation. Je recommanderai ce podcast à mon groupe de catéchisme.",
+        "episodes_preferes": [
+          6,
+          10,
+          4
+        ],
+        "alertes": [
+          "E05 (Joseph) : vérifier la fidélité — ne pas omettre la dimension du pardon divin",
+          "E10 (Jonas) : bien montrer que Jonas apprend une leçon, pas juste une aventure"
+        ]
+      }
+    },
+    "note_audience": 8.7
+  }
+}
