@@ -1281,3 +1281,144 @@ Note audience = Lina×0.3 + Noah×0.3 + Sophie×0.4 (parent weighs more).
 - 12 new tests in test_scripteur.py (TestNettoyerOnomatopees)
 - 34 new tests in test_directeur_podcast.py: TestPersonas (7), TestPrompts (7), TestValidation (7), TestUtilitaires (9), TestEvaluer (5)
 - Full scripteur + directeur suite: 123 passed, 0 failures
+
+## Infrastructure Audit + Fixed Episodes + Purge System (Session 20)
+Comprehensive 6-commit session: infrastructure audit, fixed episodes, season increment bug, SEO titles, historique pollution fix, and production data purge system.
+
+### Infrastructure Audit Fixes (H1 + M1 + M2 + L1)
+
+**H1 (HIGH)**: `valider_metadonnees()`, `go_no_go_publication()`, `brief_creatif()` created `anthropic.Anthropic()` without arguments instead of using `self.client` (which has explicit API key + 300s timeout). Fixed: replaced with `self.client` at lines 1346, 1470, 1569 of `directeur_podcast.py`.
+
+**M1 (MEDIUM)**: `instructions_dir` built by directeur for metadata regeneration were NEVER injected into `metadonnees.generer()`. Fixed: script enriched with `script_enrichi["_instructions_metadonnees"] = "\n".join(instructions_dir)` before the call, matching the pattern in `_validation_metadonnees()`.
+
+**M2 (MEDIUM)**: `_construire_system_prompt_directeur()` duplicated persona-building logic from `_construire_personas_text()`. Fixed: refactored to call `_construire_personas_text()` — DRY.
+
+**L1 (LOW)**: Variable `directeur_ok` was assigned but never read. Fixed: now used in `rapport["etapes"]["directeur_podcast"]["approuve"]`.
+
+### Fixed Episodes — Saison 1 IMPOSED (10 biblical stories)
+
+**CRITICAL CHANGE**: Season 1 episodes are no longer generated freely by the LLM. They are IMPOSED in this exact order:
+1. La création du monde
+2. Adam et Ève — le fruit défendu
+3. Noé et le déluge
+4. Abraham — quitter tout par confiance
+5. Joseph et la tunique de couleurs
+6. Moïse — l'enfant du Nil et la mer qui s'ouvre
+7. David et Goliath
+8. Salomon — le roi sage
+9. Daniel dans la fosse aux lions
+10. Jonas — avalé par une baleine
+
+**Implementation**:
+- `config.PERIMETRES_SAISONS[1]` now has `episodes_imposes` list with the exact 10 stories
+- `planificateur.planifier_saison()` captures `episodes_imposes` from perimetre and forces `histoire_biblique` post-generation
+- System prompt examples updated to match the new stories
+- `_ORDRE_CHRONOLOGIQUE` in planificateur: Daniel=48, Jonas=50 (was reversed)
+
+### Fixed Episodes — Saisons 2 and 3 IMPOSED
+
+**Saison 2 — La vie de Jésus** (10 episodes):
+1. L'annonce à Marie — l'ange Gabriel
+2. La naissance à Bethléem
+3. Les rois mages et l'étoile
+4. Jésus enfant au Temple
+5. Le baptême dans le Jourdain
+6. Les noces de Cana — l'eau changée en vin
+7. Le sermon sur la montagne
+8. La multiplication des pains
+9. Lazare — le miracle de la résurrection
+10. La Passion, la mort et la résurrection de Jésus
+
+**Saison 3 — Apôtres et grands saints** (10 episodes):
+1. Pierre — le pêcheur devenu chef des apôtres
+2. Paul — le persécuteur foudroyé sur le chemin de Damas
+3. Étienne — le premier martyr chrétien
+4. Marie-Madeleine — la première témoin de la résurrection
+5. Jean — l'apôtre qui écrit l'Apocalypse à Patmos
+6. François d'Assise — le riche qui choisit la pauvreté
+7. Jeanne d'Arc — la bergère qui entend des voix
+8. Nicolas de Myre — le saint qui donne en secret
+9. Thérèse de Lisieux — la petite voie vers Dieu
+10. Mère Teresa — servir Dieu dans les rues de Calcutta
+
+### Season Increment Bug Fix
+
+**Bug**: When re-planning saison 1, the LLM saw "Saison 1 already exists" in `saisons_precedentes` and generated a "saison 2" instead of replacing.
+
+**Fix** (3 layers):
+1. `saisons_precedentes` in `planifier_saison()` now excludes saisons `>= current` (was including all)
+2. Same filter applied to `archives_saisons`
+3. Season number forced in plan JSON after generation: `plan["saison"]["numero"] = saison`
+
+### Directeur Podcast — SEO Title Verification
+
+**New requirement**: Titles must be both ACCROCHEURS (catchy) and CHERCHABLES (searchable on podcast platforms).
+
+**Changes to `_SYSTEM_PROMPT_METADONNEES`**:
+- Title criterion split into 2 mandatory sub-criteria: a) Accrocheur, b) Cherchable/SEO
+- Title MUST contain biblical character/story name — missing = verdict "retravailler" (blocking)
+- Good/bad examples added (e.g., "David contre Goliath — le berger qui terrasse un géant" = good, "Le courage d'un petit berger" = bad — searchable but unfindable)
+- Description must also contain SEO keywords
+- New JSON response fields: `titre_cherchable`, `titre_contient_nom_biblique`
+
+### Historique Pollution Fix
+
+**Bug**: When re-planning a season, old historique entries (from previous production) remained. Episodes were skipped as "déjà produits" even though the plan had completely changed.
+
+**Fix** (3 layers):
+1. **`_episodes_deja_produits()` helper** (main.py): Compares title from current plan vs historique. If title changed → episode is NOT "déjà produit" → will be re-produced.
+2. **Purge at plan save**: When a new plan is saved in `planifier-saison`, historique entries whose title doesn't match the new plan are automatically purged.
+3. Both `_interactif_saison()` and `produire_saison()` now use `_episodes_deja_produits()` instead of raw episode_id matching.
+
+### Production Data Purge System (Web Dashboard)
+
+**New section in Config tab**: "Nettoyage des données de production"
+
+**3 levels of purge**:
+
+| Action | Endpoint | What it does |
+|--------|----------|-------------|
+| Purger une saison | `POST /api/purge/saison/<num>` | Deletes all produced episodes of a season (historique, scripts, audio, rapports, DB). Option `garder_plan` to keep the season plan. |
+| Reset complet | `POST /api/purge/tout` | Deletes EVERYTHING: historique, plans, saisons, DB tables, files. |
+| (existing) Supprimer épisode | `POST /api/episode/<id>/delete` | Soft-delete single episode (was already present) |
+
+**Security**:
+- 2-step confirmation (click → confirmation zone → confirm button)
+- Files archived to `output/archive/` (recoverable)
+- Audit trail in `audit_log` DB table
+- Object Storage cleanup included
+
+**Frontend**: Card with red border in Config page, saison number input, "garder plan" checkbox, "Purger la saison" button (coral), "Tout supprimer" button (dark red), confirmation zone with contextual message, result display with details.
+
+### When modifying config.py (Session 20)
+- `PERIMETRES_SAISONS` now has `episodes_imposes` key (list of strings) for seasons with fixed episodes
+- All 3 seasons have `episodes_imposes` — the LLM receives them in the description AND the planificateur forces them post-generation
+- To add/change episodes for a season: update both `description` (for prompt) and `episodes_imposes` (for enforcement)
+
+### When modifying planificateur.py (Session 20)
+- `planifier_saison()` reads `perimetre.get("episodes_imposes")` and stores it in `episodes_imposes` variable
+- After validation loop, if `episodes_imposes` is set, forces each episode's `histoire_biblique` to match
+- `_ORDRE_CHRONOLOGIQUE`: Daniel=48, Jonas=50 (Daniel is before Jonas biblically)
+- Marie-Madeleine=201, Jean=215, François d'Assise=330, Jeanne d'Arc=340, Nicolas de Myre=325, Teresa=360 added
+
+### When modifying main.py (Session 20)
+- `_episodes_deja_produits(saison_num, episodes_plan)` → `set[str]` — compares title between plan and historique
+- `planifier_saison()`: excludes saisons `>= current` from `saisons_precedentes` and `archives_saisons`
+- `planifier_saison()`: forces `plan["saison"]["numero"] = saison` after generation
+- `planifier_saison()`: purges stale historique entries after saving new plan
+- Both `_interactif_saison()` and `produire_saison()` use `_episodes_deja_produits()` not raw set comprehension
+
+### When modifying directeur_podcast.py (Session 20)
+- `valider_metadonnees()`, `go_no_go_publication()`, `brief_creatif()` use `self.client` (not `anthropic.Anthropic()`)
+- `_construire_system_prompt_directeur()` calls `_construire_personas_text()` (no more duplication)
+- `_SYSTEM_PROMPT_METADONNEES` has SEO/searchability criteria for titles — `titre_cherchable` and `titre_contient_nom_biblique` fields in response JSON
+
+### When modifying web.py (Session 20)
+- `POST /api/purge/saison/<num>` — purges all episode data for a season, optional `garder_plan` body param
+- `POST /api/purge/tout` — full reset of all production data
+- Both endpoints: archive files, purge historique JSON, DELETE from DB tables (hard delete, not soft), clean Object Storage, log to audit_log
+- DB tables purged: `historique_episodes`, `episodes`, `productions`, `scripts`, `fichiers_audio`, `saisons`
+
+### Tests (Session 20)
+- Full suite: 749 passed, 7 pre-existing failures, 3 skipped (ffmpeg)
+- No regressions from any of the 6 commits
