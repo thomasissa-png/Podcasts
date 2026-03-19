@@ -1206,6 +1206,255 @@ def api_delete_episode(episode_id):
     })
 
 
+# ── Routes API — Purge de données de production ──────────────────────────────
+
+
+@app.route("/api/purge/saison/<int:saison_num>", methods=["POST"])
+def api_purge_saison(saison_num):
+    """Purge TOUTES les données de production d'une saison.
+
+    Supprime : historique, scripts, rapports, audio, checkpoints, covers,
+    segments, productions DB, épisodes DB, plan de saison JSON + DB.
+
+    Body JSON optionnel :
+        {"garder_plan": true}  — supprime les épisodes produits mais garde le plan
+    """
+    import shutil
+
+    body = request.get_json(silent=True) or {}
+    garder_plan = body.get("garder_plan", False)
+
+    prefix = f"S{saison_num:02d}"
+    supprime = {"fichiers": 0, "db": 0, "details": []}
+
+    # 1. Trouver tous les épisodes de cette saison dans l'historique
+    historique_path = config.HISTORIQUE_DIR / "historique_episodes.json"
+    episode_ids = set()
+    if historique_path.exists():
+        try:
+            import json as _json
+            with open(historique_path, "r", encoding="utf-8") as f:
+                historique = _json.load(f)
+            original_len = len(historique)
+            episode_ids = {
+                ep.get("episode_id") for ep in historique
+                if ep.get("episode_id", "").startswith(prefix)
+            }
+            historique = [
+                ep for ep in historique
+                if not ep.get("episode_id", "").startswith(prefix)
+            ]
+            if len(historique) < original_len:
+                with open(historique_path, "w", encoding="utf-8") as f:
+                    _json.dump(historique, f, ensure_ascii=False, indent=2)
+                nb = original_len - len(historique)
+                supprime["fichiers"] += nb
+                supprime["details"].append(f"historique: {nb} entrée(s)")
+        except Exception as e:
+            logger.warning("Erreur purge historique saison %d : %s", saison_num, e)
+
+    # Aussi chercher les épisodes par pattern dans les fichiers
+    for i in range(1, 21):
+        episode_ids.add(f"S{saison_num:02d}E{i:02d}")
+
+    # 2. Archiver les fichiers de chaque épisode
+    for episode_id in sorted(episode_ids):
+        archive_dir = _THIS_DIR / "output" / "archive" / episode_id
+        archive_dir.mkdir(parents=True, exist_ok=True)
+
+        for d, patterns in [
+            (config.SCRIPTS_DIR, [f"{episode_id}_valide.json", f"{episode_id}_script*.json"]),
+            (config.LOGS_DIR, [f"{episode_id}_rapport*.json"]),
+            (_THIS_DIR / "output" / "episodes", [f"{episode_id}*"]),
+        ]:
+            if d.exists():
+                for pat in patterns:
+                    for f in d.glob(pat):
+                        try:
+                            shutil.move(str(f), str(archive_dir / f.name))
+                            supprime["fichiers"] += 1
+                        except Exception:
+                            pass
+
+        if hasattr(config, "COVERS_DIR") and config.COVERS_DIR.exists():
+            for f in config.COVERS_DIR.glob(f"{episode_id}_cover*"):
+                try:
+                    shutil.move(str(f), str(archive_dir / f.name))
+                    supprime["fichiers"] += 1
+                except Exception:
+                    pass
+
+        if hasattr(config, "CHECKPOINTS_DIR"):
+            for f in config.CHECKPOINTS_DIR.glob(f"{episode_id}*checkpoint*"):
+                try:
+                    shutil.move(str(f), str(archive_dir / f.name))
+                    supprime["fichiers"] += 1
+                except Exception:
+                    pass
+
+    # 3. Supprimer le plan de saison (sauf si garder_plan)
+    if not garder_plan:
+        plan_path = config.SAISONS_DIR / f"saison_{saison_num:02d}.json"
+        if plan_path.exists():
+            try:
+                plan_path.unlink()
+                supprime["fichiers"] += 1
+                supprime["details"].append("plan de saison supprimé")
+            except Exception as e:
+                logger.warning("Erreur suppression plan saison %d : %s", saison_num, e)
+
+    # 4. Purge DB
+    if _DB_AVAILABLE:
+        try:
+            from database import get_cursor
+            with get_cursor() as cur:
+                for table in ["historique_episodes", "episodes", "productions", "scripts", "fichiers_audio"]:
+                    try:
+                        cur.execute(
+                            f"DELETE FROM {table} WHERE episode_id LIKE %s",
+                            (f"{prefix}%",),
+                        )
+                        if cur.rowcount > 0:
+                            supprime["db"] += cur.rowcount
+                            supprime["details"].append(f"DB {table}: {cur.rowcount} ligne(s)")
+                    except Exception as e:
+                        logger.warning("Erreur purge DB %s saison %d : %s", table, saison_num, e)
+
+                if not garder_plan:
+                    try:
+                        cur.execute(
+                            "DELETE FROM saisons WHERE numero = %s",
+                            (saison_num,),
+                        )
+                        if cur.rowcount > 0:
+                            supprime["db"] += cur.rowcount
+                            supprime["details"].append(f"DB saisons: {cur.rowcount} version(s)")
+                    except Exception as e:
+                        logger.warning("Erreur purge DB saisons %d : %s", saison_num, e)
+
+                cur.execute(
+                    "INSERT INTO audit_log (table_name, action, context) "
+                    "VALUES ('saisons', 'PURGE', %s)",
+                    (json.dumps({
+                        "saison": saison_num,
+                        "garder_plan": garder_plan,
+                        "supprime": supprime,
+                    }, ensure_ascii=False, default=str),),
+                )
+        except Exception as e:
+            logger.warning("Erreur purge DB saison %d : %s", saison_num, e)
+
+    # 5. Nettoyer Object Storage
+    try:
+        import persistent_storage
+        if persistent_storage.is_available():
+            for pfx in [persistent_storage.PREFIX_AUDIO, persistent_storage.PREFIX_SCRIPT,
+                        persistent_storage.PREFIX_RAPPORT, "segments/", "metadonnees/",
+                        "chapters/", "covers/", "checkpoints/"]:
+                for eid in sorted(episode_ids):
+                    keys = persistent_storage.list_files(f"{pfx}{eid}")
+                    for key in keys:
+                        if persistent_storage.delete_file(key):
+                            supprime["fichiers"] += 1
+    except Exception as e:
+        logger.warning("Erreur purge Object Storage saison %d : %s", saison_num, e)
+
+    total = supprime["fichiers"] + supprime["db"]
+    return jsonify({
+        "status": "ok",
+        "message": f"Saison {saison_num} purgée. {supprime['fichiers']} fichier(s), {supprime['db']} entrée(s) DB.",
+        "total": total,
+        "details": supprime,
+    })
+
+
+@app.route("/api/purge/tout", methods=["POST"])
+def api_purge_tout():
+    """Purge TOUTES les données de production — reset complet.
+
+    Supprime : historique JSON, tous les fichiers produits, toutes les tables DB.
+    Les plans de saison sont supprimés aussi.
+    """
+    supprime = {"fichiers": 0, "db": 0, "details": []}
+
+    # 1. Vider l'historique JSON
+    historique_path = config.HISTORIQUE_DIR / "historique_episodes.json"
+    if historique_path.exists():
+        try:
+            with open(historique_path, "w", encoding="utf-8") as f:
+                json.dump([], f)
+            supprime["fichiers"] += 1
+            supprime["details"].append("historique vidé")
+        except Exception as e:
+            logger.warning("Erreur purge historique : %s", e)
+
+    # 2. Vider les répertoires de production
+    import shutil
+    for d_name, d_path in [
+        ("scripts", config.SCRIPTS_DIR),
+        ("logs", config.LOGS_DIR),
+        ("episodes", _THIS_DIR / "output" / "episodes"),
+        ("saisons", config.SAISONS_DIR),
+    ]:
+        if d_path.exists():
+            for f in d_path.iterdir():
+                if f.is_file() and f.suffix == ".json" or f.suffix in (".mp3", ".wav", ".png", ".jpg"):
+                    try:
+                        f.unlink()
+                        supprime["fichiers"] += 1
+                    except Exception:
+                        pass
+
+    if hasattr(config, "COVERS_DIR") and config.COVERS_DIR.exists():
+        for f in config.COVERS_DIR.glob("*"):
+            if f.is_file():
+                try:
+                    f.unlink()
+                    supprime["fichiers"] += 1
+                except Exception:
+                    pass
+
+    if hasattr(config, "CHECKPOINTS_DIR") and config.CHECKPOINTS_DIR.exists():
+        for f in config.CHECKPOINTS_DIR.glob("*"):
+            if f.is_file():
+                try:
+                    f.unlink()
+                    supprime["fichiers"] += 1
+                except Exception:
+                    pass
+
+    # 3. Purge DB complète
+    if _DB_AVAILABLE:
+        try:
+            from database import get_cursor
+            with get_cursor() as cur:
+                for table in ["historique_episodes", "productions", "scripts",
+                              "fichiers_audio", "episodes", "saisons"]:
+                    try:
+                        cur.execute(f"DELETE FROM {table}")
+                        if cur.rowcount > 0:
+                            supprime["db"] += cur.rowcount
+                            supprime["details"].append(f"DB {table}: {cur.rowcount}")
+                    except Exception as e:
+                        logger.warning("Erreur purge DB %s : %s", table, e)
+
+                cur.execute(
+                    "INSERT INTO audit_log (table_name, action, context) "
+                    "VALUES ('all', 'PURGE_TOUT', %s)",
+                    (json.dumps({"supprime": supprime}, ensure_ascii=False, default=str),),
+                )
+        except Exception as e:
+            logger.warning("Erreur purge DB globale : %s", e)
+
+    total = supprime["fichiers"] + supprime["db"]
+    return jsonify({
+        "status": "ok",
+        "message": f"Reset complet. {supprime['fichiers']} fichier(s), {supprime['db']} entrée(s) DB.",
+        "total": total,
+        "details": supprime,
+    })
+
+
 # ── Routes API — Validation des épisodes ─────────────────────────────────────
 
 

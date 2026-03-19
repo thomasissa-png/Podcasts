@@ -2253,6 +2253,64 @@
             <p style="color: var(--texte-dim);">Chargement...</p>
         </div>
     </div>
+
+    <!-- ── Section Purge / Nettoyage ──────────────────────────────────── -->
+    <div class="card" style="margin-top: 1.25rem; border: 1px solid var(--corail);">
+        <div class="card-header" style="background: rgba(231, 76, 60, 0.08);">
+            <span class="icon">&#128465;</span> Nettoyage des données de production
+        </div>
+        <div class="card-body">
+            <p style="color: var(--texte-dim); margin-bottom: 1rem; font-size: 0.9rem;">
+                Supprimer les données de production (historique, scripts, audio, rapports, DB).
+                Les fichiers sont archivés dans <code>output/archive/</code> — récupérables si besoin.
+            </p>
+
+            <!-- Purge saison -->
+            <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+                <label style="font-weight: 600; min-width: 120px;">Purger une saison :</label>
+                <input type="number" id="purge-saison-num" min="1" max="99" value="1"
+                       style="width: 60px; padding: 0.4rem 0.5rem; border-radius: 6px; border: 1px solid var(--bordure); background: var(--fond-carte); color: var(--texte); font-size: 0.95rem;">
+                <label style="font-size: 0.85rem; color: var(--texte-dim);">
+                    <input type="checkbox" id="purge-garder-plan"> Garder le plan de saison
+                </label>
+                <button class="btn" onclick="purgeSaison()" id="btn-purge-saison"
+                        style="background: var(--corail); color: white; font-size: 0.85rem; padding: 0.4rem 1rem;">
+                    Purger la saison
+                </button>
+            </div>
+
+            <!-- Purge tout -->
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid var(--bordure);">
+                <label style="font-weight: 600; min-width: 120px; color: var(--corail);">Reset complet :</label>
+                <span style="font-size: 0.85rem; color: var(--texte-dim);">
+                    Supprime TOUT : historique, scripts, audio, plans, DB. Irréversible.
+                </span>
+                <button class="btn" onclick="purgeTout()" id="btn-purge-tout"
+                        style="background: #8b0000; color: white; font-size: 0.85rem; padding: 0.4rem 1rem;">
+                    Tout supprimer
+                </button>
+            </div>
+
+            <!-- Zone de confirmation -->
+            <div id="purge-confirm-zone" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 8px; background: rgba(231, 76, 60, 0.08); border: 1px solid var(--corail);">
+                <p id="purge-confirm-msg" style="font-weight: 600; margin-bottom: 0.75rem;"></p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn" id="purge-confirm-btn" onclick="purgeConfirm()"
+                            style="background: var(--corail); color: white;">
+                        Confirmer la suppression
+                    </button>
+                    <button class="btn" onclick="purgeCancel()"
+                            style="background: var(--fond-carte); color: var(--texte); border: 1px solid var(--bordure);">
+                        Annuler
+                    </button>
+                </div>
+            </div>
+
+            <!-- Résultat -->
+            <div id="purge-result" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
 </div>
 
 </main>
@@ -4367,6 +4425,90 @@ async function _reconnectActiveJob() {
                 '. <a href="javascript:void(0)" onclick="window.location.reload()" style="color:var(--turquoise);text-decoration:underline;">Réessayer</a></div>';
         }
     }
+}
+
+/* ── Purge / Nettoyage ─────────────────────────────────────────────────── */
+let _purgeAction = null;  // {url, method, body, label}
+
+function purgeSaison() {
+    const num = document.getElementById('purge-saison-num').value;
+    const garder = document.getElementById('purge-garder-plan').checked;
+    _purgeAction = {
+        url: '/api/purge/saison/' + num,
+        body: {garder_plan: garder},
+        label: 'Purger la saison ' + num + (garder ? ' (en gardant le plan)' : ' (plan inclus)'),
+    };
+    const zone = document.getElementById('purge-confirm-zone');
+    document.getElementById('purge-confirm-msg').textContent =
+        'Confirmer : supprimer toutes les données de la saison ' + num + ' ?' +
+        (garder ? '' : ' Le plan de saison sera aussi supprimé.');
+    zone.style.display = 'block';
+    document.getElementById('purge-result').style.display = 'none';
+}
+
+function purgeTout() {
+    _purgeAction = {
+        url: '/api/purge/tout',
+        body: {},
+        label: 'Reset complet — tout supprimer',
+    };
+    const zone = document.getElementById('purge-confirm-zone');
+    document.getElementById('purge-confirm-msg').textContent =
+        'ATTENTION : Confirmer la suppression de TOUTES les données de production ? ' +
+        'Historique, scripts, audio, plans, DB — tout sera supprimé.';
+    zone.style.display = 'block';
+    document.getElementById('purge-result').style.display = 'none';
+}
+
+function purgeCancel() {
+    _purgeAction = null;
+    document.getElementById('purge-confirm-zone').style.display = 'none';
+}
+
+async function purgeConfirm() {
+    if (!_purgeAction) return;
+    const btn = document.getElementById('purge-confirm-btn');
+    btn.disabled = true;
+    btn.textContent = 'Suppression en cours...';
+    const result = document.getElementById('purge-result');
+
+    try {
+        const resp = await fetch(_purgeAction.url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(_purgeAction.body),
+        });
+        const data = await resp.json();
+
+        if (data.status === 'ok') {
+            result.style.background = 'rgba(46, 204, 113, 0.1)';
+            result.style.border = '1px solid var(--vert-prairie)';
+            result.style.color = 'var(--vert-prairie)';
+            let details = data.message;
+            if (data.details && data.details.details && data.details.details.length > 0) {
+                details += '<br><small style="color: var(--texte-dim);">' +
+                    data.details.details.join(' · ') + '</small>';
+            }
+            result.innerHTML = '&#10003; ' + details;
+            _dashboardDirty = true;
+        } else {
+            result.style.background = 'rgba(231, 76, 60, 0.1)';
+            result.style.border = '1px solid var(--corail)';
+            result.style.color = 'var(--corail)';
+            result.innerHTML = '&#10007; Erreur : ' + (data.message || data.error || 'Inconnue');
+        }
+    } catch (err) {
+        result.style.background = 'rgba(231, 76, 60, 0.1)';
+        result.style.border = '1px solid var(--corail)';
+        result.style.color = 'var(--corail)';
+        result.innerHTML = '&#10007; Erreur réseau : ' + err.message;
+    }
+
+    result.style.display = 'block';
+    document.getElementById('purge-confirm-zone').style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = 'Confirmer la suppression';
+    _purgeAction = null;
 }
 </script>
 
