@@ -43,7 +43,7 @@
       {
         "id": "sfx_001",
         "personnage": "sfx",
-        "texte": "infinite cosmic void, absolute silence slowly building tension, primordial emptiness",
+        "texte": "low sub-bass drone slowly rising in pitch, deep rumble growing from silence, dark ambient pad building intensity over 8 seconds",
         "ton": "ambiance",
         "pause_apres_ms": 500,
         "duree_sfx_secondes": 8.0,
@@ -60,7 +60,7 @@
       {
         "id": "sfx_002",
         "personnage": "sfx",
-        "texte": "deep cosmic breathing, universe holding its breath before creation",
+        "texte": "slow deep inhale and exhale with heavy reverb, breath-like low frequency swell, suspenseful atmospheric drone",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -69,7 +69,7 @@
       {
         "id": "sfx_003",
         "personnage": "sfx",
-        "texte": "deep rumbling voice echoing in vast empty darkness, cosmic vibration",
+        "texte": "deep thunderous rumble echoing in vast reverberant space, powerful low-frequency vibration shaking the air, no speech",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 6.0,
@@ -86,7 +86,7 @@
       {
         "id": "sfx_004",
         "personnage": "sfx",
-        "texte": "brilliant explosion of light bursting through darkness, radiant warmth spreading",
+        "texte": "massive orchestral swell rising from silence to fortissimo, bright shimmering chimes cascading upward, warm reverberant glow expanding",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -95,7 +95,7 @@
       {
         "id": "sfx_005",
         "personnage": "sfx",
-        "texte": "magical dreamlike transition whoosh, soft harp glissando, returning to cozy room",
+        "texte": "magical whoosh transition with sparkle trail, soft harp glissando descending, settling into warm indoor ambiance with soft fireplace",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 4.0,
@@ -104,7 +104,7 @@
       {
         "id": "sfx_006",
         "personnage": "sfx",
-        "texte": "car doors closing, children's excited voices, gravel path footsteps approaching house",
+        "texte": "car doors closing, gravel path footsteps approaching wooden house, distant children laughing",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 5.0,
@@ -261,7 +261,7 @@
       {
         "id": "sfx_011",
         "personnage": "sfx",
-        "texte": "vast empty cosmic silence, deep dark void ambiance, infinite space",
+        "texte": "deep space drone with slow low-frequency oscillation, very subtle cosmic wind ambiance, dark atmospheric pad",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 18.0,
@@ -302,7 +302,7 @@
       {
         "id": "sfx_012",
         "personnage": "sfx",
-        "texte": "brilliant burst of divine light, warm radiance spreading across vast emptiness",
+        "texte": "bright orchestral burst rising from silence, shimmering high-frequency chimes cascading outward, warm sustained string chord expanding",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -359,7 +359,7 @@
       {
         "id": "sfx_013",
         "personnage": "sfx",
-        "texte": "celestial chime ringing softly, day transition marker, gentle bell resonance",
+        "texte": "single celestial chime ringing softly with long reverb tail, gentle tubular bell resonance fading",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -392,7 +392,7 @@
       {
         "id": "sfx_014",
         "personnage": "sfx",
-        "texte": "massive waters separating, sky forming above vast ocean, wind rushing upward",
+        "texte": "massive ocean waves splitting apart, rushing water separating, strong wind blowing upward with deep bass rumble",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 6.0,
@@ -457,7 +457,7 @@
       {
         "id": "sfx_015",
         "personnage": "sfx",
-        "texte": "ocean waves receding, dry land emerging from waters, earth rumbling gently",
+        "texte": "ocean waves receding and draining, deep earth rumble, water flowing away revealing rocky surface",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 6.0,
@@ -466,7 +466,7 @@
       {
         "id": "sfx_016",
         "personnage": "sfx",
-        "texte": "celestial chime ringing softly, second day transition, ethereal bell",
+        "texte": "single celestial chime ringing softly, ethereal tubular bell with long reverb tail",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -490,9 +490,9 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "Les gens de cette époque imaginaient le ciel comme une grande voûte au-dessus de leurs têtes. Ils l'appelaient le firmament. Un mot magnifique, non ? Fir-ma-ment.",
+        "texte": "Les gens de cette époque imaginaient le ciel comme une grande voûte au-dessus de leurs têtes. Ils l'appelaient le firmament. Un mot magnifique, non ? Firmament.",
         "ton": "chaleureux",
-        "rythme": "normal",
+        "rythme": "lent",
         "pause_apres_ms": 300,
         "id": "seg_039"
       },
@@ -531,7 +531,7 @@
       {
         "id": "sfx_017",
         "personnage": "sfx",
-        "texte": "lush vegetation growing rapidly, flowers blooming, forest sounds emerging with birdsong",
+        "texte": "rich forest ambiance emerging, birdsong growing louder and more varied, wind rustling through dense leaves and branches",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 8.0,
@@ -580,7 +580,7 @@
       {
         "id": "sfx_018",
         "personnage": "sfx",
-        "texte": "night sky forming, stars appearing one by one, cosmic magical atmosphere",
+        "texte": "quiet night ambiance, gentle twinkling high-pitched chimes appearing one by one, subtle cosmic shimmer pad",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 8.0,
@@ -589,7 +589,7 @@
       {
         "id": "sfx_019",
         "personnage": "sfx",
-        "texte": "celestial chime ringing, third day transition, crystalline bell resonance",
+        "texte": "single crystalline bell chime ringing, bright tubular bell with shimmering overtones and long decay",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -653,7 +653,7 @@
       },
       {
         "personnage": "sfx",
-        "texte": "gentle rain falling on fresh new earth, plants growing, soil rich and damp",
+        "texte": "gentle rain falling on soft earth, raindrops hitting leaves, wet ground ambiance with distant thunder",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 6.0,
@@ -728,7 +728,7 @@
       {
         "id": "sfx_022",
         "personnage": "sfx",
-        "texte": "celestial chime ringing, fourth day transition, harmonic bell",
+        "texte": "single harmonic bell chime ringing, warm tubular bell with rich overtones and gentle decay",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -761,7 +761,7 @@
       {
         "id": "seg_066",
         "personnage": "papy_babou",
-        "texte": "Un cœur grand comme une voiture ! Imagine le bruit que ça fait quand il bat. Boum... boum... On pourrait l'entendre à des kilomètres sous l'eau.",
+        "texte": "Un cœur grand comme une voiture ! Imagine le bruit que ça fait quand il bat. On pourrait l'entendre à des kilomètres sous l'eau.",
         "ton": "émerveillé",
         "rythme": "lent",
         "pause_apres_ms": 300
@@ -769,7 +769,7 @@
       {
         "id": "sfx_023",
         "personnage": "sfx",
-        "texte": "deep whale heartbeat pounding slowly underwater, majestic and primal",
+        "texte": "deep rhythmic bass pulse pounding slowly like a giant heartbeat underwater, low sub-bass throb with reverb",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -866,7 +866,7 @@
       {
         "id": "sfx_024",
         "personnage": "sfx",
-        "texte": "kitchen door opening, delicious baking smell wafting in, ceramic cups clinking",
+        "texte": "wooden kitchen door opening with creak, ceramic cups and plates clinking together, warm busy kitchen ambiance",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 4.0,
@@ -956,7 +956,7 @@
       {
         "id": "sfx_026",
         "personnage": "sfx",
-        "texte": "celestial chime ringing, fifth day transition, resonant bell tone",
+        "texte": "single resonant bell tone ringing, deep tubular bell with sustained warm overtones",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -1037,7 +1037,7 @@
       },
       {
         "personnage": "sfx",
-        "texte": "deep ocean mysterious sounds, bioluminescent fish swimming, bubbles rising slowly",
+        "texte": "deep ocean underwater ambiance with mysterious low-frequency hum, air bubbles rising slowly, distant whale song echo",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 5.0,
@@ -1080,7 +1080,7 @@
       {
         "id": "sfx_030",
         "personnage": "sfx",
-        "texte": "solemn sacred atmosphere, gentle ethereal choir, divine creative moment",
+        "texte": "gentle ethereal choir singing sustained notes softly, reverberant cathedral space ambiance, warm organ drone",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -1178,7 +1178,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "La Bible mentionne quatre rivières : le Tigre, l'Euphrate, le Pishon et le Gihon. Le Tigre et l'Euphrate, on les connaît encore aujourd'hui. Ils coulent en Irak, au Moyen-Orient. C'est une région qu'on appelle la Mésopotamie.",
+        "texte": "La Bible mentionne quatre rivières : le Tigre, l'Euphrate, le Pichone et le Guihone. Le Tigre et l'Euphrate, on les connaît encore aujourd'hui. Ils coulent en Irak, au Moyen-Orient. C'est une région qu'on appelle la Mésopotamie.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 350,
@@ -1251,7 +1251,7 @@
       {
         "id": "sfx_033",
         "personnage": "sfx",
-        "texte": "peaceful serene morning ambiance, gentle birds, warm sunlight, tranquil nature",
+        "texte": "peaceful morning nature ambiance, gentle birdsong with varied calls, soft breeze through trees, distant stream flowing",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 15.0,
@@ -1260,7 +1260,7 @@
       {
         "id": "sfx_034",
         "personnage": "sfx",
-        "texte": "celestial chime ringing final time, sixth day transition, serene bell fading",
+        "texte": "single serene bell chime ringing final note, warm tubular bell fading slowly into silence",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -1374,7 +1374,7 @@
       {
         "id": "sfx_036",
         "personnage": "sfx",
-        "texte": "child climbing onto grandfather's lap, warm embrace, contented sigh",
+        "texte": "child climbing onto cushioned seat, soft fabric and leather rustling, small contented sigh, settling sounds",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 3.0,
@@ -1399,7 +1399,7 @@
       {
         "id": "sfx_037",
         "personnage": "sfx",
-        "texte": "gentle return transition, warm room ambiance fading in, clock ticking softly, fire crackling",
+        "texte": "soft whoosh transition, warm room ambiance with clock ticking softly and fireplace crackling gently",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -1440,13 +1440,21 @@
       {
         "id": "seg_134",
         "personnage": "antoine",
-        "texte": "Dieu a créé le monde en six jours ! Le premier jour la lumière, le deuxième le ciel, le troisième la terre et les plantes, le quatrième le soleil et les étoiles, le cinquième les poissons et les oiseaux, et le sixième les animaux et les hommes !",
+        "texte": "Dieu a créé le monde en six jours ! Le premier jour la lumière, le deuxième le ciel, le troisième la terre et les plantes.",
         "ton": "enthousiaste",
         "rythme": "rapide",
         "pause_apres_ms": 300
       },
       {
         "id": "seg_135",
+        "personnage": "antoine",
+        "texte": "Le quatrième le soleil et les étoiles, le cinquième les poissons et les oiseaux, et le sixième les animaux et les hommes !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_136",
         "personnage": "papy_babou",
         "texte": "Bravo Antoine ! Tu as tout retenu dans l'ordre. Et toi, Noémie ?",
         "ton": "chaleureux",
@@ -1454,7 +1462,7 @@
         "pause_apres_ms": 250
       },
       {
-        "id": "seg_136",
+        "id": "seg_137",
         "personnage": "noemie",
         "texte": "Moi j'ai retenu que Dieu il a regardé tout ce qu'il avait fait et il a dit que c'était très beau. Et après il s'est reposé parce que même Dieu il a besoin de se reposer.",
         "ton": "joyeux",
@@ -1462,7 +1470,7 @@
         "pause_apres_ms": 300
       },
       {
-        "id": "seg_137",
+        "id": "seg_138",
         "personnage": "papy_babou",
         "texte": "C'est magnifique, ma puce. Tu as retenu le plus important.",
         "ton": "chaleureux",
@@ -1479,7 +1487,7 @@
         "mode": "overlay"
       },
       {
-        "id": "seg_138",
+        "id": "seg_139",
         "personnage": "papy_babou",
         "texte": "Vous savez ce que je retiens, moi, de cette histoire ? C'est que le monde est un cadeau merveilleux. Chaque fleur, chaque étoile, chaque animal, chaque personne. Tout a été voulu, tout a été pensé avec amour.",
         "ton": "chaleureux",
@@ -1487,7 +1495,7 @@
         "pause_apres_ms": 400
       },
       {
-        "id": "seg_139",
+        "id": "seg_140",
         "personnage": "papy_babou",
         "texte": "Et c'est notre responsabilité d'en prendre soin. De la terre, des animaux, et les uns des autres.",
         "ton": "solennel",
@@ -1495,7 +1503,7 @@
         "pause_apres_ms": 400
       },
       {
-        "id": "seg_140",
+        "id": "seg_141",
         "personnage": "antoine",
         "texte": "Comme le bébé qui va arriver ! Maman dit que c'est un cadeau aussi.",
         "ton": "chaleureux",
@@ -1503,7 +1511,7 @@
         "pause_apres_ms": 300
       },
       {
-        "id": "seg_141",
+        "id": "seg_142",
         "personnage": "papy_babou",
         "texte": "Exactement, mon grand. Chaque nouvelle vie est un cadeau de Dieu, comme la Création. Et vous savez quoi ? La prochaine fois que vous viendrez, je vous raconterai ce qui s'est passé dans le plus beau jardin du monde. Le jardin d'Éden.",
         "ton": "mystérieux",
@@ -1511,7 +1519,7 @@
         "pause_apres_ms": 400
       },
       {
-        "id": "seg_142",
+        "id": "seg_143",
         "personnage": "noemie",
         "texte": "Avec des fleurs partout ?",
         "ton": "excite",
@@ -1519,7 +1527,7 @@
         "pause_apres_ms": 200
       },
       {
-        "id": "seg_143",
+        "id": "seg_144",
         "personnage": "papy_babou",
         "texte": "Avec des fleurs partout, des fruits magnifiques, des animaux dociles. Mais aussi avec un arbre très spécial dont il ne fallait surtout pas manger le fruit.",
         "ton": "mystérieux",
@@ -1527,7 +1535,7 @@
         "pause_apres_ms": 400
       },
       {
-        "id": "seg_144",
+        "id": "seg_145",
         "personnage": "antoine",
         "texte": "Pourquoi ? Qu'est-ce qui s'est passé ?",
         "ton": "curieux",
@@ -1535,7 +1543,7 @@
         "pause_apres_ms": 250
       },
       {
-        "id": "seg_145",
+        "id": "seg_146",
         "personnage": "papy_babou",
         "texte": "Ça, mes petits loups, ce sera pour la prochaine fois.",
         "ton": "espiègle",
@@ -1543,7 +1551,7 @@
         "pause_apres_ms": 300
       },
       {
-        "id": "seg_146",
+        "id": "seg_147",
         "personnage": "noemie",
         "texte": "C'est pas juste, Papy ! Tu dis toujours ça !",
         "ton": "espiègle",
@@ -1551,7 +1559,7 @@
         "pause_apres_ms": 200
       },
       {
-        "id": "seg_147",
+        "id": "seg_148",
         "personnage": "papy_babou",
         "texte": "Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
         "ton": "chaleureux",
@@ -1559,7 +1567,7 @@
         "pause_apres_ms": 300
       },
       {
-        "id": "seg_148",
+        "id": "seg_149",
         "personnage": "antoine",
         "texte": "Merci Papy, c'était génial !",
         "ton": "joyeux",
@@ -1567,7 +1575,7 @@
         "pause_apres_ms": 200
       },
       {
-        "id": "seg_149",
+        "id": "seg_150",
         "personnage": "noemie",
         "texte": "Merci Papy Babou ! Et merci Mamie pour les sablés étoiles !",
         "ton": "joyeux",
@@ -1575,7 +1583,7 @@
         "pause_apres_ms": 200
       },
       {
-        "id": "seg_150",
+        "id": "seg_151",
         "personnage": "mamie_sonia",
         "texte": "De rien mes petits chéris. Et n'oubliez pas de regarder les étoiles ce soir avant de dormir.",
         "ton": "chaleureux",
