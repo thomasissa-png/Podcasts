@@ -1,533 +1,390 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 3000" width="3000" height="3000">
   <defs>
-    <!-- Fond ciel etoile -->
     <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B2A4A"/>
-      <stop offset="60%" stop-color="#2D4A7A"/>
-      <stop offset="100%" stop-color="#2D4A7A"/>
+      <stop offset="0%" stop-color="#4A9FE5"/>
+      <stop offset="100%" stop-color="#7BCBF5"/>
     </linearGradient>
-
-    <!-- Halo dore radial autour du livre -->
-    <radialGradient id="bookGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.35"/>
-      <stop offset="35%" stop-color="#E8C44A" stop-opacity="0.15"/>
-      <stop offset="70%" stop-color="#E8C44A" stop-opacity="0.05"/>
-      <stop offset="100%" stop-color="#E8C44A" stop-opacity="0"/>
+    <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8C97A"/>
+      <stop offset="100%" stop-color="#D4A854"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="20%" r="40%">
+      <stop offset="0%" stop-color="#FFD234" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FFD234" stop-opacity="0"/>
     </radialGradient>
-
-    <!-- Degrade dore pour le texte Papy Babou -->
-    <linearGradient id="goldText" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#E8C44A"/>
-      <stop offset="50%" stop-color="#E8C44A"/>
-      <stop offset="100%" stop-color="#8B6914"/>
-    </linearGradient>
-
-    <!-- Degrade dore pour le livre -->
-    <linearGradient id="bookGold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#E8C44A"/>
-      <stop offset="100%" stop-color="#8B6914"/>
-    </linearGradient>
-
-    <!-- Degrade dore pour pages -->
-    <linearGradient id="pageGlow" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FDF5E6"/>
-      <stop offset="100%" stop-color="#F0E0C0"/>
-    </linearGradient>
-
-    <!-- Bordure doree -->
-    <linearGradient id="goldBorder" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.6"/>
-      <stop offset="50%" stop-color="#8B6914" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#E8C44A" stop-opacity="0.6"/>
-    </linearGradient>
-
-    <!-- Rayons du livre -->
-    <radialGradient id="bookRays" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.20"/>
-      <stop offset="50%" stop-color="#E8C44A" stop-opacity="0.06"/>
-      <stop offset="100%" stop-color="#E8C44A" stop-opacity="0"/>
-    </radialGradient>
-
-    <!-- Clip arrondi -->
     <clipPath id="roundClip">
-      <rect width="3000" height="3000" rx="160" ry="160"/>
+      <rect width="3000" height="3000" rx="140" ry="140"/>
     </clipPath>
   </defs>
 
   <g clip-path="url(#roundClip)">
 
-    <!-- ══════ FOND CIEL ETOILE ══════ -->
+    <!-- ══════ CIEL BLEU VIF ══════ -->
     <rect width="3000" height="3000" fill="url(#skyGrad)"/>
+    <rect width="3000" height="3000" fill="url(#sunGlow)"/>
 
-    <!-- ══════ ETOILES ══════ -->
-    <!-- Grandes etoiles -->
-    <g opacity="0.7">
-      <circle cx="220" cy="180" r="5" fill="#FFFFFF"/>
-      <circle cx="580" cy="120" r="6" fill="#FDF5E6"/>
-      <circle cx="950" cy="200" r="4" fill="#FFFFFF"/>
-      <circle cx="1300" cy="100" r="5" fill="#FDF5E6"/>
-      <circle cx="1700" cy="160" r="7" fill="#FFFFFF"/>
-      <circle cx="2050" cy="90" r="5" fill="#FDF5E6"/>
-      <circle cx="2400" cy="200" r="6" fill="#FFFFFF"/>
-      <circle cx="2750" cy="130" r="5" fill="#FDF5E6"/>
+    <!-- ══════ NUAGES STYLISES ══════ -->
+    <g fill="#FFFFFF" opacity="0.85">
+      <ellipse cx="400" cy="350" rx="180" ry="70"/>
+      <ellipse cx="320" cy="330" rx="120" ry="60"/>
+      <ellipse cx="500" cy="340" rx="100" ry="50"/>
     </g>
-    <!-- Moyennes etoiles -->
-    <g opacity="0.5">
-      <circle cx="150" cy="380" r="4" fill="#FFFFFF"/>
-      <circle cx="420" cy="320" r="3" fill="#FDF5E6"/>
-      <circle cx="700" cy="400" r="4" fill="#FFFFFF"/>
-      <circle cx="1050" cy="350" r="3.5" fill="#FDF5E6"/>
-      <circle cx="1400" cy="300" r="4" fill="#FFFFFF"/>
-      <circle cx="1850" cy="370" r="3" fill="#FDF5E6"/>
-      <circle cx="2200" cy="310" r="4" fill="#FFFFFF"/>
-      <circle cx="2550" cy="380" r="3.5" fill="#FDF5E6"/>
-      <circle cx="2850" cy="330" r="3" fill="#FFFFFF"/>
+    <g fill="#FFFFFF" opacity="0.7">
+      <ellipse cx="2400" cy="280" rx="200" ry="75"/>
+      <ellipse cx="2300" cy="260" rx="130" ry="55"/>
+      <ellipse cx="2520" cy="270" rx="110" ry="50"/>
     </g>
-    <!-- Petites etoiles -->
-    <g opacity="0.35">
-      <circle cx="300" cy="500" r="3" fill="#FFFFFF"/>
-      <circle cx="500" cy="550" r="2.5" fill="#FDF5E6"/>
-      <circle cx="820" cy="520" r="3" fill="#FFFFFF"/>
-      <circle cx="1150" cy="480" r="2.5" fill="#FDF5E6"/>
-      <circle cx="1550" cy="450" r="3" fill="#FFFFFF"/>
-      <circle cx="1950" cy="500" r="2.5" fill="#FDF5E6"/>
-      <circle cx="2300" cy="470" r="3" fill="#FFFFFF"/>
-      <circle cx="2650" cy="530" r="2.5" fill="#FDF5E6"/>
-      <circle cx="100" cy="600" r="2" fill="#FFFFFF"/>
-      <circle cx="2900" cy="480" r="2" fill="#FFFFFF"/>
+    <g fill="#FFFFFF" opacity="0.5">
+      <ellipse cx="1200" cy="200" rx="150" ry="55"/>
+      <ellipse cx="1130" cy="185" rx="100" ry="45"/>
     </g>
-    <!-- Etoiles scintillantes (4 branches) -->
-    <g opacity="0.6">
-      <!-- Etoile 1 -->
-      <g transform="translate(380, 220)">
-        <rect x="-1.5" y="-10" width="3" height="20" rx="1.5" fill="#FFFFFF"/>
-        <rect x="-10" y="-1.5" width="20" height="3" rx="1.5" fill="#FFFFFF"/>
+
+    <!-- ══════ COLLINES ARRIERE-PLAN ══════ -->
+    <path d="M0,2100 Q400,1850 800,1950 Q1200,1800 1500,1900 Q1800,1780 2200,1880 Q2600,1800 3000,2000 L3000,3000 L0,3000Z" fill="#5DBD72" opacity="0.5"/>
+    <path d="M0,2200 Q350,2000 700,2100 Q1100,1950 1500,2050 Q1900,1920 2300,2020 Q2700,1950 3000,2100 L3000,3000 L0,3000Z" fill="#4AA85E" opacity="0.6"/>
+
+    <!-- ══════ SOL SABLE ══════ -->
+    <path d="M0,2350 Q500,2280 1000,2320 Q1500,2270 2000,2310 Q2500,2260 3000,2330 L3000,3000 L0,3000Z" fill="url(#groundGrad)"/>
+
+    <!-- ══════ DECOR BIBLIQUE — temple/colonnes ══════ -->
+    <g opacity="0.3" fill="#C4854A">
+      <rect x="200" y="1900" width="60" height="350" rx="10"/>
+      <rect x="120" y="1880" width="220" height="40" rx="8"/>
+      <rect x="400" y="1950" width="50" height="300" rx="8"/>
+      <rect x="340" y="1935" width="170" height="35" rx="6"/>
+      <rect x="2500" y="1920" width="55" height="330" rx="10"/>
+      <rect x="2420" y="1900" width="215" height="40" rx="8"/>
+      <rect x="2700" y="1970" width="45" height="280" rx="8"/>
+      <rect x="2650" y="1955" width="155" height="35" rx="6"/>
+    </g>
+
+    <!-- ══════ LIVRE OUVERT GEANT (arriere-plan) ══════ -->
+    <g transform="translate(1500, 2050)">
+      <path d="M-350,-80 Q-350,-130 -300,-130 L-30,-130 L-30,100 L-350,100 Q-370,100 -370,80Z" fill="#FDF5E6" stroke="#2D2D2D" stroke-width="8"/>
+      <path d="M350,-80 Q350,-130 300,-130 L30,-130 L30,100 L350,100 Q370,100 370,80Z" fill="#FDF5E6" stroke="#2D2D2D" stroke-width="8"/>
+      <rect x="-30" y="-130" width="60" height="230" rx="6" fill="#C4854A" stroke="#2D2D2D" stroke-width="8"/>
+      <g opacity="0.2">
+        <rect x="-300" y="-90" width="200" height="8" rx="4" fill="#2D2D2D"/>
+        <rect x="-300" y="-60" width="230" height="8" rx="4" fill="#2D2D2D"/>
+        <rect x="-300" y="-30" width="180" height="8" rx="4" fill="#2D2D2D"/>
+        <rect x="-300" y="0" width="220" height="8" rx="4" fill="#2D2D2D"/>
+        <rect x="70" y="-90" width="230" height="8" rx="4" fill="#2D2D2D"/>
+        <rect x="70" y="-60" width="200" height="8" rx="4" fill="#2D2D2D"/>
+        <rect x="70" y="-30" width="240" height="8" rx="4" fill="#2D2D2D"/>
+        <rect x="70" y="0" width="190" height="8" rx="4" fill="#2D2D2D"/>
       </g>
-      <!-- Etoile 2 -->
-      <g transform="translate(1900, 140)">
-        <rect x="-2" y="-12" width="4" height="24" rx="2" fill="#FDF5E6"/>
-        <rect x="-12" y="-2" width="24" height="4" rx="2" fill="#FDF5E6"/>
-      </g>
-      <!-- Etoile 3 -->
-      <g transform="translate(2600, 260)">
-        <rect x="-1.5" y="-8" width="3" height="16" rx="1.5" fill="#FFFFFF"/>
-        <rect x="-8" y="-1.5" width="16" height="3" rx="1.5" fill="#FFFFFF"/>
-      </g>
-      <!-- Etoile 4 -->
-      <g transform="translate(750, 280)">
-        <rect x="-1" y="-7" width="2" height="14" rx="1" fill="#FFFFFF"/>
-        <rect x="-7" y="-1" width="14" height="2" rx="1" fill="#FFFFFF"/>
+      <!-- Etoiles autour du livre -->
+      <g fill="#FFD234" opacity="0.8">
+        <polygon points="-420,-100 -410,-80 -390,-80 -405,-65 -400,-45 -420,-60 -440,-45 -435,-65 -450,-80 -430,-80" transform="scale(0.7)"/>
+        <polygon points="420,-100 410,-80 390,-80 405,-65 400,-45 420,-60 440,-45 435,-65 450,-80 430,-80" transform="scale(0.7) translate(300,-50)"/>
       </g>
     </g>
 
-    <!-- ══════ MONTAGNES / COLLINES (arriere-plan) ══════ -->
-    <!-- Collines lointaines -->
-    <path d="M0,2250 Q200,2050 400,2180 Q600,2000 850,2120 Q1050,1950 1300,2080 Q1500,1920 1700,2050 Q1900,1900 2100,2030 Q2300,1950 2500,2100 Q2700,1980 3000,2150 L3000,3000 L0,3000 Z"
-          fill="#5A7A9A" opacity="0.25"/>
-    <!-- Collines moyennes -->
-    <path d="M0,2380 Q250,2200 500,2320 Q750,2150 1000,2280 Q1250,2120 1500,2240 Q1750,2100 2000,2220 Q2250,2120 2500,2260 Q2750,2150 3000,2300 L3000,3000 L0,3000 Z"
-          fill="#5A7A9A" opacity="0.35"/>
-    <!-- Collines proches -->
-    <path d="M0,2500 Q300,2350 600,2450 Q900,2320 1200,2420 Q1500,2300 1800,2400 Q2100,2320 2400,2430 Q2700,2350 3000,2460 L3000,3000 L0,3000 Z"
-          fill="#2D4A7A" opacity="0.4"/>
+    <!-- ══════ PAPY BABOU (centre, chibi) ══════ -->
+    <g transform="translate(1500, 1600)">
+      <!-- Corps petit chibi -->
+      <ellipse cx="0" cy="180" rx="110" ry="100" fill="#D2B48C" stroke="#2D2D2D" stroke-width="8"/>
+      <!-- Chemise -->
+      <rect x="-40" y="90" width="80" height="40" rx="8" fill="#F0E0C0" stroke="#2D2D2D" stroke-width="5"/>
+      <!-- Boutons gilet -->
+      <circle cx="0" cy="155" r="6" fill="#2D2D2D"/>
+      <circle cx="0" cy="185" r="6" fill="#2D2D2D"/>
 
-    <!-- ══════ SOL SABLE DORE ══════ -->
-    <path d="M0,2550 Q400,2500 800,2530 Q1200,2490 1500,2510 Q1800,2480 2200,2520 Q2600,2490 3000,2540 L3000,3000 L0,3000 Z"
-          fill="#F0E0C0" opacity="0.3"/>
-    <path d="M0,2600 Q500,2560 1000,2580 Q1500,2550 2000,2570 Q2500,2545 3000,2580 L3000,3000 L0,3000 Z"
-          fill="#FDF5E6" opacity="0.15"/>
+      <!-- GROSSE TETE CHIBI (40% du corps) -->
+      <circle cx="0" cy="-20" r="130" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="8"/>
 
-    <!-- ══════ HALO DU LIVRE (rayons) ══════ -->
-    <ellipse cx="1500" cy="1850" rx="900" ry="700" fill="url(#bookRays)"/>
-    <ellipse cx="1500" cy="1850" rx="550" ry="450" fill="url(#bookGlow)"/>
+      <!-- Cheveux blancs -->
+      <ellipse cx="-105" cy="-55" rx="45" ry="55" fill="#E8E8E8" stroke="#2D2D2D" stroke-width="6"/>
+      <ellipse cx="105" cy="-55" rx="45" ry="55" fill="#E8E8E8" stroke="#2D2D2D" stroke-width="6"/>
+      <path d="M-60,-140 Q0,-165 60,-140" fill="#E8E8E8" stroke="#2D2D2D" stroke-width="6"/>
 
-    <!-- ══════ LIVRE OUVERT (element central) ══════ -->
-    <g transform="translate(1500, 1820)">
-      <!-- Ombre du livre -->
-      <ellipse cx="0" cy="180" rx="420" ry="40" fill="#1B2A4A" opacity="0.3"/>
-
-      <!-- Page gauche -->
-      <path d="M-20,0 L-20,-220 Q-20,-240 -40,-240 L-350,-240 Q-380,-240 -380,-220 L-380,120 Q-380,150 -350,150 L-20,150 Z"
-            fill="url(#pageGlow)"/>
-      <!-- Lignes de texte page gauche -->
-      <g opacity="0.15">
-        <rect x="-340" y="-180" width="200" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="-150" width="260" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="-120" width="230" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="-90" width="250" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="-60" width="180" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="-30" width="260" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="0" width="220" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="30" width="240" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="60" width="200" height="6" rx="3" fill="#8B6914"/>
-        <rect x="-340" y="90" width="170" height="6" rx="3" fill="#8B6914"/>
-      </g>
-
-      <!-- Page droite -->
-      <path d="M20,0 L20,-220 Q20,-240 40,-240 L350,-240 Q380,-240 380,-220 L380,120 Q380,150 350,150 L20,150 Z"
-            fill="url(#pageGlow)"/>
-      <!-- Lignes de texte page droite -->
-      <g opacity="0.15">
-        <rect x="60" y="-180" width="240" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="-150" width="260" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="-120" width="210" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="-90" width="250" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="-60" width="230" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="-30" width="190" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="0" width="260" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="30" width="220" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="60" width="240" height="6" rx="3" fill="#8B6914"/>
-        <rect x="60" y="90" width="180" height="6" rx="3" fill="#8B6914"/>
-      </g>
-
-      <!-- Reliure du livre (centre) -->
-      <rect x="-20" y="-240" width="40" height="390" rx="6" fill="url(#bookGold)"/>
-      <!-- Reflet sur la reliure -->
-      <rect x="-8" y="-230" width="6" height="370" rx="3" fill="#E8C44A" opacity="0.5"/>
-
-      <!-- Couverture bords dores -->
-      <path d="M-380,-220 L-380,120 Q-380,155 -345,155 L-20,155 L-20,-245 L-345,-245 Q-380,-245 -380,-220 Z"
-            fill="none" stroke="#8B6914" stroke-width="6"/>
-      <path d="M380,-220 L380,120 Q380,155 345,155 L20,155 L20,-245 L345,-245 Q380,-245 380,-220 Z"
-            fill="none" stroke="#8B6914" stroke-width="6"/>
-
-      <!-- Petites particules dorees autour du livre -->
-      <g opacity="0.6">
-        <circle cx="-420" cy="-180" r="4" fill="#E8C44A"/>
-        <circle cx="430" cy="-150" r="3" fill="#E8C44A"/>
-        <circle cx="-400" cy="50" r="3.5" fill="#E8C44A"/>
-        <circle cx="410" cy="80" r="4" fill="#E8C44A"/>
-        <circle cx="-300" cy="-280" r="3" fill="#E8C44A"/>
-        <circle cx="320" cy="-270" r="3.5" fill="#E8C44A"/>
-        <circle cx="0" cy="-290" r="4" fill="#E8C44A"/>
-        <circle cx="-200" cy="-300" r="2.5" fill="#E8C44A"/>
-        <circle cx="180" cy="-310" r="3" fill="#E8C44A"/>
-        <circle cx="-450" cy="-50" r="2.5" fill="#E8C44A"/>
-        <circle cx="460" cy="-30" r="2.5" fill="#E8C44A"/>
-      </g>
-    </g>
-
-    <!-- ══════ PERSONNAGES (silhouettes) ══════ -->
-
-    <!-- PAPY BABOU (centre, assis derriere le livre) -->
-    <g transform="translate(1500, 1580)">
-      <!-- Corps / buste — gilet beige sur chemise a carreaux -->
-      <ellipse cx="0" cy="80" rx="130" ry="105" fill="#D2B48C"/>
-      <!-- Chemise col visible -->
-      <rect x="-45" y="-15" width="90" height="40" rx="8" fill="#F0E0C0"/>
-      <!-- Motif carreaux sur chemise (subtil) -->
-      <line x1="-30" y1="-10" x2="-30" y2="20" stroke="#D2B48C" stroke-width="3" opacity="0.4"/>
-      <line x1="0" y1="-10" x2="0" y2="20" stroke="#D2B48C" stroke-width="3" opacity="0.4"/>
-      <line x1="30" y1="-10" x2="30" y2="20" stroke="#D2B48C" stroke-width="3" opacity="0.4"/>
-      <line x1="-45" y1="5" x2="45" y2="5" stroke="#D2B48C" stroke-width="3" opacity="0.4"/>
-      <!-- Gilet boutons -->
-      <circle cx="0" cy="50" r="5" fill="#8B6914" opacity="0.5"/>
-      <circle cx="0" cy="80" r="5" fill="#8B6914" opacity="0.5"/>
-      <!-- Epaules arrondies -->
-      <ellipse cx="-110" cy="30" rx="60" ry="50" fill="#D2B48C"/>
-      <ellipse cx="110" cy="30" rx="60" ry="50" fill="#D2B48C"/>
-      <!-- Cou peau -->
-      <rect x="-28" y="-35" width="56" height="50" rx="12" fill="#F5D0A9"/>
-      <!-- Tete ronde peau -->
-      <circle cx="0" cy="-75" r="80" fill="#F5D0A9"/>
-      <!-- Cheveux blancs/argentes — tufts on sides -->
-      <ellipse cx="-70" cy="-95" rx="30" ry="40" fill="#E8E8E8"/>
-      <ellipse cx="70" cy="-95" rx="30" ry="40" fill="#E8E8E8"/>
-      <!-- Cheveux arriere (thinning top) -->
-      <path d="M-40,-150 Q-20,-165 0,-160 Q20,-165 40,-150" fill="none" stroke="#E8E8E8" stroke-width="12" stroke-linecap="round"/>
       <!-- Oreilles -->
-      <ellipse cx="-78" cy="-65" rx="14" ry="20" fill="#F5D0A9"/>
-      <ellipse cx="78" cy="-65" rx="14" ry="20" fill="#F5D0A9"/>
-      <!-- Sourcils bienveillants (arcs doux) -->
-      <path d="M-50,-100 Q-35,-112 -15,-105" fill="none" stroke="#C0C0C0" stroke-width="6" stroke-linecap="round"/>
-      <path d="M15,-105 Q35,-112 50,-100" fill="none" stroke="#C0C0C0" stroke-width="6" stroke-linecap="round"/>
-      <!-- Yeux — demi-fermes bienveillants (arcs sombres) -->
-      <path d="M-42,-85 Q-30,-95 -18,-85" fill="none" stroke="#1B2A4A" stroke-width="6" stroke-linecap="round"/>
-      <path d="M18,-85 Q30,-95 42,-85" fill="none" stroke="#1B2A4A" stroke-width="6" stroke-linecap="round"/>
-      <!-- Petits reflets bleus dans les yeux -->
-      <circle cx="-28" cy="-88" r="4" fill="#7BAFD4" opacity="0.7"/>
-      <circle cx="32" cy="-88" r="4" fill="#7BAFD4" opacity="0.7"/>
-      <!-- Lunettes signature (cercles dores sur le nez) -->
-      <circle cx="-30" cy="-75" r="28" fill="none" stroke="#E8C44A" stroke-width="7"/>
-      <circle cx="30" cy="-75" r="28" fill="none" stroke="#E8C44A" stroke-width="7"/>
-      <!-- Pont des lunettes -->
-      <path d="M-2,-75 Q0,-82 2,-75" fill="none" stroke="#E8C44A" stroke-width="5"/>
-      <!-- Branches des lunettes -->
-      <line x1="-58" y1="-78" x2="-75" y2="-88" stroke="#E8C44A" stroke-width="5" stroke-linecap="round"/>
-      <line x1="58" y1="-78" x2="75" y2="-88" stroke="#E8C44A" stroke-width="5" stroke-linecap="round"/>
-      <!-- Reflets dans les lunettes -->
-      <circle cx="-22" cy="-82" r="6" fill="#E8C44A" opacity="0.2"/>
-      <circle cx="38" cy="-82" r="6" fill="#E8C44A" opacity="0.2"/>
-      <!-- Nez rond -->
-      <ellipse cx="0" cy="-62" rx="10" ry="8" fill="#E8B88A" opacity="0.6"/>
-      <!-- Moustache grise -->
-      <path d="M-30,-50 Q-15,-42 0,-48 Q15,-42 30,-50" fill="none" stroke="#C0C0C0" stroke-width="8" stroke-linecap="round"/>
-      <!-- Sourire amical -->
-      <path d="M-22,-40 Q0,-28 22,-40" fill="none" stroke="#1B2A4A" stroke-width="6" stroke-linecap="round"/>
-      <!-- Rides de sourire (patte d'oie) -->
-      <path d="M-52,-78 Q-58,-72 -54,-66" fill="none" stroke="#E8B88A" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
-      <path d="M52,-78 Q58,-72 54,-66" fill="none" stroke="#E8B88A" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
-      <!-- Bras gauche (peau, tenant le livre) -->
-      <path d="M-130,50 Q-200,110 -220,180 Q-230,210 -200,210" fill="none" stroke="#D2B48C" stroke-width="42" stroke-linecap="round"/>
-      <!-- Main gauche peau -->
-      <circle cx="-200" cy="210" r="22" fill="#F5D0A9"/>
-      <!-- Bras droit -->
-      <path d="M130,50 Q200,110 220,180 Q230,210 200,210" fill="none" stroke="#D2B48C" stroke-width="42" stroke-linecap="round"/>
-      <!-- Main droite peau -->
-      <circle cx="200" cy="210" r="22" fill="#F5D0A9"/>
-    </g>
+      <ellipse cx="-125" cy="-10" rx="18" ry="25" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+      <ellipse cx="125" cy="-10" rx="18" ry="25" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
 
-    <!-- ANTOINE (gauche, garcon 8 ans, assis en tailleur) -->
-    <g transform="translate(900, 1900)">
-      <!-- Jambes croisees (jean) -->
-      <ellipse cx="-35" cy="130" rx="55" ry="25" fill="#2D4A7A"/>
-      <ellipse cx="35" cy="130" rx="55" ry="25" fill="#2D4A7A"/>
-      <!-- Pieds / chaussures -->
-      <ellipse cx="-70" cy="140" rx="20" ry="14" fill="#8B6914"/>
-      <ellipse cx="70" cy="140" rx="20" ry="14" fill="#8B6914"/>
-      <!-- Corps / t-shirt bleu -->
-      <ellipse cx="0" cy="60" rx="72" ry="68" fill="#7BAFD4"/>
-      <!-- Col du t-shirt -->
-      <path d="M-20,0 Q0,-8 20,0" fill="none" stroke="#5A9ABF" stroke-width="6" stroke-linecap="round"/>
-      <!-- Cou peau -->
-      <rect x="-16" y="-12" width="32" height="28" rx="8" fill="#F5D0A9"/>
-      <!-- Tete ronde peau -->
-      <circle cx="0" cy="-42" r="55" fill="#F5D0A9"/>
-      <!-- Cheveux bruns en desordre -->
-      <path d="M-50,-60 Q-55,-90 -35,-95 Q-15,-100 0,-98 Q20,-102 35,-95 Q55,-88 50,-60" fill="#8B6914"/>
-      <!-- Meche rebelle qui depasse -->
-      <path d="M5,-98 Q8,-120 15,-115 Q12,-105 10,-98" fill="#8B6914"/>
-      <path d="M-10,-96 Q-14,-112 -5,-114 Q-2,-106 -5,-96" fill="#8B6914"/>
-      <!-- Oreilles -->
-      <ellipse cx="-53" cy="-35" rx="10" ry="14" fill="#F5D0A9"/>
-      <ellipse cx="53" cy="-35" rx="10" ry="14" fill="#F5D0A9"/>
-      <!-- Grands yeux ronds (emerveillement) — regard vers le livre -->
-      <circle cx="-16" cy="-45" r="16" fill="#FFFFFF"/>
-      <circle cx="16" cy="-45" r="16" fill="#FFFFFF"/>
+      <!-- GRANDS YEUX cartoon -->
+      <ellipse cx="-40" cy="-20" rx="30" ry="32" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="6"/>
+      <ellipse cx="40" cy="-20" rx="30" ry="32" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="6"/>
       <!-- Iris -->
-      <circle cx="-12" cy="-44" r="10" fill="#1B2A4A"/>
-      <circle cx="20" cy="-44" r="10" fill="#1B2A4A"/>
+      <circle cx="-35" cy="-18" r="18" fill="#5A7A9A"/>
+      <circle cx="45" cy="-18" r="18" fill="#5A7A9A"/>
       <!-- Pupilles -->
-      <circle cx="-10" cy="-45" r="5" fill="#000000"/>
-      <circle cx="22" cy="-45" r="5" fill="#000000"/>
-      <!-- Reflets dans les yeux -->
-      <circle cx="-14" cy="-48" r="4" fill="#FFFFFF"/>
-      <circle cx="18" cy="-48" r="4" fill="#FFFFFF"/>
-      <!-- Sourcils expressifs (leves par l'emerveillement) -->
-      <path d="M-28,-62 Q-16,-70 -4,-64" fill="none" stroke="#8B6914" stroke-width="6" stroke-linecap="round"/>
-      <path d="M4,-64 Q16,-70 28,-62" fill="none" stroke="#8B6914" stroke-width="6" stroke-linecap="round"/>
-      <!-- Taches de rousseur -->
-      <circle cx="-28" cy="-32" r="3" fill="#D4A06A" opacity="0.5"/>
-      <circle cx="-22" cy="-28" r="2.5" fill="#D4A06A" opacity="0.5"/>
-      <circle cx="-32" cy="-28" r="2" fill="#D4A06A" opacity="0.4"/>
-      <circle cx="28" cy="-32" r="3" fill="#D4A06A" opacity="0.5"/>
-      <circle cx="22" cy="-28" r="2.5" fill="#D4A06A" opacity="0.5"/>
-      <circle cx="32" cy="-28" r="2" fill="#D4A06A" opacity="0.4"/>
-      <!-- Nez petit -->
-      <ellipse cx="2" cy="-32" rx="6" ry="5" fill="#E8B88A" opacity="0.5"/>
-      <!-- Bouche "wow" ouverte -->
-      <ellipse cx="2" cy="-20" rx="10" ry="8" fill="#1B2A4A"/>
-      <ellipse cx="2" cy="-22" rx="8" ry="4" fill="#FFFFFF" opacity="0.3"/>
-      <!-- Bras droit tendu vers le livre (peau) -->
-      <path d="M55,30 Q110,5 140,-20" fill="none" stroke="#7BAFD4" stroke-width="30" stroke-linecap="round"/>
-      <!-- Main droite peau -->
-      <circle cx="140" cy="-20" r="16" fill="#F5D0A9"/>
-    </g>
+      <circle cx="-33" cy="-20" r="10" fill="#2D2D2D"/>
+      <circle cx="47" cy="-20" r="10" fill="#2D2D2D"/>
+      <!-- Reflets -->
+      <circle cx="-40" cy="-28" r="7" fill="#FFFFFF"/>
+      <circle cx="40" cy="-28" r="7" fill="#FFFFFF"/>
+      <circle cx="-28" cy="-14" r="4" fill="#FFFFFF" opacity="0.6"/>
+      <circle cx="52" cy="-14" r="4" fill="#FFFFFF" opacity="0.6"/>
 
-    <!-- NOEMIE (droite, fille 5 ans, assise) -->
-    <g transform="translate(2100, 1900)">
-      <!-- Jambes croisees (plus petites) -->
-      <ellipse cx="-30" cy="120" rx="48" ry="22" fill="#F0E0C0"/>
-      <ellipse cx="30" cy="120" rx="48" ry="22" fill="#F0E0C0"/>
-      <!-- Petites chaussures -->
-      <ellipse cx="-60" cy="128" rx="16" ry="12" fill="#E8A0B0"/>
-      <ellipse cx="60" cy="128" rx="16" ry="12" fill="#E8A0B0"/>
-      <!-- Corps / robe rose -->
-      <ellipse cx="0" cy="55" rx="65" ry="62" fill="#E8A0B0"/>
-      <!-- Detail robe — petit col -->
-      <path d="M-18,-2 Q0,-10 18,-2" fill="none" stroke="#D48A9A" stroke-width="6" stroke-linecap="round"/>
-      <!-- Cou peau -->
-      <rect x="-14" y="-12" width="28" height="24" rx="7" fill="#F5D0A9"/>
-      <!-- Tete ronde peau (un peu plus petite qu'Antoine) -->
-      <circle cx="0" cy="-40" r="48" fill="#F5D0A9"/>
+      <!-- Sourcils bienveillants -->
+      <path d="M-65,-55 Q-40,-68 -15,-58" fill="none" stroke="#2D2D2D" stroke-width="8" stroke-linecap="round"/>
+      <path d="M15,-58 Q40,-68 65,-55" fill="none" stroke="#2D2D2D" stroke-width="8" stroke-linecap="round"/>
+
+      <!-- LUNETTES DOREES signature -->
+      <circle cx="-40" cy="-20" r="35" fill="none" stroke="#E8C44A" stroke-width="10"/>
+      <circle cx="40" cy="-20" r="35" fill="none" stroke="#E8C44A" stroke-width="10"/>
+      <line x1="-5" y1="-22" x2="5" y2="-22" stroke="#E8C44A" stroke-width="8"/>
+      <line x1="-75" y1="-25" x2="-95" y2="-35" stroke="#E8C44A" stroke-width="7" stroke-linecap="round"/>
+      <line x1="75" y1="-25" x2="95" y2="-35" stroke="#E8C44A" stroke-width="7" stroke-linecap="round"/>
+
+      <!-- Nez rond -->
+      <ellipse cx="0" cy="8" rx="14" ry="10" fill="#E8B88A" stroke="#2D2D2D" stroke-width="4"/>
+
+      <!-- Moustache grise epaisse -->
+      <path d="M-40,22 Q-20,35 0,28 Q20,35 40,22" fill="#C0C0C0" stroke="#2D2D2D" stroke-width="5"/>
+
+      <!-- Grand sourire -->
+      <path d="M-35,40 Q0,65 35,40" fill="none" stroke="#2D2D2D" stroke-width="8" stroke-linecap="round"/>
+
       <!-- Joues roses -->
-      <circle cx="-30" cy="-25" r="12" fill="#F0A0A0" opacity="0.35"/>
-      <circle cx="30" cy="-25" r="12" fill="#F0A0A0" opacity="0.35"/>
-      <!-- Cheveux blonds boucles -->
-      <path d="M-45,-55 Q-50,-90 -30,-95 Q-10,-105 0,-100 Q10,-105 30,-95 Q50,-88 45,-55" fill="#E8C44A"/>
-      <!-- Boucles qui depassent sur les cotes -->
-      <circle cx="-48" cy="-65" r="14" fill="#E8C44A"/>
-      <circle cx="48" cy="-65" r="14" fill="#E8C44A"/>
-      <circle cx="-42" cy="-48" r="10" fill="#E8C44A"/>
-      <circle cx="42" cy="-48" r="10" fill="#E8C44A"/>
-      <!-- Noeud / ruban rose dans les cheveux -->
-      <path d="M8,-100 Q18,-115 28,-100" fill="#E8A0B0" stroke="#D48A9A" stroke-width="3"/>
-      <path d="M8,-100 Q18,-85 28,-100" fill="#E8A0B0" stroke="#D48A9A" stroke-width="3"/>
-      <circle cx="18" cy="-100" r="5" fill="#D48A9A"/>
-      <!-- Oreilles (sous les boucles) -->
-      <ellipse cx="-46" cy="-35" rx="8" ry="12" fill="#F5D0A9"/>
-      <ellipse cx="46" cy="-35" rx="8" ry="12" fill="#F5D0A9"/>
-      <!-- Grands yeux bleus etincelants (regard vers le livre) -->
-      <circle cx="-14" cy="-42" r="14" fill="#FFFFFF"/>
-      <circle cx="14" cy="-42" r="14" fill="#FFFFFF"/>
-      <!-- Iris bleus -->
-      <circle cx="-17" cy="-41" r="9" fill="#7BAFD4"/>
-      <circle cx="11" cy="-41" r="9" fill="#7BAFD4"/>
-      <!-- Pupilles -->
-      <circle cx="-18" cy="-42" r="4.5" fill="#1B2A4A"/>
-      <circle cx="10" cy="-42" r="4.5" fill="#1B2A4A"/>
-      <!-- Reflets etincelants -->
-      <circle cx="-15" cy="-45" r="3.5" fill="#FFFFFF"/>
-      <circle cx="13" cy="-45" r="3.5" fill="#FFFFFF"/>
-      <circle cx="-20" cy="-39" r="2" fill="#FFFFFF" opacity="0.6"/>
-      <circle cx="8" cy="-39" r="2" fill="#FFFFFF" opacity="0.6"/>
-      <!-- Petits cils -->
-      <line x1="-26" y1="-48" x2="-28" y2="-52" stroke="#8B6914" stroke-width="3" stroke-linecap="round"/>
-      <line x1="-4" y1="-50" x2="-2" y2="-54" stroke="#8B6914" stroke-width="3" stroke-linecap="round"/>
-      <line x1="2" y1="-50" x2="0" y2="-54" stroke="#8B6914" stroke-width="3" stroke-linecap="round"/>
-      <line x1="24" y1="-48" x2="26" y2="-52" stroke="#8B6914" stroke-width="3" stroke-linecap="round"/>
-      <!-- Sourcils fins -->
-      <path d="M-24,-56 Q-14,-62 -4,-57" fill="none" stroke="#C8A832" stroke-width="4" stroke-linecap="round"/>
-      <path d="M4,-57 Q14,-62 24,-56" fill="none" stroke="#C8A832" stroke-width="4" stroke-linecap="round"/>
-      <!-- Petit nez -->
-      <ellipse cx="-2" cy="-30" rx="5" ry="4" fill="#E8B88A" opacity="0.5"/>
-      <!-- Sourire chipie avec fossettes -->
-      <path d="M-16,-20 Q-2,-12 14,-20" fill="none" stroke="#1B2A4A" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="-75" cy="15" r="20" fill="#F26B5E" opacity="0.3"/>
+      <circle cx="75" cy="15" r="20" fill="#F26B5E" opacity="0.3"/>
+
+      <!-- Bras gauche levé (pose héroïque, pointe vers le haut) -->
+      <path d="M-110,140 Q-180,80 -200,20 Q-210,-10 -190,-20" fill="none" stroke="#D2B48C" stroke-width="45" stroke-linecap="round"/>
+      <path d="M-110,140 Q-180,80 -200,20 Q-210,-10 -190,-20" fill="none" stroke="#2D2D2D" stroke-width="50" stroke-linecap="round" opacity="0.15"/>
+      <!-- Main gauche — index pointe le ciel -->
+      <circle cx="-190" cy="-20" r="22" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+      <rect x="-196" y="-65" width="12" height="40" rx="6" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="4"/>
+
+      <!-- Bras droit -->
+      <path d="M110,140 Q170,120 190,160" fill="none" stroke="#D2B48C" stroke-width="45" stroke-linecap="round"/>
+      <path d="M110,140 Q170,120 190,160" fill="none" stroke="#2D2D2D" stroke-width="50" stroke-linecap="round" opacity="0.15"/>
+      <circle cx="190" cy="160" r="22" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+
+      <!-- Jambes courtes chibi -->
+      <rect x="-65" y="260" width="50" height="70" rx="20" fill="#2D5B9E" stroke="#2D2D2D" stroke-width="6"/>
+      <rect x="15" y="260" width="50" height="70" rx="20" fill="#2D5B9E" stroke="#2D2D2D" stroke-width="6"/>
+      <!-- Chaussures -->
+      <ellipse cx="-40" cy="340" rx="35" ry="18" fill="#8B6914" stroke="#2D2D2D" stroke-width="5"/>
+      <ellipse cx="40" cy="340" rx="35" ry="18" fill="#8B6914" stroke="#2D2D2D" stroke-width="5"/>
+    </g>
+
+    <!-- ══════ ANTOINE (gauche, chibi aventurier) ══════ -->
+    <g transform="translate(750, 1800)">
+      <!-- Corps t-shirt bleu -->
+      <ellipse cx="0" cy="140" rx="80" ry="75" fill="#4A9FE5" stroke="#2D2D2D" stroke-width="7"/>
+
+      <!-- GROSSE TETE CHIBI -->
+      <circle cx="0" cy="-10" r="105" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="7"/>
+
+      <!-- Cheveux bruns ébouriffés -->
+      <path d="M-90,-40 Q-95,-100 -60,-115 Q-30,-130 0,-125 Q30,-132 60,-115 Q95,-98 90,-40" fill="#8B6914" stroke="#2D2D2D" stroke-width="6"/>
+      <!-- Mèche rebelle -->
+      <path d="M5,-125 Q10,-160 20,-155 Q15,-140 12,-125" fill="#8B6914" stroke="#2D2D2D" stroke-width="4"/>
+      <path d="M-15,-122 Q-22,-150 -10,-152 Q-5,-138 -8,-122" fill="#8B6914" stroke="#2D2D2D" stroke-width="4"/>
+
+      <!-- Oreilles -->
+      <ellipse cx="-100" cy="0" rx="14" ry="20" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+      <ellipse cx="100" cy="0" rx="14" ry="20" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+
+      <!-- GRANDS YEUX émerveillés -->
+      <ellipse cx="-30" cy="-10" rx="26" ry="28" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="6"/>
+      <ellipse cx="30" cy="-10" rx="26" ry="28" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="6"/>
+      <circle cx="-25" cy="-8" r="16" fill="#2D5B9E"/>
+      <circle cx="35" cy="-8" r="16" fill="#2D5B9E"/>
+      <circle cx="-23" cy="-10" r="9" fill="#2D2D2D"/>
+      <circle cx="37" cy="-10" r="9" fill="#2D2D2D"/>
+      <circle cx="-30" cy="-18" r="6" fill="#FFFFFF"/>
+      <circle cx="30" cy="-18" r="6" fill="#FFFFFF"/>
+
+      <!-- Sourcils excités -->
+      <path d="M-52,-42 Q-30,-55 -8,-44" fill="none" stroke="#8B6914" stroke-width="7" stroke-linecap="round"/>
+      <path d="M8,-44 Q30,-55 52,-42" fill="none" stroke="#8B6914" stroke-width="7" stroke-linecap="round"/>
+
+      <!-- Taches de rousseur -->
+      <circle cx="-48" cy="10" r="4" fill="#D4A06A" opacity="0.6"/>
+      <circle cx="-40" cy="16" r="3.5" fill="#D4A06A" opacity="0.5"/>
+      <circle cx="48" cy="10" r="4" fill="#D4A06A" opacity="0.6"/>
+      <circle cx="40" cy="16" r="3.5" fill="#D4A06A" opacity="0.5"/>
+
+      <!-- Nez -->
+      <ellipse cx="2" cy="12" rx="8" ry="6" fill="#E8B88A" stroke="#2D2D2D" stroke-width="3"/>
+
+      <!-- Grande bouche "wow" -->
+      <ellipse cx="2" cy="35" rx="20" ry="15" fill="#2D2D2D" stroke="#2D2D2D" stroke-width="4"/>
+      <ellipse cx="2" cy="30" rx="14" ry="6" fill="#FFFFFF" opacity="0.4"/>
+
+      <!-- Joues roses -->
+      <circle cx="-60" cy="20" r="16" fill="#F26B5E" opacity="0.35"/>
+      <circle cx="60" cy="20" r="16" fill="#F26B5E" opacity="0.35"/>
+
+      <!-- Bras droit tendu dynamique -->
+      <path d="M70,110 Q130,80 160,50" fill="none" stroke="#4A9FE5" stroke-width="35" stroke-linecap="round"/>
+      <path d="M70,110 Q130,80 160,50" fill="none" stroke="#2D2D2D" stroke-width="40" stroke-linecap="round" opacity="0.12"/>
+      <circle cx="160" cy="50" r="18" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+
+      <!-- Bras gauche poing fermé -->
+      <path d="M-70,110 Q-110,130 -120,160" fill="none" stroke="#4A9FE5" stroke-width="35" stroke-linecap="round"/>
+      <circle cx="-120" cy="160" r="18" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+
+      <!-- Jambes -->
+      <rect x="-50" y="200" width="40" height="55" rx="16" fill="#2D5B9E" stroke="#2D2D2D" stroke-width="5"/>
+      <rect x="10" y="200" width="40" height="55" rx="16" fill="#2D5B9E" stroke="#2D2D2D" stroke-width="5"/>
+      <ellipse cx="-30" cy="260" rx="28" ry="14" fill="#F26B5E" stroke="#2D2D2D" stroke-width="4"/>
+      <ellipse cx="30" cy="260" rx="28" ry="14" fill="#F26B5E" stroke="#2D2D2D" stroke-width="4"/>
+    </g>
+
+    <!-- ══════ NOEMIE (droite, chibi espiègle) ══════ -->
+    <g transform="translate(2250, 1820)">
+      <!-- Corps robe rose -->
+      <ellipse cx="0" cy="130" rx="75" ry="70" fill="#E895A8" stroke="#2D2D2D" stroke-width="7"/>
+      <!-- Motif fleur sur robe -->
+      <circle cx="-20" cy="120" r="8" fill="#FFFFFF" opacity="0.5"/>
+      <circle cx="15" cy="140" r="6" fill="#FFFFFF" opacity="0.4"/>
+
+      <!-- GROSSE TETE CHIBI -->
+      <circle cx="0" cy="-15" r="95" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="7"/>
+
+      <!-- Cheveux blonds bouclés -->
+      <path d="M-82,-35 Q-88,-95 -55,-108 Q-25,-125 0,-118 Q25,-125 55,-108 Q88,-93 82,-35" fill="#FFD234" stroke="#2D2D2D" stroke-width="6"/>
+      <!-- Boucles -->
+      <circle cx="-82" cy="-55" r="20" fill="#FFD234" stroke="#2D2D2D" stroke-width="5"/>
+      <circle cx="82" cy="-55" r="20" fill="#FFD234" stroke="#2D2D2D" stroke-width="5"/>
+      <circle cx="-75" cy="-30" r="15" fill="#FFD234" stroke="#2D2D2D" stroke-width="4"/>
+      <circle cx="75" cy="-30" r="15" fill="#FFD234" stroke="#2D2D2D" stroke-width="4"/>
+
+      <!-- Noeud rose -->
+      <path d="M10,-115 Q22,-135 34,-115" fill="#F26B5E" stroke="#2D2D2D" stroke-width="4"/>
+      <path d="M10,-115 Q22,-95 34,-115" fill="#F26B5E" stroke="#2D2D2D" stroke-width="4"/>
+      <circle cx="22" cy="-115" r="6" fill="#D4486B" stroke="#2D2D2D" stroke-width="3"/>
+
+      <!-- Oreilles -->
+      <ellipse cx="-90" cy="0" rx="12" ry="18" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+      <ellipse cx="90" cy="0" rx="12" ry="18" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="5"/>
+
+      <!-- GRANDS YEUX pétillants -->
+      <ellipse cx="-28" cy="-12" rx="24" ry="26" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="6"/>
+      <ellipse cx="28" cy="-12" rx="24" ry="26" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="6"/>
+      <circle cx="-32" cy="-10" r="14" fill="#4A9FE5"/>
+      <circle cx="24" cy="-10" r="14" fill="#4A9FE5"/>
+      <circle cx="-33" cy="-12" r="8" fill="#2D2D2D"/>
+      <circle cx="23" cy="-12" r="8" fill="#2D2D2D"/>
+      <circle cx="-28" cy="-20" r="5.5" fill="#FFFFFF"/>
+      <circle cx="28" cy="-20" r="5.5" fill="#FFFFFF"/>
+      <!-- Cils -->
+      <line x1="-48" y1="-25" x2="-52" y2="-32" stroke="#2D2D2D" stroke-width="4" stroke-linecap="round"/>
+      <line x1="-10" y1="-28" x2="-8" y2="-35" stroke="#2D2D2D" stroke-width="4" stroke-linecap="round"/>
+      <line x1="10" y1="-28" x2="8" y2="-35" stroke="#2D2D2D" stroke-width="4" stroke-linecap="round"/>
+      <line x1="48" y1="-25" x2="52" y2="-32" stroke="#2D2D2D" stroke-width="4" stroke-linecap="round"/>
+
+      <!-- Sourcils -->
+      <path d="M-48,-42 Q-28,-52 -8,-43" fill="none" stroke="#C8A832" stroke-width="6" stroke-linecap="round"/>
+      <path d="M8,-43 Q28,-52 48,-42" fill="none" stroke="#C8A832" stroke-width="6" stroke-linecap="round"/>
+
+      <!-- Nez -->
+      <ellipse cx="-2" cy="8" rx="7" ry="5" fill="#E8B88A" stroke="#2D2D2D" stroke-width="3"/>
+
+      <!-- Sourire chipie -->
+      <path d="M-25,28 Q0,48 25,28" fill="none" stroke="#2D2D2D" stroke-width="7" stroke-linecap="round"/>
       <!-- Fossettes -->
-      <circle cx="-18" cy="-18" r="3" fill="#E8B88A" opacity="0.4"/>
-      <circle cx="16" cy="-18" r="3" fill="#E8B88A" opacity="0.4"/>
-      <!-- Bras gauche (vers le livre) -->
-      <path d="M-50,25 Q-95,5 -120,-15" fill="none" stroke="#E8A0B0" stroke-width="26" stroke-linecap="round"/>
-      <!-- Main gauche peau -->
-      <circle cx="-120" cy="-15" r="14" fill="#F5D0A9"/>
-      <!-- Bras droit tenant le doudou lapin -->
-      <path d="M50,30 Q70,50 75,70" fill="none" stroke="#E8A0B0" stroke-width="26" stroke-linecap="round"/>
-      <!-- Main droite peau -->
-      <circle cx="75" cy="70" r="14" fill="#F5D0A9"/>
-      <!-- Doudou lapin blanc -->
-      <g transform="translate(90, 55)">
-        <!-- Corps lapin -->
-        <ellipse cx="0" cy="15" rx="18" ry="22" fill="#FFFFFF" stroke="#F0E0C0" stroke-width="3"/>
-        <!-- Tete lapin -->
-        <circle cx="0" cy="-8" r="14" fill="#FFFFFF" stroke="#F0E0C0" stroke-width="3"/>
-        <!-- Oreilles lapin -->
-        <ellipse cx="-8" cy="-28" rx="5" ry="14" fill="#FFFFFF" stroke="#F0E0C0" stroke-width="3"/>
-        <ellipse cx="8" cy="-28" rx="5" ry="14" fill="#FFFFFF" stroke="#F0E0C0" stroke-width="3"/>
-        <!-- Interieur oreilles rose -->
-        <ellipse cx="-8" cy="-28" rx="3" ry="10" fill="#F0B0C0" opacity="0.5"/>
-        <ellipse cx="8" cy="-28" rx="3" ry="10" fill="#F0B0C0" opacity="0.5"/>
-        <!-- Yeux lapin -->
-        <circle cx="-5" cy="-10" r="3" fill="#1B2A4A"/>
-        <circle cx="5" cy="-10" r="3" fill="#1B2A4A"/>
-        <!-- Nez lapin -->
-        <ellipse cx="0" cy="-5" rx="3" ry="2" fill="#F0B0C0"/>
+      <circle cx="-28" cy="30" r="4" fill="#E8B88A" opacity="0.5"/>
+      <circle cx="28" cy="30" r="4" fill="#E8B88A" opacity="0.5"/>
+
+      <!-- Joues roses -->
+      <circle cx="-55" cy="18" r="16" fill="#F26B5E" opacity="0.4"/>
+      <circle cx="55" cy="18" r="16" fill="#F26B5E" opacity="0.4"/>
+
+      <!-- Bras gauche tenant le doudou -->
+      <path d="M-65,100 Q-100,120 -110,145" fill="none" stroke="#E895A8" stroke-width="30" stroke-linecap="round"/>
+      <circle cx="-110" cy="145" r="16" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="4"/>
+
+      <!-- Doudou lapin -->
+      <g transform="translate(-125, 130)">
+        <ellipse cx="0" cy="18" rx="20" ry="25" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="4"/>
+        <circle cx="0" cy="-8" r="16" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="4"/>
+        <ellipse cx="-9" cy="-28" rx="6" ry="16" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="3"/>
+        <ellipse cx="9" cy="-28" rx="6" ry="16" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="3"/>
+        <ellipse cx="-9" cy="-28" rx="3.5" ry="11" fill="#F0B0C0" opacity="0.6"/>
+        <ellipse cx="9" cy="-28" rx="3.5" ry="11" fill="#F0B0C0" opacity="0.6"/>
+        <circle cx="-5" cy="-10" r="3.5" fill="#2D2D2D"/>
+        <circle cx="5" cy="-10" r="3.5" fill="#2D2D2D"/>
+        <ellipse cx="0" cy="-4" rx="3.5" ry="2.5" fill="#F0B0C0"/>
+      </g>
+
+      <!-- Bras droit leve -->
+      <path d="M65,100 Q105,75 115,45" fill="none" stroke="#E895A8" stroke-width="30" stroke-linecap="round"/>
+      <circle cx="115" cy="45" r="16" fill="#F5D0A9" stroke="#2D2D2D" stroke-width="4"/>
+
+      <!-- Jambes -->
+      <rect x="-45" y="185" width="35" height="50" rx="14" fill="#F0E0C0" stroke="#2D2D2D" stroke-width="5"/>
+      <rect x="10" y="185" width="35" height="50" rx="14" fill="#F0E0C0" stroke="#2D2D2D" stroke-width="5"/>
+      <ellipse cx="-28" cy="240" rx="25" ry="12" fill="#E895A8" stroke="#2D2D2D" stroke-width="4"/>
+      <ellipse cx="28" cy="240" rx="25" ry="12" fill="#E895A8" stroke="#2D2D2D" stroke-width="4"/>
+    </g>
+
+    <!-- ══════ ETOILES DYNAMIQUES ══════ -->
+    <g fill="#FFD234">
+      <!-- Étoile 5 branches en haut gauche -->
+      <polygon points="250,550 265,590 310,590 275,615 290,660 250,635 210,660 225,615 190,590 235,590" stroke="#2D2D2D" stroke-width="4"/>
+      <!-- Étoile haut droite -->
+      <polygon points="2700,500 2712,535 2750,535 2720,555 2732,590 2700,570 2668,590 2680,555 2650,535 2688,535" stroke="#2D2D2D" stroke-width="3"/>
+      <!-- Petites étoiles scintillantes -->
+      <g stroke="#2D2D2D" stroke-width="3">
+        <polygon points="600,650 608,670 630,670 613,682 620,705 600,692 580,705 587,682 570,670 592,670" transform="scale(0.6) translate(300,400)"/>
+        <polygon points="2200,680 2208,700 2230,700 2213,712 2220,735 2200,722 2180,735 2187,712 2170,700 2192,700" transform="scale(0.5) translate(1800,500)"/>
       </g>
     </g>
 
-    <!-- ══════ BOUSSOLE DISCRETE ══════ -->
-    <g transform="translate(2550, 1550)" opacity="0.18">
-      <!-- Cercle exterieur -->
-      <circle cx="0" cy="0" r="80" fill="none" stroke="#E8C44A" stroke-width="5"/>
-      <circle cx="0" cy="0" r="70" fill="none" stroke="#E8C44A" stroke-width="3"/>
-      <!-- Aiguilles -->
-      <polygon points="0,-60 8,0 0,-10 -8,0" fill="#E8C44A"/>
-      <polygon points="0,60 8,0 0,10 -8,0" fill="#E8C44A" opacity="0.5"/>
-      <polygon points="-60,0 0,8 -10,0 0,-8" fill="#E8C44A" opacity="0.5"/>
-      <polygon points="60,0 0,8 10,0 0,-8" fill="#E8C44A" opacity="0.5"/>
-      <!-- Centre -->
-      <circle cx="0" cy="0" r="8" fill="#E8C44A"/>
-    </g>
+    <!-- ══════ TEXTE CARTOON ══════ -->
 
-    <!-- Deuxieme boussole discrete de l'autre cote -->
-    <g transform="translate(450, 1550)" opacity="0.12">
-      <circle cx="0" cy="0" r="60" fill="none" stroke="#E8C44A" stroke-width="4"/>
-      <polygon points="0,-50 6,0 0,-8 -6,0" fill="#E8C44A"/>
-      <polygon points="0,50 6,0 0,8 -6,0" fill="#E8C44A" opacity="0.4"/>
-      <circle cx="0" cy="0" r="6" fill="#E8C44A"/>
-    </g>
-
-    <!-- ══════ ETOILES SCINTILLANTES AUTOUR DU LIVRE ══════ -->
-    <g opacity="0.5">
-      <!-- Etoile scintillante gauche du livre -->
-      <g transform="translate(900, 1650)">
-        <rect x="-2" y="-14" width="4" height="28" rx="2" fill="#E8C44A"/>
-        <rect x="-14" y="-2" width="28" height="4" rx="2" fill="#E8C44A"/>
-      </g>
-      <!-- Etoile scintillante droite du livre -->
-      <g transform="translate(2100, 1620)">
-        <rect x="-2" y="-12" width="4" height="24" rx="2" fill="#E8C44A"/>
-        <rect x="-12" y="-2" width="24" height="4" rx="2" fill="#E8C44A"/>
-      </g>
-      <!-- Etoile au-dessus -->
-      <g transform="translate(1250, 1450)">
-        <rect x="-1.5" y="-10" width="3" height="20" rx="1.5" fill="#E8C44A"/>
-        <rect x="-10" y="-1.5" width="20" height="3" rx="1.5" fill="#E8C44A"/>
-      </g>
-      <g transform="translate(1750, 1430)">
-        <rect x="-1.5" y="-10" width="3" height="20" rx="1.5" fill="#E8C44A"/>
-        <rect x="-10" y="-1.5" width="20" height="3" rx="1.5" fill="#E8C44A"/>
-      </g>
-    </g>
-
-    <!-- Petites etoiles en bas -->
-    <g opacity="0.3">
-      <circle cx="350" cy="2200" r="3" fill="#E8C44A"/>
-      <circle cx="650" cy="2300" r="4" fill="#E8C44A"/>
-      <circle cx="2350" cy="2250" r="3.5" fill="#E8C44A"/>
-      <circle cx="2650" cy="2180" r="3" fill="#E8C44A"/>
-    </g>
-
-    <!-- ══════ TEXTE ══════ -->
-
-    <!-- "Les Histoires de" (petit, blanc) -->
-    <text x="1500" y="750"
+    <!-- "Les Histoires de" -->
+    <text x="1500" y="680"
           text-anchor="middle"
-          font-family="'Baloo 2', sans-serif"
-          font-size="160"
-          font-weight="600"
+          font-family="'Baloo 2', 'Comic Sans MS', sans-serif"
+          font-size="150"
+          font-weight="700"
           fill="#FFFFFF"
-          opacity="0.9"
-          letter-spacing="6">Les Histoires de</text>
+          stroke="#2D2D2D"
+          stroke-width="10"
+          paint-order="stroke"
+          letter-spacing="5">Les Histoires de</text>
 
-    <!-- "Papy" (grand, dore) -->
-    <text x="1500" y="1020"
+    <!-- "Papy" — gros texte cartoon incliné -->
+    <text x="1500" y="960"
           text-anchor="middle"
-          font-family="'Baloo 2', sans-serif"
-          font-size="400"
+          font-family="'Baloo 2', 'Comic Sans MS', sans-serif"
+          font-size="420"
           font-weight="800"
-          fill="url(#goldText)"
-          letter-spacing="14">Papy</text>
+          fill="#FFD234"
+          stroke="#2D2D2D"
+          stroke-width="16"
+          paint-order="stroke"
+          letter-spacing="10"
+          transform="rotate(-3, 1500, 960)">Papy</text>
 
-    <!-- "Babou" (grand, dore) -->
-    <text x="1500" y="1360"
+    <!-- "Babou" — gros texte cartoon incliné -->
+    <text x="1500" y="1330"
           text-anchor="middle"
-          font-family="'Baloo 2', sans-serif"
-          font-size="400"
+          font-family="'Baloo 2', 'Comic Sans MS', sans-serif"
+          font-size="420"
           font-weight="800"
-          fill="url(#goldText)"
-          letter-spacing="14">Babou</text>
-
-    <!-- Filet decoratif -->
-    <g transform="translate(1500, 1420)" opacity="0.5">
-      <line x1="-380" y1="0" x2="-50" y2="0" stroke="#E8C44A" stroke-width="4" stroke-linecap="round"/>
-      <line x1="50" y1="0" x2="380" y2="0" stroke="#E8C44A" stroke-width="4" stroke-linecap="round"/>
-      <polygon points="0,-12 12,0 0,12 -12,0" fill="#E8C44A"/>
-    </g>
+          fill="#F26B5E"
+          stroke="#2D2D2D"
+          stroke-width="16"
+          paint-order="stroke"
+          letter-spacing="10"
+          transform="rotate(2, 1500, 1330)">Babou</text>
 
     <!-- Sous-titre -->
-    <text x="1500" y="2700"
+    <text x="1500" y="2750"
           text-anchor="middle"
-          font-family="'Baloo 2', sans-serif"
-          font-size="90"
-          font-weight="500"
+          font-family="'Baloo 2', 'Comic Sans MS', sans-serif"
+          font-size="80"
+          font-weight="600"
           fill="#FFFFFF"
-          opacity="0.5"
-          letter-spacing="12">Podcast biblique pour enfants</text>
+          stroke="#2D2D2D"
+          stroke-width="6"
+          paint-order="stroke"
+          letter-spacing="8">Podcast biblique pour enfants</text>
 
-    <!-- ══════ BORDURE DOREE SUBTILE ══════ -->
-    <rect x="50" y="50" width="2900" height="2900" rx="140" ry="140"
-          fill="none" stroke="url(#goldBorder)" stroke-width="8"/>
+    <!-- ══════ BORDURE COLOREE ══════ -->
+    <rect x="40" y="40" width="2920" height="2920" rx="130" ry="130"
+          fill="none" stroke="#FFD234" stroke-width="12" opacity="0.7"/>
+    <rect x="55" y="55" width="2890" height="2890" rx="120" ry="120"
+          fill="none" stroke="#2D2D2D" stroke-width="5" opacity="0.3"/>
 
   </g>
 </svg>
