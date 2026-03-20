@@ -1031,6 +1031,14 @@ def api_public_episodes():
         numero = ep.get("numero", 0)
         titre = ep.get("titre", "")
 
+        # Fallback: parse saison/numero from episode_id (e.g. "S01E01")
+        if (not numero or not saison) and len(episode_id) >= 6:
+            try:
+                saison = saison or int(episode_id[1:3])
+                numero = numero or int(episode_id[4:6])
+            except (ValueError, IndexError):
+                pass
+
         # Chercher le fichier audio
         audio_url = None
         try:

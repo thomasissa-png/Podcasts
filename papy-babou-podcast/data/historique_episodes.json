@@ -1,9 +1,11 @@
 [
   {
     "episode_id": "S01E01",
+    "saison": 1,
+    "numero": 1,
     "titre": "La création du monde — quand Dieu a tout inventé",
     "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
-    "resume_court": "Et soudain, dans le noir le plus total, une voix immense a retenti. Une voix si puissante qu'elle a fait trembler le néant tout entier.",
+    "resume_court": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
     "date_production": "2026-03-20T06:46:39.946384",
     "score_review": 9.2,
     "personnages_presents": [

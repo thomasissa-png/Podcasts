@@ -525,6 +525,8 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
 
     entree = {
         "episode_id": rapport.get("episode_id", ""),
+        "saison": episode.get("saison", rapport.get("saison", 1)),
+        "numero": episode.get("numero", rapport.get("numero", 1)),
         "titre": rapport.get("titre", ""),
         "morale": episode.get("morale", ""),
         "resume_court": resume_court,
