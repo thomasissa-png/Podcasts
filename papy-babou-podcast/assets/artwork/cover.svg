@@ -1,212 +1,153 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 3000" width="3000" height="3000">
-  <!-- Fond parchemin aventure -->
   <defs>
-    <radialGradient id="parchment" cx="50%" cy="45%" r="70%">
-      <stop offset="0%" stop-color="#FDF5E6"/>
-      <stop offset="60%" stop-color="#F0E0C0"/>
-      <stop offset="100%" stop-color="#D4B896"/>
+    <!-- Fond principal : gradient bleu nuit cohérent avec le hero du site -->
+    <radialGradient id="bgGlow" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#2D4A7A"/>
+      <stop offset="55%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#141E35"/>
     </radialGradient>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B2A4A"/>
-      <stop offset="40%" stop-color="#2D4A7A"/>
-      <stop offset="70%" stop-color="#A08060"/>
-      <stop offset="100%" stop-color="#E8A84C"/>
-    </linearGradient>
-    <linearGradient id="goldShine" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E8A84C"/>
-      <stop offset="50%" stop-color="#D4883A"/>
+
+    <!-- Halo lumineux derrière le titre -->
+    <radialGradient id="titleGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E8A84C" stop-opacity="0.18"/>
+      <stop offset="60%" stop-color="#E8A84C" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#E8A84C" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Dégradé doré pour "Papy Babou" -->
+    <linearGradient id="goldText" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F0C060"/>
+      <stop offset="45%" stop-color="#E8A84C"/>
       <stop offset="100%" stop-color="#B86E20"/>
     </linearGradient>
-    <clipPath id="innerFrame">
-      <rect x="100" y="100" width="2800" height="2800" rx="60"/>
+
+    <!-- Dégradé doré pour la bordure -->
+    <linearGradient id="goldBorder" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E8A84C" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#B86E20" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#E8A84C" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <!-- Clip arrondi (border-radius 16px = ~160 en 3000px) -->
+    <clipPath id="roundClip">
+      <rect width="3000" height="3000" rx="160" ry="160"/>
     </clipPath>
   </defs>
 
-  <!-- Fond principal parchemin -->
-  <rect width="3000" height="3000" fill="url(#parchment)"/>
+  <!-- ═══ Fond ═══ -->
+  <g clip-path="url(#roundClip)">
 
-  <!-- Zone de scene clippee -->
-  <g clip-path="url(#innerFrame)">
+    <!-- Fond bleu nuit -->
+    <rect width="3000" height="3000" fill="url(#bgGlow)"/>
 
-    <!-- Ciel dramatique (bande superieure) -->
-    <rect x="100" y="100" width="2800" height="1400" fill="url(#sky)"/>
+    <!-- ═══ Éléments décoratifs subtils ═══ -->
 
-    <!-- Etoiles dans le ciel nocturne -->
-    <circle cx="400" cy="250" r="3" fill="#FFF8E0" opacity="0.9"/>
-    <circle cx="650" cy="350" r="2" fill="#FFF8E0" opacity="0.7"/>
-    <circle cx="900" cy="200" r="4" fill="#FFF8E0" opacity="0.8"/>
-    <circle cx="1100" cy="300" r="2.5" fill="#FFF8E0" opacity="0.6"/>
-    <circle cx="1300" cy="180" r="3" fill="#FFF8E0" opacity="0.9"/>
-    <circle cx="1700" cy="250" r="2" fill="#FFF8E0" opacity="0.7"/>
-    <circle cx="1950" cy="350" r="3.5" fill="#FFF8E0" opacity="0.8"/>
-    <circle cx="2200" cy="200" r="2" fill="#FFF8E0" opacity="0.6"/>
-    <circle cx="2450" cy="280" r="3" fill="#FFF8E0" opacity="0.9"/>
-    <circle cx="2650" cy="380" r="2.5" fill="#FFF8E0" opacity="0.7"/>
-    <circle cx="550" cy="450" r="2" fill="#FFF8E0" opacity="0.5"/>
-    <circle cx="1500" cy="400" r="2" fill="#FFF8E0" opacity="0.5"/>
-    <circle cx="2100" cy="450" r="1.5" fill="#FFF8E0" opacity="0.4"/>
-
-    <!-- Grande etoile de Bethlehem -->
-    <g transform="translate(1500, 280)" opacity="0.95">
-      <polygon points="0,-60 12,-18 55,-18 20,8 34,55 0,28 -34,55 -20,8 -55,-18 -12,-18" fill="#FFF8D0"/>
-      <circle cx="0" cy="0" r="15" fill="#FFFBE8" opacity="0.6"/>
-      <!-- Rayons -->
-      <line x1="0" y1="-80" x2="0" y2="80" stroke="#FFF8D0" stroke-width="2" opacity="0.3"/>
-      <line x1="-80" y1="0" x2="80" y2="0" stroke="#FFF8D0" stroke-width="2" opacity="0.3"/>
+    <!-- Étoiles discrètes (haut) -->
+    <g opacity="0.5">
+      <circle cx="350" cy="280" r="4" fill="#FFF8E0"/>
+      <circle cx="680" cy="180" r="3" fill="#FFF8E0"/>
+      <circle cx="1050" cy="320" r="3.5" fill="#FFF8E0"/>
+      <circle cx="1400" cy="150" r="2.5" fill="#FFF8E0"/>
+      <circle cx="1750" cy="280" r="4" fill="#FFF8E0"/>
+      <circle cx="2100" cy="200" r="3" fill="#FFF8E0"/>
+      <circle cx="2400" cy="320" r="3.5" fill="#FFF8E0"/>
+      <circle cx="2700" cy="180" r="2.5" fill="#FFF8E0"/>
+      <circle cx="500" cy="450" r="2" fill="#FFF8E0"/>
+      <circle cx="900" cy="500" r="2.5" fill="#FFF8E0"/>
+      <circle cx="2200" cy="480" r="2" fill="#FFF8E0"/>
+      <circle cx="2600" cy="420" r="3" fill="#FFF8E0"/>
     </g>
 
-    <!-- Montagnes lointaines (silhouettes) -->
-    <path d="M100,1100 L400,700 L550,800 L750,550 L950,750 L1100,600 L1250,750 L1500,450 L1750,700 L1900,600 L2100,750 L2300,500 L2500,700 L2700,600 L2900,800 L2900,1500 L100,1500 Z"
-          fill="#1B2A4A" opacity="0.5"/>
-    <path d="M100,1200 L350,850 L500,950 L700,700 L900,900 L1050,750 L1300,600 L1500,800 L1700,650 L1900,850 L2100,700 L2350,850 L2600,750 L2900,950 L2900,1500 L100,1500 Z"
-          fill="#2D4A7A" opacity="0.6"/>
-
-    <!-- Silhouettes bibliques dans les montagnes -->
-    <!-- Arche de Noe (gauche) -->
-    <g transform="translate(550, 850)" opacity="0.35">
-      <path d="M-80,30 Q-80,-10 -50,-30 L50,-30 Q80,-10 80,30 L70,30 Q60,-10 0,-20 Q-60,-10 -70,30 Z" fill="#1B2A4A"/>
-      <line x1="0" y1="-30" x2="0" y2="-60" stroke="#1B2A4A" stroke-width="6"/>
+    <!-- Montagnes très subtiles (fond, bas) -->
+    <g opacity="0.12">
+      <path d="M0,2500 L200,2200 L400,2350 L650,2050 L900,2250 L1100,2100 L1350,1950 L1500,2100 L1700,1900 L1900,2050 L2100,2200 L2350,2000 L2550,2150 L2750,2050 L3000,2250 L3000,3000 L0,3000 Z"
+              fill="#2D4A7A"/>
+    </g>
+    <g opacity="0.08">
+      <path d="M0,2600 L300,2350 L500,2450 L750,2200 L1000,2400 L1200,2300 L1500,2150 L1800,2350 L2000,2200 L2250,2350 L2500,2250 L2800,2400 L3000,2300 L3000,3000 L0,3000 Z"
+              fill="#1B2A4A"/>
     </g>
 
-    <!-- Lion (centre-droit) -->
-    <g transform="translate(2200, 830)" opacity="0.3">
-      <ellipse cx="0" cy="0" rx="35" ry="25" fill="#1B2A4A"/>
-      <circle cx="-25" cy="-15" r="18" fill="#1B2A4A"/>
-      <ellipse cx="-25" cy="-15" rx="25" ry="22" fill="#1B2A4A"/>
-      <rect x="15" y="5" width="8" height="20" rx="3" fill="#1B2A4A"/>
-      <rect x="-15" y="5" width="8" height="20" rx="3" fill="#1B2A4A"/>
+    <!-- Étoile de Bethléem (discrète, en haut) -->
+    <g transform="translate(1500, 420)" opacity="0.35">
+      <polygon points="0,-70 10,-22 60,-22 18,6 30,55 0,25 -30,55 -18,6 -60,-22 -10,-22" fill="#FFF8D0"/>
+      <circle cx="0" cy="0" r="14" fill="#FFFBE8" opacity="0.5"/>
     </g>
 
-    <!-- Mer qui s'ouvre (bas) -->
-    <path d="M100,1350 Q400,1250 600,1350 Q800,1450 1000,1350 Q1200,1250 1400,1350 Q1500,1400 1500,1500 L100,1500 Z"
-          fill="#2D4A7A" opacity="0.3"/>
-    <path d="M2900,1350 Q2600,1250 2400,1350 Q2200,1450 2000,1350 Q1800,1250 1600,1350 Q1500,1400 1500,1500 L2900,1500 Z"
-          fill="#2D4A7A" opacity="0.3"/>
-
-  </g>
-
-  <!-- Zone parchemin basse (titre + personnages) -->
-  <rect x="100" y="1500" width="2800" height="1400" fill="url(#parchment)" rx="0"/>
-
-  <!-- Boussole centrale (entre ciel et parchemin) -->
-  <g transform="translate(1500, 1400)">
-    <!-- Cercle de fond -->
-    <circle cx="0" cy="0" r="220" fill="#F0E0C0" stroke="#B86E20" stroke-width="8"/>
-    <circle cx="0" cy="0" r="200" fill="none" stroke="#D4883A" stroke-width="3"/>
-    <circle cx="0" cy="0" r="190" fill="none" stroke="#D4883A" stroke-width="1.5" opacity="0.5"/>
-
-    <!-- Graduations de boussole -->
-    <g opacity="0.4">
-      <line x1="0" y1="-195" x2="0" y2="-175" stroke="#8B6914" stroke-width="3"/>
-      <line x1="0" y1="175" x2="0" y2="195" stroke="#8B6914" stroke-width="3"/>
-      <line x1="-195" y1="0" x2="-175" y2="0" stroke="#8B6914" stroke-width="3"/>
-      <line x1="175" y1="0" x2="195" y2="0" stroke="#8B6914" stroke-width="3"/>
-      <!-- Diagonales -->
-      <line x1="-135" y1="-135" x2="-125" y2="-125" stroke="#8B6914" stroke-width="2"/>
-      <line x1="125" y1="-125" x2="135" y2="-135" stroke="#8B6914" stroke-width="2"/>
-      <line x1="-135" y1="135" x2="-125" y2="125" stroke="#8B6914" stroke-width="2"/>
-      <line x1="125" y1="125" x2="135" y2="135" stroke="#8B6914" stroke-width="2"/>
+    <!-- Rose des vents minimaliste (centre, derrière le texte) -->
+    <g transform="translate(1500, 1480)" opacity="0.08">
+      <!-- Cercle -->
+      <circle cx="0" cy="0" r="700" fill="none" stroke="#E8A84C" stroke-width="4"/>
+      <circle cx="0" cy="0" r="660" fill="none" stroke="#E8A84C" stroke-width="2"/>
+      <!-- 4 pointes principales (très grandes, très discrètes) -->
+      <polygon points="0,-640 30,-100 0,-140 -30,-100" fill="#E8A84C"/>
+      <polygon points="0,640 30,100 0,140 -30,100" fill="#E8A84C"/>
+      <polygon points="-640,0 -100,30 -140,0 -100,-30" fill="#E8A84C"/>
+      <polygon points="640,0 100,30 140,0 100,-30" fill="#E8A84C"/>
+      <!-- 4 pointes intermédiaires -->
+      <polygon points="-440,-440 -60,-60 -80,-80 -60,-60" fill="#E8A84C" opacity="0.6"/>
+      <polygon points="440,-440 60,-60 80,-80 60,-60" fill="#E8A84C" opacity="0.6"/>
+      <polygon points="-440,440 -60,60 -80,80 -60,60" fill="#E8A84C" opacity="0.6"/>
+      <polygon points="440,440 60,60 80,80 60,60" fill="#E8A84C" opacity="0.6"/>
+      <!-- Centre -->
+      <circle cx="0" cy="0" r="30" fill="#E8A84C"/>
     </g>
 
-    <!-- Rose des vents (8 pointes) -->
-    <!-- 4 pointes principales -->
-    <polygon points="0,-170 15,-40 0,-55 -15,-40" fill="#B86E20"/><!-- N -->
-    <polygon points="0,170 15,40 0,55 -15,40" fill="#D4883A"/><!-- S -->
-    <polygon points="-170,0 -40,15 -55,0 -40,-15" fill="#D4883A"/><!-- O -->
-    <polygon points="170,0 40,15 55,0 40,-15" fill="#D4883A"/><!-- E -->
-    <!-- 4 pointes intermediaires -->
-    <polygon points="-115,-115 -20,-30 -35,-35 -30,-20" fill="#E8A84C" opacity="0.7"/>
-    <polygon points="115,-115 20,-30 35,-35 30,-20" fill="#E8A84C" opacity="0.7"/>
-    <polygon points="-115,115 -20,30 -35,35 -30,20" fill="#E8A84C" opacity="0.7"/>
-    <polygon points="115,115 20,30 35,35 30,20" fill="#E8A84C" opacity="0.7"/>
+    <!-- ═══ Halo derrière le texte ═══ -->
+    <ellipse cx="1500" cy="1400" rx="1100" ry="700" fill="url(#titleGlow)"/>
 
-    <!-- Centre de la boussole -->
-    <circle cx="0" cy="0" r="18" fill="url(#goldShine)" stroke="#8B6914" stroke-width="3"/>
-    <circle cx="0" cy="0" r="8" fill="#FDF5E6"/>
+    <!-- ═══ TEXTE PRINCIPAL ═══ -->
 
-    <!-- Lettres cardinales -->
-    <text x="0" y="-145" text-anchor="middle" font-family="Georgia, serif" font-size="28" font-weight="bold" fill="#8B6914" dominant-baseline="middle">N</text>
-    <text x="0" y="155" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#8B6914" dominant-baseline="middle">S</text>
-    <text x="-150" y="5" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#8B6914" dominant-baseline="middle">O</text>
-    <text x="150" y="5" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#8B6914" dominant-baseline="middle">E</text>
-  </g>
+    <!-- "Les Histoires de" — plus petit, blanc doux -->
+    <text x="1500" y="1180"
+          text-anchor="middle"
+          font-family="'Baloo 2', 'Nunito', sans-serif"
+          font-size="180"
+          font-weight="600"
+          fill="#FFFFFF"
+          opacity="0.85"
+          letter-spacing="8">Les Histoires de</text>
 
-  <!-- Ligne decorative carte ancienne -->
-  <line x1="200" y1="1650" x2="1200" y2="1650" stroke="#B86E20" stroke-width="2" opacity="0.3" stroke-dasharray="12,6"/>
-  <line x1="1800" y1="1650" x2="2800" y2="1650" stroke="#B86E20" stroke-width="2" opacity="0.3" stroke-dasharray="12,6"/>
+    <!-- "Papy" — grand, doré -->
+    <text x="1500" y="1480"
+          text-anchor="middle"
+          font-family="'Baloo 2', 'Nunito', sans-serif"
+          font-size="380"
+          font-weight="800"
+          fill="url(#goldText)"
+          letter-spacing="12">Papy</text>
 
-  <!-- Titre principal -->
-  <text x="1500" y="1850" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="130" fill="#4A5866" letter-spacing="4">Les Histoires de</text>
-  <text x="1500" y="2080" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="220" font-weight="bold" fill="#B86E20" letter-spacing="6">Papy Babou</text>
+    <!-- "Babou" — grand, doré -->
+    <text x="1500" y="1830"
+          text-anchor="middle"
+          font-family="'Baloo 2', 'Nunito', sans-serif"
+          font-size="380"
+          font-weight="800"
+          fill="url(#goldText)"
+          letter-spacing="12">Babou</text>
 
-  <!-- Filet decoratif sous le titre -->
-  <g transform="translate(1500, 2140)" opacity="0.6">
-    <line x1="-400" y1="0" x2="-50" y2="0" stroke="#B86E20" stroke-width="3"/>
-    <line x1="50" y1="0" x2="400" y2="0" stroke="#B86E20" stroke-width="3"/>
-    <!-- Petit losange central -->
-    <polygon points="0,-12 12,0 0,12 -12,0" fill="#B86E20"/>
-  </g>
+    <!-- Filet décoratif sous le titre -->
+    <g transform="translate(1500, 1920)" opacity="0.45">
+      <line x1="-450" y1="0" x2="-60" y2="0" stroke="#E8A84C" stroke-width="4" stroke-linecap="round"/>
+      <line x1="60" y1="0" x2="450" y2="0" stroke="#E8A84C" stroke-width="4" stroke-linecap="round"/>
+      <!-- Petit losange central -->
+      <polygon points="0,-14 14,0 0,14 -14,0" fill="#E8A84C"/>
+    </g>
 
-  <!-- Sous-titre -->
-  <text x="1500" y="2250" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="75" fill="#4A5866" opacity="0.8" font-style="italic">Grandes epopees bibliques pour les enfants</text>
+    <!-- Sous-titre — discret -->
+    <text x="1500" y="2080"
+          text-anchor="middle"
+          font-family="'Nunito', sans-serif"
+          font-size="100"
+          font-weight="600"
+          fill="#FFFFFF"
+          opacity="0.5"
+          letter-spacing="10">Podcast biblique pour enfants</text>
 
-  <!-- Personnages en silhouettes aventurieres -->
-  <!-- Papy Babou (centre, plus grand, avec livre) -->
-  <g transform="translate(1500, 2550)">
-    <circle cx="0" cy="-55" r="38" fill="#B86E20"/>
-    <path d="M-30,0 Q0,55 30,0" fill="#B86E20"/>
-    <!-- Lunettes signature (petites, distinctives) -->
-    <circle cx="-12" cy="-55" r="10" fill="none" stroke="#FDF5E6" stroke-width="3"/>
-    <circle cx="12" cy="-55" r="10" fill="none" stroke="#FDF5E6" stroke-width="3"/>
-    <line x1="-2" y1="-55" x2="2" y2="-55" stroke="#FDF5E6" stroke-width="3"/>
-    <!-- Livre ouvert (petit, dans les mains) -->
-    <rect x="-22" y="-15" width="18" height="14" rx="2" fill="#FDF5E6" opacity="0.8"/>
-    <rect x="4" y="-15" width="18" height="14" rx="2" fill="#FDF5E6" opacity="0.8"/>
-    <rect x="-2" y="-17" width="4" height="18" fill="#C47A5A" opacity="0.8"/>
-  </g>
+    <!-- ═══ Bordure dorée subtile ═══ -->
+    <rect x="60" y="60" width="2880" height="2880" rx="130" ry="130"
+          fill="none" stroke="url(#goldBorder)" stroke-width="6"/>
 
-  <!-- Antoine (gauche, pose aventuriere) -->
-  <g transform="translate(1250, 2580)">
-    <circle cx="0" cy="-40" r="28" fill="#2D4A7A"/>
-    <path d="M-22,0 Q0,40 22,0" fill="#2D4A7A"/>
-    <!-- Bras leve (enthousiaste) -->
-    <line x1="18" y1="-10" x2="30" y2="-35" stroke="#2D4A7A" stroke-width="8" stroke-linecap="round"/>
-  </g>
-
-  <!-- Noemie (droite, pose curieuse) -->
-  <g transform="translate(1750, 2560)">
-    <circle cx="0" cy="-40" r="28" fill="#C45A6E"/>
-    <path d="M-22,0 Q0,40 22,0" fill="#C45A6E"/>
-    <!-- Noeud cheveux -->
-    <circle cx="18" cy="-55" r="9" fill="#C45A6E"/>
-    <!-- Main pointant vers le haut -->
-    <line x1="20" y1="-10" x2="32" y2="-30" stroke="#C45A6E" stroke-width="7" stroke-linecap="round"/>
-  </g>
-
-  <!-- Cadre style carte ancienne -->
-  <rect x="80" y="80" width="2840" height="2840" rx="60" fill="none" stroke="#B86E20" stroke-width="10" opacity="0.5"/>
-  <rect x="110" y="110" width="2780" height="2780" rx="50" fill="none" stroke="#B86E20" stroke-width="3" opacity="0.25"/>
-
-  <!-- Coins decoratifs (style carte au tresor) -->
-  <!-- Coin haut-gauche -->
-  <g transform="translate(160, 160)" opacity="0.4">
-    <path d="M0,60 L0,0 L60,0" fill="none" stroke="#B86E20" stroke-width="6" stroke-linecap="round"/>
-    <circle cx="0" cy="0" r="8" fill="#B86E20"/>
-  </g>
-  <!-- Coin haut-droit -->
-  <g transform="translate(2840, 160)" opacity="0.4">
-    <path d="M0,60 L0,0 L-60,0" fill="none" stroke="#B86E20" stroke-width="6" stroke-linecap="round"/>
-    <circle cx="0" cy="0" r="8" fill="#B86E20"/>
-  </g>
-  <!-- Coin bas-gauche -->
-  <g transform="translate(160, 2840)" opacity="0.4">
-    <path d="M0,-60 L0,0 L60,0" fill="none" stroke="#B86E20" stroke-width="6" stroke-linecap="round"/>
-    <circle cx="0" cy="0" r="8" fill="#B86E20"/>
-  </g>
-  <!-- Coin bas-droit -->
-  <g transform="translate(2840, 2840)" opacity="0.4">
-    <path d="M0,-60 L0,0 L-60,0" fill="none" stroke="#B86E20" stroke-width="6" stroke-linecap="round"/>
-    <circle cx="0" cy="0" r="8" fill="#B86E20"/>
   </g>
 </svg>
