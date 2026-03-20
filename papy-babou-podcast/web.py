@@ -176,21 +176,27 @@ def favicon():
     """Sert le favicon SVG ou retourne 204 si absent."""
     favicon_path = _THIS_DIR / "assets" / "artwork" / "favicon.svg"
     if favicon_path.exists():
-        return send_from_directory(str(favicon_path.parent), favicon_path.name, mimetype="image/svg+xml")
+        response = send_from_directory(str(favicon_path.parent), favicon_path.name, mimetype="image/svg+xml")
+        response.cache_control.max_age = 2592000  # 30 jours
+        return response
     return "", 204
 
 
 @app.route("/assets/manifest.json")
 def serve_manifest():
     """Sert le web app manifest."""
-    return send_from_directory(str(_THIS_DIR / "assets"), "manifest.json", mimetype="application/manifest+json")
+    response = send_from_directory(str(_THIS_DIR / "assets"), "manifest.json", mimetype="application/manifest+json")
+    response.cache_control.max_age = 86400  # 1 jour
+    return response
 
 
 @app.route("/assets/artwork/<path:filename>")
 def serve_artwork(filename):
     """Sert les fichiers artwork (favicon, images)."""
     artwork_dir = _THIS_DIR / "assets" / "artwork"
-    return send_from_directory(str(artwork_dir), filename)
+    response = send_from_directory(str(artwork_dir), filename)
+    response.cache_control.max_age = 2592000  # 30 jours
+    return response
 
 
 @app.route("/audio/episodes/<path:filename>")

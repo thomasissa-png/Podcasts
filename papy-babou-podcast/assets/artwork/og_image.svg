@@ -5,7 +5,7 @@
     <linearGradient id="ogSky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#1B2A4A"/>
       <stop offset="50%" stop-color="#2D4A7A"/>
-      <stop offset="80%" stop-color="#C8703A"/>
+      <stop offset="80%" stop-color="#A08060"/>
       <stop offset="100%" stop-color="#E8A84C"/>
     </linearGradient>
     <linearGradient id="ogParchment" x1="0" y1="0" x2="0" y2="1">
@@ -72,8 +72,8 @@
   <!-- Personnages badges -->
   <g transform="translate(870, 440)">
     <!-- Antoine -->
-    <rect x="0" y="0" width="95" height="30" rx="15" fill="#3D6F8E" opacity="0.25"/>
-    <text x="12" y="21" font-family="Arial, sans-serif" font-size="14" fill="#3D6F8E" font-weight="bold">Antoine</text>
+    <rect x="0" y="0" width="95" height="30" rx="15" fill="#2D4A7A" opacity="0.25"/>
+    <text x="12" y="21" font-family="Arial, sans-serif" font-size="14" fill="#2D4A7A" font-weight="bold">Antoine</text>
 
     <!-- Noemie -->
     <rect x="110" y="0" width="95" height="30" rx="15" fill="#C45A6E" opacity="0.25"/>

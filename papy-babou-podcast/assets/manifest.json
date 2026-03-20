@@ -1,11 +1,12 @@
 {
   "name": "Les Histoires de Papy Babou",
   "short_name": "Papy Babou",
-  "description": "Grandes epopees bibliques pour les enfants de 6 a 10 ans",
+  "description": "Grandes épopées bibliques pour les enfants de 6 à 10 ans",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1B2A4A",
   "theme_color": "#1B2A4A",
+  "categories": ["education", "kids"],
   "icons": [
     {
       "src": "/assets/artwork/icon-192.svg",

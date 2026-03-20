@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Les Histoires de Papy Babou — Podcast biblique pour enfants</title>
   <meta name="description" content="Des histoires bibliques racontées avec amour par Papy Babou à ses petits-enfants Antoine et Noémie. Un podcast pour les enfants de 6 à 10 ans.">
-  <meta property="og:title" content="Les Histoires de Papy Babou">
-  <meta property="og:description" content="Des histoires bibliques racontées avec amour par Papy Babou à ses petits-enfants Antoine et Noémie.">
+  <meta property="og:title" content="Les Histoires de Papy Babou — Podcast biblique pour enfants">
+  <meta property="og:description" content="Des grandes épopées bibliques racontées avec amour par Papy Babou à ses petits-enfants Antoine et Noémie. Pour les enfants de 6 à 10 ans.">
   <meta property="og:image" content="/assets/artwork/og_image.svg">
   <meta property="og:type" content="website">
   <!-- Favicons & Icons -->
@@ -21,9 +21,14 @@
     "@context": "https://schema.org",
     "@type": "PodcastSeries",
     "name": "Les Histoires de Papy Babou",
-    "description": "Des histoires bibliques racontées avec amour par Papy Babou à ses petits-enfants Antoine et Noémie. Un podcast pour les enfants de 6 à 10 ans.",
+    "description": "Des grandes épopées bibliques racontées avec amour par Papy Babou à ses petits-enfants Antoine et Noémie. Un podcast aventure pour les enfants de 6 à 10 ans.",
     "genre": "Religion & Spirituality",
     "inLanguage": "fr",
+    "image": "/assets/artwork/cover.svg",
+    "author": {
+      "@type": "Person",
+      "name": "Papy Babou"
+    },
     "audience": {
       "@type": "PeopleAudience",
       "suggestedMinAge": 6,
@@ -60,12 +65,24 @@
       --font-body: 'Nunito', sans-serif;
       --font-display: 'Baloo 2', cursive;
 
+      /* Couleurs intermediaires (gradient hero) */
+      --bleu-gris: #5A7A9A;
+      --brun-chaud: #A08060;
+
+      /* Couleurs externes (plateformes) */
+      --apple-purple: #7D5BA6;
+      --spotify-green: #1DB954;
+
       --max-width: 1100px;
       --radius: 16px;
       --radius-sm: 10px;
       --radius-pill: 24px;
+      --radius-bar: 4px;
       --shadow: 0 4px 20px rgba(90, 105, 120, 0.08);
       --shadow-hover: 0 8px 30px rgba(90, 105, 120, 0.15);
+      --shadow-hero: 0 8px 30px rgba(27, 42, 74, 0.4);
+      --shadow-player: 0 -4px 20px rgba(0, 0, 0, 0.08);
+      --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.2);
     }
 
     html { scroll-behavior: smooth; }
@@ -78,17 +95,17 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    a { color: var(--bleu-fonce); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    a { color: var(--bleu-fonce); text-decoration: underline; text-decoration-color: rgba(45, 74, 122, 0.3); text-underline-offset: 2px; }
+    a:hover { text-decoration-color: var(--bleu-fonce); }
 
     /* ── Header / Hero ────────────────────────────────────────── */
     .hero {
       background: linear-gradient(175deg,
         var(--bleu-nuit) 0%,
-        var(--bleu-fonce) 30%,
-        #5A7A9A 50%,
-        #A08060 65%,
-        var(--sable-dark) 82%,
+        var(--bleu-fonce) 25%,
+        var(--bleu-gris) 45%,
+        var(--brun-chaud) 62%,
+        var(--sable-dark) 80%,
         var(--sable) 100%);
       padding: 3rem 1.5rem 2.5rem;
       text-align: center;
@@ -128,7 +145,7 @@
       flex-shrink: 0;
       width: 220px; height: 220px;
       border-radius: var(--radius);
-      box-shadow: 0 8px 30px rgba(27, 42, 74, 0.4);
+      box-shadow: var(--shadow-hero);
       object-fit: cover;
       background: var(--blanc);
     }
@@ -257,6 +274,7 @@
       gap: 1.2rem;
       transition: box-shadow 0.25s, transform 0.25s;
       cursor: pointer;
+      contain: layout style paint;
     }
 
     .episode-card:hover {
@@ -419,7 +437,7 @@
       bottom: 0; left: 0; right: 0;
       background: var(--blanc);
       border-top: 2px solid var(--ocre-light);
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+      box-shadow: var(--shadow-player);
       z-index: 1000;
       display: none; /* shown via JS when playing */
       padding: 0.6rem 1.5rem;
@@ -474,7 +492,7 @@
       flex: 1;
       height: 4px;
       background: var(--sable-dark);
-      border-radius: 2px;
+      border-radius: var(--radius-bar);
       cursor: pointer;
       position: relative;
     }
@@ -482,13 +500,13 @@
     .player-progress-bar {
       height: 100%;
       background: var(--ocre);
-      border-radius: 2px;
+      border-radius: var(--radius-bar);
       width: 0%;
       transition: width 0.3s;
     }
 
     .player-time {
-      font-size: 0.80rem;
+      font-size: 0.85rem;
       color: var(--gris-leger);
       font-weight: 600;
       white-space: nowrap;
@@ -530,7 +548,7 @@
     .empty-state {
       text-align: center;
       padding: 3rem 1.5rem;
-      color: var(--gris-leger);
+      color: var(--gris-texte);
     }
 
     .empty-state svg {
@@ -656,7 +674,7 @@
       padding: 0 1.5rem 1rem;
       font-size: 0.95rem;
       line-height: 1.7;
-      color: var(--gris-leger);
+      color: var(--gris-texte);
     }
 
     /* ── Testimonials ────────────────────────────────────────── */
@@ -743,8 +761,8 @@
       box-shadow: var(--shadow-hover);
       text-decoration: none;
     }
-    .subscribe-btn.apple { background: #7D5BA6; color: var(--blanc); }
-    .subscribe-btn.spotify { background: #1DB954; color: var(--blanc); }
+    .subscribe-btn.apple { background: var(--apple-purple); color: var(--blanc); }
+    .subscribe-btn.spotify { background: var(--spotify-green); color: var(--blanc); }
     .subscribe-btn.rss { background: var(--ocre); color: var(--blanc); }
     .subscribe-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
@@ -800,7 +818,7 @@
       width: 100%;
       max-height: 85vh;
       overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      box-shadow: var(--shadow-modal);
       animation: modalIn 0.25s ease-out;
     }
     @keyframes modalIn {
@@ -932,7 +950,7 @@
     .player-speed-btn {
       width: auto;
       padding: 0.2rem 0.5rem;
-      border-radius: 12px;
+      border-radius: var(--radius-sm);
       font-size: 0.72rem;
       font-weight: 800;
       color: var(--gris-leger);
@@ -963,7 +981,7 @@
       font-size: 0.72rem;
       font-weight: 700;
       padding: 0.2rem 0.6rem;
-      border-radius: 12px;
+      border-radius: var(--radius-sm);
       margin-bottom: 0.3rem;
     }
 
@@ -1075,7 +1093,7 @@
   </header>
 
   <!-- ═══ Saison tabs ═══ -->
-  <nav class="saison-nav" id="saison-nav"></nav>
+  <nav class="saison-nav" id="saison-nav" aria-label="Filtrer les épisodes par saison"></nav>
 
   <!-- ═══ Search ═══ -->
   <div class="search-bar" id="search-bar" style="display:none;">
@@ -1427,7 +1445,7 @@
           '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
           '<h3>Les épisodes arrivent bientôt !</h3>' +
           '<p>Papy Babou prépare ses plus belles histoires...</p>' +
-          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:20px;background:var(--ocre);color:white;border:none;cursor:pointer;font-weight:700;">Réessayer</button></div>';
+          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--ocre);color:white;border:none;cursor:pointer;font-weight:700;">Réessayer</button></div>';
       }
     }
 
@@ -1561,6 +1579,7 @@
     // ── Episode Modal ──
     function openModal(ep) {
       modalCover.src = ep.cover_url || '/assets/artwork/cover.svg';
+      modalCover.alt = ep.titre ? 'Couverture de l\u2019épisode : ' + ep.titre : 'Couverture épisode';
       modalTitle.textContent = ep.titre || '';
       modalEpNum.textContent = 'Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero;
       modalResume.textContent = ep.resume || 'Pas de résumé disponible.';
