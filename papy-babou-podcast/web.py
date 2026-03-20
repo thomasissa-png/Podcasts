@@ -180,6 +180,12 @@ def favicon():
     return "", 204
 
 
+@app.route("/assets/manifest.json")
+def serve_manifest():
+    """Sert le web app manifest."""
+    return send_from_directory(str(_THIS_DIR / "assets"), "manifest.json", mimetype="application/manifest+json")
+
+
 @app.route("/assets/artwork/<path:filename>")
 def serve_artwork(filename):
     """Sert les fichiers artwork (favicon, images)."""
