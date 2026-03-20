@@ -6,8 +6,8 @@
       <stop offset="100%" stop-color="#2D4A7A"/>
     </linearGradient>
     <linearGradient id="i512gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E8A84C"/>
-      <stop offset="100%" stop-color="#B86E20"/>
+      <stop offset="0%" stop-color="#E8C44A"/>
+      <stop offset="100%" stop-color="#856F14"/>
     </linearGradient>
   </defs>
 
@@ -21,21 +21,21 @@
   <circle cx="450" cy="150" r="2" fill="#FFF8E0" opacity="0.4"/>
 
   <!-- Anneau dore -->
-  <circle cx="256" cy="230" r="180" fill="none" stroke="#B86E20" stroke-width="5" opacity="0.5"/>
+  <circle cx="256" cy="230" r="180" fill="none" stroke="#856F14" stroke-width="5" opacity="0.5"/>
   <circle cx="256" cy="230" r="168" fill="none" stroke="#D4883A" stroke-width="2" opacity="0.3"/>
 
   <!-- Rose des vents -->
   <g transform="translate(256, 230)">
     <!-- 4 principales -->
-    <polygon points="0,-160 12,-30 0,-48 -12,-30" fill="#E8A84C"/>
+    <polygon points="0,-160 12,-30 0,-48 -12,-30" fill="#E8C44A"/>
     <polygon points="0,160 12,30 0,48 -12,30" fill="#D4883A"/>
     <polygon points="-160,0 -30,12 -48,0 -30,-12" fill="#D4883A"/>
     <polygon points="160,0 30,12 48,0 30,-12" fill="#D4883A"/>
     <!-- 4 intermediaires -->
-    <polygon points="-110,-110 -18,-22 -26,-26 -22,-18" fill="#E8A84C" opacity="0.6"/>
-    <polygon points="110,-110 18,-22 26,-26 22,-18" fill="#E8A84C" opacity="0.6"/>
-    <polygon points="-110,110 -18,22 -26,26 -22,18" fill="#E8A84C" opacity="0.6"/>
-    <polygon points="110,110 18,22 26,26 22,18" fill="#E8A84C" opacity="0.6"/>
+    <polygon points="-110,-110 -18,-22 -26,-26 -22,-18" fill="#E8C44A" opacity="0.6"/>
+    <polygon points="110,-110 18,-22 26,-26 22,-18" fill="#E8C44A" opacity="0.6"/>
+    <polygon points="-110,110 -18,22 -26,26 -22,18" fill="#E8C44A" opacity="0.6"/>
+    <polygon points="110,110 18,22 26,26 22,18" fill="#E8C44A" opacity="0.6"/>
     <!-- Lettres cardinales -->
     <text x="0" y="-128" text-anchor="middle" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#8B6914" dominant-baseline="middle">N</text>
     <text x="0" y="138" text-anchor="middle" font-family="Georgia, serif" font-size="18" fill="#8B6914" dominant-baseline="middle">S</text>
@@ -48,13 +48,13 @@
 
   <!-- Lunettes signature -->
   <g transform="translate(256, 435)">
-    <circle cx="-20" cy="0" r="18" fill="none" stroke="#E8A84C" stroke-width="4.5"/>
-    <circle cx="20" cy="0" r="18" fill="none" stroke="#E8A84C" stroke-width="4.5"/>
-    <line x1="2" y1="0" x2="-2" y2="0" stroke="#E8A84C" stroke-width="4.5"/>
-    <line x1="-38" y1="-5" x2="-48" y2="-12" stroke="#E8A84C" stroke-width="3.5" stroke-linecap="round"/>
-    <line x1="38" y1="-5" x2="48" y2="-12" stroke="#E8A84C" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="-20" cy="0" r="18" fill="none" stroke="#E8C44A" stroke-width="4.5"/>
+    <circle cx="20" cy="0" r="18" fill="none" stroke="#E8C44A" stroke-width="4.5"/>
+    <line x1="2" y1="0" x2="-2" y2="0" stroke="#E8C44A" stroke-width="4.5"/>
+    <line x1="-38" y1="-5" x2="-48" y2="-12" stroke="#E8C44A" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="38" y1="-5" x2="48" y2="-12" stroke="#E8C44A" stroke-width="3.5" stroke-linecap="round"/>
   </g>
 
   <!-- Titre "Papy Babou" -->
-  <text x="256" y="490" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="bold" fill="#E8A84C" letter-spacing="4">PAPY BABOU</text>
+  <text x="256" y="490" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="bold" fill="#E8C44A" letter-spacing="4">PAPY BABOU</text>
 </svg>

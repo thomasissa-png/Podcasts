@@ -10,23 +10,23 @@
 
     <!-- Halo lumineux derrière le titre -->
     <radialGradient id="titleGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#E8A84C" stop-opacity="0.18"/>
-      <stop offset="60%" stop-color="#E8A84C" stop-opacity="0.05"/>
-      <stop offset="100%" stop-color="#E8A84C" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.18"/>
+      <stop offset="60%" stop-color="#E8C44A" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#E8C44A" stop-opacity="0"/>
     </radialGradient>
 
     <!-- Dégradé doré pour "Papy Babou" -->
     <linearGradient id="goldText" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F0C060"/>
-      <stop offset="45%" stop-color="#E8A84C"/>
-      <stop offset="100%" stop-color="#B86E20"/>
+      <stop offset="0%" stop-color="#F0D860"/>
+      <stop offset="45%" stop-color="#E8C44A"/>
+      <stop offset="100%" stop-color="#856F14"/>
     </linearGradient>
 
     <!-- Dégradé doré pour la bordure -->
     <linearGradient id="goldBorder" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E8A84C" stop-opacity="0.5"/>
-      <stop offset="50%" stop-color="#B86E20" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#E8A84C" stop-opacity="0.5"/>
+      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#856F14" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#E8C44A" stop-opacity="0.5"/>
     </linearGradient>
 
     <!-- Clip arrondi (border-radius 16px = ~160 en 3000px) -->
@@ -78,20 +78,20 @@
     <!-- Rose des vents minimaliste (centre, derrière le texte) -->
     <g transform="translate(1500, 1480)" opacity="0.08">
       <!-- Cercle -->
-      <circle cx="0" cy="0" r="700" fill="none" stroke="#E8A84C" stroke-width="4"/>
-      <circle cx="0" cy="0" r="660" fill="none" stroke="#E8A84C" stroke-width="2"/>
+      <circle cx="0" cy="0" r="700" fill="none" stroke="#E8C44A" stroke-width="4"/>
+      <circle cx="0" cy="0" r="660" fill="none" stroke="#E8C44A" stroke-width="2"/>
       <!-- 4 pointes principales (très grandes, très discrètes) -->
-      <polygon points="0,-640 30,-100 0,-140 -30,-100" fill="#E8A84C"/>
-      <polygon points="0,640 30,100 0,140 -30,100" fill="#E8A84C"/>
-      <polygon points="-640,0 -100,30 -140,0 -100,-30" fill="#E8A84C"/>
-      <polygon points="640,0 100,30 140,0 100,-30" fill="#E8A84C"/>
+      <polygon points="0,-640 30,-100 0,-140 -30,-100" fill="#E8C44A"/>
+      <polygon points="0,640 30,100 0,140 -30,100" fill="#E8C44A"/>
+      <polygon points="-640,0 -100,30 -140,0 -100,-30" fill="#E8C44A"/>
+      <polygon points="640,0 100,30 140,0 100,-30" fill="#E8C44A"/>
       <!-- 4 pointes intermédiaires -->
-      <polygon points="-440,-440 -60,-60 -80,-80 -60,-60" fill="#E8A84C" opacity="0.6"/>
-      <polygon points="440,-440 60,-60 80,-80 60,-60" fill="#E8A84C" opacity="0.6"/>
-      <polygon points="-440,440 -60,60 -80,80 -60,60" fill="#E8A84C" opacity="0.6"/>
-      <polygon points="440,440 60,60 80,80 60,60" fill="#E8A84C" opacity="0.6"/>
+      <polygon points="-440,-440 -60,-60 -80,-80 -60,-60" fill="#E8C44A" opacity="0.6"/>
+      <polygon points="440,-440 60,-60 80,-80 60,-60" fill="#E8C44A" opacity="0.6"/>
+      <polygon points="-440,440 -60,60 -80,80 -60,60" fill="#E8C44A" opacity="0.6"/>
+      <polygon points="440,440 60,60 80,80 60,60" fill="#E8C44A" opacity="0.6"/>
       <!-- Centre -->
-      <circle cx="0" cy="0" r="30" fill="#E8A84C"/>
+      <circle cx="0" cy="0" r="30" fill="#E8C44A"/>
     </g>
 
     <!-- ═══ Halo derrière le texte ═══ -->
@@ -129,10 +129,10 @@
 
     <!-- Filet décoratif sous le titre -->
     <g transform="translate(1500, 1920)" opacity="0.45">
-      <line x1="-450" y1="0" x2="-60" y2="0" stroke="#E8A84C" stroke-width="4" stroke-linecap="round"/>
-      <line x1="60" y1="0" x2="450" y2="0" stroke="#E8A84C" stroke-width="4" stroke-linecap="round"/>
+      <line x1="-450" y1="0" x2="-60" y2="0" stroke="#E8C44A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="60" y1="0" x2="450" y2="0" stroke="#E8C44A" stroke-width="4" stroke-linecap="round"/>
       <!-- Petit losange central -->
-      <polygon points="0,-14 14,0 0,14 -14,0" fill="#E8A84C"/>
+      <polygon points="0,-14 14,0 0,14 -14,0" fill="#E8C44A"/>
     </g>
 
     <!-- Sous-titre — discret -->
