@@ -1,0 +1,15 @@
+{
+  "episode_id": "S01E01",
+  "titre": "La création du monde — quand Dieu a tout inventé",
+  "dry_run": false,
+  "debut": "2026-03-20T06:46:39.946689",
+  "etapes": {
+    "script": {
+      "status": "waiting_script",
+      "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01E01_script.json",
+      "score_review": 9.2,
+      "validation_humaine": false
+    }
+  },
+  "decisions_humaines": []
+}
