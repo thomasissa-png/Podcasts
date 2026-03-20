@@ -1,153 +1,385 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 3000" width="3000" height="3000">
   <defs>
-    <!-- Fond principal : gradient bleu nuit cohérent avec le hero du site -->
-    <radialGradient id="bgGlow" cx="50%" cy="42%" r="65%">
-      <stop offset="0%" stop-color="#2D4A7A"/>
-      <stop offset="55%" stop-color="#1B2A4A"/>
-      <stop offset="100%" stop-color="#141E35"/>
-    </radialGradient>
+    <!-- Fond ciel etoile -->
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="60%" stop-color="#2D4A7A"/>
+      <stop offset="100%" stop-color="#2D4A7A"/>
+    </linearGradient>
 
-    <!-- Halo lumineux derrière le titre -->
-    <radialGradient id="titleGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.18"/>
-      <stop offset="60%" stop-color="#E8C44A" stop-opacity="0.05"/>
+    <!-- Halo dore radial autour du livre -->
+    <radialGradient id="bookGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.35"/>
+      <stop offset="35%" stop-color="#E8C44A" stop-opacity="0.15"/>
+      <stop offset="70%" stop-color="#E8C44A" stop-opacity="0.05"/>
       <stop offset="100%" stop-color="#E8C44A" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Dégradé doré pour "Papy Babou" -->
+    <!-- Degrade dore pour le texte Papy Babou -->
     <linearGradient id="goldText" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F0D860"/>
-      <stop offset="45%" stop-color="#E8C44A"/>
+      <stop offset="0%" stop-color="#E8C44A"/>
+      <stop offset="50%" stop-color="#E8C44A"/>
       <stop offset="100%" stop-color="#8B6914"/>
     </linearGradient>
 
-    <!-- Dégradé doré pour la bordure -->
-    <linearGradient id="goldBorder" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.5"/>
-      <stop offset="50%" stop-color="#8B6914" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#E8C44A" stop-opacity="0.5"/>
+    <!-- Degrade dore pour le livre -->
+    <linearGradient id="bookGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8C44A"/>
+      <stop offset="100%" stop-color="#8B6914"/>
     </linearGradient>
 
-    <!-- Clip arrondi (border-radius 16px = ~160 en 3000px) -->
+    <!-- Degrade dore pour pages -->
+    <linearGradient id="pageGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FDF5E6"/>
+      <stop offset="100%" stop-color="#F0E0C0"/>
+    </linearGradient>
+
+    <!-- Bordure doree -->
+    <linearGradient id="goldBorder" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#8B6914" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#E8C44A" stop-opacity="0.6"/>
+    </linearGradient>
+
+    <!-- Rayons du livre -->
+    <radialGradient id="bookRays" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E8C44A" stop-opacity="0.20"/>
+      <stop offset="50%" stop-color="#E8C44A" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#E8C44A" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Clip arrondi -->
     <clipPath id="roundClip">
       <rect width="3000" height="3000" rx="160" ry="160"/>
     </clipPath>
   </defs>
 
-  <!-- ═══ Fond ═══ -->
   <g clip-path="url(#roundClip)">
 
-    <!-- Fond bleu nuit -->
-    <rect width="3000" height="3000" fill="url(#bgGlow)"/>
+    <!-- ══════ FOND CIEL ETOILE ══════ -->
+    <rect width="3000" height="3000" fill="url(#skyGrad)"/>
 
-    <!-- ═══ Éléments décoratifs subtils ═══ -->
-
-    <!-- Étoiles discrètes (haut) -->
+    <!-- ══════ ETOILES ══════ -->
+    <!-- Grandes etoiles -->
+    <g opacity="0.7">
+      <circle cx="220" cy="180" r="5" fill="#FFFFFF"/>
+      <circle cx="580" cy="120" r="6" fill="#FDF5E6"/>
+      <circle cx="950" cy="200" r="4" fill="#FFFFFF"/>
+      <circle cx="1300" cy="100" r="5" fill="#FDF5E6"/>
+      <circle cx="1700" cy="160" r="7" fill="#FFFFFF"/>
+      <circle cx="2050" cy="90" r="5" fill="#FDF5E6"/>
+      <circle cx="2400" cy="200" r="6" fill="#FFFFFF"/>
+      <circle cx="2750" cy="130" r="5" fill="#FDF5E6"/>
+    </g>
+    <!-- Moyennes etoiles -->
     <g opacity="0.5">
-      <circle cx="350" cy="280" r="4" fill="#FFF8E0"/>
-      <circle cx="680" cy="180" r="3" fill="#FFF8E0"/>
-      <circle cx="1050" cy="320" r="3.5" fill="#FFF8E0"/>
-      <circle cx="1400" cy="150" r="2.5" fill="#FFF8E0"/>
-      <circle cx="1750" cy="280" r="4" fill="#FFF8E0"/>
-      <circle cx="2100" cy="200" r="3" fill="#FFF8E0"/>
-      <circle cx="2400" cy="320" r="3.5" fill="#FFF8E0"/>
-      <circle cx="2700" cy="180" r="2.5" fill="#FFF8E0"/>
-      <circle cx="500" cy="450" r="2" fill="#FFF8E0"/>
-      <circle cx="900" cy="500" r="2.5" fill="#FFF8E0"/>
-      <circle cx="2200" cy="480" r="2" fill="#FFF8E0"/>
-      <circle cx="2600" cy="420" r="3" fill="#FFF8E0"/>
+      <circle cx="150" cy="380" r="4" fill="#FFFFFF"/>
+      <circle cx="420" cy="320" r="3" fill="#FDF5E6"/>
+      <circle cx="700" cy="400" r="4" fill="#FFFFFF"/>
+      <circle cx="1050" cy="350" r="3.5" fill="#FDF5E6"/>
+      <circle cx="1400" cy="300" r="4" fill="#FFFFFF"/>
+      <circle cx="1850" cy="370" r="3" fill="#FDF5E6"/>
+      <circle cx="2200" cy="310" r="4" fill="#FFFFFF"/>
+      <circle cx="2550" cy="380" r="3.5" fill="#FDF5E6"/>
+      <circle cx="2850" cy="330" r="3" fill="#FFFFFF"/>
+    </g>
+    <!-- Petites etoiles -->
+    <g opacity="0.35">
+      <circle cx="300" cy="500" r="3" fill="#FFFFFF"/>
+      <circle cx="500" cy="550" r="2.5" fill="#FDF5E6"/>
+      <circle cx="820" cy="520" r="3" fill="#FFFFFF"/>
+      <circle cx="1150" cy="480" r="2.5" fill="#FDF5E6"/>
+      <circle cx="1550" cy="450" r="3" fill="#FFFFFF"/>
+      <circle cx="1950" cy="500" r="2.5" fill="#FDF5E6"/>
+      <circle cx="2300" cy="470" r="3" fill="#FFFFFF"/>
+      <circle cx="2650" cy="530" r="2.5" fill="#FDF5E6"/>
+      <circle cx="100" cy="600" r="2" fill="#FFFFFF"/>
+      <circle cx="2900" cy="480" r="2" fill="#FFFFFF"/>
+    </g>
+    <!-- Etoiles scintillantes (4 branches) -->
+    <g opacity="0.6">
+      <!-- Etoile 1 -->
+      <g transform="translate(380, 220)">
+        <rect x="-1.5" y="-10" width="3" height="20" rx="1.5" fill="#FFFFFF"/>
+        <rect x="-10" y="-1.5" width="20" height="3" rx="1.5" fill="#FFFFFF"/>
+      </g>
+      <!-- Etoile 2 -->
+      <g transform="translate(1900, 140)">
+        <rect x="-2" y="-12" width="4" height="24" rx="2" fill="#FDF5E6"/>
+        <rect x="-12" y="-2" width="24" height="4" rx="2" fill="#FDF5E6"/>
+      </g>
+      <!-- Etoile 3 -->
+      <g transform="translate(2600, 260)">
+        <rect x="-1.5" y="-8" width="3" height="16" rx="1.5" fill="#FFFFFF"/>
+        <rect x="-8" y="-1.5" width="16" height="3" rx="1.5" fill="#FFFFFF"/>
+      </g>
+      <!-- Etoile 4 -->
+      <g transform="translate(750, 280)">
+        <rect x="-1" y="-7" width="2" height="14" rx="1" fill="#FFFFFF"/>
+        <rect x="-7" y="-1" width="14" height="2" rx="1" fill="#FFFFFF"/>
+      </g>
     </g>
 
-    <!-- Montagnes très subtiles (fond, bas) -->
-    <g opacity="0.12">
-      <path d="M0,2500 L200,2200 L400,2350 L650,2050 L900,2250 L1100,2100 L1350,1950 L1500,2100 L1700,1900 L1900,2050 L2100,2200 L2350,2000 L2550,2150 L2750,2050 L3000,2250 L3000,3000 L0,3000 Z"
-              fill="#2D4A7A"/>
-    </g>
-    <g opacity="0.08">
-      <path d="M0,2600 L300,2350 L500,2450 L750,2200 L1000,2400 L1200,2300 L1500,2150 L1800,2350 L2000,2200 L2250,2350 L2500,2250 L2800,2400 L3000,2300 L3000,3000 L0,3000 Z"
-              fill="#1B2A4A"/>
+    <!-- ══════ MONTAGNES / COLLINES (arriere-plan) ══════ -->
+    <!-- Collines lointaines -->
+    <path d="M0,2250 Q200,2050 400,2180 Q600,2000 850,2120 Q1050,1950 1300,2080 Q1500,1920 1700,2050 Q1900,1900 2100,2030 Q2300,1950 2500,2100 Q2700,1980 3000,2150 L3000,3000 L0,3000 Z"
+          fill="#5A7A9A" opacity="0.25"/>
+    <!-- Collines moyennes -->
+    <path d="M0,2380 Q250,2200 500,2320 Q750,2150 1000,2280 Q1250,2120 1500,2240 Q1750,2100 2000,2220 Q2250,2120 2500,2260 Q2750,2150 3000,2300 L3000,3000 L0,3000 Z"
+          fill="#5A7A9A" opacity="0.35"/>
+    <!-- Collines proches -->
+    <path d="M0,2500 Q300,2350 600,2450 Q900,2320 1200,2420 Q1500,2300 1800,2400 Q2100,2320 2400,2430 Q2700,2350 3000,2460 L3000,3000 L0,3000 Z"
+          fill="#2D4A7A" opacity="0.4"/>
+
+    <!-- ══════ SOL SABLE DORE ══════ -->
+    <path d="M0,2550 Q400,2500 800,2530 Q1200,2490 1500,2510 Q1800,2480 2200,2520 Q2600,2490 3000,2540 L3000,3000 L0,3000 Z"
+          fill="#F0E0C0" opacity="0.3"/>
+    <path d="M0,2600 Q500,2560 1000,2580 Q1500,2550 2000,2570 Q2500,2545 3000,2580 L3000,3000 L0,3000 Z"
+          fill="#FDF5E6" opacity="0.15"/>
+
+    <!-- ══════ HALO DU LIVRE (rayons) ══════ -->
+    <ellipse cx="1500" cy="1850" rx="900" ry="700" fill="url(#bookRays)"/>
+    <ellipse cx="1500" cy="1850" rx="550" ry="450" fill="url(#bookGlow)"/>
+
+    <!-- ══════ LIVRE OUVERT (element central) ══════ -->
+    <g transform="translate(1500, 1820)">
+      <!-- Ombre du livre -->
+      <ellipse cx="0" cy="180" rx="420" ry="40" fill="#1B2A4A" opacity="0.3"/>
+
+      <!-- Page gauche -->
+      <path d="M-20,0 L-20,-220 Q-20,-240 -40,-240 L-350,-240 Q-380,-240 -380,-220 L-380,120 Q-380,150 -350,150 L-20,150 Z"
+            fill="url(#pageGlow)"/>
+      <!-- Lignes de texte page gauche -->
+      <g opacity="0.15">
+        <rect x="-340" y="-180" width="200" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="-150" width="260" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="-120" width="230" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="-90" width="250" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="-60" width="180" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="-30" width="260" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="0" width="220" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="30" width="240" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="60" width="200" height="6" rx="3" fill="#8B6914"/>
+        <rect x="-340" y="90" width="170" height="6" rx="3" fill="#8B6914"/>
+      </g>
+
+      <!-- Page droite -->
+      <path d="M20,0 L20,-220 Q20,-240 40,-240 L350,-240 Q380,-240 380,-220 L380,120 Q380,150 350,150 L20,150 Z"
+            fill="url(#pageGlow)"/>
+      <!-- Lignes de texte page droite -->
+      <g opacity="0.15">
+        <rect x="60" y="-180" width="240" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="-150" width="260" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="-120" width="210" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="-90" width="250" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="-60" width="230" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="-30" width="190" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="0" width="260" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="30" width="220" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="60" width="240" height="6" rx="3" fill="#8B6914"/>
+        <rect x="60" y="90" width="180" height="6" rx="3" fill="#8B6914"/>
+      </g>
+
+      <!-- Reliure du livre (centre) -->
+      <rect x="-20" y="-240" width="40" height="390" rx="6" fill="url(#bookGold)"/>
+      <!-- Reflet sur la reliure -->
+      <rect x="-8" y="-230" width="6" height="370" rx="3" fill="#E8C44A" opacity="0.5"/>
+
+      <!-- Couverture bords dores -->
+      <path d="M-380,-220 L-380,120 Q-380,155 -345,155 L-20,155 L-20,-245 L-345,-245 Q-380,-245 -380,-220 Z"
+            fill="none" stroke="#8B6914" stroke-width="6"/>
+      <path d="M380,-220 L380,120 Q380,155 345,155 L20,155 L20,-245 L345,-245 Q380,-245 380,-220 Z"
+            fill="none" stroke="#8B6914" stroke-width="6"/>
+
+      <!-- Petites particules dorees autour du livre -->
+      <g opacity="0.6">
+        <circle cx="-420" cy="-180" r="4" fill="#E8C44A"/>
+        <circle cx="430" cy="-150" r="3" fill="#E8C44A"/>
+        <circle cx="-400" cy="50" r="3.5" fill="#E8C44A"/>
+        <circle cx="410" cy="80" r="4" fill="#E8C44A"/>
+        <circle cx="-300" cy="-280" r="3" fill="#E8C44A"/>
+        <circle cx="320" cy="-270" r="3.5" fill="#E8C44A"/>
+        <circle cx="0" cy="-290" r="4" fill="#E8C44A"/>
+        <circle cx="-200" cy="-300" r="2.5" fill="#E8C44A"/>
+        <circle cx="180" cy="-310" r="3" fill="#E8C44A"/>
+        <circle cx="-450" cy="-50" r="2.5" fill="#E8C44A"/>
+        <circle cx="460" cy="-30" r="2.5" fill="#E8C44A"/>
+      </g>
     </g>
 
-    <!-- Étoile de Bethléem (discrète, en haut) -->
-    <g transform="translate(1500, 420)" opacity="0.35">
-      <polygon points="0,-70 10,-22 60,-22 18,6 30,55 0,25 -30,55 -18,6 -60,-22 -10,-22" fill="#FFF8D0"/>
-      <circle cx="0" cy="0" r="14" fill="#FFFBE8" opacity="0.5"/>
+    <!-- ══════ PERSONNAGES (silhouettes) ══════ -->
+
+    <!-- PAPY BABOU (centre, assis derriere le livre) -->
+    <g transform="translate(1500, 1580)">
+      <!-- Corps / buste -->
+      <ellipse cx="0" cy="80" rx="120" ry="100" fill="#1B2A4A"/>
+      <!-- Epaules arrondies -->
+      <ellipse cx="-100" cy="30" rx="55" ry="45" fill="#1B2A4A"/>
+      <ellipse cx="100" cy="30" rx="55" ry="45" fill="#1B2A4A"/>
+      <!-- Cou -->
+      <rect x="-25" y="-30" width="50" height="50" rx="10" fill="#1B2A4A"/>
+      <!-- Tete -->
+      <circle cx="0" cy="-70" r="75" fill="#1B2A4A"/>
+      <!-- Lunettes signature (cercles dores) -->
+      <circle cx="-30" cy="-75" r="28" fill="none" stroke="#E8C44A" stroke-width="7"/>
+      <circle cx="30" cy="-75" r="28" fill="none" stroke="#E8C44A" stroke-width="7"/>
+      <!-- Pont des lunettes -->
+      <path d="M-2,-75 Q0,-82 2,-75" fill="none" stroke="#E8C44A" stroke-width="5"/>
+      <!-- Branches des lunettes -->
+      <line x1="-58" y1="-78" x2="-72" y2="-85" stroke="#E8C44A" stroke-width="5" stroke-linecap="round"/>
+      <line x1="58" y1="-78" x2="72" y2="-85" stroke="#E8C44A" stroke-width="5" stroke-linecap="round"/>
+      <!-- Reflets dans les lunettes -->
+      <circle cx="-22" cy="-82" r="6" fill="#E8C44A" opacity="0.2"/>
+      <circle cx="38" cy="-82" r="6" fill="#E8C44A" opacity="0.2"/>
+      <!-- Bras gauche (tenant le livre) -->
+      <path d="M-120,50 Q-200,100 -220,170 Q-230,200 -200,200" fill="none" stroke="#1B2A4A" stroke-width="40" stroke-linecap="round"/>
+      <!-- Bras droit -->
+      <path d="M120,50 Q200,100 220,170 Q230,200 200,200" fill="none" stroke="#1B2A4A" stroke-width="40" stroke-linecap="round"/>
     </g>
 
-    <!-- Rose des vents minimaliste (centre, derrière le texte) -->
-    <g transform="translate(1500, 1480)" opacity="0.08">
-      <!-- Cercle -->
-      <circle cx="0" cy="0" r="700" fill="none" stroke="#E8C44A" stroke-width="4"/>
-      <circle cx="0" cy="0" r="660" fill="none" stroke="#E8C44A" stroke-width="2"/>
-      <!-- 4 pointes principales (très grandes, très discrètes) -->
-      <polygon points="0,-640 30,-100 0,-140 -30,-100" fill="#E8C44A"/>
-      <polygon points="0,640 30,100 0,140 -30,100" fill="#E8C44A"/>
-      <polygon points="-640,0 -100,30 -140,0 -100,-30" fill="#E8C44A"/>
-      <polygon points="640,0 100,30 140,0 100,-30" fill="#E8C44A"/>
-      <!-- 4 pointes intermédiaires -->
-      <polygon points="-440,-440 -60,-60 -80,-80 -60,-60" fill="#E8C44A" opacity="0.6"/>
-      <polygon points="440,-440 60,-60 80,-80 60,-60" fill="#E8C44A" opacity="0.6"/>
-      <polygon points="-440,440 -60,60 -80,80 -60,60" fill="#E8C44A" opacity="0.6"/>
-      <polygon points="440,440 60,60 80,80 60,60" fill="#E8C44A" opacity="0.6"/>
+    <!-- ENFANT GAUCHE (assis, ecoute) -->
+    <g transform="translate(900, 1900)">
+      <!-- Corps -->
+      <ellipse cx="0" cy="60" rx="70" ry="65" fill="#2D4A7A"/>
+      <!-- Cou -->
+      <rect x="-15" y="-10" width="30" height="30" rx="8" fill="#2D4A7A"/>
+      <!-- Tete -->
+      <circle cx="0" cy="-40" r="52" fill="#2D4A7A"/>
+      <!-- Petite meche de cheveux -->
+      <path d="M-15,-90 Q0,-105 15,-88" fill="none" stroke="#2D4A7A" stroke-width="12" stroke-linecap="round"/>
+      <!-- Regard vers le livre (yeux simplifies) -->
+      <circle cx="12" cy="-42" r="5" fill="#7BAFD4" opacity="0.6"/>
+      <!-- Jambes croisees -->
+      <ellipse cx="-40" cy="130" rx="55" ry="25" fill="#2D4A7A"/>
+      <ellipse cx="40" cy="130" rx="55" ry="25" fill="#2D4A7A"/>
+      <!-- Bras tendus vers le livre -->
+      <path d="M50,30 Q100,10 130,-10" fill="none" stroke="#2D4A7A" stroke-width="28" stroke-linecap="round"/>
+    </g>
+
+    <!-- ENFANT DROIT (assis, ecoute) -->
+    <g transform="translate(2100, 1900)">
+      <!-- Corps -->
+      <ellipse cx="0" cy="60" rx="70" ry="65" fill="#2D4A7A"/>
+      <!-- Cou -->
+      <rect x="-15" y="-10" width="30" height="30" rx="8" fill="#2D4A7A"/>
+      <!-- Tete -->
+      <circle cx="0" cy="-40" r="52" fill="#2D4A7A"/>
+      <!-- Couettes / cheveux (fille) -->
+      <circle cx="-45" cy="-55" r="20" fill="#2D4A7A"/>
+      <circle cx="45" cy="-55" r="20" fill="#2D4A7A"/>
+      <!-- Regard vers le livre -->
+      <circle cx="-12" cy="-42" r="5" fill="#7BAFD4" opacity="0.6"/>
+      <!-- Jambes croisees -->
+      <ellipse cx="-40" cy="130" rx="55" ry="25" fill="#2D4A7A"/>
+      <ellipse cx="40" cy="130" rx="55" ry="25" fill="#2D4A7A"/>
+      <!-- Bras tendus vers le livre -->
+      <path d="M-50,30 Q-100,10 -130,-10" fill="none" stroke="#2D4A7A" stroke-width="28" stroke-linecap="round"/>
+    </g>
+
+    <!-- ══════ BOUSSOLE DISCRETE ══════ -->
+    <g transform="translate(2550, 1550)" opacity="0.18">
+      <!-- Cercle exterieur -->
+      <circle cx="0" cy="0" r="80" fill="none" stroke="#E8C44A" stroke-width="5"/>
+      <circle cx="0" cy="0" r="70" fill="none" stroke="#E8C44A" stroke-width="3"/>
+      <!-- Aiguilles -->
+      <polygon points="0,-60 8,0 0,-10 -8,0" fill="#E8C44A"/>
+      <polygon points="0,60 8,0 0,10 -8,0" fill="#E8C44A" opacity="0.5"/>
+      <polygon points="-60,0 0,8 -10,0 0,-8" fill="#E8C44A" opacity="0.5"/>
+      <polygon points="60,0 0,8 10,0 0,-8" fill="#E8C44A" opacity="0.5"/>
       <!-- Centre -->
-      <circle cx="0" cy="0" r="30" fill="#E8C44A"/>
+      <circle cx="0" cy="0" r="8" fill="#E8C44A"/>
     </g>
 
-    <!-- ═══ Halo derrière le texte ═══ -->
-    <ellipse cx="1500" cy="1400" rx="1100" ry="700" fill="url(#titleGlow)"/>
+    <!-- Deuxieme boussole discrete de l'autre cote -->
+    <g transform="translate(450, 1550)" opacity="0.12">
+      <circle cx="0" cy="0" r="60" fill="none" stroke="#E8C44A" stroke-width="4"/>
+      <polygon points="0,-50 6,0 0,-8 -6,0" fill="#E8C44A"/>
+      <polygon points="0,50 6,0 0,8 -6,0" fill="#E8C44A" opacity="0.4"/>
+      <circle cx="0" cy="0" r="6" fill="#E8C44A"/>
+    </g>
 
-    <!-- ═══ TEXTE PRINCIPAL ═══ -->
+    <!-- ══════ ETOILES SCINTILLANTES AUTOUR DU LIVRE ══════ -->
+    <g opacity="0.5">
+      <!-- Etoile scintillante gauche du livre -->
+      <g transform="translate(900, 1650)">
+        <rect x="-2" y="-14" width="4" height="28" rx="2" fill="#E8C44A"/>
+        <rect x="-14" y="-2" width="28" height="4" rx="2" fill="#E8C44A"/>
+      </g>
+      <!-- Etoile scintillante droite du livre -->
+      <g transform="translate(2100, 1620)">
+        <rect x="-2" y="-12" width="4" height="24" rx="2" fill="#E8C44A"/>
+        <rect x="-12" y="-2" width="24" height="4" rx="2" fill="#E8C44A"/>
+      </g>
+      <!-- Etoile au-dessus -->
+      <g transform="translate(1250, 1450)">
+        <rect x="-1.5" y="-10" width="3" height="20" rx="1.5" fill="#E8C44A"/>
+        <rect x="-10" y="-1.5" width="20" height="3" rx="1.5" fill="#E8C44A"/>
+      </g>
+      <g transform="translate(1750, 1430)">
+        <rect x="-1.5" y="-10" width="3" height="20" rx="1.5" fill="#E8C44A"/>
+        <rect x="-10" y="-1.5" width="20" height="3" rx="1.5" fill="#E8C44A"/>
+      </g>
+    </g>
 
-    <!-- "Les Histoires de" — plus petit, blanc doux -->
-    <text x="1500" y="1180"
+    <!-- Petites etoiles en bas -->
+    <g opacity="0.3">
+      <circle cx="350" cy="2200" r="3" fill="#E8C44A"/>
+      <circle cx="650" cy="2300" r="4" fill="#E8C44A"/>
+      <circle cx="2350" cy="2250" r="3.5" fill="#E8C44A"/>
+      <circle cx="2650" cy="2180" r="3" fill="#E8C44A"/>
+    </g>
+
+    <!-- ══════ TEXTE ══════ -->
+
+    <!-- "Les Histoires de" (petit, blanc) -->
+    <text x="1500" y="750"
           text-anchor="middle"
-          font-family="'Baloo 2', 'Nunito', sans-serif"
-          font-size="180"
+          font-family="'Baloo 2', sans-serif"
+          font-size="160"
           font-weight="600"
           fill="#FFFFFF"
-          opacity="0.85"
-          letter-spacing="8">Les Histoires de</text>
+          opacity="0.9"
+          letter-spacing="6">Les Histoires de</text>
 
-    <!-- "Papy" — grand, doré -->
-    <text x="1500" y="1480"
+    <!-- "Papy" (grand, dore) -->
+    <text x="1500" y="1020"
           text-anchor="middle"
-          font-family="'Baloo 2', 'Nunito', sans-serif"
-          font-size="380"
+          font-family="'Baloo 2', sans-serif"
+          font-size="400"
           font-weight="800"
           fill="url(#goldText)"
-          letter-spacing="12">Papy</text>
+          letter-spacing="14">Papy</text>
 
-    <!-- "Babou" — grand, doré -->
-    <text x="1500" y="1830"
+    <!-- "Babou" (grand, dore) -->
+    <text x="1500" y="1360"
           text-anchor="middle"
-          font-family="'Baloo 2', 'Nunito', sans-serif"
-          font-size="380"
+          font-family="'Baloo 2', sans-serif"
+          font-size="400"
           font-weight="800"
           fill="url(#goldText)"
-          letter-spacing="12">Babou</text>
+          letter-spacing="14">Babou</text>
 
-    <!-- Filet décoratif sous le titre -->
-    <g transform="translate(1500, 1920)" opacity="0.45">
-      <line x1="-450" y1="0" x2="-60" y2="0" stroke="#E8C44A" stroke-width="4" stroke-linecap="round"/>
-      <line x1="60" y1="0" x2="450" y2="0" stroke="#E8C44A" stroke-width="4" stroke-linecap="round"/>
-      <!-- Petit losange central -->
-      <polygon points="0,-14 14,0 0,14 -14,0" fill="#E8C44A"/>
+    <!-- Filet decoratif -->
+    <g transform="translate(1500, 1420)" opacity="0.5">
+      <line x1="-380" y1="0" x2="-50" y2="0" stroke="#E8C44A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="50" y1="0" x2="380" y2="0" stroke="#E8C44A" stroke-width="4" stroke-linecap="round"/>
+      <polygon points="0,-12 12,0 0,12 -12,0" fill="#E8C44A"/>
     </g>
 
-    <!-- Sous-titre — discret -->
-    <text x="1500" y="2080"
+    <!-- Sous-titre -->
+    <text x="1500" y="2700"
           text-anchor="middle"
-          font-family="'Nunito', sans-serif"
-          font-size="100"
-          font-weight="600"
+          font-family="'Baloo 2', sans-serif"
+          font-size="90"
+          font-weight="500"
           fill="#FFFFFF"
           opacity="0.5"
-          letter-spacing="10">Podcast biblique pour enfants</text>
+          letter-spacing="12">Podcast biblique pour enfants</text>
 
-    <!-- ═══ Bordure dorée subtile ═══ -->
-    <rect x="60" y="60" width="2880" height="2880" rx="130" ry="130"
-          fill="none" stroke="url(#goldBorder)" stroke-width="6"/>
+    <!-- ══════ BORDURE DOREE SUBTILE ══════ -->
+    <rect x="50" y="50" width="2900" height="2900" rx="140" ry="140"
+          fill="none" stroke="url(#goldBorder)" stroke-width="8"/>
 
   </g>
 </svg>
