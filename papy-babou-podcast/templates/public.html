@@ -1245,11 +1245,11 @@
     <div class="footer-links">
       <a href="mailto:contact@papybabou.fr">Contact</a>
     </div>
-    <p>&copy; 2024-2026 Les Histoires de Papy Babou. Tous droits réservés.</p>
+    <p>&copy; 2024-2026 Les Histoires de Papy Babou. Tous droits réservés. L'aventure continue !</p>
   </footer>
 
   <!-- ═══ Episode Detail Modal ═══ -->
-  <div class="episode-modal" id="episode-modal" role="dialog" aria-modal="true" aria-label="Détail de l'aventure">
+  <div class="episode-modal" id="episode-modal" role="dialog" aria-modal="true" aria-label="Détail de la mission">
     <div class="modal-content" style="position:relative;">
       <button class="modal-close-btn" id="modal-close" aria-label="Fermer">&times;</button>
       <div class="modal-header">
@@ -1267,7 +1267,7 @@
         <h4>La mission</h4>
         <p id="modal-resume"></p>
         <div id="modal-morale-wrap" style="display:none;">
-          <h4>Ce que les enfants apprennent</h4>
+          <h4>Ce que nos héros retiennent</h4>
           <p id="modal-morale"></p>
         </div>
       </div>
@@ -1440,8 +1440,8 @@
         console.error('Erreur chargement épisodes:', e);
         listEl.innerHTML = '<div class="empty-state">' +
           '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
-          '<h3>Les épisodes arrivent bientôt !</h3>' +
-          '<p>Papy Babou prépare ses plus belles histoires...</p>' +
+          '<h3>Les missions arrivent bientôt !</h3>' +
+          '<p>Papy Babou prépare des épopées extraordinaires...</p>' +
           '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--dore);color:white;border:none;cursor:pointer;font-weight:700;">Réessayer</button></div>';
       }
     }
@@ -1496,8 +1496,8 @@
 
       if (filtered.length === 0) {
         var emptyMsg = searchQuery
-          ? 'Aucun épisode ne correspond à votre recherche.'
-          : 'Papy Babou prépare de nouvelles histoires pour cette saison.';
+          ? 'Aucune mission ne correspond à votre recherche.'
+          : 'Papy Babou prépare de nouvelles missions pour cette saison.';
         listEl.innerHTML = '<div class="empty-state">' +
           '<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>' +
           '<h3>Bientôt disponible !</h3>' +
