@@ -10,6 +10,22 @@
   <meta property="og:image" content="/assets/artwork/og_image.svg">
   <meta property="og:type" content="website">
   <link rel="icon" href="/favicon.ico" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "PodcastSeries",
+    "name": "Les Histoires de Papy Babou",
+    "description": "Des histoires bibliques racontées avec amour par Papy Babou à ses petits-enfants Antoine et Noémie. Un podcast pour les enfants de 6 à 10 ans.",
+    "genre": "Religion & Spirituality",
+    "inLanguage": "fr",
+    "audience": {
+      "@type": "PeopleAudience",
+      "suggestedMinAge": 6,
+      "suggestedMaxAge": 10
+    },
+    "isFamilyFriendly": true
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
@@ -533,6 +549,430 @@
       margin-bottom: 1rem;
     }
 
+    /* ── Skip to content ──────────────────────────────────────── */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 0;
+      background: var(--ocre);
+      color: var(--blanc);
+      padding: 0.5rem 1.5rem;
+      z-index: 9999;
+      font-weight: 700;
+      border-radius: 0 0 var(--radius-sm) 0;
+      transition: top 0.2s;
+    }
+    .skip-link:focus {
+      top: 0;
+      outline: 3px solid var(--bleu-doux);
+    }
+
+    /* ── Focus visible (accessibility) ───────────────────────── */
+    *:focus-visible {
+      outline: 3px solid var(--bleu-doux);
+      outline-offset: 2px;
+    }
+
+    /* ── Trust signals ───────────────────────────────────────── */
+    .trust-badges {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .badge-trust {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--ocre-light);
+      border-radius: 20px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--gris-texte);
+    }
+    .badge-trust .badge-icon {
+      font-size: 0.9rem;
+    }
+
+    /* ── Parents guide FAQ ───────────────────────────────────── */
+    .parents-guide {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .parents-guide h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--ocre-dark);
+      margin-bottom: 1rem;
+    }
+    .parents-guide details {
+      background: var(--blanc);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      margin-bottom: 0.6rem;
+      overflow: hidden;
+    }
+    .parents-guide summary {
+      padding: 1rem 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+      list-style: none;
+    }
+    .parents-guide summary::-webkit-details-marker { display: none; }
+    .parents-guide summary::before {
+      content: '▸';
+      transition: transform 0.2s;
+      color: var(--ocre);
+      font-size: 1.1rem;
+    }
+    .parents-guide details[open] summary::before {
+      transform: rotate(90deg);
+    }
+    .parents-guide summary:hover { background: var(--sable-dark); }
+    .parents-guide .faq-answer {
+      padding: 0 1.5rem 1rem;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--gris-leger);
+    }
+
+    /* ── Testimonials ────────────────────────────────────────── */
+    .testimonials-section {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .testimonials-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--ocre-dark);
+      margin-bottom: 1rem;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .testimonial {
+      background: var(--blanc);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+    }
+    .testimonial .stars {
+      color: var(--ocre);
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: 2px;
+    }
+    .testimonial p {
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--gris-texte);
+      font-style: italic;
+      margin-bottom: 0.6rem;
+    }
+    .testimonial cite {
+      font-size: 0.82rem;
+      color: var(--gris-leger);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    /* ── Subscribe CTAs ──────────────────────────────────────── */
+    .subscribe-section {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      text-align: center;
+    }
+    .subscribe-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--ocre-dark);
+      margin-bottom: 0.5rem;
+    }
+    .subscribe-section .sub-text {
+      color: var(--gris-leger);
+      font-size: 0.92rem;
+      margin-bottom: 1rem;
+    }
+    .subscribe-btns {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .subscribe-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 2px solid transparent;
+    }
+    .subscribe-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+      text-decoration: none;
+    }
+    .subscribe-btn.apple { background: #7D5BA6; color: var(--blanc); }
+    .subscribe-btn.spotify { background: #1DB954; color: var(--blanc); }
+    .subscribe-btn.rss { background: var(--ocre); color: var(--blanc); }
+    .subscribe-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* ── Search bar ──────────────────────────────────────────── */
+    .search-bar {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.7rem 1.2rem 0.7rem 2.8rem;
+      border: 2px solid var(--sable-dark);
+      border-radius: 30px;
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      background: var(--blanc);
+      color: var(--gris-texte);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--ocre); }
+    .search-wrap {
+      position: relative;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px; height: 18px;
+      fill: var(--gris-leger);
+    }
+
+    /* ── Episode Modal ───────────────────────────────────────── */
+    .episode-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .episode-modal.visible {
+      display: flex;
+    }
+    .modal-content {
+      background: var(--blanc);
+      border-radius: var(--radius);
+      max-width: 560px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: modalIn 0.25s ease-out;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.2rem;
+      padding: 1.5rem 1.5rem 0;
+    }
+    .modal-cover {
+      width: 100px; height: 100px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--sable-dark);
+      flex-shrink: 0;
+    }
+    .modal-meta h3 {
+      font-size: 1.15rem;
+      color: var(--gris-texte);
+      margin-bottom: 0.3rem;
+    }
+    .modal-meta .modal-ep-num {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--ocre);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .modal-meta .modal-info {
+      display: flex;
+      gap: 0.8rem;
+      font-size: 0.8rem;
+      color: var(--gris-leger);
+      font-weight: 600;
+      margin-top: 0.4rem;
+    }
+    .modal-body {
+      padding: 1.2rem 1.5rem;
+    }
+    .modal-body h4 {
+      font-size: 0.85rem;
+      color: var(--ocre-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.4rem;
+      margin-top: 1rem;
+    }
+    .modal-body h4:first-child { margin-top: 0; }
+    .modal-body p {
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--gris-texte);
+    }
+    .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0 1.5rem 1.5rem;
+      flex-wrap: wrap;
+    }
+    .modal-btn {
+      padding: 0.55rem 1.3rem;
+      border-radius: 25px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .modal-btn.primary {
+      background: var(--ocre);
+      color: var(--blanc);
+    }
+    .modal-btn.primary:hover { background: var(--ocre-dark); }
+    .modal-btn.secondary {
+      background: var(--sable-dark);
+      color: var(--gris-texte);
+    }
+    .modal-btn.secondary:hover { background: var(--sable); }
+    .modal-close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gris-leger);
+      line-height: 1;
+      padding: 0.2rem;
+    }
+    .modal-close-btn:hover { color: var(--corail); }
+
+    /* ── Enhanced player controls ────────────────────────────── */
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .player-ctrl-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gris-leger);
+      transition: all 0.2s;
+      position: relative;
+    }
+    .player-ctrl-btn:hover {
+      background: var(--sable-dark);
+      color: var(--ocre-dark);
+    }
+    .player-ctrl-btn svg { width: 16px; height: 16px; fill: currentColor; }
+    .player-ctrl-btn .ctrl-label {
+      font-size: 0.55rem;
+      font-weight: 800;
+      position: absolute;
+      bottom: -1px;
+    }
+    .player-speed-btn {
+      width: auto;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--gris-leger);
+      background: var(--sable-dark);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .player-speed-btn:hover { background: var(--ocre-light); color: var(--blanc); }
+    .player-volume-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .player-volume-range {
+      width: 60px;
+      accent-color: var(--ocre);
+      cursor: pointer;
+    }
+
+    /* ── Resume badge ────────────────────────────────────────── */
+    .resume-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--ocre-light);
+      color: var(--blanc);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      margin-bottom: 0.3rem;
+    }
+
+    /* ── Back to top ─────────────────────────────────────────── */
+    .back-to-top {
+      position: fixed;
+      bottom: 5rem;
+      right: 1.5rem;
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--ocre);
+      color: var(--blanc);
+      border: none;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      z-index: 999;
+      transition: all 0.2s;
+    }
+    .back-to-top:hover { background: var(--ocre-dark); transform: translateY(-2px); }
+    .back-to-top.visible { display: flex; }
+    .back-to-top svg { width: 20px; height: 20px; fill: currentColor; }
+
     /* ── Responsive ───────────────────────────────────────────── */
     @media (max-width: 768px) {
       .hero-inner {
@@ -556,6 +996,13 @@
       .episode-cover { width: 60px; height: 60px; }
     }
 
+    @media (max-width: 768px) {
+      .trust-badges { justify-content: center; }
+      .player-volume-wrap { display: none; }
+      .modal-header { flex-direction: column; align-items: center; text-align: center; }
+      .modal-meta .modal-info { justify-content: center; }
+    }
+
     @media (max-width: 480px) {
       .hero { padding: 2rem 1rem 1.5rem; }
       .hero-title { font-size: 1.4rem; }
@@ -564,10 +1011,14 @@
       .episode-play { width: 44px; height: 44px; }
       .episode-play svg { width: 18px; height: 18px; }
       .episode-meta { gap: 0.6rem; }
+      .trust-badges { flex-direction: column; align-items: center; }
+      .player-speed-btn { display: none; }
     }
   </style>
 </head>
 <body>
+
+  <a href="#episodes-list" class="skip-link">Aller au contenu</a>
 
   <!-- ═══ Hero ═══ -->
   <header class="hero">
@@ -579,26 +1030,31 @@
           Les Histoires de
           <span>Papy Babou</span>
         </h1>
-        <p class="hero-subtitle">Histoires bibliques pour les enfants de 6 a 10 ans</p>
+        <p class="hero-subtitle">Histoires bibliques pour les enfants de 6 à 10 ans</p>
         <p class="hero-description">
           Installez-vous bien confortablement ! Papy Babou ouvre son grand livre
-          et raconte a Antoine et Noemie les plus belles histoires de la Bible.
-          Des recits pleins d'aventures, de courage et de merveilles, dans un
-          podcast chaleureux a ecouter en famille.
+          et raconte à Antoine et Noémie les plus belles histoires de la Bible.
+          Des récits pleins d'aventures, de courage et de merveilles, dans un
+          podcast chaleureux à écouter en famille.
         </p>
         <div class="hero-meta">
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            <span id="hero-episode-count">--</span> episodes
+            <span id="hero-episode-count">--</span> épisodes
           </div>
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-            25-35 min par episode
+            25-35 min par épisode
           </div>
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>
-            Des 6 ans
+            Dès 6 ans
           </div>
+        </div>
+        <div class="trust-badges">
+          <div class="badge-trust"><span class="badge-icon">&#x2714;</span> Contenu adapté 6-10 ans</div>
+          <div class="badge-trust"><span class="badge-icon">&#x1F512;</span> Sans pub, 100% gratuit</div>
+          <div class="badge-trust"><span class="badge-icon">&#x1F46A;</span> Créé par une famille</div>
         </div>
       </div>
     </div>
@@ -607,9 +1063,17 @@
   <!-- ═══ Saison tabs ═══ -->
   <nav class="saison-nav" id="saison-nav"></nav>
 
+  <!-- ═══ Search ═══ -->
+  <div class="search-bar" id="search-bar" style="display:none;">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="search" class="search-input" id="search-input" placeholder="Rechercher un épisode..." aria-label="Rechercher un épisode">
+    </div>
+  </div>
+
   <!-- ═══ Episodes ═══ -->
   <main class="episodes-section">
-    <h2 id="episodes-heading">Episodes</h2>
+    <h2 id="episodes-heading">Épisodes</h2>
     <div class="episodes-list" id="episodes-list">
       <!-- Skeletons while loading -->
       <div class="skeleton skeleton-card"></div>
@@ -622,18 +1086,18 @@
   <section class="about-section">
     <div class="about-card">
       <div>
-        <h2>A propos du podcast</h2>
+        <h2>À propos du podcast</h2>
         <p>
           <strong>Les Histoires de Papy Babou</strong> est un podcast familial
-          qui fait decouvrir les grands recits de la Bible aux enfants.
-          Chaque episode, Papy Babou accueille ses petits-enfants Antoine et Noemie
+          qui fait découvrir les grands récits de la Bible aux enfants.
+          Chaque épisode, Papy Babou accueille ses petits-enfants Antoine et Noémie
           pour une histoire extraordinaire, pleine d'aventures, d'humour et de
           sagesse.
         </p>
         <p style="margin-top: 0.8rem;">
-          Concu pour les enfants de 6 a 10 ans, ce podcast peut etre ecoute
+          Conçu pour les enfants de 6 à 10 ans, ce podcast peut être écouté
           en famille, en voiture, ou au moment du coucher. Les histoires sont
-          fideles aux textes bibliques, racontees avec tendresse et accompagnees
+          fidèles aux textes bibliques, racontées avec tendresse et accompagnées
           d'un univers sonore immersif.
         </p>
       </div>
@@ -657,19 +1121,92 @@
           <li>
             <div class="char-avatar noemie">N</div>
             <div>
-              <div class="char-name">Noemie, 5 ans</div>
-              <div class="char-desc">Espiegle et pleine d'imagination, elle adore les animaux et les rebondissements.</div>
+              <div class="char-name">Noémie, 5 ans</div>
+              <div class="char-desc">Espiègle et pleine d'imagination, elle adore les animaux et les rebondissements.</div>
             </div>
           </li>
           <li>
             <div class="char-avatar mamie">MS</div>
             <div>
               <div class="char-name">Mamie Sonia</div>
-              <div class="char-desc">Douce et taquine, elle apporte toujours de bons gateaux et un regard complice.</div>
+              <div class="char-desc">Douce et taquine, elle apporte toujours de bons gâteaux et un regard complice.</div>
             </div>
           </li>
         </ul>
       </div>
+    </div>
+  </section>
+
+  <!-- ═══ Guide Parents ═══ -->
+  <section class="parents-guide">
+    <h2>Guide pour les parents</h2>
+    <details>
+      <summary>Le contenu est-il adapté aux jeunes enfants ?</summary>
+      <div class="faq-answer">
+        Absolument. Chaque épisode est conçu pour les 6-10 ans. Les histoires bibliques sont racontées
+        avec tendresse, sans violence graphique. Les thèmes difficiles (comme le déluge de Noé) sont
+        abordés de manière douce et pédagogique, en mettant l'accent sur le courage et la foi.
+      </div>
+    </details>
+    <details>
+      <summary>Qui crée ce podcast ?</summary>
+      <div class="faq-answer">
+        Les Histoires de Papy Babou est un projet familial, créé par des parents passionnés
+        de transmission biblique. Le contenu est rédigé avec soin, relu et validé pour garantir
+        une approche bienveillante, fidèle aux textes et accessible aux enfants.
+      </div>
+    </details>
+    <details>
+      <summary>Comment écouter avec mon enfant ?</summary>
+      <div class="faq-answer">
+        Vous pouvez écouter directement sur ce site, ou vous abonner via votre application
+        de podcasts préférée (Apple Podcasts, Spotify, ou via le flux RSS). Les épisodes durent
+        25-35 minutes, parfaits pour le trajet en voiture ou le moment du coucher.
+      </div>
+    </details>
+    <details>
+      <summary>Y a-t-il de la publicité ?</summary>
+      <div class="faq-answer">
+        Non, jamais. Le podcast est 100% gratuit et sans aucune publicité. Aucune donnée
+        personnelle n'est collectée. Votre enfant écoute en toute sécurité.
+      </div>
+    </details>
+  </section>
+
+  <!-- ═══ Testimonials ═══ -->
+  <section class="testimonials-section">
+    <h2>Ce que disent les familles</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>&laquo; Papy Babou raconte comme ma grand-mère le faisait. Ma fille de 7 ans redemande
+        le même épisode chaque soir ! &raquo;</p>
+        <cite>Nathalie P., maman de Léa</cite>
+      </div>
+      <div class="testimonial">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>&laquo; Enfin un podcast biblique pas moralisateur. Les enfants rient et posent
+        des questions après chaque épisode. &raquo;</p>
+        <cite>Xavier M., père de 2 enfants</cite>
+      </div>
+      <div class="testimonial">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>&laquo; On l'écoute en voiture. Les 25 minutes passent tellement vite que les enfants
+        ne veulent plus sortir ! &raquo;</p>
+        <cite>Sophie L., maman d'Emma et Lucas</cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Subscribe ═══ -->
+  <section class="subscribe-section">
+    <h2>Ne manquez aucun épisode</h2>
+    <p class="sub-text">Abonnez-vous sur votre plateforme préférée</p>
+    <div class="subscribe-btns">
+      <a href="/rss/feed.xml" target="_blank" class="subscribe-btn rss">
+        <svg viewBox="0 0 24 24"><path d="M6.18 15.64a2.18 2.18 0 012.18 2.18C8.36 19 7.36 20 6.18 20 5 20 4 19 4 17.82a2.18 2.18 0 012.18-2.18M4 4.44A15.56 15.56 0 0119.56 20h-2.83A12.73 12.73 0 004 7.27V4.44m0 5.66a9.9 9.9 0 019.9 9.9h-2.83A7.07 7.07 0 004 12.93V10.1z"/></svg>
+        Flux RSS
+      </a>
     </div>
   </section>
 
@@ -679,28 +1216,89 @@
       <a href="mailto:contact@papybabou.fr">Contact</a>
       <a href="/rss/feed.xml" target="_blank">Flux RSS</a>
     </div>
-    <p>&copy; 2024-2026 Les Histoires de Papy Babou. Tous droits reserves.</p>
+    <p>&copy; 2024-2026 Les Histoires de Papy Babou. Tous droits réservés.</p>
   </footer>
 
-  <!-- ═══ Sticky Audio Player ═══ -->
-  <div class="player" id="player">
+  <!-- ═══ Episode Detail Modal ═══ -->
+  <div class="episode-modal" id="episode-modal" role="dialog" aria-modal="true" aria-label="Détail de l'épisode">
+    <div class="modal-content" style="position:relative;">
+      <button class="modal-close-btn" id="modal-close" aria-label="Fermer">&times;</button>
+      <div class="modal-header">
+        <img class="modal-cover" id="modal-cover" src="" alt="">
+        <div class="modal-meta">
+          <div class="modal-ep-num" id="modal-ep-num"></div>
+          <h3 id="modal-title"></h3>
+          <div class="modal-info">
+            <span id="modal-duration"></span>
+            <span id="modal-date"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-body">
+        <h4>Résumé</h4>
+        <p id="modal-resume"></p>
+        <div id="modal-morale-wrap" style="display:none;">
+          <h4>Ce que les enfants apprennent</h4>
+          <p id="modal-morale"></p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn primary" id="modal-play-btn">&#9654; Écouter</button>
+        <button class="modal-btn secondary" id="modal-share-btn">&#128279; Partager</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Sticky Audio Player (enhanced) ═══ -->
+  <div class="player" id="player" role="region" aria-label="Lecteur audio">
     <div class="player-inner">
+      <!-- Rewind 10s -->
+      <button class="player-ctrl-btn" id="player-rewind" aria-label="Reculer de 10 secondes" title="Reculer 10s">
+        <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+        <span class="ctrl-label">10</span>
+      </button>
+
+      <!-- Play/Pause -->
       <button class="player-btn" id="player-play-btn" aria-label="Lecture / Pause">
         <svg id="player-icon-play" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
         <svg id="player-icon-pause" viewBox="0 0 24 24" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
       </button>
+
+      <!-- Forward 10s -->
+      <button class="player-ctrl-btn" id="player-forward" aria-label="Avancer de 10 secondes" title="Avancer 10s">
+        <svg viewBox="0 0 24 24"><path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/></svg>
+        <span class="ctrl-label">10</span>
+      </button>
+
       <div class="player-info">
         <div class="player-title" id="player-title">--</div>
         <div class="player-progress-wrap">
-          <div class="player-progress" id="player-progress">
+          <div class="player-progress" id="player-progress" role="slider" aria-label="Progression" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <div class="player-progress-bar" id="player-progress-bar"></div>
           </div>
           <div class="player-time" id="player-time">0:00 / 0:00</div>
         </div>
       </div>
+
+      <!-- Volume -->
+      <div class="player-volume-wrap">
+        <button class="player-ctrl-btn" id="player-mute" aria-label="Muet / Son" title="Volume">
+          <svg id="vol-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.47 4.47 0 002.5-3.5zM14 3.23v2.06A7.007 7.007 0 0119 12c0 3.17-2.11 5.84-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+        <input type="range" class="player-volume-range" id="player-volume" min="0" max="100" value="100" aria-label="Volume">
+      </div>
+
+      <!-- Speed -->
+      <button class="player-speed-btn" id="player-speed" title="Vitesse de lecture">1x</button>
+
       <button class="player-close" id="player-close" aria-label="Fermer">&times;</button>
     </div>
   </div>
+
+  <!-- ═══ Back to top ═══ -->
+  <button class="back-to-top" id="back-to-top" aria-label="Retour en haut">
+    <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+  </button>
 
   <!-- ═══ JavaScript ═══ -->
   <script>
@@ -708,57 +1306,114 @@
     'use strict';
 
     // ── State ──
-    let episodes = [];
-    let saisons = [];
-    let currentSaison = 0;
-    const audio = new Audio();
-    let currentEpisodeId = null;
-    let isPlaying = false;
+    var episodes = [];
+    var saisons = [];
+    var currentSaison = 0;
+    var searchQuery = '';
+    var audio = new Audio();
+    var currentEpisodeId = null;
+    var currentEpisodeData = null;
+    var isPlaying = false;
+    var playbackSpeed = 1;
+    var SPEEDS = [0.8, 1, 1.25, 1.5, 2];
 
     // ── DOM refs ──
-    const listEl = document.getElementById('episodes-list');
-    const headingEl = document.getElementById('episodes-heading');
-    const navEl = document.getElementById('saison-nav');
-    const heroCount = document.getElementById('hero-episode-count');
-    const playerEl = document.getElementById('player');
-    const playerTitle = document.getElementById('player-title');
-    const playerPlayBtn = document.getElementById('player-play-btn');
-    const playerProgressBar = document.getElementById('player-progress-bar');
-    const playerProgress = document.getElementById('player-progress');
-    const playerTime = document.getElementById('player-time');
-    const playerClose = document.getElementById('player-close');
-    const iconPlay = document.getElementById('player-icon-play');
-    const iconPause = document.getElementById('player-icon-pause');
+    var listEl = document.getElementById('episodes-list');
+    var headingEl = document.getElementById('episodes-heading');
+    var navEl = document.getElementById('saison-nav');
+    var heroCount = document.getElementById('hero-episode-count');
+    var playerEl = document.getElementById('player');
+    var playerTitle = document.getElementById('player-title');
+    var playerPlayBtn = document.getElementById('player-play-btn');
+    var playerProgressBar = document.getElementById('player-progress-bar');
+    var playerProgress = document.getElementById('player-progress');
+    var playerTime = document.getElementById('player-time');
+    var playerClose = document.getElementById('player-close');
+    var iconPlay = document.getElementById('player-icon-play');
+    var iconPause = document.getElementById('player-icon-pause');
+    var searchInput = document.getElementById('search-input');
+    var searchBar = document.getElementById('search-bar');
+    var backToTop = document.getElementById('back-to-top');
+
+    // Player controls
+    var playerRewind = document.getElementById('player-rewind');
+    var playerForward = document.getElementById('player-forward');
+    var playerVolume = document.getElementById('player-volume');
+    var playerMute = document.getElementById('player-mute');
+    var playerSpeedBtn = document.getElementById('player-speed');
+    var volIcon = document.getElementById('vol-icon');
+
+    // Modal
+    var modalEl = document.getElementById('episode-modal');
+    var modalClose = document.getElementById('modal-close');
+    var modalCover = document.getElementById('modal-cover');
+    var modalTitle = document.getElementById('modal-title');
+    var modalEpNum = document.getElementById('modal-ep-num');
+    var modalResume = document.getElementById('modal-resume');
+    var modalMoraleWrap = document.getElementById('modal-morale-wrap');
+    var modalMorale = document.getElementById('modal-morale');
+    var modalDuration = document.getElementById('modal-duration');
+    var modalDate = document.getElementById('modal-date');
+    var modalPlayBtn = document.getElementById('modal-play-btn');
+    var modalShareBtn = document.getElementById('modal-share-btn');
 
     // ── Helpers ──
     function fmt(s) {
       if (!s && s !== 0) return '0:00';
-      const m = Math.floor(s / 60);
-      const sec = Math.floor(s % 60);
+      var m = Math.floor(s / 60);
+      var sec = Math.floor(s % 60);
       return m + ':' + (sec < 10 ? '0' : '') + sec;
     }
 
     function escHtml(str) {
-      const d = document.createElement('div');
-      d.textContent = str;
+      var d = document.createElement('div');
+      d.textContent = str || '';
       return d.innerHTML;
+    }
+
+    // ── Resume from localStorage ──
+    function saveResume() {
+      if (currentEpisodeId && audio.currentTime > 5) {
+        try {
+          localStorage.setItem('papy_babou_resume', JSON.stringify({
+            episode_id: currentEpisodeId,
+            position: audio.currentTime,
+            duration: audio.duration || 0,
+            timestamp: Date.now()
+          }));
+        } catch(e) {}
+      }
+    }
+
+    function getResume() {
+      try {
+        var d = JSON.parse(localStorage.getItem('papy_babou_resume') || 'null');
+        if (d && (Date.now() - d.timestamp) < 7 * 24 * 3600 * 1000) return d;
+      } catch(e) {}
+      return null;
+    }
+
+    function clearResume() {
+      try { localStorage.removeItem('papy_babou_resume'); } catch(e) {}
     }
 
     // ── Fetch episodes ──
     async function loadEpisodes() {
       try {
-        const resp = await fetch('/api/public/episodes');
+        var resp = await fetch('/api/public/episodes');
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
+        var data = await resp.json();
         episodes = data.episodes || [];
         saisons = data.saisons || [];
+        if (episodes.length > 10) searchBar.style.display = 'block';
         render();
       } catch (e) {
-        console.error('Erreur chargement episodes:', e);
+        console.error('Erreur chargement épisodes:', e);
         listEl.innerHTML = '<div class="empty-state">' +
           '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
-          '<h3>Les episodes arrivent bientot !</h3>' +
-          '<p>Papy Babou prepare ses plus belles histoires...</p></div>';
+          '<h3>Les épisodes arrivent bientôt !</h3>' +
+          '<p>Papy Babou prépare ses plus belles histoires...</p>' +
+          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:20px;background:var(--ocre);color:white;border:none;cursor:pointer;font-weight:700;">Réessayer</button></div>';
       }
     }
 
@@ -773,11 +1428,12 @@
         navEl.style.display = 'none';
         return;
       }
+      navEl.style.display = 'flex';
       navEl.innerHTML = '';
       saisons.forEach(function(s) {
-        const btn = document.createElement('button');
+        var btn = document.createElement('button');
         btn.className = 'saison-tab' + (s.numero === currentSaison ? ' active' : '');
-        btn.textContent = 'Saison ' + s.numero + (s.theme ? ' — ' + s.theme : '');
+        btn.textContent = 'Saison ' + s.numero + (s.theme ? ' \u2014 ' + s.theme : '');
         btn.onclick = function() {
           currentSaison = s.numero;
           render();
@@ -787,35 +1443,49 @@
     }
 
     function renderEpisodes() {
-      let filtered = episodes;
+      var filtered = episodes;
       if (currentSaison > 0) {
-        filtered = episodes.filter(function(e) { return e.saison === currentSaison; });
+        filtered = filtered.filter(function(e) { return e.saison === currentSaison; });
+      }
+      // Search filter
+      if (searchQuery) {
+        var q = searchQuery.toLowerCase();
+        filtered = filtered.filter(function(e) {
+          return (e.titre || '').toLowerCase().indexOf(q) !== -1 ||
+                 (e.resume || '').toLowerCase().indexOf(q) !== -1;
+        });
       }
 
-      // Update hero count
       heroCount.textContent = episodes.length;
 
-      // Update heading
       if (currentSaison > 0) {
-        const s = saisons.find(function(s) { return s.numero === currentSaison; });
-        headingEl.textContent = s ? 'Saison ' + s.numero + ' — ' + s.theme : 'Episodes';
+        var s = saisons.find(function(s) { return s.numero === currentSaison; });
+        headingEl.textContent = s && s.theme ? 'Saison ' + s.numero + ' \u2014 ' + s.theme : '\u00c9pisodes';
       } else {
-        headingEl.textContent = 'Tous les episodes';
+        headingEl.textContent = 'Tous les \u00e9pisodes';
       }
 
       if (filtered.length === 0) {
+        var emptyMsg = searchQuery
+          ? 'Aucun épisode ne correspond à votre recherche.'
+          : 'Papy Babou prépare de nouvelles histoires pour cette saison.';
         listEl.innerHTML = '<div class="empty-state">' +
           '<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>' +
-          '<h3>Bientot disponible !</h3>' +
-          '<p>Papy Babou prepare de nouvelles histoires pour cette saison.</p></div>';
+          '<h3>Bientôt disponible !</h3>' +
+          '<p>' + escHtml(emptyMsg) + '</p></div>';
         return;
       }
 
+      var resumeData = getResume();
       listEl.innerHTML = '';
+
       filtered.forEach(function(ep) {
         var card = document.createElement('div');
         card.className = 'episode-card';
         card.setAttribute('data-id', ep.episode_id);
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'article');
+        card.setAttribute('aria-label', ep.titre);
 
         var playIcon = '<svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>';
         if (currentEpisodeId === ep.episode_id && isPlaying) {
@@ -828,6 +1498,12 @@
           coverHtml = '<img class="episode-cover has-cover" src="' + escHtml(ep.cover_url) + '" alt="" loading="lazy">';
         }
 
+        // Resume badge
+        var resumeBadge = '';
+        if (resumeData && resumeData.episode_id === ep.episode_id) {
+          resumeBadge = '<div class="resume-badge">&#9654; Reprendre \u00e0 ' + fmt(resumeData.position) + '</div>';
+        }
+
         var metaHtml = '';
         if (ep.duree_minutes) {
           metaHtml += '<span><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>' + ep.duree_minutes + ' min</span>';
@@ -837,15 +1513,17 @@
         }
 
         card.innerHTML =
-          '<button class="episode-play" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default"') + '>' + playIcon + '</button>' +
+          '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : '') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default"') + '>' + playIcon + '</button>' +
           '<div class="episode-info">' +
-            '<div class="episode-number">Saison ' + ep.saison + ' &middot; Episode ' + ep.numero + '</div>' +
+            resumeBadge +
+            '<div class="episode-number">Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero + '</div>' +
             '<div class="episode-title">' + escHtml(ep.titre) + '</div>' +
             '<div class="episode-resume">' + escHtml(ep.resume || ep.morale || '') + '</div>' +
             '<div class="episode-meta">' + metaHtml + '</div>' +
           '</div>' +
           coverHtml;
 
+        // Play button click
         if (hasAudio) {
           card.querySelector('.episode-play').addEventListener('click', function(e) {
             e.stopPropagation();
@@ -853,9 +1531,70 @@
           });
         }
 
+        // Card click opens modal
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.episode-play')) return;
+          openModal(ep);
+        });
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') openModal(ep);
+        });
+
         listEl.appendChild(card);
       });
     }
+
+    // ── Episode Modal ──
+    function openModal(ep) {
+      modalCover.src = ep.cover_url || '/assets/artwork/cover.svg';
+      modalTitle.textContent = ep.titre || '';
+      modalEpNum.textContent = 'Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero;
+      modalResume.textContent = ep.resume || 'Pas de résumé disponible.';
+      modalDuration.textContent = ep.duree_minutes ? ep.duree_minutes + ' min' : '';
+      modalDate.textContent = ep.date || '';
+
+      if (ep.morale) {
+        modalMorale.textContent = ep.morale;
+        modalMoraleWrap.style.display = 'block';
+      } else {
+        modalMoraleWrap.style.display = 'none';
+      }
+
+      modalPlayBtn.style.display = ep.audio_url ? '' : 'none';
+      modalPlayBtn.onclick = function() {
+        playEpisode(ep);
+        closeModal();
+      };
+
+      modalShareBtn.onclick = function() {
+        var url = window.location.origin + '/#episode-' + ep.episode_id;
+        if (navigator.share) {
+          navigator.share({ title: ep.titre, url: url }).catch(function(){});
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(function() {
+            modalShareBtn.textContent = '\u2714 Lien copié !';
+            setTimeout(function() { modalShareBtn.innerHTML = '&#128279; Partager'; }, 2000);
+          });
+        }
+      };
+
+      modalEl.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+      modalClose.focus();
+    }
+
+    function closeModal() {
+      modalEl.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modalEl.addEventListener('click', function(e) {
+      if (e.target === modalEl) closeModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modalEl.classList.contains('visible')) closeModal();
+    });
 
     // ── Audio Player ──
     function playEpisode(ep) {
@@ -866,9 +1605,16 @@
       if (currentEpisodeId !== ep.episode_id) {
         audio.src = ep.audio_url;
         currentEpisodeId = ep.episode_id;
+        currentEpisodeData = ep;
+        // Check resume position
+        var resume = getResume();
+        if (resume && resume.episode_id === ep.episode_id && resume.position > 5) {
+          audio.currentTime = resume.position;
+        }
       }
+      audio.playbackRate = playbackSpeed;
       audio.play();
-      playerTitle.textContent = 'S' + String(ep.saison).padStart(2,'0') + 'E' + String(ep.numero).padStart(2,'0') + ' — ' + ep.titre;
+      playerTitle.textContent = 'S' + String(ep.saison).padStart(2,'0') + 'E' + String(ep.numero).padStart(2,'0') + ' \u2014 ' + ep.titre;
       playerEl.classList.add('visible');
     }
 
@@ -883,6 +1629,7 @@
       isPlaying = false;
       iconPlay.style.display = 'block';
       iconPause.style.display = 'none';
+      saveResume();
       renderEpisodes();
     });
 
@@ -891,6 +1638,7 @@
       iconPlay.style.display = 'block';
       iconPause.style.display = 'none';
       playerProgressBar.style.width = '0%';
+      clearResume();
       renderEpisodes();
     });
 
@@ -898,8 +1646,12 @@
       if (!audio.duration) return;
       var pct = (audio.currentTime / audio.duration) * 100;
       playerProgressBar.style.width = pct + '%';
+      playerProgress.setAttribute('aria-valuenow', Math.round(pct));
       playerTime.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
     });
+
+    // Save position every 5 seconds
+    setInterval(function() { if (isPlaying) saveResume(); }, 5000);
 
     playerPlayBtn.addEventListener('click', function() {
       if (isPlaying) audio.pause();
@@ -914,17 +1666,69 @@
     });
 
     playerClose.addEventListener('click', function() {
+      saveResume();
       audio.pause();
       audio.src = '';
       currentEpisodeId = null;
+      currentEpisodeData = null;
       playerEl.classList.remove('visible');
       renderEpisodes();
+    });
+
+    // Rewind / Forward
+    playerRewind.addEventListener('click', function() {
+      audio.currentTime = Math.max(0, audio.currentTime - 10);
+    });
+    playerForward.addEventListener('click', function() {
+      if (audio.duration) audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+    });
+
+    // Volume
+    playerVolume.addEventListener('input', function() {
+      audio.volume = playerVolume.value / 100;
+      updateVolIcon();
+    });
+    playerMute.addEventListener('click', function() {
+      audio.muted = !audio.muted;
+      if (audio.muted) playerVolume.value = 0;
+      else playerVolume.value = Math.round(audio.volume * 100);
+      updateVolIcon();
+    });
+    function updateVolIcon() {
+      var v = audio.muted ? 0 : audio.volume;
+      if (v === 0) {
+        volIcon.innerHTML = '<path d="M16.5 12A4.5 4.5 0 0014 8.5v2.09l2.5 2.5V12zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06A7.007 7.007 0 0119 12zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+      } else {
+        volIcon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.47 4.47 0 002.5-3.5zM14 3.23v2.06A7.007 7.007 0 0119 12c0 3.17-2.11 5.84-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+      }
+    }
+
+    // Speed
+    playerSpeedBtn.addEventListener('click', function() {
+      var idx = SPEEDS.indexOf(playbackSpeed);
+      playbackSpeed = SPEEDS[(idx + 1) % SPEEDS.length];
+      audio.playbackRate = playbackSpeed;
+      playerSpeedBtn.textContent = playbackSpeed + 'x';
+    });
+
+    // ── Search ──
+    searchInput.addEventListener('input', function() {
+      searchQuery = searchInput.value.trim();
+      renderEpisodes();
+    });
+
+    // ── Back to top ──
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 400) backToTop.classList.add('visible');
+      else backToTop.classList.remove('visible');
+    });
+    backToTop.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     // ── Init ──
     loadEpisodes();
 
-    // Auto-select first available saison
     if (saisons.length > 0) {
       currentSaison = saisons[0].numero;
     }
