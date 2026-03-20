@@ -676,6 +676,30 @@ Comprehensive 8-agent audit followed by full implementation of all fixes before 
 - Total: 51 tests in test_phase2_improvements.py
 - Full suite: 537 passed, 3 pre-existing flaky (TestHistorique), 3 skipped (ffmpeg)
 
+## Audio IA Quality Rules (Session 15 — MANDATORY for all episodes)
+
+### SFX Prompts — Rules for AI Sound Generation (ElevenLabs SFX / Stable Audio)
+
+Every SFX prompt MUST describe ONLY reproducible sounds. Apply these filters systematically:
+
+1. **NO visual descriptions**: Remove `light`, `darkness`, `brilliant`, `radiant`, `bioluminescent`, `sunlight`, `warm sunlight`. Replace with sonic equivalents (e.g., `"brilliant explosion of light"` → `"massive orchestral swell rising from silence"`).
+2. **NO abstract/emotional concepts**: Remove `divine`, `primordial`, `sacred`, `majestic`, `primal`, `infinite`. Replace with concrete sound descriptors (e.g., `"majestic and primal"` → `"low sub-bass throb with reverb"`).
+3. **NO silent events**: Remove `plants growing`, `flowers blooming`, `fish swimming`, `warm embrace`, `baking smell`, `soil rich and damp`, `sky forming`, `dry land emerging`. Replace with audible equivalents (e.g., `"flowers blooming"` → `"wind rustling through dense leaves"`).
+4. **NO montage metadata in prompts**: Remove `day transition marker`, `second day transition`, `returning to cozy room`, `gentle return transition`. These are edit instructions, not sounds.
+5. **NO human speech risk**: Replace `voices` with `laughing` or `cheering` to prevent AI generating speech that conflicts with TTS.
+6. **NO "silence" descriptions**: `"absolute silence"` generates nothing. Replace with `"low sub-bass drone"`, `"dark atmospheric pad"`, etc.
+7. **NO conflicting spatial layers**: Don't mix `underwater` + `seagulls` in same prompt.
+8. **Use concrete audio vocabulary**: frequencies (sub-bass, high-pitched), instruments (tubular bell, harp, organ), textures (drone, pad, shimmer, swell, reverb), actions (crackling, rustling, clinking, creaking).
+
+### Voice Text — Rules for TTS (ElevenLabs)
+
+1. **NO onomatopoeia**: Remove `Boum`, `Splash`, `Crac`, `Bang`, `Pfff`, `Brrr`, `Grr`. If the sound matters, the SFX handles it.
+2. **NO hyphenated syllabification**: `Fir-ma-ment` → `Firmament` with `"rythme": "lent"`. TTS reads hyphens as pauses or literal characters.
+3. **NO uncontrolled ellipsis**: `Boum... boum...` → rewrite without `...` or accept unpredictable TTS pausing.
+4. **Rare proper nouns**: Write phonetically for French TTS (e.g., `Pishon` → `Pichone`, `Gihon` → `Guihone`).
+5. **Word count limits**: Max 60 words per segment for adult voices, max 40 words for children's voices (Antoine, Noémie). Split longer segments.
+6. **Numbers > 9**: Spell out in letters (e.g., `30` → `trente`).
+
 ## Git Workflow
 - Branch: `claude/fix-postgres-gunicorn-SV32c`
 - Push: `git push -u origin claude/fix-postgres-gunicorn-SV32c`

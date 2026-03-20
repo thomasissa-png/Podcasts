@@ -10,5 +10,17 @@
     "source_episode": "",
     "categorie": "structure",
     "date": "2026-03-15"
+  },
+  {
+    "regle": "RÈGLES SFX POUR GÉNÉRATION IA : Chaque prompt SFX doit décrire UNIQUEMENT des sons reproductibles. INTERDIT : descriptions visuelles (light, darkness, brilliant, radiant, bioluminescent, sunlight), concepts abstraits (divine, primordial, sacred, majestic, primal, infinite), événements silencieux (plants growing, flowers blooming, fish swimming, warm embrace, baking smell, sky forming), métadonnées de montage (day transition, returning to room), parole humaine (voices → remplacer par laughing/cheering), silence décrit poétiquement (absolute silence → low sub-bass drone). UTILISER : vocabulaire audio concret (sub-bass, drone, pad, shimmer, swell, reverb, tubular bell, harp, crackling, rustling, clinking).",
+    "source_episode": "S01E01",
+    "categorie": "audio_sfx",
+    "date": "2026-03-20"
+  },
+  {
+    "regle": "RÈGLES VOIX POUR TTS IA : INTERDIT dans les textes parlés : onomatopées (Boum, Splash, Crac, Bang, Pfff, Brrr, Grr — le SFX fait le son), syllabification avec tirets (Fir-ma-ment → écrire Firmament avec rythme lent), ellipses incontrôlées (... → comportement TTS imprévisible). Noms propres rares : écrire en phonétique française (Pishon → Pichone, Gihon → Guihone). Limites de mots par segment : max 60 mots pour voix adultes (Papy, Mamie), max 40 mots pour voix enfants (Antoine, Noémie). Nombres > 9 : écrire en toutes lettres.",
+    "source_episode": "S01E01",
+    "categorie": "audio_voix",
+    "date": "2026-03-20"
   }
 ]
