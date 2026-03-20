@@ -45,13 +45,13 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* Palette Papy Babou — aventure, epopee, parchemin */
+      /* Palette Papy Babou — bleu + sable dore */
       /* Contrastes WCAG AA verifies */
       --sable: #FDF5E6;
       --sable-dark: #F0E0C0;
-      --ocre: #B86E20;
-      --ocre-light: #E8A84C;
-      --ocre-dark: #8B5A10;
+      --dore: #856F14;
+      --dore-light: #E8C44A;
+      --dore-dark: #6E5A10;
       --bleu-doux: #7BAFD4;
       --bleu-fonce: #2D4A7A;
       --bleu-nuit: #1B2A4A;
@@ -67,7 +67,7 @@
 
       /* Couleurs intermediaires (gradient hero) */
       --bleu-gris: #5A7A9A;
-      --brun-chaud: #A08060;
+      --sable-bleu: #8A9AAE;
 
       /* Couleurs externes (plateformes) */
       --apple-purple: #7D5BA6;
@@ -118,7 +118,7 @@
       position: absolute;
       top: -60px; right: -60px;
       width: 300px; height: 300px;
-      background: radial-gradient(circle, var(--ocre-light) 0%, transparent 70%);
+      background: radial-gradient(circle, var(--dore-light) 0%, transparent 70%);
       opacity: 0.15;
     }
 
@@ -154,7 +154,7 @@
 
     .hero-badge {
       display: inline-block;
-      background: var(--ocre);
+      background: var(--dore);
       color: var(--blanc);
       font-size: 0.82rem;
       font-weight: 700;
@@ -176,7 +176,7 @@
 
     .hero-title span {
       display: block;
-      color: var(--ocre-light);
+      color: var(--dore-light);
       font-size: 3rem;
     }
 
@@ -212,7 +212,7 @@
 
     .hero-meta-item svg {
       width: 18px; height: 18px;
-      fill: var(--ocre-light);
+      fill: var(--dore-light);
     }
 
     /* ── Saison Tabs ──────────────────────────────────────────── */
@@ -231,17 +231,17 @@
       font-weight: 700;
       font-size: 0.9rem;
       cursor: pointer;
-      border: 2px solid var(--ocre-light);
+      border: 2px solid var(--dore-light);
       background: var(--blanc);
-      color: var(--ocre-dark);
+      color: var(--dore-dark);
       transition: all 0.2s;
     }
 
-    .saison-tab:hover { background: var(--ocre-light); color: var(--blanc); }
+    .saison-tab:hover { background: var(--dore-light); color: var(--blanc); }
     .saison-tab.active {
-      background: var(--ocre);
+      background: var(--dore);
       color: var(--blanc);
-      border-color: var(--ocre);
+      border-color: var(--dore);
     }
 
     /* ── Episodes List ────────────────────────────────────────── */
@@ -286,7 +286,7 @@
       flex-shrink: 0;
       width: 52px; height: 52px;
       border-radius: 50%;
-      background: var(--ocre);
+      background: var(--dore);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -296,7 +296,7 @@
     }
 
     .episode-play:hover {
-      background: var(--ocre-dark);
+      background: var(--dore-dark);
       transform: scale(1.08);
     }
 
@@ -313,7 +313,7 @@
     .episode-number {
       font-size: 0.82rem;
       font-weight: 800;
-      color: var(--ocre);
+      color: var(--dore);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -385,7 +385,7 @@
     .about-card h2 {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--ocre-dark);
+      color: var(--dore-dark);
       margin-bottom: 0.8rem;
     }
 
@@ -419,7 +419,7 @@
       flex-shrink: 0;
     }
 
-    .char-avatar.papy { background: var(--ocre); color: var(--blanc); }
+    .char-avatar.papy { background: var(--dore); color: var(--blanc); }
     .char-avatar.antoine { background: var(--bleu-fonce); color: var(--blanc); }
     .char-avatar.noemie { background: var(--rose-tendre); color: var(--blanc); }
     .char-avatar.mamie { background: var(--vert-prairie); color: var(--blanc); }
@@ -436,7 +436,7 @@
       position: fixed;
       bottom: 0; left: 0; right: 0;
       background: var(--blanc);
-      border-top: 2px solid var(--ocre-light);
+      border-top: 2px solid var(--dore-light);
       box-shadow: var(--shadow-player);
       z-index: 1000;
       display: none; /* shown via JS when playing */
@@ -456,7 +456,7 @@
     .player-btn {
       width: 42px; height: 42px;
       border-radius: 50%;
-      background: var(--ocre);
+      background: var(--dore);
       border: none;
       cursor: pointer;
       display: flex;
@@ -466,7 +466,7 @@
       transition: background 0.2s;
     }
 
-    .player-btn:hover { background: var(--ocre-dark); }
+    .player-btn:hover { background: var(--dore-dark); }
     .player-btn svg { width: 18px; height: 18px; fill: var(--blanc); }
 
     .player-info {
@@ -499,7 +499,7 @@
 
     .player-progress-bar {
       height: 100%;
-      background: var(--ocre);
+      background: var(--dore);
       border-radius: var(--radius-bar);
       width: 0%;
       transition: width 0.3s;
@@ -534,7 +534,7 @@
       font-size: 0.85rem;
     }
 
-    .footer a { color: var(--ocre-dark); font-weight: 600; }
+    .footer a { color: var(--dore-dark); font-weight: 600; }
 
     .footer-links {
       display: flex;
@@ -553,14 +553,14 @@
 
     .empty-state svg {
       width: 64px; height: 64px;
-      fill: var(--ocre-light);
+      fill: var(--dore-light);
       margin-bottom: 1rem;
     }
 
     .empty-state h3 {
       font-family: var(--font-display);
       font-size: 1.3rem;
-      color: var(--ocre-dark);
+      color: var(--dore-dark);
       margin-bottom: 0.5rem;
     }
 
@@ -588,7 +588,7 @@
       position: absolute;
       top: -100px;
       left: 0;
-      background: var(--ocre);
+      background: var(--dore);
       color: var(--blanc);
       padding: 0.5rem 1.5rem;
       z-index: 9999;
@@ -639,7 +639,7 @@
     .parents-guide h2 {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--ocre-dark);
+      color: var(--dore-dark);
       margin-bottom: 1rem;
     }
     .parents-guide details {
@@ -663,7 +663,7 @@
     .parents-guide summary::before {
       content: '▸';
       transition: transform 0.2s;
-      color: var(--ocre);
+      color: var(--dore);
       font-size: 1.1rem;
     }
     .parents-guide details[open] summary::before {
@@ -686,7 +686,7 @@
     .testimonials-section h2 {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--ocre-dark);
+      color: var(--dore-dark);
       margin-bottom: 1rem;
     }
     .testimonials-grid {
@@ -701,7 +701,7 @@
       padding: 1.5rem;
     }
     .testimonial .stars {
-      color: var(--ocre);
+      color: var(--dore);
       font-size: 1.1rem;
       margin-bottom: 0.5rem;
       letter-spacing: 2px;
@@ -730,7 +730,7 @@
     .subscribe-section h2 {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--ocre-dark);
+      color: var(--dore-dark);
       margin-bottom: 0.5rem;
     }
     .subscribe-section .sub-text {
@@ -763,7 +763,7 @@
     }
     .subscribe-btn.apple { background: var(--apple-purple); color: var(--blanc); }
     .subscribe-btn.spotify { background: var(--spotify-green); color: var(--blanc); }
-    .subscribe-btn.rss { background: var(--ocre); color: var(--blanc); }
+    .subscribe-btn.rss { background: var(--dore); color: var(--blanc); }
     .subscribe-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
     /* ── Search bar ──────────────────────────────────────────── */
@@ -784,7 +784,7 @@
       transition: border-color 0.2s;
       outline: none;
     }
-    .search-input:focus { border-color: var(--ocre); }
+    .search-input:focus { border-color: var(--dore); }
     .search-wrap {
       position: relative;
     }
@@ -846,7 +846,7 @@
     .modal-meta .modal-ep-num {
       font-size: 0.75rem;
       font-weight: 800;
-      color: var(--ocre);
+      color: var(--dore);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -863,7 +863,7 @@
     }
     .modal-body h4 {
       font-size: 0.85rem;
-      color: var(--ocre-dark);
+      color: var(--dore-dark);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 0.4rem;
@@ -894,10 +894,10 @@
       transition: all 0.2s;
     }
     .modal-btn.primary {
-      background: var(--ocre);
+      background: var(--dore);
       color: var(--blanc);
     }
-    .modal-btn.primary:hover { background: var(--ocre-dark); }
+    .modal-btn.primary:hover { background: var(--dore-dark); }
     .modal-btn.secondary {
       background: var(--sable-dark);
       color: var(--gris-texte);
@@ -938,7 +938,7 @@
     }
     .player-ctrl-btn:hover {
       background: var(--sable-dark);
-      color: var(--ocre-dark);
+      color: var(--dore-dark);
     }
     .player-ctrl-btn svg { width: 16px; height: 16px; fill: currentColor; }
     .player-ctrl-btn .ctrl-label {
@@ -959,7 +959,7 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .player-speed-btn:hover { background: var(--ocre); color: var(--blanc); }
+    .player-speed-btn:hover { background: var(--dore); color: var(--blanc); }
     .player-volume-wrap {
       display: flex;
       align-items: center;
@@ -967,7 +967,7 @@
     }
     .player-volume-range {
       width: 60px;
-      accent-color: var(--ocre);
+      accent-color: var(--dore);
       cursor: pointer;
     }
 
@@ -976,7 +976,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      background: var(--ocre);
+      background: var(--dore);
       color: var(--blanc);
       font-size: 0.72rem;
       font-weight: 700;
@@ -992,7 +992,7 @@
       right: 1.5rem;
       width: 42px; height: 42px;
       border-radius: 50%;
-      background: var(--ocre);
+      background: var(--dore);
       color: var(--blanc);
       border: none;
       cursor: pointer;
@@ -1003,7 +1003,7 @@
       z-index: 999;
       transition: all 0.2s;
     }
-    .back-to-top:hover { background: var(--ocre-dark); transform: translateY(-2px); }
+    .back-to-top:hover { background: var(--dore-dark); transform: translateY(-2px); }
     .back-to-top.visible { display: flex; }
     .back-to-top svg { width: 20px; height: 20px; fill: currentColor; }
 
@@ -1435,7 +1435,7 @@
           '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
           '<h3>Les épisodes arrivent bientôt !</h3>' +
           '<p>Papy Babou prépare ses plus belles histoires...</p>' +
-          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--ocre);color:white;border:none;cursor:pointer;font-weight:700;">Réessayer</button></div>';
+          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--dore);color:white;border:none;cursor:pointer;font-weight:700;">Réessayer</button></div>';
       }
     }
 
