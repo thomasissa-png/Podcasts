@@ -1082,11 +1082,11 @@
           </div>
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-            25-35 min par épisode
+            25-35 min par mission
           </div>
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>
-            Dès 6 ans
+            Héros dès 6 ans
           </div>
         </div>
         <div class="trust-badges">
@@ -1491,7 +1491,7 @@
         var s = saisons.find(function(s) { return s.numero === currentSaison; });
         headingEl.textContent = s && s.theme ? 'Saison ' + s.numero + ' \u2014 ' + s.theme : '\u00c9pisodes';
       } else {
-        headingEl.textContent = 'Tous les \u00e9pisodes';
+        headingEl.textContent = 'Toutes les missions';
       }
 
       if (filtered.length === 0) {
@@ -1500,7 +1500,7 @@
           : 'Papy Babou prépare de nouvelles missions pour cette saison.';
         listEl.innerHTML = '<div class="empty-state">' +
           '<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>' +
-          '<h3>Bientôt disponible !</h3>' +
+          '<h3>Prochaine mission en préparation !</h3>' +
           '<p>' + escHtml(emptyMsg) + '</p></div>';
         return;
       }
@@ -1576,10 +1576,10 @@
     // ── Episode Modal ──
     function openModal(ep) {
       modalCover.src = ep.cover_url || '/assets/artwork/cover.svg';
-      modalCover.alt = ep.titre ? 'Couverture de l\u2019épisode : ' + ep.titre : 'Couverture épisode';
+      modalCover.alt = ep.titre ? 'Couverture de la mission : ' + ep.titre : 'Couverture mission';
       modalTitle.textContent = ep.titre || '';
       modalEpNum.textContent = 'Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero;
-      modalResume.textContent = ep.resume || 'Pas de résumé disponible.';
+      modalResume.textContent = ep.resume || 'Briefing de mission en cours de rédaction.';
       modalDuration.textContent = ep.duree_minutes ? ep.duree_minutes + ' min' : '';
       modalDate.textContent = ep.date || '';
 
