@@ -22,21 +22,21 @@ from rich.theme import Theme as RichTheme
 # ══════════════════════════════════════════════════════════════════════════════
 
 class Palette:
-    """Tokens couleur de la charte graphique."""
+    """Tokens couleur de la charte graphique — style cartoon aventure."""
 
     # ── Couleurs primaires ───────────────────────────────────────────────
-    OCRE          = "#D4A054"   # Doré chaud — couleur signature Papy Babou
-    BLEU_CIEL     = "#7BAFD4"   # Bleu doux — ciel de Provence / Antoine
-    ROSE_POUDRE   = "#D4869A"   # Rose tendre — Noémie
-    VERT_OLIVE    = "#8BAF6E"   # Vert nature — succès, validation
-    BEIGE_CHAUD   = "#F5E6D0"   # Fond parcheminé — texture de livre ancien
+    OCRE          = "#E8A020"   # Doré vif — couleur signature Papy Babou
+    BLEU_CIEL     = "#4A9FE5"   # Bleu ciel vif — Antoine
+    ROSE_POUDRE   = "#E895A8"   # Rose tendre — Noémie
+    VERT_OLIVE    = "#5DBD72"   # Vert prairie — succès, validation
+    BEIGE_CHAUD   = "#FFF0D6"   # Fond sable chaud
 
     # ── Couleurs secondaires ─────────────────────────────────────────────
     LAVANDE       = "#9B8EC4"   # Mystère, nuit, spirituel
-    TERRE_CUITE   = "#C47A5A"   # Chaleur, cheminée, automne
-    MIEL          = "#E8B84B"   # Lumière, joie, trésor
-    ARDOISE       = "#5A6978"   # Texte secondaire, neutre
-    IVOIRE        = "#FDF8F0"   # Fond le plus clair
+    TERRE_CUITE   = "#F26B5E"   # Corail — accents, alertes
+    MIEL          = "#FFD234"   # Jaune soleil — titres, étoiles
+    ARDOISE       = "#5A6B78"   # Texte secondaire, neutre
+    IVOIRE        = "#FFF8ED"   # Fond le plus clair
 
     # ── Couleurs fonctionnelles ──────────────────────────────────────────
     SUCCES        = "#6BA368"   # Vert doux — validé, publié

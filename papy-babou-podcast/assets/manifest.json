@@ -4,8 +4,8 @@
   "description": "Grandes épopées bibliques pour les enfants de 6 à 10 ans",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1B2A4A",
-  "theme_color": "#1B2A4A",
+  "background_color": "#4A9FE5",
+  "theme_color": "#4A9FE5",
   "categories": ["education", "kids"],
   "icons": [
     {

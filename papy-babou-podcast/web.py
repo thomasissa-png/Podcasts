@@ -1003,11 +1003,14 @@ def api_public_episodes():
     except Exception:
         historique = []
 
-    # Charger les saisons disponibles
+    # Charger uniquement les saisons qui ont des épisodes publiés (pas les plans futurs)
     saisons_info = []
+    saison_nums_avec_episodes = set(ep.get("saison", 1) for ep in historique if ep.get("saison"))
     try:
         saisons_list = config.liste_saisons() if hasattr(config, 'liste_saisons') else []
         for num in sorted(saisons_list):
+            if num not in saison_nums_avec_episodes:
+                continue  # Saison planifiée mais pas encore diffusée
             plan = config.charger_saison(num)
             saison_data = plan.get("saison", {})
             saisons_info.append({
@@ -1017,11 +1020,12 @@ def api_public_episodes():
     except Exception:
         pass
 
-    # S'il n'y a pas de saisons trouvées mais qu'il y a des épisodes, créer une entrée
-    if not saisons_info and historique:
-        saison_nums = set(ep.get("saison", 1) for ep in historique if ep.get("saison"))
-        for num in sorted(saison_nums):
+    # Fallback: saisons détectées depuis l'historique mais sans plan JSON
+    saisons_in_info = set(s["numero"] for s in saisons_info)
+    for num in sorted(saison_nums_avec_episodes):
+        if num not in saisons_in_info:
             saisons_info.append({"numero": num, "theme": ""})
+    saisons_info.sort(key=lambda s: s["numero"])
 
     # Construire la liste d'épisodes publics
     episodes_public = []
