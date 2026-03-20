@@ -700,6 +700,75 @@ Every SFX prompt MUST describe ONLY reproducible sounds. Apply these filters sys
 5. **Word count limits**: Max 60 words per segment for adult voices, max 40 words for children's voices (Antoine, Noémie). Split longer segments.
 6. **Numbers > 9**: Spell out in letters (e.g., `30` → `trente`).
 
+## Season 1 Episode Plan — IMPOSED (Session 21)
+
+### Episode List (FINAL — do not regenerate)
+| # | Titre | Type | Durée |
+|---|-------|------|-------|
+| 01 | La création du monde — quand Dieu a tout inventé | ouverture | 30 min |
+| 02 | Noé et le déluge | standard | 25 min |
+| 03 | Abraham — quitter tout par confiance | standard | 25 min |
+| 04 | Joseph et la tunique de couleurs | standard | 25 min |
+| 05 | Moïse — l'enfant du Nil et la mer qui s'ouvre | mi-saison | 30 min |
+| 06 | David et Goliath | standard | 25 min |
+| 07 | Salomon — le roi sage | standard | 25 min |
+| 08 | Daniel dans la fosse aux lions | standard | 25 min |
+| 09 | Jonas — avalé par une baleine | standard | 25 min |
+| 10 | Esther — la reine qui sauve son peuple | final | 35 min |
+
+### Why Adam & Eve was removed
+Episode 1 (La Création) already covers Adam and Eve extensively: their creation from dust, the breath of life, naming the animals, Eve from Adam's rib, the Garden of Eden, and the teasing about the forbidden fruit. Having a separate Adam & Eve episode was redundant.
+
+### Episode 10 — Esther (NEW)
+Esther replaces the old Jonas finale. Jonas moves to E09 (standard). Esther becomes the season finale with:
+- **Lucas birth event** (same as old E10): the family celebrates Lucas's arrival
+- **Moral**: "Le vrai courage, c'est agir pour les autres même quand on a peur pour soi"
+- **Arc focus**: Papy Babou — emotional conclusion, Noémie says Esther is her favorite hero
+- **Teasing S2**: "Il y a un homme dont je n'ai pas encore parlé — le plus grand de tous"
+
+### S01E01 Script — VALIDATED (do not regenerate)
+- Script at `output/scripts/S01E01_script.json` — 190 segments, 3314 words, 39 SFX
+- Score: 9.2/10 (directeur validation)
+- Audio IA audit: 0 remaining issues (26 SFX prompts + 4 voice segments corrected)
+- Status: `waiting_script` in pipeline (ready for audio production)
+- Production data files: `data/historique_episodes.json`, `logs/S01E01_rapport.json`, `checkpoints/S01E01_checkpoint.json`
+
+### Audio IA Audit Process (MANDATORY for every script)
+Before any script goes to audio production, run this audit:
+
+**SFX audit** — check every SFX prompt for:
+1. Non-auditory descriptions (visual, olfactory, tactile) → replace with sonic equivalents
+2. Abstract concepts (divine, primordial, sacred) → replace with concrete sound descriptors
+3. Silent events (plants growing, flowers blooming) → replace with audible equivalents
+4. Montage metadata in prompts (day transition marker) → remove
+5. Human speech risk (voices) → replace with laughing/cheering
+6. Silence described poetically → replace with drones/pads
+7. Conflicting spatial layers (underwater + seagulls) → fix
+
+**Voice text audit** — check every spoken segment for:
+1. Onomatopoeia (Boum, Splash, Crac) → remove, let SFX handle it
+2. Hyphenated syllabification (Fir-ma-ment) → write normally + use rythme lent
+3. Uncontrolled ellipsis (...) → rewrite
+4. Rare proper nouns → French phonetic spelling (Pishon → Pichone)
+5. Word count: max 60 words adult, max 40 words children → split
+6. Numbers > 9 → spell out
+
+### Files updated in this session
+- `data/saisons/saison_01.json` — season plan with 10 episodes (Esther replaces Adam & Eve)
+- `config.py` — `PERIMETRES_SAISONS[1]["episodes_imposes"]` updated
+- `agents/planificateur.py` — prompt examples updated
+- `data/preferences_producteur.json` — 2 new rules (audio_sfx + audio_voix)
+- `output/scripts/S01E01_script.json` — audited script with all SFX/voice fixes
+- `data/historique_episodes.json` — S01E01 entry for frontend visibility
+- `logs/S01E01_rapport.json` — rapport with waiting_script status
+- `checkpoints/S01E01_checkpoint.json` — checkpoint for pipeline resume
+
+### When producing future episodes
+1. Generate script via pipeline (scripteur + reviewer + directeur)
+2. Run Audio IA audit (SFX prompts + voice text) — rules in `preferences_producteur.json` are injected into scripteur prompt automatically, but POST-GENERATION audit is still recommended
+3. Validate script via frontend or CLI
+4. Continue to audio production (TTS + SFX + montage)
+
 ## Git Workflow
 - Branch: `claude/fix-postgres-gunicorn-SV32c`
 - Push: `git push -u origin claude/fix-postgres-gunicorn-SV32c`
