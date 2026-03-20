@@ -1,82 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
-  <!-- Open Graph image template — Les Histoires de Papy Babou -->
-  <!-- Format: 1200x630 (standard OG/Twitter) -->
+  <!-- Open Graph — Les Histoires de Papy Babou — Adventure Edition -->
+  <defs>
+    <linearGradient id="ogSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="50%" stop-color="#2D4A7A"/>
+      <stop offset="80%" stop-color="#C8703A"/>
+      <stop offset="100%" stop-color="#E8A84C"/>
+    </linearGradient>
+    <linearGradient id="ogParchment" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F0E0C0"/>
+      <stop offset="100%" stop-color="#D4B896"/>
+    </linearGradient>
+  </defs>
 
-  <!-- Fond beige chaud parcheminé -->
-  <rect width="1200" height="630" fill="#F5E6D0"/>
+  <!-- Fond ciel dramatique -->
+  <rect width="1200" height="630" fill="url(#ogSky)"/>
 
-  <!-- Bande ocre dorée en haut -->
-  <rect width="1200" height="8" fill="#D4A054"/>
+  <!-- Montagnes -->
+  <path d="M0,420 L120,280 L200,340 L320,220 L450,320 L550,240 L680,310 L800,200 L920,300 L1000,250 L1100,320 L1200,270 L1200,630 L0,630 Z"
+        fill="#1B2A4A" opacity="0.4"/>
+  <path d="M0,480 L100,360 L220,400 L360,300 L500,380 L620,310 L750,370 L880,290 L1000,370 L1100,330 L1200,380 L1200,630 L0,630 Z"
+        fill="#1B2A4A" opacity="0.55"/>
 
-  <!-- Bande ocre dorée en bas -->
-  <rect y="622" width="1200" height="8" fill="#D4A054"/>
+  <!-- Zone parchemin basse -->
+  <rect y="420" width="1200" height="210" fill="url(#ogParchment)" opacity="0.92"/>
 
-  <!-- Cercle décoratif fond -->
-  <circle cx="180" cy="315" r="130" fill="#D4A054" opacity="0.12"/>
+  <!-- Bande doree separation -->
+  <rect y="416" width="1200" height="8" fill="#B86E20" opacity="0.6"/>
 
-  <!-- Livre ouvert (logo) — centré dans le cercle -->
-  <g transform="translate(180, 330)">
-    <path d="M-10,-50 L-10,25 Q-10,32 -18,32 L-75,32 Q-82,32 -82,-35 L-82,-35 Q-82,-42 -75,-42 L-18,-50 Z"
-          fill="#FDF8F0" stroke="#5A6978" stroke-width="2.5"/>
-    <path d="M10,-50 L10,25 Q10,32 18,32 L75,32 Q82,32 82,-35 L82,-35 Q82,-42 75,-42 L18,-50 Z"
-          fill="#FDF8F0" stroke="#5A6978" stroke-width="2.5"/>
-    <path d="M-10,-50 L0,-56 L10,-50 L10,25 L0,32 L-10,25 Z"
-          fill="#C47A5A" stroke="#5A6978" stroke-width="2"/>
-    <!-- Lignes gauche -->
-    <line x1="-68" y1="-22" x2="-22" y2="-22" stroke="#D4A054" stroke-width="2" stroke-linecap="round"/>
-    <line x1="-68" y1="-8" x2="-28" y2="-8" stroke="#D4A054" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-    <line x1="-68" y1="6" x2="-25" y2="6" stroke="#D4A054" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-    <!-- Lignes droite -->
-    <line x1="22" y1="-22" x2="68" y2="-22" stroke="#7BAFD4" stroke-width="2" stroke-linecap="round"/>
-    <line x1="22" y1="-8" x2="62" y2="-8" stroke="#7BAFD4" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-    <line x1="22" y1="6" x2="65" y2="6" stroke="#7BAFD4" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  <!-- Etoiles -->
+  <circle cx="150" cy="80" r="2" fill="#FFF8E0" opacity="0.8"/>
+  <circle cx="350" cy="120" r="1.5" fill="#FFF8E0" opacity="0.6"/>
+  <circle cx="550" cy="60" r="2.5" fill="#FFF8E0" opacity="0.9"/>
+  <circle cx="850" cy="100" r="2" fill="#FFF8E0" opacity="0.7"/>
+  <circle cx="1050" cy="70" r="1.5" fill="#FFF8E0" opacity="0.6"/>
+  <circle cx="700" cy="150" r="1.5" fill="#FFF8E0" opacity="0.5"/>
+
+  <!-- Etoile de Bethlehem -->
+  <g transform="translate(600, 100)" opacity="0.9">
+    <polygon points="0,-28 6,-8 26,-8 10,4 16,24 0,13 -16,24 -10,4 -26,-8 -6,-8" fill="#FFF8D0"/>
+    <circle cx="0" cy="0" r="6" fill="#FFFBE8" opacity="0.5"/>
   </g>
 
-  <!-- Lunettes de Papy -->
-  <g transform="translate(180, 260)">
-    <circle cx="-14" cy="0" r="12" fill="none" stroke="#5A6978" stroke-width="3"/>
-    <circle cx="14" cy="0" r="12" fill="none" stroke="#5A6978" stroke-width="3"/>
-    <line x1="2" y1="0" x2="-2" y2="0" stroke="#5A6978" stroke-width="3"/>
-    <line x1="-26" y1="-3" x2="-32" y2="-6" stroke="#5A6978" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="26" y1="-3" x2="32" y2="-6" stroke="#5A6978" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Boussole (gauche) -->
+  <g transform="translate(130, 510)">
+    <circle cx="0" cy="0" r="65" fill="#F0E0C0" stroke="#B86E20" stroke-width="3" opacity="0.9"/>
+    <!-- Rose des vents simplifiee -->
+    <polygon points="0,-52 5,-12 0,-18 -5,-12" fill="#B86E20"/>
+    <polygon points="0,52 5,12 0,18 -5,12" fill="#D4883A"/>
+    <polygon points="-52,0 -12,5 -18,0 -12,-5" fill="#D4883A"/>
+    <polygon points="52,0 12,5 18,0 12,-5" fill="#D4883A"/>
+    <!-- Centre -->
+    <circle cx="0" cy="0" r="6" fill="#B86E20"/>
+    <circle cx="0" cy="0" r="2.5" fill="#FDF5E6"/>
   </g>
 
-  <!-- Étoiles décoratives -->
-  <polygon points="90,140 94,152 107,152 97,160 100,172 90,165 80,172 83,160 73,152 86,152"
-           fill="#E8B84B"/>
-  <polygon points="270,180 273,189 282,189 275,194 277,203 270,198 263,203 265,194 258,189 267,189"
-           fill="#E8B84B" opacity="0.6"/>
-
-  <!-- Titre principal -->
-  <text x="360" y="250" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="bold" fill="#D4A054">
+  <!-- Titre -->
+  <text x="600" y="490" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="36" fill="#4A5866" letter-spacing="3">
     Les Histoires de
   </text>
-  <text x="360" y="320" font-family="Georgia, 'Times New Roman', serif" font-size="64" font-weight="bold" fill="#D4A054">
+  <text x="600" y="545" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="bold" fill="#B86E20" letter-spacing="4">
     Papy Babou
   </text>
 
   <!-- Sous-titre -->
-  <text x="360" y="380" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#5A6978">
-    Des histoires bibliques racontées avec amour
+  <text x="600" y="590" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#4A5866" opacity="0.8">
+    Grandes epopees bibliques pour les enfants
   </text>
 
-  <!-- Personnages tags -->
-  <g transform="translate(360, 430)">
+  <!-- Personnages badges -->
+  <g transform="translate(870, 440)">
     <!-- Antoine -->
-    <rect x="0" y="0" width="120" height="36" rx="18" fill="#7BAFD4" opacity="0.2"/>
-    <text x="16" y="24" font-family="Arial, sans-serif" font-size="16" fill="#7BAFD4">⚡ Antoine</text>
+    <rect x="0" y="0" width="95" height="30" rx="15" fill="#3D6F8E" opacity="0.25"/>
+    <text x="12" y="21" font-family="Arial, sans-serif" font-size="14" fill="#3D6F8E" font-weight="bold">Antoine</text>
 
-    <!-- Noémie -->
-    <rect x="140" y="0" width="120" height="36" rx="18" fill="#D4869A" opacity="0.2"/>
-    <text x="156" y="24" font-family="Arial, sans-serif" font-size="16" fill="#D4869A">🌸 Noémie</text>
-
-    <!-- Papy -->
-    <rect x="280" y="0" width="160" height="36" rx="18" fill="#D4A054" opacity="0.2"/>
-    <text x="296" y="24" font-family="Arial, sans-serif" font-size="16" fill="#D4A054">📖 Papy Babou</text>
+    <!-- Noemie -->
+    <rect x="110" y="0" width="95" height="30" rx="15" fill="#C45A6E" opacity="0.25"/>
+    <text x="122" y="21" font-family="Arial, sans-serif" font-size="14" fill="#C45A6E" font-weight="bold">Noemie</text>
   </g>
 
-  <!-- Badge âge -->
-  <rect x="1040" y="540" width="120" height="50" rx="25" fill="#8BAF6E" opacity="0.9"/>
-  <text x="1100" y="572" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white" text-anchor="middle">6-10 ans</text>
+  <!-- Badge age -->
+  <rect x="1050" y="555" width="110" height="40" rx="20" fill="#4A8B5A" opacity="0.9"/>
+  <text x="1105" y="582" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">6-10 ans</text>
+
+  <!-- Bande doree bas -->
+  <rect y="622" width="1200" height="8" fill="#B86E20" opacity="0.4"/>
 </svg>

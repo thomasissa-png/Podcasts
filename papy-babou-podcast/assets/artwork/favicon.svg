@@ -1,47 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Fond circulaire ocre doré -->
-  <circle cx="256" cy="256" r="256" fill="#D4A054"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#2D4A7A"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E8A84C"/>
+      <stop offset="100%" stop-color="#B86E20"/>
+    </linearGradient>
+  </defs>
 
-  <!-- Livre ouvert (flat) — symbole central -->
-  <g transform="translate(256, 280)">
-    <!-- Page gauche -->
-    <path d="M-20,-80 L-20,40 Q-20,50 -30,50 L-130,50 Q-140,50 -140,40 L-140,-60 Q-140,-70 -130,-70 L-30,-80 Q-20,-80 -20,-80 Z"
-          fill="#FDF8F0" stroke="#5A6978" stroke-width="4"/>
-    <!-- Page droite -->
-    <path d="M20,-80 L20,40 Q20,50 30,50 L130,50 Q140,50 140,40 L140,-60 Q140,-70 130,-70 L30,-80 Q20,-80 20,-80 Z"
-          fill="#FDF8F0" stroke="#5A6978" stroke-width="4"/>
-    <!-- Reliure -->
-    <path d="M-20,-80 L0,-90 L20,-80 L20,40 L0,50 L-20,40 Z"
-          fill="#C47A5A" stroke="#5A6978" stroke-width="3"/>
+  <!-- Fond cercle indigo profond -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
 
-    <!-- Lignes de texte page gauche -->
-    <line x1="-120" y1="-40" x2="-40" y2="-40" stroke="#D4A054" stroke-width="3" stroke-linecap="round"/>
-    <line x1="-120" y1="-20" x2="-50" y2="-20" stroke="#D4A054" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-    <line x1="-120" y1="0" x2="-45" y2="0" stroke="#D4A054" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
-    <line x1="-120" y1="20" x2="-55" y2="20" stroke="#D4A054" stroke-width="3" stroke-linecap="round" opacity="0.3"/>
+  <!-- Anneau dore -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#B86E20" stroke-width="6" opacity="0.6"/>
+  <circle cx="256" cy="256" r="205" fill="none" stroke="#D4883A" stroke-width="2" opacity="0.3"/>
 
-    <!-- Lignes de texte page droite -->
-    <line x1="40" y1="-40" x2="120" y2="-40" stroke="#7BAFD4" stroke-width="3" stroke-linecap="round"/>
-    <line x1="40" y1="-20" x2="110" y2="-20" stroke="#7BAFD4" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-    <line x1="40" y1="0" x2="115" y2="0" stroke="#7BAFD4" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
-    <line x1="40" y1="20" x2="105" y2="20" stroke="#7BAFD4" stroke-width="3" stroke-linecap="round" opacity="0.3"/>
+  <!-- Rose des vents -->
+  <g transform="translate(256, 256)">
+    <!-- 4 pointes principales -->
+    <polygon points="0,-175 12,-35 0,-50 -12,-35" fill="#E8A84C"/><!-- N -->
+    <polygon points="0,175 12,35 0,50 -12,35" fill="#D4883A"/><!-- S -->
+    <polygon points="-175,0 -35,12 -50,0 -35,-12" fill="#D4883A"/><!-- O -->
+    <polygon points="175,0 35,12 50,0 35,-12" fill="#D4883A"/><!-- E -->
+
+    <!-- 4 pointes intermediaires -->
+    <polygon points="-120,-120 -18,-25 -30,-30 -25,-18" fill="#E8A84C" opacity="0.6"/>
+    <polygon points="120,-120 18,-25 30,-30 25,-18" fill="#E8A84C" opacity="0.6"/>
+    <polygon points="-120,120 -18,25 -30,30 -25,18" fill="#E8A84C" opacity="0.6"/>
+    <polygon points="120,120 18,25 30,30 25,18" fill="#E8A84C" opacity="0.6"/>
+
+    <!-- Centre -->
+    <circle cx="0" cy="0" r="16" fill="url(#gold)" stroke="#8B6914" stroke-width="3"/>
+    <circle cx="0" cy="0" r="6" fill="#FDF5E6"/>
   </g>
 
-  <!-- Étoiles décoratives (flat) -->
-  <polygon points="130,90 135,105 150,105 138,114 142,130 130,120 118,130 122,114 110,105 125,105"
-           fill="#E8B84B"/>
-  <polygon points="380,100 384,111 395,111 386,118 389,129 380,122 371,129 374,118 365,111 376,111"
-           fill="#E8B84B" opacity="0.7"/>
-  <polygon points="160,150 163,158 172,158 165,163 167,172 160,167 153,172 155,163 148,158 157,158"
-           fill="#E8B84B" opacity="0.5"/>
+  <!-- Etoile de Bethlehem (petite, en haut) -->
+  <polygon points="256,55 262,75 282,75 266,87 272,107 256,95 240,107 246,87 230,75 250,75"
+           fill="#FFF8D0" opacity="0.8"/>
 
-  <!-- Lunettes de Papy (flat, signature) -->
-  <g transform="translate(256, 160)">
-    <circle cx="-25" cy="0" r="22" fill="none" stroke="#5A6978" stroke-width="5"/>
-    <circle cx="25" cy="0" r="22" fill="none" stroke="#5A6978" stroke-width="5"/>
-    <line x1="3" y1="0" x2="-3" y2="0" stroke="#5A6978" stroke-width="5"/>
-    <line x1="-47" y1="-5" x2="-55" y2="-10" stroke="#5A6978" stroke-width="4" stroke-linecap="round"/>
-    <line x1="47" y1="-5" x2="55" y2="-10" stroke="#5A6978" stroke-width="4" stroke-linecap="round"/>
+  <!-- Lunettes de Papy (signature, bas) -->
+  <g transform="translate(256, 410)">
+    <circle cx="-18" cy="0" r="16" fill="none" stroke="#E8A84C" stroke-width="4"/>
+    <circle cx="18" cy="0" r="16" fill="none" stroke="#E8A84C" stroke-width="4"/>
+    <line x1="2" y1="0" x2="-2" y2="0" stroke="#E8A84C" stroke-width="4"/>
+    <line x1="-34" y1="-5" x2="-42" y2="-10" stroke="#E8A84C" stroke-width="3" stroke-linecap="round"/>
+    <line x1="34" y1="-5" x2="42" y2="-10" stroke="#E8A84C" stroke-width="3" stroke-linecap="round"/>
   </g>
 </svg>

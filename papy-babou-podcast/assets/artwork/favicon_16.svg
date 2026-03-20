@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <circle cx="8" cy="8" r="8" fill="#D4A054"/>
-  <g transform="translate(8, 9.5)">
-    <path d="M-1,-4 L-1,2.5 L-5.5,2.5 L-5.5,-3 L-1.5,-4 Z" fill="#FDF8F0" stroke="#5A6978" stroke-width="0.5"/>
-    <path d="M1,-4 L1,2.5 L5.5,2.5 L5.5,-3 L1.5,-4 Z" fill="#FDF8F0" stroke="#5A6978" stroke-width="0.5"/>
-    <rect x="-1" y="-4" width="2" height="6.5" fill="#C47A5A"/>
-  </g>
-  <circle cx="6" cy="5.5" r="1.5" fill="none" stroke="#5A6978" stroke-width="0.8"/>
-  <circle cx="10" cy="5.5" r="1.5" fill="none" stroke="#5A6978" stroke-width="0.8"/>
-  <line x1="7.5" y1="5.5" x2="8.5" y2="5.5" stroke="#5A6978" stroke-width="0.8"/>
+  <!-- Fond indigo -->
+  <circle cx="8" cy="8" r="8" fill="#1B2A4A"/>
+  <!-- Rose des vents minimaliste -->
+  <polygon points="8,1.5 9,6 8,5 7,6" fill="#E8A84C"/><!-- N -->
+  <polygon points="8,14.5 9,10 8,11 7,10" fill="#D4883A"/><!-- S -->
+  <polygon points="1.5,8 6,9 5,8 6,7" fill="#D4883A"/><!-- O -->
+  <polygon points="14.5,8 10,9 11,8 10,7" fill="#D4883A"/><!-- E -->
+  <!-- Centre -->
+  <circle cx="8" cy="8" r="1.5" fill="#E8A84C"/>
+  <circle cx="8" cy="8" r="0.6" fill="#FDF5E6"/>
 </svg>

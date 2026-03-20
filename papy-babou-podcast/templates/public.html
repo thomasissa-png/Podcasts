@@ -34,19 +34,20 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* Palette Papy Babou — chaleureuse, biblique, enfantine */
-      /* Contrastes WCAG AA corrigés */
-      --sable: #FDF8F0;
-      --sable-dark: #F5EDE0;
-      --ocre: #C08930;
-      --ocre-light: #E8C87A;
-      --ocre-dark: #8E6520;
+      /* Palette Papy Babou — aventure, epopee, parchemin */
+      /* Contrastes WCAG AA verifies */
+      --sable: #FDF5E6;
+      --sable-dark: #F0E0C0;
+      --ocre: #B86E20;
+      --ocre-light: #E8A84C;
+      --ocre-dark: #8B5A10;
       --bleu-doux: #7BAFD4;
-      --bleu-fonce: #3D6F8E;
-      --rose-tendre: #D4667A;
-      --vert-prairie: #56A659;
+      --bleu-fonce: #2D4A7A;
+      --bleu-nuit: #1B2A4A;
+      --rose-tendre: #C45A6E;
+      --vert-prairie: #4A8B5A;
       --corail: #FF6B6B;
-      --gris-texte: #3D3D3D;
+      --gris-texte: #2D2D2D;
       --gris-leger: #4A5866;
       --blanc: #FFFFFF;
 
@@ -76,7 +77,7 @@
 
     /* ── Header / Hero ────────────────────────────────────────── */
     .hero {
-      background: linear-gradient(175deg, var(--sable) 0%, var(--sable-dark) 50%, #EDE0CC 100%);
+      background: linear-gradient(175deg, var(--bleu-nuit) 0%, var(--bleu-fonce) 35%, var(--ocre-light) 75%, var(--sable) 100%);
       padding: 3rem 1.5rem 2.5rem;
       text-align: center;
       position: relative;
@@ -89,7 +90,7 @@
       top: -60px; right: -60px;
       width: 300px; height: 300px;
       background: radial-gradient(circle, var(--ocre-light) 0%, transparent 70%);
-      opacity: 0.2;
+      opacity: 0.15;
     }
 
     .hero::after {
@@ -97,8 +98,8 @@
       position: absolute;
       bottom: -40px; left: -40px;
       width: 200px; height: 200px;
-      background: radial-gradient(circle, var(--bleu-doux) 0%, transparent 70%);
-      opacity: 0.15;
+      background: radial-gradient(circle, var(--bleu-fonce) 0%, transparent 70%);
+      opacity: 0.1;
     }
 
     .hero-inner {
@@ -115,7 +116,7 @@
       flex-shrink: 0;
       width: 220px; height: 220px;
       border-radius: var(--radius);
-      box-shadow: 0 8px 30px rgba(212, 160, 84, 0.25);
+      box-shadow: 0 8px 30px rgba(27, 42, 74, 0.4);
       object-fit: cover;
       background: var(--blanc);
     }
@@ -139,26 +140,27 @@
       font-family: var(--font-display);
       font-size: 2.5rem;
       line-height: 1.15;
-      color: var(--gris-texte);
+      color: var(--blanc);
       margin-bottom: 0.3rem;
+      text-shadow: 0 2px 8px rgba(27, 42, 74, 0.3);
     }
 
     .hero-title span {
       display: block;
-      color: var(--ocre-dark);
+      color: var(--ocre-light);
       font-size: 3rem;
     }
 
     .hero-subtitle {
       font-size: 1.1rem;
-      color: var(--gris-leger);
+      color: rgba(255, 255, 255, 0.8);
       font-style: italic;
       margin-bottom: 1rem;
     }
 
     .hero-description {
       font-size: 1rem;
-      color: var(--gris-texte);
+      color: rgba(255, 255, 255, 0.85);
       max-width: 550px;
       line-height: 1.7;
     }
@@ -175,13 +177,13 @@
       align-items: center;
       gap: 0.4rem;
       font-size: 0.9rem;
-      color: var(--gris-leger);
+      color: rgba(255, 255, 255, 0.75);
       font-weight: 600;
     }
 
     .hero-meta-item svg {
       width: 18px; height: 18px;
-      fill: var(--ocre);
+      fill: var(--ocre-light);
     }
 
     /* ── Saison Tabs ──────────────────────────────────────────── */
@@ -388,7 +390,7 @@
     }
 
     .char-avatar.papy { background: var(--ocre); color: var(--blanc); }
-    .char-avatar.antoine { background: #4A8DB8; color: var(--blanc); }
+    .char-avatar.antoine { background: var(--bleu-fonce); color: var(--blanc); }
     .char-avatar.noemie { background: var(--rose-tendre); color: var(--blanc); }
     .char-avatar.mamie { background: var(--vert-prairie); color: var(--blanc); }
 
@@ -586,13 +588,13 @@
       display: flex;
       align-items: center;
       gap: 0.4rem;
-      background: rgba(255,255,255,0.7);
-      border: 1px solid var(--ocre-light);
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(232, 168, 76, 0.4);
       border-radius: var(--radius-pill);
       padding: 0.3rem 0.9rem;
       font-size: 0.78rem;
       font-weight: 600;
-      color: var(--gris-texte);
+      color: rgba(255,255,255,0.85);
     }
     .badge-trust .badge-icon {
       font-size: 0.9rem;
@@ -1030,7 +1032,7 @@
           Les Histoires de
           <span>Papy Babou</span>
         </h1>
-        <p class="hero-subtitle">Histoires bibliques pour les enfants de 6 à 10 ans</p>
+        <p class="hero-subtitle">Grandes epopees bibliques pour les enfants de 6 a 10 ans</p>
         <p class="hero-description">
           Installez-vous bien confortablement ! Papy Babou ouvre son grand livre
           et raconte à Antoine et Noémie les plus belles histoires de la Bible.
