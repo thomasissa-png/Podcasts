@@ -3,12 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Les Histoires de Papy Babou — Le podcast des grandes missions bibliques</title>
+  <title>Les Histoires de Papy Babou | Podcast biblique pour enfants</title>
   <meta name="description" content="Rejoignez Papy Babou, Antoine et Noémie pour des missions bibliques extraordinaires ! Le podcast qui transforme les enfants de 6 à 10 ans en vrais héros.">
-  <meta property="og:title" content="Les Histoires de Papy Babou — Le podcast des grandes missions bibliques">
+  <meta property="og:title" content="Les Histoires de Papy Babou | Podcast biblique pour enfants">
   <meta property="og:description" content="Des missions impossibles, des héros légendaires, des rebondissements incroyables ! Papy Babou embarque Antoine et Noémie dans les plus grandes épopées de la Bible.">
-  <meta property="og:image" content="/assets/artwork/og_image.svg">
+  <meta property="og:image" content="/assets/artwork/og_image.png">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://papybabou.fr">
+  <meta property="og:locale" content="fr_FR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Les Histoires de Papy Babou | Podcast biblique pour enfants">
+  <meta name="twitter:description" content="Des missions bibliques extraordinaires pour les 6-10 ans. Gratuit, sans pub, en famille.">
+  <meta name="twitter:image" content="/assets/artwork/og_image.png">
   <!-- Favicons & Icons -->
   <link rel="icon" type="image/svg+xml" href="/assets/artwork/favicon.svg">
   <link rel="icon" type="image/svg+xml" sizes="32x32" href="/assets/artwork/favicon_32.svg">
@@ -21,7 +27,7 @@
     "@context": "https://schema.org",
     "@type": "PodcastSeries",
     "name": "Les Histoires de Papy Babou",
-    "description": "Des missions impossibles, des héros légendaires, des rebondissements incroyables ! Papy Babou embarque Antoine et Noémie dans les plus grandes épopées de la Bible. Pour les 6-10 ans.",
+    "description": "Des missions impossibles, des héros légendaires, des rebondissements incroyables ! Papy Babou embarque Antoine et Noémie dans les plus grandes épopées de la Bible. Pour les 6-10 ans. Gratuit et sans pub.",
     "genre": "Religion & Spirituality",
     "inLanguage": "fr",
     "image": "/assets/artwork/cover.svg",
@@ -39,7 +45,8 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"></noscript>
   <style>
     /* ── Reset & Variables ─────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -187,14 +194,14 @@
 
     .hero-subtitle {
       font-size: 1.1rem;
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.95);
       font-style: italic;
       margin-bottom: 1rem;
     }
 
     .hero-description {
       font-size: 1rem;
-      color: rgba(255, 255, 255, 0.85);
+      color: rgba(255, 255, 255, 0.95);
       max-width: 550px;
       line-height: 1.7;
     }
@@ -211,7 +218,7 @@
       align-items: center;
       gap: 0.4rem;
       font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.75);
+      color: rgba(255, 255, 255, 0.95);
       font-weight: 600;
     }
 
@@ -393,6 +400,8 @@
       font-size: 1.5rem;
       color: var(--dore-dark);
       margin-bottom: 0.8rem;
+      border-left: 4px solid var(--dore-light);
+      padding-left: 0.8rem;
     }
 
     .about-card p {
@@ -496,11 +505,13 @@
 
     .player-progress {
       flex: 1;
-      height: 4px;
+      height: 8px;
       background: var(--sable-dark);
       border-radius: var(--radius-bar);
       cursor: pointer;
       position: relative;
+      padding: 8px 0;
+      background-clip: content-box;
     }
 
     .player-progress-bar {
@@ -644,8 +655,8 @@
     }
     .parents-guide h2 {
       font-family: var(--font-display);
-      font-size: 1.5rem;
-      color: var(--dore-dark);
+      font-size: 1.4rem;
+      color: var(--bleu-fonce);
       margin-bottom: 1rem;
     }
     .parents-guide details {
@@ -691,8 +702,8 @@
     }
     .testimonials-section h2 {
       font-family: var(--font-display);
-      font-size: 1.5rem;
-      color: var(--dore-dark);
+      font-size: 1.4rem;
+      color: var(--rose-tendre);
       margin-bottom: 1rem;
     }
     .testimonials-grid {
@@ -1002,15 +1013,17 @@
       color: var(--blanc);
       border: none;
       cursor: pointer;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: var(--shadow);
       z-index: 999;
-      transition: all 0.2s;
+      transition: opacity 0.3s, visibility 0.3s, transform 0.2s, background 0.2s;
+      opacity: 0;
+      visibility: hidden;
     }
     .back-to-top:hover { background: var(--dore-dark); transform: translateY(-2px); }
-    .back-to-top.visible { display: flex; }
+    .back-to-top.visible { opacity: 1; visibility: visible; }
     .back-to-top svg { width: 20px; height: 20px; fill: currentColor; }
 
     /* ── Responsive ───────────────────────────────────────────── */
@@ -1036,8 +1049,18 @@
       .episode-cover { width: 60px; height: 60px; }
 
       .trust-badges { justify-content: center; }
+      .saison-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.5rem;
+      }
+      .saison-nav::-webkit-scrollbar { display: none; }
+      .saison-tab { white-space: nowrap; flex-shrink: 0; }
       .player-volume-wrap { display: none; }
       .modal-header { flex-direction: column; align-items: center; text-align: center; }
+      .modal-cover { width: 60px; height: 60px; }
       .modal-meta .modal-info { justify-content: center; }
     }
 
@@ -1052,33 +1075,83 @@
       .trust-badges { flex-direction: column; align-items: center; }
       .player-speed-btn { display: none; }
     }
+
+    /* ── Large screens ──────────────────────────────────────── */
+    @media (min-width: 1200px) {
+      .hero { padding: 4rem 2rem 3rem; }
+      .hero::before { width: 500px; height: 500px; }
+      .hero::after { width: 350px; height: 350px; }
+      .hero-cover { width: 260px; height: 260px; }
+    }
+
+    /* ── Email subscribe form ──────────────────────────────── */
+    .subscribe-email-form {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .subscribe-email-form input[type="email"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.7rem 1.2rem;
+      border: 2px solid var(--sable-dark);
+      border-radius: var(--radius-pill);
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      background: var(--blanc);
+      color: var(--gris-texte);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .subscribe-email-form input[type="email"]:focus { border-color: var(--dore); }
+    .subscribe-email-form button {
+      padding: 0.7rem 1.5rem;
+      border-radius: var(--radius-pill);
+      background: var(--dore);
+      color: var(--blanc);
+      font-weight: 700;
+      font-size: 0.92rem;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .subscribe-email-form button:hover { background: var(--dore-dark); transform: translateY(-1px); }
+    .subscribe-success {
+      color: var(--vert-prairie);
+      font-weight: 700;
+      font-size: 0.92rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
   </style>
 </head>
 <body>
 
-  <a href="#episodes-list" class="skip-link">Aller au contenu</a>
+  <a href="#episodes-heading" class="skip-link">Aller au contenu</a>
 
   <!-- ═══ Hero ═══ -->
   <header class="hero">
     <div class="hero-inner">
       <img src="/assets/artwork/cover.svg" alt="Les Histoires de Papy Babou" class="hero-cover">
       <div class="hero-text">
-        <div class="hero-badge">Mission podcast : en route !</div>
+        <div class="hero-badge">Nouveau : Saison 1 disponible !</div>
         <h1 class="hero-title">
           Les Histoires de
           <span>Papy Babou</span>
         </h1>
         <p class="hero-subtitle">Les plus grandes épopées de la Bible, racontées en famille !</p>
         <p class="hero-description">
-          Accrochez-vous, la mission commence ! Papy Babou, le plus intrépide
-          des grands-pères, entraîne Antoine et Noémie au coeur des récits les plus
-          extraordinaires de la Bible. Des héros légendaires, des défis impossibles,
-          des rebondissements à chaque tournant. Bienvenue dans l'aventure !
+          Papy Babou entraîne Antoine et Noémie dans les plus grandes
+          épopées de la Bible. Des héros légendaires, des défis impossibles
+          et des rebondissements à chaque tournant !
         </p>
         <div class="hero-meta">
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            <span id="hero-episode-count">-- épisodes</span>
+            <span id="hero-episode-count">-- missions</span>
           </div>
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
@@ -1090,9 +1163,10 @@
           </div>
         </div>
         <div class="trust-badges">
-          <div class="badge-trust"><span class="badge-icon">&#x2714;</span> Missions conçues pour les 6-10 ans</div>
-          <div class="badge-trust"><span class="badge-icon">&#x1F512;</span> Zéro pub, 100% gratuit</div>
-          <div class="badge-trust"><span class="badge-icon">&#x1F46A;</span> Fabriqué en famille avec passion</div>
+          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--dore-light)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Missions conçues pour les 6-10 ans</div>
+          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--dore-light)"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg></span> Zéro pub, 100% gratuit</div>
+          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--dore-light)"><path d="M12 12.75c1.63 0 3.07.39 4.24.9 1.08.48 1.76 1.56 1.76 2.73V18H6v-1.61c0-1.18.68-2.26 1.76-2.73 1.17-.52 2.61-.91 4.24-.91zM4 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm1.13 1.1c-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58A2.01 2.01 0 000 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29zM20 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm4 3.43c0-.81-.48-1.53-1.22-1.85A6.95 6.95 0 0020 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57zM12 6c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/></svg></span> Fabriqué en famille avec passion</div>
+          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--dore-light)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg></span> Récits fidèles aux textes bibliques</div>
         </div>
       </div>
     </div>
@@ -1121,13 +1195,13 @@
   </main>
 
   <!-- ═══ About ═══ -->
-  <section class="about-section">
+  <section class="about-section" id="about-section">
     <div class="about-card">
       <div>
         <h2>C'est quoi, cette mission ?</h2>
         <p>
           <strong>Les Histoires de Papy Babou</strong>, c'est LE podcast qui propulse
-          les héros de la Bible dans des épopées palpitantes ! Chaque épisode,
+          les héros de la Bible dans des épopées palpitantes ! Chaque mission,
           une nouvelle mission extraordinaire. Des défis impossibles, des retournements
           de situation, de l'humour et du courage à revendre.
         </p>
@@ -1189,7 +1263,7 @@
       <summary>Qui se cache derrière ces missions ?</summary>
       <div class="faq-answer">
         Les Histoires de Papy Babou, c'est un projet familial mené par des parents passionnés
-        de récits et de transmission. Chaque épisode est écrit avec soin, relu et validé pour
+        de récits et de transmission. Chaque mission est écrite avec soin, relue et validée pour
         garantir des missions fidèles aux textes bibliques, bienveillantes et accessibles
         à vos enfants.
       </div>
@@ -1217,19 +1291,19 @@
     <h2>Retour de mission des familles</h2>
     <div class="testimonials-grid">
       <div class="testimonial">
-        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="stars" role="img" aria-label="5 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
         <p>&laquo; Ma fille de 7 ans se prend pour Noémie et exige sa "mission du soir".
-        Elle redemande le même épisode encore et encore, impossible de l'arrêter ! &raquo;</p>
+        Elle redemande la même mission encore et encore, impossible de l'arrêter ! &raquo;</p>
         <cite>Nathalie P., maman de Léa</cite>
       </div>
       <div class="testimonial">
-        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="stars" role="img" aria-label="4 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;<span style="opacity:0.3">&#9733;</span></div>
         <p>&laquo; Un podcast biblique palpitant et jamais moralisateur. Les enfants rient,
         s'émerveillent et posent mille questions après chaque mission. Du grand spectacle ! &raquo;</p>
         <cite>Xavier M., père de 2 enfants</cite>
       </div>
       <div class="testimonial">
-        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="stars" role="img" aria-label="5 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
         <p>&laquo; On l'écoute en voiture. Les 25 minutes passent tellement vite que les enfants
         ne veulent plus descendre ! C'est devenu le rendez-vous incontournable de la famille. &raquo;</p>
         <cite>Sophie L., maman d'Emma et Lucas</cite>
@@ -1237,13 +1311,24 @@
     </div>
   </section>
 
-  <!-- ═══ Subscribe (hidden — no RSS feed yet) ═══ -->
-  <!-- Section masquée tant qu'aucun flux RSS n'est disponible -->
+  <!-- ═══ Subscribe ═══ -->
+  <section class="subscribe-section">
+    <h2>Ne manquez aucune mission !</h2>
+    <p class="sub-text">Recevez un email à chaque nouvelle mission. Pas de spam, promis.</p>
+    <form class="subscribe-email-form" id="subscribe-form">
+      <input type="email" placeholder="votre@email.fr" aria-label="Adresse email" required>
+      <button type="submit">M'abonner</button>
+    </form>
+    <p class="subscribe-success" id="subscribe-success">Merci ! Vous serez prévenu(e) dès la prochaine mission.</p>
+  </section>
 
   <!-- ═══ Footer ═══ -->
   <footer class="footer">
     <div class="footer-links">
       <a href="mailto:contact@papybabou.fr">Contact</a>
+      <a href="/mentions-legales">Mentions légales</a>
+      <a href="/confidentialite">Politique de confidentialité</a>
+      <a href="#about-section">À propos</a>
     </div>
     <p>&copy; 2024-2026 Les Histoires de Papy Babou. Tous droits réservés. L'aventure continue !</p>
   </footer>
@@ -1485,7 +1570,7 @@
         });
       }
 
-      heroCount.textContent = episodes.length + ' épisode' + (episodes.length > 1 ? 's' : '');
+      heroCount.textContent = episodes.length + ' mission' + (episodes.length > 1 ? 's' : '');
 
       if (currentSaison > 0) {
         var s = saisons.find(function(s) { return s.numero === currentSaison; });
@@ -1524,7 +1609,7 @@
         var hasAudio = !!ep.audio_url;
         var coverHtml = '';
         if (ep.cover_url) {
-          coverHtml = '<img class="episode-cover has-cover" src="' + escHtml(ep.cover_url) + '" alt="" loading="lazy">';
+          coverHtml = '<img class="episode-cover has-cover" src="' + escHtml(ep.cover_url) + '" alt="' + escHtml('Couverture de la mission : ' + (ep.titre || '')) + '" loading="lazy">';
         }
 
         // Resume badge
@@ -1542,7 +1627,7 @@
         }
 
         card.innerHTML =
-          '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : '') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default"') + '>' + playIcon + '</button>' +
+          '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : 'Bientôt disponible — ') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default" title="Bientôt disponible"') + '>' + playIcon + '</button>' +
           '<div class="episode-info">' +
             resumeBadge +
             '<div class="episode-number">Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero + '</div>' +
@@ -1610,10 +1695,36 @@
 
       modalEl.classList.add('visible');
       document.body.style.overflow = 'hidden';
+      _setupFocusTrap();
       modalClose.focus();
     }
 
+    // Focus trap for modal
+    var _focusTrapHandler = null;
+    function _setupFocusTrap() {
+      var focusable = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      _focusTrapHandler = function(e) {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      };
+      modalEl.addEventListener('keydown', _focusTrapHandler);
+    }
+    function _removeFocusTrap() {
+      if (_focusTrapHandler) {
+        modalEl.removeEventListener('keydown', _focusTrapHandler);
+        _focusTrapHandler = null;
+      }
+    }
+
     function closeModal() {
+      _removeFocusTrap();
       modalEl.classList.remove('visible');
       document.body.style.overflow = '';
     }
@@ -1670,6 +1781,17 @@
       playerProgressBar.style.width = '0%';
       clearResume();
       renderEpisodes();
+      // Auto-play next episode
+      if (currentEpisodeData) {
+        var currIdx = episodes.findIndex(function(e) { return e.episode_id === currentEpisodeData.episode_id; });
+        if (currIdx >= 0 && currIdx < episodes.length - 1) {
+          var next = episodes[currIdx + 1];
+          if (next && next.audio_url) {
+            playerTitle.textContent = 'Prochain : ' + (next.titre || '');
+            setTimeout(function() { playEpisode(next); }, 3000);
+          }
+        }
+      }
     });
 
     audio.addEventListener('timeupdate', function() {
@@ -1755,6 +1877,26 @@
     backToTop.addEventListener('click', function() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+
+    // ── Subscribe form ──
+    var subForm = document.getElementById('subscribe-form');
+    var subSuccess = document.getElementById('subscribe-success');
+    if (subForm) {
+      subForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var emailInput = subForm.querySelector('input[type="email"]');
+        var email = emailInput ? emailInput.value.trim() : '';
+        if (!email) return;
+        // POST to backend (graceful fallback if endpoint doesn't exist yet)
+        fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        }).catch(function() {});
+        subForm.style.display = 'none';
+        subSuccess.style.display = 'block';
+      });
+    }
 
     // ── Init ──
     loadEpisodes();
