@@ -503,12 +503,15 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         if seg["personnage"] != "sfx"
     })
 
-    # Construire un résumé court à partir des premiers segments (pas juste le titre)
-    premiers_textes = [
-        seg["texte"] for seg in episode.get("segments", [])[:3]
-        if seg.get("personnage") != "sfx"
-    ]
-    resume_court = " ".join(premiers_textes)[:200] if premiers_textes else episode.get("titre", "")
+    # Construire un résumé court : priorité au résumé narratif, puis morale, puis titre
+    resume_court = (
+        episode.get("resume")
+        or rapport.get("resume")
+        or episode.get("morale")
+        or rapport.get("titre", "")
+    )
+    if resume_court:
+        resume_court = resume_court[:200]
 
     # Construire un resume des retours humains pour la memoire (A2)
     retours_humains = ""

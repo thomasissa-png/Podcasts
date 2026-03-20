@@ -959,7 +959,7 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .player-speed-btn:hover { background: var(--ocre-light); color: var(--blanc); }
+    .player-speed-btn:hover { background: var(--ocre); color: var(--blanc); }
     .player-volume-wrap {
       display: flex;
       align-items: center;
@@ -976,7 +976,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      background: var(--ocre-light);
+      background: var(--ocre);
       color: var(--blanc);
       font-size: 0.72rem;
       font-weight: 700;
@@ -1062,7 +1062,7 @@
           Les Histoires de
           <span>Papy Babou</span>
         </h1>
-        <p class="hero-subtitle">Grandes epopees bibliques pour les enfants de 6 a 10 ans</p>
+        <p class="hero-subtitle">Saison 1 — Grandes epopees bibliques pour les enfants de 6 a 10 ans</p>
         <p class="hero-description">
           Installez-vous bien confortablement ! Papy Babou ouvre son grand livre
           et raconte à Antoine et Noémie les plus belles histoires de la Bible.
@@ -1191,9 +1191,9 @@
     <details>
       <summary>Comment écouter avec mon enfant ?</summary>
       <div class="faq-answer">
-        Vous pouvez écouter directement sur ce site, ou vous abonner via votre application
-        de podcasts préférée (Apple Podcasts, Spotify, ou via le flux RSS). Les épisodes durent
+        Vous pouvez écouter directement sur ce site. Les épisodes durent
         25-35 minutes, parfaits pour le trajet en voiture ou le moment du coucher.
+        L'abonnement via les plateformes de podcasts sera bientôt disponible.
       </div>
     </details>
     <details>
@@ -1230,23 +1230,13 @@
     </div>
   </section>
 
-  <!-- ═══ Subscribe ═══ -->
-  <section class="subscribe-section">
-    <h2>Ne manquez aucun épisode</h2>
-    <p class="sub-text">Abonnez-vous sur votre plateforme préférée</p>
-    <div class="subscribe-btns">
-      <a href="/rss/feed.xml" target="_blank" class="subscribe-btn rss">
-        <svg viewBox="0 0 24 24"><path d="M6.18 15.64a2.18 2.18 0 012.18 2.18C8.36 19 7.36 20 6.18 20 5 20 4 19 4 17.82a2.18 2.18 0 012.18-2.18M4 4.44A15.56 15.56 0 0119.56 20h-2.83A12.73 12.73 0 004 7.27V4.44m0 5.66a9.9 9.9 0 019.9 9.9h-2.83A7.07 7.07 0 004 12.93V10.1z"/></svg>
-        Flux RSS
-      </a>
-    </div>
-  </section>
+  <!-- ═══ Subscribe (hidden — no RSS feed yet) ═══ -->
+  <!-- Section masquée tant qu'aucun flux RSS n'est disponible -->
 
   <!-- ═══ Footer ═══ -->
   <footer class="footer">
     <div class="footer-links">
       <a href="mailto:contact@papybabou.fr">Contact</a>
-      <a href="/rss/feed.xml" target="_blank">Flux RSS</a>
     </div>
     <p>&copy; 2024-2026 Les Histoires de Papy Babou. Tous droits réservés.</p>
   </footer>
