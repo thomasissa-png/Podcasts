@@ -816,15 +816,16 @@ PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
             "Histoires de l'Ancien Testament exclusivement. "
             "Les 10 épisodes sont IMPOSÉS dans cet ordre EXACT — NE PAS CHANGER :\n"
             "  Épisode 1 : La création du monde\n"
-            "  Épisode 2 : Adam et Ève — le fruit défendu\n"
-            "  Épisode 3 : Noé et le déluge\n"
-            "  Épisode 4 : Abraham — quitter tout par confiance\n"
-            "  Épisode 5 : Joseph et la tunique de couleurs\n"
-            "  Épisode 6 : Moïse — l'enfant du Nil et la mer qui s'ouvre\n"
-            "  Épisode 7 : David et Goliath\n"
-            "  Épisode 8 : Salomon — le roi sage\n"
-            "  Épisode 9 : Daniel dans la fosse aux lions\n"
-            "  Épisode 10 : Jonas — avalé par une baleine\n"
+            "  Épisode 2 : Noé et le déluge\n"
+            "  Épisode 3 : Abraham — quitter tout par confiance\n"
+            "  Épisode 4 : Joseph et la tunique de couleurs\n"
+            "  Épisode 5 : Moïse — l'enfant du Nil et la mer qui s'ouvre\n"
+            "  Épisode 6 : David et Goliath\n"
+            "  Épisode 7 : Salomon — le roi sage\n"
+            "  Épisode 8 : Daniel dans la fosse aux lions\n"
+            "  Épisode 9 : Jonas — avalé par une baleine\n"
+            "  Épisode 10 : Esther — la reine qui sauve son peuple\n"
+            "NOTE : Adam et Ève est couvert dans l'épisode 1 (Création). "
             "Tu DOIS utiliser EXACTEMENT ces histoire_biblique pour chaque épisode, "
             "dans cet ordre. Tu peux choisir les titres, résumés, morales et prétextes "
             "librement, mais l'histoire_biblique de chaque épisode est FIXÉE. "
@@ -833,7 +834,6 @@ PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
         ),
         "episodes_imposes": [
             "La création du monde",
-            "Adam et Ève — le fruit défendu",
             "Noé et le déluge",
             "Abraham — quitter tout par confiance",
             "Joseph et la tunique de couleurs",
@@ -842,6 +842,7 @@ PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
             "Salomon — le roi sage",
             "Daniel dans la fosse aux lions",
             "Jonas — avalé par une baleine",
+            "Esther — la reine qui sauve son peuple",
         ],
     },
     2: {

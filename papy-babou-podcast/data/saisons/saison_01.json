@@ -2,7 +2,7 @@
   "saison": {
     "numero": 1,
     "theme": "Les grandes aventures de l'Ancien Testament",
-    "description": "Papy Babou fait découvrir à Antoine et Noémie les plus belles histoires de l'Ancien Testament, de la Création du monde jusqu'à Jonas. Chaque visite chez Papy est l'occasion d'un voyage extraordinaire dans le temps, où les enfants découvrent des héros de la Bible qui ont fait confiance à Dieu malgré les épreuves.",
+    "description": "Papy Babou fait découvrir à Antoine et Noémie les plus belles histoires de l'Ancien Testament, de la Création du monde jusqu'à Esther. Chaque visite chez Papy est l'occasion d'un voyage extraordinaire dans le temps, où les enfants découvrent des héros de la Bible qui ont fait confiance à Dieu malgré les épreuves.",
     "fil_rouge": "Antoine et Noémie découvrent progressivement que chaque héros biblique a dû faire confiance à Dieu dans des moments difficiles — tout comme eux dans leur propre vie. En parallèle, la famille attend l'arrivée d'un bébé (Lucas), ce qui colore les réactions des enfants au fil de la saison.",
     "arcs_personnages": {
       "antoine": {
@@ -62,7 +62,7 @@
         "arc_personnage_focus": "noemie",
         "progression_arc": "Noémie s'émerveille devant chaque création et commence à poser des questions sur l'origine des choses. Son sens de l'émerveillement est le moteur de l'épisode.",
         "lien_episode_precedent": "",
-        "teasing_episode_suivant": "Papy promet de raconter la prochaine fois ce qui s'est passé dans le plus beau jardin du monde — et pourquoi on n'y habite plus.",
+        "teasing_episode_suivant": "Papy promet de raconter la prochaine fois l'histoire du plus grand bateau jamais construit — et pourquoi il a fallu le construire.",
         "elements_fil_rouge": "Premier épisode chez Papy. Les enfants découvrent le rituel des histoires. Antoine mentionne que Maman a un gros ventre mais ne comprend pas encore bien ce que ça signifie.",
         "moments_cles": [
           "Noémie qui imite les animaux au fur et à mesure que Papy les nomme",
@@ -70,45 +70,12 @@
           "Le premier 'petit mot de Papy' qui demande aux enfants quel est leur moment préféré de la création"
         ],
         "questions_ouvertes": [
-          "Que s'est-il passé dans le jardin d'Éden ?",
+          "Qu'est-ce que Dieu va faire quand les hommes oublient ses merveilles ?",
           "Pourquoi Dieu s'est-il reposé le septième jour ?"
         ]
       },
       {
         "numero": 2,
-        "titre": "Adam et Ève — le fruit défendu du jardin merveilleux",
-        "type": "standard",
-        "histoire_biblique": "Adam et Ève — le fruit défendu",
-        "resume": "Papy raconte l'histoire d'Adam et Ève dans le jardin d'Éden. Ils vivent heureux au milieu d'arbres magnifiques et d'animaux dociles. Dieu leur a tout donné, sauf un arbre dont ils ne doivent pas manger le fruit. Le serpent rusé convainc Ève de goûter, et Adam la suit. Ils découvrent alors la honte et doivent quitter le jardin. Mais Dieu ne les abandonne pas — il leur fait des vêtements et veille sur eux.",
-        "morale": "Les règles existent pour nous protéger, pas pour nous punir. Quand on fait une bêtise, on peut toujours se relever.",
-        "ambiance": "mystere",
-        "duree_cible_minutes": 25,
-        "pretexte": "Mamie Sonia a fait un magnifique gâteau au chocolat mais interdit d'y toucher avant le goûter. Noémie a terriblement envie d'en prendre un morceau en cachette. Papy sourit : 'Ça me rappelle une histoire...'",
-        "personnages_presents": [
-          "papy_babou",
-          "antoine",
-          "noemie"
-        ],
-        "personnages_secondaires_presents": [
-          "mamie_sonia"
-        ],
-        "arc_personnage_focus": "antoine",
-        "progression_arc": "Antoine comprend que les règles ne sont pas là pour embêter mais pour protéger. Il fait le parallèle avec les consignes de ses parents.",
-        "lien_episode_precedent": "Papy reprend là où il s'était arrêté : le beau jardin de la création, et ce qui s'y est passé ensuite.",
-        "teasing_episode_suivant": "Papy annonce que la prochaine fois, il racontera l'histoire du plus grand bateau jamais construit — et pourquoi il a fallu le construire.",
-        "elements_fil_rouge": "Mamie Sonia apparaît pour la première fois. Elle taquine Papy sur sa façon de raconter. Noémie demande si le bébé dans le ventre de Maman a aussi le droit de manger du gâteau.",
-        "moments_cles": [
-          "Le serpent qui parle — Noémie a un frisson",
-          "Adam et Ève qui se cachent de Dieu — Antoine trouve ça rigolo",
-          "Mamie Sonia qui dit 'Votre Papy exagère toujours un peu' quand Papy décrit le jardin"
-        ],
-        "questions_ouvertes": [
-          "Qu'est devenu le jardin d'Éden ?",
-          "Est-ce que Dieu était vraiment fâché ou plutôt triste ?"
-        ]
-      },
-      {
-        "numero": 3,
         "titre": "Noé et le déluge — l'arche qui a sauvé le monde",
         "type": "standard",
         "histoire_biblique": "Noé et le déluge",
@@ -122,12 +89,14 @@
           "antoine",
           "noemie"
         ],
-        "personnages_secondaires_presents": [],
+        "personnages_secondaires_presents": [
+          "mamie_sonia"
+        ],
         "arc_personnage_focus": "antoine",
         "progression_arc": "Antoine est touché par le courage de Noé face aux moqueries. Il fait le lien avec une situation à l'école où on s'est moqué de lui.",
-        "lien_episode_precedent": "Papy explique que les descendants d'Adam et Ève ont oublié les leçons du jardin — les hommes sont devenus égoïstes.",
+        "lien_episode_precedent": "Après la Création, les hommes ont oublié les merveilles de Dieu — ils sont devenus égoïstes et violents.",
         "teasing_episode_suivant": "Papy promet de raconter l'histoire d'un homme qui a tout quitté — sa maison, sa famille, son pays — juste parce que Dieu le lui a demandé.",
-        "elements_fil_rouge": "Antoine demande si le bébé aura peur de l'orage. Papy le rassure : un grand frère, c'est là pour protéger.",
+        "elements_fil_rouge": "Mamie Sonia apparaît pour la première fois. Elle taquine Papy sur sa façon de raconter. Antoine demande si le bébé aura peur de l'orage. Papy le rassure : un grand frère, c'est là pour protéger.",
         "moments_cles": [
           "Noémie qui veut savoir comment les girafes sont entrées dans l'arche",
           "Le moment où la pluie s'arrête enfin — silence puis joie",
@@ -139,7 +108,7 @@
         ]
       },
       {
-        "numero": 4,
+        "numero": 3,
         "titre": "Abraham — celui qui a tout quitté par confiance",
         "type": "standard",
         "histoire_biblique": "Abraham — quitter tout par confiance",
@@ -172,7 +141,7 @@
         ]
       },
       {
-        "numero": 5,
+        "numero": 4,
         "titre": "Joseph et la tunique de couleurs — trahi par ses frères",
         "type": "standard",
         "histoire_biblique": "Joseph et la tunique de couleurs",
@@ -203,7 +172,7 @@
         ]
       },
       {
-        "numero": 6,
+        "numero": 5,
         "titre": "Moïse — l'enfant du Nil et la mer qui s'ouvre",
         "type": "mi-saison",
         "histoire_biblique": "Moïse — l'enfant du Nil et la mer qui s'ouvre",
@@ -242,7 +211,7 @@
         }
       },
       {
-        "numero": 7,
+        "numero": 6,
         "titre": "David et Goliath — le berger qui a terrassé un géant",
         "type": "standard",
         "histoire_biblique": "David et Goliath",
@@ -273,7 +242,7 @@
         ]
       },
       {
-        "numero": 8,
+        "numero": 7,
         "titre": "Salomon — le roi qui a demandé la sagesse",
         "type": "standard",
         "histoire_biblique": "Salomon — le roi sage",
@@ -306,7 +275,7 @@
         ]
       },
       {
-        "numero": 9,
+        "numero": 8,
         "titre": "Daniel dans la fosse aux lions — la foi plus forte que la peur",
         "type": "standard",
         "histoire_biblique": "Daniel dans la fosse aux lions",
@@ -326,7 +295,7 @@
         "arc_personnage_focus": "antoine",
         "progression_arc": "Antoine surmonte sa peur du noir en s'inspirant de Daniel. Il comprend que la prière et la confiance en Dieu sont des forces intérieures qui protègent.",
         "lien_episode_precedent": "Après Salomon, le royaume s'est divisé et le peuple a été exilé à Babylone. Daniel fait partie de ces exilés.",
-        "teasing_episode_suivant": "Papy dit que pour la dernière histoire de cette série, il racontera quelque chose d'extraordinaire : un homme avalé par un énorme poisson — et ce qui lui est arrivé à l'intérieur.",
+        "teasing_episode_suivant": "Papy dit que la prochaine histoire, c'est celle d'un homme avalé par un énorme poisson — et ce qui lui est arrivé à l'intérieur.",
         "elements_fil_rouge": "Mamie apporte du lait chaud et des couvertures. L'ambiance cocooning du soir. Antoine demande si le bébé Lucas aura peur du noir lui aussi, et promet de le protéger.",
         "moments_cles": [
           "Daniel qui prie malgré l'interdiction — Antoine admire son courage",
@@ -339,15 +308,48 @@
         ]
       },
       {
-        "numero": 10,
+        "numero": 9,
         "titre": "Jonas — avalé par une baleine, rattrapé par l'amour de Dieu",
-        "type": "final",
+        "type": "standard",
         "histoire_biblique": "Jonas — avalé par une baleine",
         "resume": "Dieu demande à Jonas d'aller prêcher à Ninive, une ville méchante. Jonas a peur et fuit sur un bateau en direction opposée. Une terrible tempête éclate. Jonas comprend que c'est à cause de lui et demande aux marins de le jeter à la mer. Un énorme poisson l'avale. Pendant trois jours dans le ventre du poisson, Jonas prie et regrette sa fuite. Le poisson le recrache sur la plage. Jonas va finalement à Ninive, et la ville entière se repent. Dieu pardonne à Ninive — et Jonas apprend que l'amour de Dieu est pour tous.",
         "morale": "On ne peut pas fuir ses responsabilités, mais on peut toujours revenir sur le bon chemin. L'amour de Dieu est pour tout le monde, même ceux qu'on croit méchants.",
         "ambiance": "joyeux",
+        "duree_cible_minutes": 25,
+        "pretexte": "Noémie a fait une bêtise à l'école et elle refuse de s'excuser. Elle dit que c'est pas grave. Papy lui dit : 'Tu sais, il y a quelqu'un qui a essayé de fuir ce qu'il devait faire...'",
+        "personnages_presents": [
+          "papy_babou",
+          "antoine",
+          "noemie"
+        ],
+        "personnages_secondaires_presents": [
+          "mamie_sonia"
+        ],
+        "arc_personnage_focus": "noemie",
+        "progression_arc": "Noémie comprend à travers Jonas qu'on ne peut pas fuir ses responsabilités, mais que Dieu pardonne toujours quand on revient sur le bon chemin.",
+        "lien_episode_precedent": "Après Daniel et sa foi inébranlable, Dieu continue de parler aux hommes — mais tous n'écoutent pas.",
+        "teasing_episode_suivant": "Papy annonce que la prochaine fois, il racontera l'histoire d'une jeune femme très courageuse qui est devenue reine — et qui a sauvé tout un peuple.",
+        "elements_fil_rouge": "Noémie fait le parallèle avec sa propre bêtise. Antoine la rassure : 'Même Jonas a eu une seconde chance.' Le bébé Lucas bouge beaucoup dans le ventre de Maman — il arrive bientôt.",
+        "moments_cles": [
+          "Jonas dans le ventre du poisson — Noémie demande si ça sent mauvais",
+          "Jonas à Ninive — les enfants comprennent le pardon universel",
+          "Noémie décide de s'excuser le lendemain — elle a compris la leçon"
+        ],
+        "questions_ouvertes": [
+          "Qui est cette reine courageuse dont Papy parlera la prochaine fois ?",
+          "Est-ce que Jonas est resté obéissant après ?"
+        ]
+      },
+      {
+        "numero": 10,
+        "titre": "Esther — la reine qui sauve son peuple",
+        "type": "final",
+        "histoire_biblique": "Esther — la reine qui sauve son peuple",
+        "resume": "La jeune Esther, une orpheline juive élevée par son cousin Mardochée, est choisie pour devenir reine de Perse. Quand le cruel Haman complote pour exterminer tous les Juifs du royaume, Mardochée supplie Esther d'intervenir auprès du roi. Esther risque sa vie en se présentant devant le roi sans y être invitée. Par son courage, son intelligence et sa foi, elle déjoue le complot de Haman et sauve tout son peuple. Le roi fait pendre Haman et les Juifs célèbrent leur délivrance lors de la fête de Pourim.",
+        "morale": "Le vrai courage, c'est agir pour les autres même quand on a peur pour soi. Chacun de nous est là pour une raison — il faut oser se lever quand le moment est venu.",
+        "ambiance": "dramatique",
         "duree_cible_minutes": 35,
-        "pretexte": "C'est un jour très spécial : Lucas est né ! Toute la famille est réunie chez Papy et Mamie pour fêter l'arrivée du bébé. Noémie et Antoine sont surexcités. Papy prend Lucas dans ses bras et dit : 'Pour fêter cette nouvelle vie, je vais vous raconter une dernière histoire extraordinaire...'",
+        "pretexte": "C'est un jour très spécial : Lucas est né ! Toute la famille est réunie chez Papy et Mamie pour fêter l'arrivée du bébé. Noémie et Antoine sont surexcités. Papy prend Lucas dans ses bras et dit : 'Pour fêter cette nouvelle vie, je vais vous raconter une dernière histoire extraordinaire — celle d'une femme qui a sauvé tout un peuple.'",
         "personnages_presents": [
           "papy_babou",
           "antoine",
@@ -357,13 +359,13 @@
           "mamie_sonia"
         ],
         "arc_personnage_focus": "papy_babou",
-        "progression_arc": "Papy est ému par l'arrivée de Lucas. Il conclut la saison en montrant que chaque vie est un cadeau de Dieu, et que transmettre ces histoires est sa plus grande joie. L'histoire de Jonas — sur les secondes chances et l'amour inconditionnel — est son message final.",
-        "lien_episode_precedent": "Jonas clôture le voyage à travers l'Ancien Testament. Papy fait un bref rappel de tous les héros rencontrés cette saison.",
+        "progression_arc": "Papy est ému par l'arrivée de Lucas. Il choisit l'histoire d'Esther — une femme courageuse — pour montrer que le courage n'a pas de genre. L'histoire d'Esther — sur le courage, l'identité et la protection des plus faibles — est son message final de la saison.",
+        "lien_episode_precedent": "Après Jonas et le pardon, Papy clôture la saison avec une autre histoire de courage face au danger — mais cette fois, c'est une femme qui sauve un peuple entier.",
         "teasing_episode_suivant": "Papy dit à Lucas endormi dans ses bras : 'Mon petit bonhomme, quand tu seras grand, je te raconterai toutes ces histoires... et bien d'autres encore. Car il y a un homme dont je n'ai pas encore parlé — le plus grand de tous.'",
-        "elements_fil_rouge": "La naissance de Lucas clôture l'arc familial de la saison. Antoine est fier d'être grand frère. Noémie veut déjà raconter les histoires à Lucas. Papy est ému aux larmes. Le fil rouge sur la confiance trouve son aboutissement : accueillir un nouveau-né, c'est le plus grand acte de foi.",
+        "elements_fil_rouge": "La naissance de Lucas clôture l'arc familial de la saison. Antoine est fier d'être grand frère. Noémie veut déjà raconter les histoires à Lucas. Papy est ému aux larmes. Le fil rouge sur la confiance trouve son aboutissement : accueillir un nouveau-né, c'est le plus grand acte de foi. Noémie dit qu'Esther est son héroïne préférée — une fille courageuse comme elle veut l'être.",
         "moments_cles": [
-          "Jonas dans le ventre du poisson — Noémie demande si ça sent mauvais",
-          "Jonas à Ninive — les enfants comprennent le pardon universel",
+          "Esther qui se prépare pour aller voir le roi — le suspense",
+          "Le banquet où Esther révèle le complot de Haman",
           "Papy qui berce Lucas en concluant l'histoire",
           "Le rappel de toutes les histoires de la saison — les enfants nomment leurs préférées"
         ],

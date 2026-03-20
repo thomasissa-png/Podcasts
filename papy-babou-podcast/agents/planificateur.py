@@ -47,8 +47,8 @@ RÈGLES DE PLANIFICATION :
     Pour chaque personnage, choisir le moment le PLUS emblématique et raconter l'histoire
     COMPLÈTE de A à Z en un seul épisode (25-35 min = largement suffisant).
     Exemples CORRECTS (10 épisodes, 10 personnages/histoires différents) :
-    Ep1=Création du monde, Ep2=Adam et Ève, Ep3=Noé, Ep4=Abraham,
-    Ep5=Joseph, Ep6=Moïse, Ep7=David, Ep8=Salomon, Ep9=Daniel, Ep10=Jonas.
+    Ep1=Création du monde, Ep2=Noé, Ep3=Abraham, Ep4=Joseph,
+    Ep5=Moïse, Ep6=David, Ep7=Salomon, Ep8=Daniel, Ep9=Jonas, Ep10=Esther.
     Exemples INTERDITS :
     Ep1=Moïse et le buisson, Ep2=Moïse et l'Exode, Ep3=Moïse et la mer Rouge (3x Moïse!)
     Ep1=Joseph vendu, Ep2=Joseph en Égypte, Ep3=Joseph viceroy (3x Joseph!)
@@ -57,8 +57,8 @@ RÈGLES DE PLANIFICATION :
 12. ORDRE CHRONOLOGIQUE — RÈGLE ABSOLUE : Les histoires bibliques DOIVENT être
     présentées dans l'ordre chronologique de la Bible / de l'Histoire. C'est un
     podcast éducatif pour enfants : on suit le fil de l'Histoire de manière
-    progressive. Exemples pour l'Ancien Testament : Création → Adam et Ève →
-    Noé → Abraham → Joseph → Moïse → David → Salomon → Daniel → Jonas.
+    progressive. Exemples pour l'Ancien Testament : Création →
+    Noé → Abraham → Joseph → Moïse → David → Salomon → Daniel → Jonas → Esther.
     Exemples pour la vie de Jésus : Annonciation → Nativité → Fuite en Égypte →
     Baptême → Premiers miracles → Paraboles → Entrée à Jérusalem → Cène → Passion.
     JAMAIS un épisode tardif de la saison sur un événement antérieur à l'épisode 1.
