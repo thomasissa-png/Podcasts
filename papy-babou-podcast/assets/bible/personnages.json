@@ -279,45 +279,46 @@
     "utilisation_backstory": "Les détails biographiques des personnages (voyages, goûts, métiers) servent de base d'anecdotes naturelles — à utiliser avec parcimonie, jamais de façon forcée"
   },
   "style_cover_art": {
-    "style": "Flat design chaleureux et moderne, formes géométriques douces, aplats de couleur, pas d'ombres portées, inspiré par Oliver Jeffers et Jon Klassen",
+    "style": "Cartoon aventure coloré pour enfants, style chibi/super-deformed avec grosses têtes et petits corps, traits noirs épais et dynamiques, couleurs vives et saturées, inspiré par Quelle Histoire et Les aventures de Tina (France Inter). Personnages expressifs en action, décors historiques/bibliques détaillés en arrière-plan, ambiance épique et ludique",
     "palette": {
-      "ocre_dore": "#D4A054",
-      "bleu_ciel": "#7BAFD4",
-      "rose_poudre": "#D4869A",
-      "vert_olive": "#8BAF6E",
-      "beige_chaud": "#F5E6D0",
-      "lavande": "#9B8EC4",
-      "terre_cuite": "#C47A5A",
-      "miel": "#E8B84B",
-      "ardoise": "#5A6978",
-      "ivoire": "#FDF8F0"
+      "bleu_ciel_vif": "#4A9FE5",
+      "bleu_profond": "#2D5B9E",
+      "ocre_sable": "#E8C97A",
+      "vert_nature": "#5DBD72",
+      "corail_chaud": "#F26B5E",
+      "violet_aventure": "#7B5EA7",
+      "jaune_soleil": "#FFD234",
+      "terre_antique": "#C4854A",
+      "rose_doux": "#E895A8",
+      "blanc_nuage": "#F5F0EB"
     },
     "elements_recurrents": [
-      "Livre ouvert stylisé avec reliure terre cuite (#C47A5A)",
-      "Lunettes rondes de Papy Babou en ardoise (#5A6978)",
-      "Étoiles dorées en miel (#E8B84B) autour du titre",
-      "Fond parcheminé en beige chaud (#F5E6D0)",
-      "Bordures ocre dorées (#D4A054) en haut et en bas",
-      "Coins arrondis, formes simples et lisibles"
+      "Papy Babou en style chibi avec ses lunettes rondes dorées et son gilet beige, grosses têtes expressives",
+      "Antoine et Noémie en proportions cartoon aventurier, poses dynamiques",
+      "Décor biblique stylisé en arrière-plan (temples, déserts, mers, montagnes)",
+      "Ciel bleu lumineux avec nuages stylisés blancs",
+      "Titre en lettres cartoon épaisses et colorées, légèrement inclinées",
+      "Logo discret du podcast dans un coin"
     ],
     "regles_visuelles": [
-      "Formes géométriques simples avec coins arrondis",
-      "Aplats de couleur sans dégradés ni textures lourdes",
-      "Traits nets et réguliers, épaisseur constante",
-      "Personnages stylisés avec expressions claires et lisibles",
-      "Fond toujours clair (ivoire ou beige chaud)",
-      "Palette limitée à 4-5 couleurs par illustration",
-      "Proportions enfantines : grandes têtes, yeux expressifs"
+      "Proportions chibi : têtes 40% du corps, yeux grands et ronds, expressions ultra-lisibles",
+      "Traits noirs épais et dynamiques, contours bien marqués",
+      "Couleurs vives et saturées, aplats avec légers dégradés pour le volume",
+      "Personnages toujours au premier plan, en action ou en pose héroïque",
+      "Arrière-plans détaillés mais en couleurs plus douces pour contraste avec les personnages",
+      "Palette de 5-6 couleurs vives par illustration, dominante bleue ou chaude selon le thème",
+      "Ambiance lumineuse et épique, éclairage chaud doré ou bleu ciel",
+      "Compositions dynamiques avec lignes de force diagonales"
     ],
     "interdictions_visuelles": [
       "Pas de violence graphique",
       "Pas d'images effrayantes ou sombres",
       "Pas de représentation directe de Dieu",
       "Pas de nudité",
-      "Pas d'aquarelle ni de textures peintes",
-      "Pas d'ombres portées ni d'effets 3D",
-      "Pas de dégradés complexes",
-      "Pas de couleurs néon ni saturées à l'extrême"
+      "Pas de style réaliste ou photoréaliste",
+      "Pas de style aquarelle ni textures peintes",
+      "Pas de personnages statiques ou figés — toujours du mouvement",
+      "Pas de couleurs ternes ou désaturées"
     ]
   }
 }

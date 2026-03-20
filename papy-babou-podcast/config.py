@@ -1013,15 +1013,17 @@ COVER_ART_CONFIG = {
     "size": "1024x1024",
     "quality": "standard",
     "style_prefix": (
-        "Flat design illustration for children ages 6-10. "
-        "Clean geometric shapes with soft rounded corners. "
-        "Warm pastel color palette: golden ochre (#D4A054), sky blue (#7BAFD4), "
-        "powder pink (#D4869A), olive green (#8BAF6E), warm beige (#F5E6D0), "
-        "lavender (#9B8EC4), terracotta (#C47A5A). "
-        "Provence countryside atmosphere with golden light. "
-        "Minimalist style with bold outlines and flat color fills, no gradients. "
-        "Inspired by modern children's book illustrations (Oliver Jeffers, Jon Klassen). "
-        "Include a subtle golden frame border evoking an old storybook. "
+        "Colorful cartoon adventure illustration for children ages 6-10, "
+        "chibi/super-deformed style with big heads and small bodies. "
+        "Bold black outlines, vibrant saturated colors, dynamic poses. "
+        "Inspired by 'Quelle Histoire' and 'Les aventures de Tina' (France Inter). "
+        "Bright vivid palette: sky blue (#4A9FE5), deep blue (#2D5B9E), "
+        "golden sand (#E8C97A), coral (#F26B5E), adventure purple (#7B5EA7), "
+        "sun yellow (#FFD234). "
+        "Characters in foreground with heroic/dynamic poses, expressive cartoon faces. "
+        "Detailed biblical/historical scenery in background with softer colors. "
+        "Bright luminous sky, epic and playful atmosphere. "
+        "Thick colorful cartoon title text, slightly tilted. "
     ),
 }
 
