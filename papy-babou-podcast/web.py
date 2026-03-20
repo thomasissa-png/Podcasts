@@ -27,7 +27,9 @@ if str(_THIS_DIR) not in sys.path:
     sys.path.insert(0, str(_THIS_DIR))
 os.chdir(_THIS_DIR)
 
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from functools import wraps
+
+from flask import Flask, jsonify, redirect, render_template, request, send_from_directory, session, url_for
 
 import config
 import dashboard_data as dashboard_data_mod
@@ -66,6 +68,79 @@ if app.secret_key == _default_secret:
         "FLASK_SECRET_KEY non configurée — clé par défaut utilisée. "
         "Configurez FLASK_SECRET_KEY en production."
     )
+
+
+## ── Admin Authentication ─────────────────────────────────────────────────────
+_ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "papybabou")
+if _ADMIN_PASSWORD == "papybabou":
+    logger.warning(
+        "ADMIN_PASSWORD non configurée — mot de passe par défaut 'papybabou'. "
+        "Configurez ADMIN_PASSWORD en production."
+    )
+
+# Routes publiques qui ne nécessitent PAS d'authentification admin
+_PUBLIC_ROUTES = frozenset({
+    "/", "/favicon.ico", "/healthz",
+    "/admin/login", "/admin/logout",
+    "/api/public/episodes",
+})
+_PUBLIC_PREFIXES = (
+    "/assets/artwork/", "/audio/episodes/", "/audio/covers/",
+)
+
+
+@app.before_request
+def _check_admin_auth():
+    """Protège toutes les routes /admin et /api (sauf publiques) par authentification."""
+    path = request.path
+
+    # Routes publiques : accès libre
+    if path in _PUBLIC_ROUTES:
+        return None
+    for prefix in _PUBLIC_PREFIXES:
+        if path.startswith(prefix):
+            return None
+
+    # Pages et API admin : exiger authentification
+    if path.startswith("/admin") or path.startswith("/api/"):
+        if not session.get("admin_authenticated"):
+            if path.startswith("/api/"):
+                return jsonify({"error": "Authentification admin requise"}), 401
+            return redirect(url_for("admin_login"))
+
+    return None
+
+
+def _admin_required(f):
+    """Décorateur : exige une session admin (doublon de sécurité pour routes critiques)."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("admin_authenticated"):
+            if request.path.startswith("/api/"):
+                return jsonify({"error": "Authentification admin requise"}), 401
+            return redirect(url_for("admin_login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    """Page de connexion admin."""
+    error = None
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        if password == _ADMIN_PASSWORD:
+            session["admin_authenticated"] = True
+            return redirect(url_for("admin_dashboard"))
+        error = "Mot de passe incorrect"
+    return render_template("admin_login.html", error=error)
+
+
+@app.route("/admin/logout")
+def admin_logout():
+    """Déconnexion admin."""
+    session.pop("admin_authenticated", None)
+    return redirect("/")
 
 
 def _init_db_if_available():
@@ -878,8 +953,15 @@ def api_storage_status():
 
 
 @app.route("/")
-def index():
-    """Page principale — Dashboard complet avec navigation."""
+def public_index():
+    """Page publique — Site vitrine du podcast."""
+    return render_template("public.html")
+
+
+@app.route("/admin")
+@_admin_required
+def admin_dashboard():
+    """Dashboard admin — Production et configuration (protégé par mot de passe)."""
     try:
         saison = request.args.get("saison", 0, type=int)
         data = get_dashboard_data(saison)
@@ -894,7 +976,107 @@ def index():
         ), 200
 
 
-# ── Routes API (JSON) — Lecture ──────────────────────────────────────────────
+# ── Route API publique ────────────────────────────────────────────────────────
+
+
+@app.route("/api/public/episodes")
+def api_public_episodes():
+    """API publique — Episodes publiés avec métadonnées pour le site vitrine.
+
+    Retourne uniquement les épisodes qui ont un audio disponible (produits et publiés).
+    Aucune donnée sensible (rapports, checkpoints, config) n'est exposée.
+    """
+    try:
+        historique = dashboard_data_mod.charger_historique_complet()
+    except Exception:
+        historique = []
+
+    # Charger les saisons disponibles
+    saisons_info = []
+    try:
+        saisons_list = config.liste_saisons() if hasattr(config, 'liste_saisons') else []
+        for num in sorted(saisons_list):
+            plan = config.charger_saison(num)
+            saison_data = plan.get("saison", {})
+            saisons_info.append({
+                "numero": num,
+                "theme": saison_data.get("theme", ""),
+            })
+    except Exception:
+        pass
+
+    # S'il n'y a pas de saisons trouvées mais qu'il y a des épisodes, créer une entrée
+    if not saisons_info and historique:
+        saison_nums = set(ep.get("saison", 1) for ep in historique if ep.get("saison"))
+        for num in sorted(saison_nums):
+            saisons_info.append({"numero": num, "theme": ""})
+
+    # Construire la liste d'épisodes publics
+    episodes_public = []
+    for ep in historique:
+        episode_id = ep.get("episode_id", "")
+        saison = ep.get("saison", 1)
+        numero = ep.get("numero", 0)
+        titre = ep.get("titre", "")
+
+        # Chercher le fichier audio
+        audio_url = None
+        try:
+            audio_info = dashboard_data_mod.trouver_fichier_audio(episode_id)
+            audio_name = (audio_info or {}).get("hq") or (audio_info or {}).get("preview")
+            if audio_name:
+                audio_url = f"/audio/episodes/{audio_name}"
+        except Exception:
+            pass
+
+        # Chercher la cover art
+        cover_url = None
+        for ext in (".png", ".jpg"):
+            cover_path = config.COVERS_DIR / f"{episode_id}_cover{ext}"
+            if cover_path.exists():
+                cover_url = f"/audio/covers/{episode_id}_cover{ext}"
+                break
+
+        # Calculer la durée
+        duree_minutes = None
+        if ep.get("duree_secondes"):
+            duree_minutes = round(ep["duree_secondes"] / 60)
+        elif ep.get("duree_cible_minutes"):
+            duree_minutes = ep["duree_cible_minutes"]
+
+        # Date de production formatée
+        date_str = ""
+        date_prod = ep.get("date_production", "")
+        if date_prod:
+            try:
+                dt = datetime.fromisoformat(date_prod.replace("Z", "+00:00"))
+                date_str = dt.strftime("%d %b %Y")
+            except (ValueError, TypeError):
+                date_str = str(date_prod)[:10]
+
+        episodes_public.append({
+            "episode_id": episode_id,
+            "saison": saison if isinstance(saison, int) else 1,
+            "numero": numero if isinstance(numero, int) else 0,
+            "titre": titre,
+            "resume": ep.get("resume_court", ep.get("resume", "")),
+            "morale": ep.get("morale", ""),
+            "audio_url": audio_url,
+            "cover_url": cover_url,
+            "duree_minutes": duree_minutes,
+            "date": date_str,
+        })
+
+    # Trier par saison puis numéro
+    episodes_public.sort(key=lambda e: (e["saison"], e["numero"]))
+
+    return jsonify({
+        "episodes": episodes_public,
+        "saisons": saisons_info,
+    })
+
+
+# ── Routes API (JSON) — Lecture (admin) ──────────────────────────────────────
 
 
 @app.route("/api/dashboard")

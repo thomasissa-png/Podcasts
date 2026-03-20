@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration — Les Histoires de Papy Babou</title>
+  <link rel="icon" href="/favicon.ico" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #FDF8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(90, 105, 120, 0.1);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .login-card img {
+      width: 80px; height: 80px;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+    .login-card h1 {
+      font-size: 1.3rem;
+      color: #5A6978;
+      margin-bottom: 0.3rem;
+    }
+    .login-card p {
+      font-size: 0.9rem;
+      color: #8A9AAA;
+      margin-bottom: 1.5rem;
+    }
+    .login-card input[type="password"] {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 2px solid #E8C87A;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: 'Nunito', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-card input:focus {
+      border-color: #D4A054;
+    }
+    .login-card button {
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.8rem;
+      background: #D4A054;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .login-card button:hover { background: #B8863A; }
+    .error {
+      color: #FF6B6B;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-top: 0.8rem;
+    }
+    .back-link {
+      display: block;
+      margin-top: 1.2rem;
+      color: #8A9AAA;
+      font-size: 0.85rem;
+    }
+    .back-link:hover { color: #5A6978; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <img src="/assets/artwork/cover.svg" alt="Papy Babou">
+    <h1>Administration</h1>
+    <p>Espace de production du podcast</p>
+    <form method="post">
+      <input type="password" name="password" placeholder="Mot de passe" autofocus required>
+      <button type="submit">Se connecter</button>
+    </form>
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    <a href="/" class="back-link">&larr; Retour au site</a>
+  </div>
+</body>
+</html>
