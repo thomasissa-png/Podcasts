@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 3000" width="3000" height="3000">
+  <defs>
+    <radialGradient id="skinFace" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="80%" stop-color="#F0C9A0"/>
+      <stop offset="100%" stop-color="#E0B080"/>
+    </radialGradient>
+    <radialGradient id="skinHand" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="100%" stop-color="#E8BC95"/>
+    </radialGradient>
+    <linearGradient id="shirtGrad" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#2C3E6B"/>
+      <stop offset="100%" stop-color="#1A2744"/>
+    </linearGradient>
+    <radialGradient id="hairGrad" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#E8E4DE"/>
+      <stop offset="100%" stop-color="#C0B8AC"/>
+    </radialGradient>
+    <radialGradient id="scalpGrad" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="60%" stop-color="#F0C9A0"/>
+      <stop offset="100%" stop-color="#E8BC95"/>
+    </radialGradient>
+    <radialGradient id="irisGrad" cx="45%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#7AA0C4"/>
+      <stop offset="60%" stop-color="#4A7A9F"/>
+      <stop offset="100%" stop-color="#3A6080"/>
+    </radialGradient>
+    <!-- Fond ciel étoilé -->
+    <radialGradient id="skyGrad" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1A1A4E"/>
+      <stop offset="100%" stop-color="#0A0A2A"/>
+    </radialGradient>
+    <!-- Lueur livre -->
+    <radialGradient id="bookGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFD700" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Fond ciel nocturne -->
+  <rect width="3000" height="3000" fill="url(#skyGrad)"/>
+
+  <!-- Étoiles -->
+  <circle cx="200" cy="300" r="4" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="500" cy="150" r="3" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="800" cy="400" r="5" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="1100" cy="200" r="3" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="1400" cy="350" r="4" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="1700" cy="180" r="3" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="2000" cy="300" r="5" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="2300" cy="150" r="4" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="2600" cy="400" r="3" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="2800" cy="250" r="4" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="350" cy="600" r="3" fill="#FFFFFF" opacity="0.5"/>
+  <circle cx="650" cy="550" r="4" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="2400" cy="550" r="3" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="2700" cy="650" r="4" fill="#FFFFFF" opacity="0.5"/>
+  <circle cx="150" cy="800" r="3" fill="#FFFFFF" opacity="0.4"/>
+  <circle cx="2850" cy="800" r="3" fill="#FFFFFF" opacity="0.4"/>
+
+  <!-- Lueur chaleureuse autour du livre -->
+  <ellipse cx="1500" cy="1700" rx="600" ry="500" fill="url(#bookGlow)"/>
+
+  <!-- ═══ PAPY BABOU — centré, en train de lire ═══ -->
+  <g transform="translate(1500, 1350)">
+
+    <!-- Ombre au sol -->
+    <ellipse cx="0" cy="750" rx="400" ry="60" fill="url(#shadowGrad)"/>
+
+    <!-- ══ JAMBES ══ -->
+    <path d="M-140,630 L-148,770 Q-142,790 -105,793 Q-68,790 -62,770 L-70,630Z" fill="#4A4A4A" stroke="#333" stroke-width="3"/>
+    <path d="M62,630 L55,770 Q62,790 98,793 Q135,790 142,770 L148,630Z" fill="#4A4A4A" stroke="#333" stroke-width="3"/>
+    <!-- Chaussures -->
+    <path d="M-165,790 Q-162,810 -105,815 Q-48,810 -45,790 Q-48,778 -105,775 Q-162,778 -165,790Z" fill="#5A3E20" stroke="#3A2510" stroke-width="3"/>
+    <path d="M40,790 Q43,810 100,815 Q157,810 160,790 Q157,778 100,775 Q43,778 40,790Z" fill="#5A3E20" stroke="#3A2510" stroke-width="3"/>
+
+    <!-- ══ CORPS / CHEMISE BLEU MARINE ══ -->
+    <path d="M-195,300 Q-210,440 -185,640 L185,640 Q210,440 195,300Z" fill="url(#shirtGrad)" stroke="#152040" stroke-width="3"/>
+    <path d="M-195,300 Q-210,440 -185,640 L-50,640 Q-70,440 -60,300Z" fill="#152040" opacity="0.25"/>
+    <!-- Col -->
+    <path d="M-75,295 L-28,330 L0,318 L28,330 L75,295 Q42,275 0,278 Q-42,275 -75,295Z" fill="#344E7A" stroke="#2C3E6B" stroke-width="2"/>
+    <!-- Boutons -->
+    <circle cx="0" cy="400" r="8" fill="#8A9AB8" stroke="#6A7A98" stroke-width="2"/>
+    <circle cx="0" cy="470" r="8" fill="#8A9AB8" stroke="#6A7A98" stroke-width="2"/>
+    <circle cx="0" cy="540" r="8" fill="#8A9AB8" stroke="#6A7A98" stroke-width="2"/>
+
+    <!-- ══ BRAS GAUCHE (tenant le livre ouvert) ══ -->
+    <path d="M-195,340 Q-280,380 -320,480" fill="none" stroke="#E0B890" stroke-width="60" stroke-linecap="round"/>
+    <path d="M-195,340 Q-240,355 -275,380" fill="none" stroke="url(#shirtGrad)" stroke-width="68" stroke-linecap="round"/>
+    <!-- Main gauche -->
+    <path d="M-340,472 Q-332,455 -315,458 Q-298,462 -296,478 Q-298,495 -315,498 Q-332,495 -340,480Z" fill="url(#skinHand)" stroke="#D4A06A" stroke-width="2"/>
+
+    <!-- ══ LIVRE OUVERT (tenu devant lui, doré) ══ -->
+    <!-- Page gauche -->
+    <path d="M-310,460 L-310,600 Q-240,610 -160,600 L-160,460 Q-240,450 -310,460Z" fill="#F5E6C8" stroke="#C4A060" stroke-width="3"/>
+    <!-- Page droite -->
+    <path d="M-160,460 L-160,600 Q-80,610 -10,600 L-10,460 Q-80,450 -160,460Z" fill="#FFF2D8" stroke="#C4A060" stroke-width="3"/>
+    <!-- Tranche -->
+    <path d="M-160,455 L-160,605" stroke="#C4A060" stroke-width="4"/>
+    <!-- Texte simulé -->
+    <line x1="-290" y1="490" x2="-180" y2="490" stroke="#B0956A" stroke-width="2" opacity="0.5"/>
+    <line x1="-290" y1="510" x2="-195" y2="510" stroke="#B0956A" stroke-width="2" opacity="0.5"/>
+    <line x1="-290" y1="530" x2="-185" y2="530" stroke="#B0956A" stroke-width="2" opacity="0.5"/>
+    <line x1="-140" y1="490" x2="-30" y2="490" stroke="#B0956A" stroke-width="2" opacity="0.5"/>
+    <line x1="-140" y1="510" x2="-40" y2="510" stroke="#B0956A" stroke-width="2" opacity="0.5"/>
+    <line x1="-140" y1="530" x2="-35" y2="530" stroke="#B0956A" stroke-width="2" opacity="0.5"/>
+
+    <!-- ══ BRAS DROIT ══ -->
+    <path d="M195,340 Q240,400 220,480" fill="none" stroke="#E0B890" stroke-width="60" stroke-linecap="round"/>
+    <path d="M195,340 Q220,370 225,400" fill="none" stroke="url(#shirtGrad)" stroke-width="68" stroke-linecap="round"/>
+    <!-- Main droite (geste conteur) -->
+    <path d="M205,475 Q212,458 228,460 Q244,464 246,480 Q244,496 228,498 Q212,496 205,480Z" fill="url(#skinHand)" stroke="#D4A06A" stroke-width="2"/>
+    <!-- Index levé -->
+    <path d="M220,458 Q218,430 215,415" fill="none" stroke="#E8BC95" stroke-width="18" stroke-linecap="round"/>
+    <path d="M220,458 Q218,430 215,415" fill="none" stroke="url(#skinHand)" stroke-width="14" stroke-linecap="round"/>
+
+    <!-- ══ TETE ══ -->
+    <!-- Cou -->
+    <rect x="-52" y="250" width="104" height="60" rx="18" fill="url(#skinFace)"/>
+
+    <!-- Tête forme -->
+    <path d="M-270,-15 Q-280,-120 -235,-210 Q-165,-300 0,-308 Q165,-300 235,-210 Q280,-120 270,-15 Q265,100 210,160 Q140,230 0,245 Q-140,230 -210,160 Q-265,100 -270,-15Z"
+          fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+
+    <!-- Crâne chauve -->
+    <path d="M-225,-50 Q-235,-180 -165,-260 Q-85,-310 0,-308 Q85,-310 165,-260 Q235,-180 225,-50"
+          fill="url(#scalpGrad)" stroke="#D4A06A" stroke-width="1"/>
+    <ellipse cx="-20" cy="-240" rx="80" ry="35" fill="#FFFFFF" opacity="0.12"/>
+
+    <!-- Cheveux gris côtés -->
+    <path d="M-275,-25 Q-295,-55 -290,-115 Q-278,-155 -255,-145 Q-235,-130 -260,-60 Q-270,-20 -275,-25Z"
+          fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <ellipse cx="-265" cy="5" rx="40" ry="70" fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <path d="M275,-25 Q295,-55 290,-115 Q278,-155 255,-145 Q235,-130 260,-60 Q270,-20 275,-25Z"
+          fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <ellipse cx="265" cy="5" rx="40" ry="70" fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+
+    <!-- Oreilles -->
+    <ellipse cx="-275" cy="25" rx="35" ry="48" fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+    <ellipse cx="-275" cy="25" rx="20" ry="30" fill="#F0C0A0" opacity="0.4"/>
+    <ellipse cx="275" cy="25" rx="35" ry="48" fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+    <ellipse cx="275" cy="25" rx="20" ry="30" fill="#F0C0A0" opacity="0.4"/>
+
+    <!-- Yeux -->
+    <ellipse cx="-90" cy="15" rx="58" ry="62" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="4"/>
+    <circle cx="-78" cy="22" r="36" fill="url(#irisGrad)"/>
+    <circle cx="-74" cy="18" r="20" fill="#1A1A2E"/>
+    <circle cx="-90" cy="2" r="13" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="-65" cy="26" r="8" fill="#FFFFFF" opacity="0.5"/>
+    <path d="M-148,5 Q-90,-28 -32,2" fill="none" stroke="#2D2D2D" stroke-width="5" stroke-linecap="round"/>
+
+    <ellipse cx="90" cy="15" rx="58" ry="62" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="4"/>
+    <circle cx="102" cy="22" r="36" fill="url(#irisGrad)"/>
+    <circle cx="106" cy="18" r="20" fill="#1A1A2E"/>
+    <circle cx="90" cy="2" r="13" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="115" cy="26" r="8" fill="#FFFFFF" opacity="0.5"/>
+    <path d="M32,2 Q90,-28 148,5" fill="none" stroke="#2D2D2D" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Sourcils -->
+    <path d="M-145,-30 Q-90,-58 -30,-35" fill="none" stroke="#8A8078" stroke-width="10" stroke-linecap="round"/>
+    <path d="M30,-35 Q90,-58 145,-30" fill="none" stroke="#8A8078" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- Lunettes rectangulaires foncées -->
+    <rect x="-158" y="-22" width="138" height="80" rx="16" ry="16" fill="none" stroke="#2A2A2A" stroke-width="10"/>
+    <rect x="20" y="-22" width="138" height="80" rx="16" ry="16" fill="none" stroke="#2A2A2A" stroke-width="10"/>
+    <path d="M-20,18 Q0,8 20,18" fill="none" stroke="#2A2A2A" stroke-width="8"/>
+    <line x1="-158" y1="5" x2="-260" y2="-15" stroke="#2A2A2A" stroke-width="8" stroke-linecap="round"/>
+    <line x1="158" y1="5" x2="260" y2="-15" stroke="#2A2A2A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M-130,-8 Q-110,-18 -80,-10" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.25" stroke-linecap="round"/>
+    <path d="M48,-8 Q68,-18 98,-10" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.25" stroke-linecap="round"/>
+
+    <!-- Nez -->
+    <path d="M-10,65 Q0,100 10,65" fill="#E8B88A" stroke="#D4A06A" stroke-width="3"/>
+    <ellipse cx="0" cy="88" rx="20" ry="14" fill="#E8B88A"/>
+
+    <!-- Bouche (sourire) -->
+    <path d="M-60,120 Q0,165 60,120" fill="#C43A2F" stroke="#2D2D2D" stroke-width="4"/>
+    <path d="M-48,124 Q0,148 48,124" fill="#FFFFFF" opacity="0.5"/>
+
+    <!-- Joues roses -->
+    <ellipse cx="-160" cy="80" rx="45" ry="30" fill="#F0988C" opacity="0.3"/>
+    <ellipse cx="160" cy="80" rx="45" ry="30" fill="#F0988C" opacity="0.3"/>
+
+    <!-- Rides sourire -->
+    <path d="M-170,60 Q-165,95 -158,115" fill="none" stroke="#D4A06A" stroke-width="3" opacity="0.3" stroke-linecap="round"/>
+    <path d="M170,60 Q165,95 158,115" fill="none" stroke="#D4A06A" stroke-width="3" opacity="0.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- ═══ TITRE ═══ -->
+  <text x="1500" y="2450" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="180" font-weight="bold" fill="#FFD700" stroke="#B8860B" stroke-width="3">
+    Les Histoires de
+  </text>
+  <text x="1500" y="2680" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="240" font-weight="bold" fill="#FFD700" stroke="#B8860B" stroke-width="4">
+    Papy Babou
+  </text>
+</svg>

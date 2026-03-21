@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 3000" width="3000" height="3000">
+  <defs>
+    <radialGradient id="skinFace" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="80%" stop-color="#F0C9A0"/>
+      <stop offset="100%" stop-color="#E0B080"/>
+    </radialGradient>
+    <radialGradient id="skinHand" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="100%" stop-color="#E8BC95"/>
+    </radialGradient>
+    <linearGradient id="shirtGrad" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#2C3E6B"/>
+      <stop offset="100%" stop-color="#1A2744"/>
+    </linearGradient>
+    <radialGradient id="hairGrad" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#E8E4DE"/>
+      <stop offset="100%" stop-color="#C0B8AC"/>
+    </radialGradient>
+    <radialGradient id="scalpGrad" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="60%" stop-color="#F0C9A0"/>
+      <stop offset="100%" stop-color="#E8BC95"/>
+    </radialGradient>
+    <radialGradient id="irisGrad" cx="45%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#7AA0C4"/>
+      <stop offset="60%" stop-color="#4A7A9F"/>
+      <stop offset="100%" stop-color="#3A6080"/>
+    </radialGradient>
+    <!-- Fond dynamique -->
+    <radialGradient id="bgGrad" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#4A90D9"/>
+      <stop offset="100%" stop-color="#2A5A8A"/>
+    </radialGradient>
+    <!-- Micro chrome -->
+    <linearGradient id="micGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#B0B0B0"/>
+      <stop offset="30%" stop-color="#E8E8E8"/>
+      <stop offset="50%" stop-color="#D0D0D0"/>
+      <stop offset="70%" stop-color="#F0F0F0"/>
+      <stop offset="100%" stop-color="#A0A0A0"/>
+    </linearGradient>
+    <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Fond bleu dynamique -->
+  <rect width="3000" height="3000" fill="url(#bgGrad)"/>
+
+  <!-- Rayons dynamiques derrière -->
+  <g opacity="0.08">
+    <polygon points="1500,1200 800,0 1200,0" fill="#FFFFFF"/>
+    <polygon points="1500,1200 1400,0 1700,0" fill="#FFFFFF"/>
+    <polygon points="1500,1200 2000,0 2300,0" fill="#FFFFFF"/>
+    <polygon points="1500,1200 2600,0 2900,0" fill="#FFFFFF"/>
+    <polygon points="1500,1200 0,400 0,700" fill="#FFFFFF"/>
+    <polygon points="1500,1200 3000,400 3000,700" fill="#FFFFFF"/>
+    <polygon points="1500,1200 0,1000 0,1300" fill="#FFFFFF"/>
+    <polygon points="1500,1200 3000,1000 3000,1300" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Ondes sonores autour du micro -->
+  <g transform="translate(700, 1100)" opacity="0.15">
+    <path d="M0,-100 Q-60,-100 -60,0 Q-60,100 0,100" fill="none" stroke="#FFFFFF" stroke-width="8"/>
+    <path d="M0,-160 Q-100,-160 -100,0 Q-100,160 0,160" fill="none" stroke="#FFFFFF" stroke-width="6"/>
+    <path d="M0,-220 Q-140,-220 -140,0 Q-140,220 0,220" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+  </g>
+
+  <!-- ═══ PAPY BABOU — buste et micro ═══ -->
+  <g transform="translate(1500, 1200)">
+
+    <!-- Ombre -->
+    <ellipse cx="0" cy="850" rx="450" ry="60" fill="url(#shadowGrad)"/>
+
+    <!-- Jambes -->
+    <path d="M-140,620 L-148,780 Q-142,800 -105,803 Q-68,800 -62,780 L-70,620Z" fill="#4A4A4A" stroke="#333" stroke-width="3"/>
+    <path d="M62,620 L55,780 Q62,800 98,803 Q135,800 142,780 L148,620Z" fill="#4A4A4A" stroke="#333" stroke-width="3"/>
+    <!-- Chaussures -->
+    <path d="M-165,800 Q-162,820 -105,825 Q-48,820 -45,800 Q-48,788 -105,785 Q-162,788 -165,800Z" fill="#5A3E20" stroke="#3A2510" stroke-width="3"/>
+    <path d="M40,800 Q43,820 100,825 Q157,820 160,800 Q157,788 100,785 Q43,788 40,800Z" fill="#5A3E20" stroke="#3A2510" stroke-width="3"/>
+
+    <!-- Corps -->
+    <path d="M-195,280 Q-210,420 -185,630 L185,630 Q210,420 195,280Z" fill="url(#shirtGrad)" stroke="#152040" stroke-width="3"/>
+    <path d="M-195,280 Q-210,420 -185,630 L-50,630 Q-65,420 -55,280Z" fill="#152040" opacity="0.25"/>
+    <!-- Col -->
+    <path d="M-75,275 L-28,308 L0,296 L28,308 L75,275 Q42,255 0,258 Q-42,255 -75,275Z" fill="#344E7A" stroke="#2C3E6B" stroke-width="2"/>
+    <!-- Boutons -->
+    <circle cx="0" cy="370" r="8" fill="#8A9AB8" stroke="#6A7A98" stroke-width="2"/>
+    <circle cx="0" cy="440" r="8" fill="#8A9AB8" stroke="#6A7A98" stroke-width="2"/>
+    <circle cx="0" cy="510" r="8" fill="#8A9AB8" stroke="#6A7A98" stroke-width="2"/>
+
+    <!-- ══ MICRO SUR PIED (à gauche) ══ -->
+    <!-- Pied -->
+    <line x1="-400" y1="820" x2="-400" y2="350" stroke="#888" stroke-width="12"/>
+    <!-- Base pied -->
+    <ellipse cx="-400" cy="820" rx="80" ry="18" fill="#666" stroke="#444" stroke-width="3"/>
+    <!-- Tête micro -->
+    <ellipse cx="-400" cy="320" rx="55" ry="70" fill="url(#micGrad)" stroke="#888" stroke-width="3"/>
+    <!-- Grille micro -->
+    <line x1="-430" y1="290" x2="-370" y2="290" stroke="#999" stroke-width="1.5" opacity="0.5"/>
+    <line x1="-435" y1="305" x2="-365" y2="305" stroke="#999" stroke-width="1.5" opacity="0.5"/>
+    <line x1="-435" y1="320" x2="-365" y2="320" stroke="#999" stroke-width="1.5" opacity="0.5"/>
+    <line x1="-435" y1="335" x2="-365" y2="335" stroke="#999" stroke-width="1.5" opacity="0.5"/>
+    <line x1="-430" y1="350" x2="-370" y2="350" stroke="#999" stroke-width="1.5" opacity="0.5"/>
+    <!-- Filtre anti-pop -->
+    <circle cx="-320" cy="320" r="65" fill="none" stroke="#333" stroke-width="2" opacity="0.3"/>
+    <circle cx="-320" cy="320" r="64" fill="#000000" opacity="0.05"/>
+
+    <!-- Bras gauche (vers le micro) -->
+    <path d="M-195,310 Q-280,290 -340,300" fill="none" stroke="#E0B890" stroke-width="55" stroke-linecap="round"/>
+    <path d="M-195,310 Q-240,300 -270,295" fill="none" stroke="url(#shirtGrad)" stroke-width="62" stroke-linecap="round"/>
+
+    <!-- Bras droit (geste expressif) -->
+    <path d="M195,310 Q300,250 340,170" fill="none" stroke="#E0B890" stroke-width="55" stroke-linecap="round"/>
+    <path d="M195,310 Q240,290 270,270" fill="none" stroke="url(#shirtGrad)" stroke-width="62" stroke-linecap="round"/>
+    <!-- Main droite -->
+    <path d="M325,162 Q332,145 348,148 Q364,152 366,168 Q364,184 348,186 Q332,184 325,170Z" fill="url(#skinHand)" stroke="#D4A06A" stroke-width="2"/>
+    <!-- Index levé -->
+    <path d="M340,145 Q338,118 335,100" fill="none" stroke="#E8BC95" stroke-width="16" stroke-linecap="round"/>
+
+    <!-- ══ TETE ══ -->
+    <rect x="-50" y="230" width="100" height="55" rx="16" fill="url(#skinFace)"/>
+
+    <path d="M-250,-20 Q-260,-115 -215,-200 Q-150,-280 0,-288 Q150,-280 215,-200 Q260,-115 250,-20 Q245,80 195,140 Q130,210 0,225 Q-130,210 -195,140 Q-245,80 -250,-20Z"
+          fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+
+    <!-- Crâne chauve -->
+    <path d="M-210,-45 Q-220,-160 -155,-240 Q-80,-285 0,-288 Q80,-285 155,-240 Q220,-160 210,-45"
+          fill="url(#scalpGrad)" stroke="#D4A06A" stroke-width="1"/>
+    <ellipse cx="-18" cy="-218" rx="72" ry="32" fill="#FFFFFF" opacity="0.12"/>
+
+    <!-- Cheveux côtés -->
+    <path d="M-255,-22 Q-278,-52 -272,-108 Q-260,-145 -238,-135 Q-218,-120 -242,-58 Q-250,-18 -255,-22Z"
+          fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <ellipse cx="-248" cy="5" rx="38" ry="65" fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <path d="M255,-22 Q278,-52 272,-108 Q260,-145 238,-135 Q218,-120 242,-58 Q250,-18 255,-22Z"
+          fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <ellipse cx="248" cy="5" rx="38" ry="65" fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+
+    <!-- Oreilles -->
+    <ellipse cx="-255" cy="22" rx="32" ry="45" fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+    <ellipse cx="-255" cy="22" rx="18" ry="28" fill="#F0C0A0" opacity="0.4"/>
+    <ellipse cx="255" cy="22" rx="32" ry="45" fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+    <ellipse cx="255" cy="22" rx="18" ry="28" fill="#F0C0A0" opacity="0.4"/>
+
+    <!-- Yeux (tournés vers le spectateur) -->
+    <ellipse cx="-82" cy="12" rx="52" ry="56" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="4"/>
+    <circle cx="-72" cy="18" r="32" fill="url(#irisGrad)"/>
+    <circle cx="-68" cy="14" r="18" fill="#1A1A2E"/>
+    <circle cx="-82" cy="0" r="12" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="-60" cy="22" r="7" fill="#FFFFFF" opacity="0.5"/>
+    <path d="M-134,5 Q-82,-22 -30,2" fill="none" stroke="#2D2D2D" stroke-width="5" stroke-linecap="round"/>
+
+    <ellipse cx="82" cy="12" rx="52" ry="56" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="4"/>
+    <circle cx="92" cy="18" r="32" fill="url(#irisGrad)"/>
+    <circle cx="96" cy="14" r="18" fill="#1A1A2E"/>
+    <circle cx="82" cy="0" r="12" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="104" cy="22" r="7" fill="#FFFFFF" opacity="0.5"/>
+    <path d="M30,2 Q82,-22 134,5" fill="none" stroke="#2D2D2D" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Sourcils -->
+    <path d="M-132,-28 Q-82,-55 -30,-32" fill="none" stroke="#8A8078" stroke-width="10" stroke-linecap="round"/>
+    <path d="M30,-32 Q82,-55 132,-28" fill="none" stroke="#8A8078" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- Lunettes rectangulaires -->
+    <rect x="-142" y="-20" width="125" height="72" rx="15" fill="none" stroke="#2A2A2A" stroke-width="9"/>
+    <rect x="18" y="-20" width="125" height="72" rx="15" fill="none" stroke="#2A2A2A" stroke-width="9"/>
+    <path d="M-17,16 Q0,7 18,16" fill="none" stroke="#2A2A2A" stroke-width="7"/>
+    <line x1="-142" y1="4" x2="-240" y2="-14" stroke="#2A2A2A" stroke-width="7" stroke-linecap="round"/>
+    <line x1="143" y1="4" x2="240" y2="-14" stroke="#2A2A2A" stroke-width="7" stroke-linecap="round"/>
+
+    <!-- Nez -->
+    <path d="M-9,58 Q0,92 9,58" fill="#E8B88A" stroke="#D4A06A" stroke-width="2.5"/>
+    <ellipse cx="0" cy="80" rx="18" ry="12" fill="#E8B88A"/>
+
+    <!-- Bouche (sourire large, expressif) -->
+    <path d="M-55,108 Q0,155 55,108" fill="#C43A2F" stroke="#2D2D2D" stroke-width="4"/>
+    <path d="M-42,112 Q0,140 42,112" fill="#FFFFFF" opacity="0.5"/>
+
+    <!-- Joues -->
+    <ellipse cx="-148" cy="72" rx="42" ry="28" fill="#F0988C" opacity="0.3"/>
+    <ellipse cx="148" cy="72" rx="42" ry="28" fill="#F0988C" opacity="0.3"/>
+
+    <!-- Rides -->
+    <path d="M-158,55 Q-152,85 -148,105" fill="none" stroke="#D4A06A" stroke-width="3" opacity="0.3" stroke-linecap="round"/>
+    <path d="M158,55 Q152,85 148,105" fill="none" stroke="#D4A06A" stroke-width="3" opacity="0.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- ═══ CASQUE AUDIO (sur les côtés de la tête) ═══ -->
+  <g transform="translate(1500, 1200)">
+    <!-- Arceau -->
+    <path d="M-250,-260 Q-260,-340 -180,-380 Q-60,-410 60,-410 Q180,-380 260,-340 Q270,-260 250,-220"
+          fill="none" stroke="#333" stroke-width="18" stroke-linecap="round"/>
+    <!-- Coussin gauche -->
+    <ellipse cx="-262" cy="-50" rx="35" ry="55" fill="#444" stroke="#333" stroke-width="4"/>
+    <ellipse cx="-262" cy="-50" rx="25" ry="42" fill="#555"/>
+    <!-- Coussin droit -->
+    <ellipse cx="262" cy="-50" rx="35" ry="55" fill="#444" stroke="#333" stroke-width="4"/>
+    <ellipse cx="262" cy="-50" rx="25" ry="42" fill="#555"/>
+  </g>
+
+  <!-- ═══ TITRE ═══ -->
+  <!-- Bandeau -->
+  <rect x="0" y="2350" width="3000" height="450" fill="#1A2744" opacity="0.85"/>
+  <text x="1500" y="2520" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="140" font-weight="bold" fill="#FFFFFF">
+    Les Histoires de
+  </text>
+  <text x="1500" y="2710" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="200" font-weight="bold" fill="#FFD700">
+    Papy Babou
+  </text>
+  <!-- Sous-titre -->
+  <text x="1500" y="2780" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="60" fill="#AABBDD" letter-spacing="8">
+    LE PODCAST
+  </text>
+</svg>

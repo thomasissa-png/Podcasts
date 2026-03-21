@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 3000" width="3000" height="3000">
+  <defs>
+    <radialGradient id="skinFace" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="80%" stop-color="#F0C9A0"/>
+      <stop offset="100%" stop-color="#E0B080"/>
+    </radialGradient>
+    <radialGradient id="skinHand" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="100%" stop-color="#E8BC95"/>
+    </radialGradient>
+    <linearGradient id="shirtGrad" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#2C3E6B"/>
+      <stop offset="100%" stop-color="#1A2744"/>
+    </linearGradient>
+    <radialGradient id="hairGrad" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#E8E4DE"/>
+      <stop offset="100%" stop-color="#C0B8AC"/>
+    </radialGradient>
+    <radialGradient id="scalpGrad" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#FCDEC0"/>
+      <stop offset="60%" stop-color="#F0C9A0"/>
+      <stop offset="100%" stop-color="#E8BC95"/>
+    </radialGradient>
+    <radialGradient id="irisGrad" cx="45%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#7AA0C4"/>
+      <stop offset="60%" stop-color="#4A7A9F"/>
+      <stop offset="100%" stop-color="#3A6080"/>
+    </radialGradient>
+    <!-- Ciel coucher de soleil -->
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF8C42"/>
+      <stop offset="30%" stop-color="#FFB366"/>
+      <stop offset="60%" stop-color="#FFD4A0"/>
+      <stop offset="100%" stop-color="#F0E8D0"/>
+    </linearGradient>
+    <!-- Herbe -->
+    <linearGradient id="grassGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5A9A3A"/>
+      <stop offset="100%" stop-color="#3A7A2A"/>
+    </linearGradient>
+    <!-- Enfant peau -->
+    <radialGradient id="childSkin" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FFE0C0"/>
+      <stop offset="80%" stop-color="#F5D0A5"/>
+      <stop offset="100%" stop-color="#E8C090"/>
+    </radialGradient>
+    <!-- Soleil -->
+    <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE080"/>
+      <stop offset="60%" stop-color="#FFD040"/>
+      <stop offset="100%" stop-color="#FFA020"/>
+    </radialGradient>
+    <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Ciel coucher de soleil -->
+  <rect width="3000" height="3000" fill="url(#skyGrad)"/>
+
+  <!-- Soleil -->
+  <circle cx="2400" cy="500" r="250" fill="url(#sunGrad)" opacity="0.8"/>
+  <circle cx="2400" cy="500" r="300" fill="#FFD040" opacity="0.1"/>
+
+  <!-- Nuages -->
+  <g opacity="0.3">
+    <ellipse cx="600" cy="400" rx="200" ry="60" fill="#FFFFFF"/>
+    <ellipse cx="500" cy="380" rx="120" ry="45" fill="#FFFFFF"/>
+    <ellipse cx="700" cy="390" rx="130" ry="50" fill="#FFFFFF"/>
+    <ellipse cx="1800" cy="300" rx="180" ry="55" fill="#FFFFFF"/>
+    <ellipse cx="1700" cy="280" rx="110" ry="40" fill="#FFFFFF"/>
+    <ellipse cx="1900" cy="290" rx="120" ry="45" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Collines fond -->
+  <path d="M0,1800 Q400,1600 800,1700 Q1200,1800 1600,1650 Q2000,1500 2400,1650 Q2700,1750 3000,1700 L3000,3000 L0,3000Z" fill="#7AB858" opacity="0.5"/>
+  <!-- Colline principale -->
+  <path d="M0,2000 Q500,1750 1000,1850 Q1500,1950 2000,1800 Q2500,1700 3000,1850 L3000,3000 L0,3000Z" fill="url(#grassGrad)"/>
+
+  <!-- Grand arbre à droite -->
+  <g transform="translate(2500, 1650)">
+    <!-- Tronc -->
+    <rect x="-35" y="-50" width="70" height="350" rx="15" fill="#7A5A30" stroke="#5A3A18" stroke-width="3"/>
+    <!-- Feuillage -->
+    <ellipse cx="0" cy="-150" rx="200" ry="180" fill="#4A8A2A" stroke="#3A7A1A" stroke-width="2"/>
+    <ellipse cx="-80" cy="-100" rx="120" ry="110" fill="#5A9A3A"/>
+    <ellipse cx="90" cy="-120" rx="130" ry="120" fill="#3A7A2A"/>
+    <ellipse cx="0" cy="-200" rx="150" ry="100" fill="#5A9A3A"/>
+  </g>
+
+  <!-- Fleurs au premier plan -->
+  <g opacity="0.7">
+    <circle cx="200" cy="2500" r="15" fill="#FF6B6B"/>
+    <circle cx="180" cy="2480" r="12" fill="#FF8888"/>
+    <circle cx="220" cy="2485" r="12" fill="#FF8888"/>
+    <circle cx="500" cy="2450" r="12" fill="#FFD700"/>
+    <circle cx="485" cy="2435" r="10" fill="#FFE840"/>
+    <circle cx="515" cy="2438" r="10" fill="#FFE840"/>
+    <circle cx="2700" cy="2480" r="14" fill="#CC88FF"/>
+    <circle cx="2680" cy="2465" r="11" fill="#DD99FF"/>
+    <circle cx="2720" cy="2468" r="11" fill="#DD99FF"/>
+    <circle cx="900" cy="2520" r="10" fill="#FF6B6B"/>
+    <circle cx="2300" cy="2530" r="12" fill="#FFD700"/>
+  </g>
+
+  <!-- ═══ PAPY BABOU — debout au centre, bras ouverts ═══ -->
+  <g transform="translate(1200, 1250)">
+
+    <!-- Ombre -->
+    <ellipse cx="0" cy="800" rx="350" ry="50" fill="url(#shadowGrad)"/>
+
+    <!-- Jambes -->
+    <path d="M-130,610 L-138,760 Q-132,780 -100,783 Q-68,780 -62,760 L-70,610Z" fill="#4A4A4A" stroke="#333" stroke-width="3"/>
+    <path d="M62,610 L55,760 Q62,780 95,783 Q128,780 135,760 L142,610Z" fill="#4A4A4A" stroke="#333" stroke-width="3"/>
+    <!-- Chaussures -->
+    <path d="M-158,780 Q-155,800 -100,805 Q-45,800 -42,780 Q-45,768 -100,765 Q-155,768 -158,780Z" fill="#5A3E20" stroke="#3A2510" stroke-width="3"/>
+    <path d="M38,780 Q41,800 96,805 Q151,800 154,780 Q151,768 96,765 Q41,768 38,780Z" fill="#5A3E20" stroke="#3A2510" stroke-width="3"/>
+
+    <!-- Corps -->
+    <path d="M-180,270 Q-195,410 -175,620 L175,620 Q195,410 180,270Z" fill="url(#shirtGrad)" stroke="#152040" stroke-width="3"/>
+    <path d="M-180,270 Q-195,410 -175,620 L-45,620 Q-60,410 -50,270Z" fill="#152040" opacity="0.25"/>
+    <!-- Col -->
+    <path d="M-68,265 L-25,298 L0,286 L25,298 L68,265 Q38,248 0,250 Q-38,248 -68,265Z" fill="#344E7A" stroke="#2C3E6B" stroke-width="2"/>
+    <!-- Boutons -->
+    <circle cx="0" cy="360" r="7" fill="#8A9AB8" stroke="#6A7A98" stroke-width="1.5"/>
+    <circle cx="0" cy="425" r="7" fill="#8A9AB8" stroke="#6A7A98" stroke-width="1.5"/>
+    <circle cx="0" cy="490" r="7" fill="#8A9AB8" stroke="#6A7A98" stroke-width="1.5"/>
+
+    <!-- Bras gauche (grand geste accueillant) -->
+    <path d="M-180,300 Q-300,220 -380,130" fill="none" stroke="#E0B890" stroke-width="52" stroke-linecap="round"/>
+    <path d="M-180,300 Q-240,260 -280,235" fill="none" stroke="url(#shirtGrad)" stroke-width="58" stroke-linecap="round"/>
+    <!-- Main gauche ouverte -->
+    <path d="M-398,122 Q-390,105 -372,108 Q-355,112 -352,128 Q-355,145 -372,148 Q-390,145 -398,130Z" fill="url(#skinHand)" stroke="#D4A06A" stroke-width="2"/>
+    <!-- Doigts ouverts -->
+    <path d="M-385,105 Q-382,80 -378,68" fill="none" stroke="#E8BC95" stroke-width="12" stroke-linecap="round"/>
+    <path d="M-372,102 Q-368,78 -362,65" fill="none" stroke="#E8BC95" stroke-width="11" stroke-linecap="round"/>
+    <path d="M-358,108 Q-352,85 -348,72" fill="none" stroke="#E8BC95" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- Bras droit (geste accueillant) -->
+    <path d="M180,300 Q300,220 380,130" fill="none" stroke="#E0B890" stroke-width="52" stroke-linecap="round"/>
+    <path d="M180,300 Q240,260 280,235" fill="none" stroke="url(#shirtGrad)" stroke-width="58" stroke-linecap="round"/>
+    <!-- Main droite ouverte -->
+    <path d="M362,122 Q370,105 388,108 Q405,112 408,128 Q405,145 388,148 Q370,145 362,130Z" fill="url(#skinHand)" stroke="#D4A06A" stroke-width="2"/>
+    <!-- Doigts -->
+    <path d="M375,105 Q378,80 382,68" fill="none" stroke="#E8BC95" stroke-width="12" stroke-linecap="round"/>
+    <path d="M388,102 Q392,78 396,65" fill="none" stroke="#E8BC95" stroke-width="11" stroke-linecap="round"/>
+    <path d="M402,108 Q408,85 412,72" fill="none" stroke="#E8BC95" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- Montre -->
+    <ellipse cx="280" cy="245" rx="14" ry="16" fill="#3A3A3A" stroke="#2A2A2A" stroke-width="2"/>
+    <ellipse cx="280" cy="245" rx="10" ry="12" fill="#E8E8E8"/>
+
+    <!-- ══ TETE ══ -->
+    <rect x="-48" y="220" width="96" height="55" rx="15" fill="url(#skinFace)"/>
+
+    <path d="M-230,-15 Q-240,-105 -200,-190 Q-140,-265 0,-272 Q140,-265 200,-190 Q240,-105 230,-15 Q225,75 185,130 Q125,200 0,215 Q-125,200 -185,130 Q-225,75 -230,-15Z"
+          fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+
+    <!-- Crâne -->
+    <path d="M-195,-40 Q-205,-150 -140,-225 Q-75,-268 0,-272 Q75,-268 140,-225 Q205,-150 195,-40"
+          fill="url(#scalpGrad)" stroke="#D4A06A" stroke-width="1"/>
+    <ellipse cx="-15" cy="-210" rx="65" ry="28" fill="#FFFFFF" opacity="0.12"/>
+
+    <!-- Cheveux côtés -->
+    <path d="M-238,-18 Q-258,-45 -252,-98 Q-242,-130 -222,-122 Q-205,-110 -228,-55 Q-235,-15 -238,-18Z"
+          fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <ellipse cx="-232" cy="5" rx="35" ry="58" fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <path d="M238,-18 Q258,-45 252,-98 Q242,-130 222,-122 Q205,-110 228,-55 Q235,-15 238,-18Z"
+          fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+    <ellipse cx="232" cy="5" rx="35" ry="58" fill="url(#hairGrad)" stroke="#B0A898" stroke-width="2"/>
+
+    <!-- Oreilles -->
+    <ellipse cx="-238" cy="20" rx="30" ry="42" fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+    <ellipse cx="-238" cy="20" rx="17" ry="26" fill="#F0C0A0" opacity="0.4"/>
+    <ellipse cx="238" cy="20" rx="30" ry="42" fill="url(#skinFace)" stroke="#D4A06A" stroke-width="3"/>
+    <ellipse cx="238" cy="20" rx="17" ry="26" fill="#F0C0A0" opacity="0.4"/>
+
+    <!-- Yeux -->
+    <ellipse cx="-78" cy="10" rx="50" ry="54" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="4"/>
+    <circle cx="-68" cy="16" r="30" fill="url(#irisGrad)"/>
+    <circle cx="-64" cy="12" r="17" fill="#1A1A2E"/>
+    <circle cx="-78" cy="-2" r="11" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="-56" cy="20" r="7" fill="#FFFFFF" opacity="0.5"/>
+    <path d="M-128,2 Q-78,-22 -28,0" fill="none" stroke="#2D2D2D" stroke-width="5" stroke-linecap="round"/>
+
+    <ellipse cx="78" cy="10" rx="50" ry="54" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="4"/>
+    <circle cx="88" cy="16" r="30" fill="url(#irisGrad)"/>
+    <circle cx="92" cy="12" r="17" fill="#1A1A2E"/>
+    <circle cx="78" cy="-2" r="11" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="100" cy="20" r="7" fill="#FFFFFF" opacity="0.5"/>
+    <path d="M28,0 Q78,-22 128,2" fill="none" stroke="#2D2D2D" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Sourcils -->
+    <path d="M-125,-22 Q-78,-48 -28,-28" fill="none" stroke="#8A8078" stroke-width="9" stroke-linecap="round"/>
+    <path d="M28,-28 Q78,-48 125,-22" fill="none" stroke="#8A8078" stroke-width="9" stroke-linecap="round"/>
+
+    <!-- Lunettes rectangulaires -->
+    <rect x="-135" y="-18" width="115" height="65" rx="13" fill="none" stroke="#2A2A2A" stroke-width="9"/>
+    <rect x="20" y="-18" width="115" height="65" rx="13" fill="none" stroke="#2A2A2A" stroke-width="9"/>
+    <path d="M-20,14 Q0,5 20,14" fill="none" stroke="#2A2A2A" stroke-width="7"/>
+    <line x1="-135" y1="2" x2="-225" y2="-12" stroke="#2A2A2A" stroke-width="7" stroke-linecap="round"/>
+    <line x1="135" y1="2" x2="225" y2="-12" stroke="#2A2A2A" stroke-width="7" stroke-linecap="round"/>
+
+    <!-- Nez -->
+    <path d="M-8,52 Q0,82 8,52" fill="#E8B88A" stroke="#D4A06A" stroke-width="2.5"/>
+    <ellipse cx="0" cy="72" rx="16" ry="11" fill="#E8B88A"/>
+
+    <!-- Bouche -->
+    <path d="M-52,100 Q0,142 52,100" fill="#C43A2F" stroke="#2D2D2D" stroke-width="3.5"/>
+    <path d="M-40,104 Q0,128 40,104" fill="#FFFFFF" opacity="0.5"/>
+
+    <!-- Joues -->
+    <ellipse cx="-140" cy="65" rx="38" ry="25" fill="#F0988C" opacity="0.3"/>
+    <ellipse cx="140" cy="65" rx="38" ry="25" fill="#F0988C" opacity="0.3"/>
+
+    <!-- Rides -->
+    <path d="M-148,48 Q-144,78 -138,95" fill="none" stroke="#D4A06A" stroke-width="3" opacity="0.3" stroke-linecap="round"/>
+    <path d="M148,48 Q144,78 138,95" fill="none" stroke="#D4A06A" stroke-width="3" opacity="0.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- ═══ ANTOINE (courant à gauche) ═══ -->
+  <g transform="translate(600, 1700)">
+    <!-- Corps -->
+    <path d="M-45,45 Q-50,90 -45,140 L45,140 Q50,90 45,45Z" fill="#E84040" stroke="#C03030" stroke-width="2"/>
+    <!-- Jambes (course) -->
+    <path d="M-35,140 Q-55,175 -70,200" fill="none" stroke="#4A6A8C" stroke-width="22" stroke-linecap="round"/>
+    <path d="M35,140 Q55,165 50,200" fill="none" stroke="#4A6A8C" stroke-width="22" stroke-linecap="round"/>
+    <!-- Bras -->
+    <path d="M-45,60 Q-75,50 -85,35" fill="none" stroke="url(#childSkin)" stroke-width="16" stroke-linecap="round"/>
+    <path d="M45,65 Q75,55 90,40" fill="none" stroke="url(#childSkin)" stroke-width="16" stroke-linecap="round"/>
+    <!-- Tête -->
+    <ellipse cx="0" cy="-12" rx="58" ry="62" fill="url(#childSkin)" stroke="#D4A06A" stroke-width="2"/>
+    <!-- Cheveux -->
+    <path d="M-48,-38 Q-52,-68 -28,-80 Q0,-88 28,-80 Q52,-68 48,-38 Q38,-48 0,-52 Q-38,-48 -48,-38Z" fill="#5A3520" stroke="#3A1A0A" stroke-width="1.5"/>
+    <!-- Yeux -->
+    <ellipse cx="-20" cy="-8" rx="13" ry="14" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="2"/>
+    <circle cx="-16" cy="-5" r="8" fill="#6B4E2E"/>
+    <circle cx="-14" cy="-7" r="4.5" fill="#3A2510"/>
+    <circle cx="-20" cy="-11" r="3.5" fill="#FFFFFF" opacity="0.8"/>
+    <ellipse cx="20" cy="-8" rx="13" ry="14" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="2"/>
+    <circle cx="24" cy="-5" r="8" fill="#6B4E2E"/>
+    <circle cx="26" cy="-7" r="4.5" fill="#3A2510"/>
+    <circle cx="20" cy="-11" r="3.5" fill="#FFFFFF" opacity="0.8"/>
+    <!-- Bouche sourire -->
+    <path d="M-14,15 Q0,26 14,15" fill="#C43A2F" stroke="#2D2D2D" stroke-width="1.5"/>
+    <!-- Joues -->
+    <ellipse cx="-35" cy="5" rx="10" ry="7" fill="#F0988C" opacity="0.3"/>
+    <ellipse cx="35" cy="5" rx="10" ry="7" fill="#F0988C" opacity="0.3"/>
+  </g>
+
+  <!-- ═══ NOEMIE (courant à droite) ═══ -->
+  <g transform="translate(1900, 1680)">
+    <!-- Jupe -->
+    <path d="M-48,45 Q-55,90 -55,150 L55,150 Q55,90 48,45Z" fill="#E8A0D0" stroke="#C880B0" stroke-width="2"/>
+    <!-- Jambes -->
+    <path d="M-35,150 Q-50,180 -60,205" fill="none" stroke="url(#childSkin)" stroke-width="18" stroke-linecap="round"/>
+    <path d="M35,150 Q50,175 45,205" fill="none" stroke="url(#childSkin)" stroke-width="18" stroke-linecap="round"/>
+    <!-- Bras -->
+    <path d="M-48,58 Q-78,45 -92,30" fill="none" stroke="url(#childSkin)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M48,58 Q78,50 95,38" fill="none" stroke="url(#childSkin)" stroke-width="14" stroke-linecap="round"/>
+    <!-- Tête -->
+    <ellipse cx="0" cy="-12" rx="55" ry="58" fill="url(#childSkin)" stroke="#D4A06A" stroke-width="2"/>
+    <!-- Cheveux -->
+    <path d="M-45,-35 Q-48,-65 -25,-78 Q0,-85 25,-78 Q48,-65 45,-35 Q35,-45 0,-48 Q-35,-45 -45,-35Z" fill="#8B5A30" stroke="#6B3A10" stroke-width="1.5"/>
+    <path d="M-48,-22 Q-55,-8 -52,25 Q-50,45 -45,55" fill="none" stroke="#8B5A30" stroke-width="10" stroke-linecap="round"/>
+    <path d="M48,-22 Q55,-8 52,25 Q50,45 45,55" fill="none" stroke="#8B5A30" stroke-width="10" stroke-linecap="round"/>
+    <!-- Yeux -->
+    <ellipse cx="-18" cy="-8" rx="12" ry="13" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="2"/>
+    <circle cx="-14" cy="-5" r="7" fill="#4A7A4A"/>
+    <circle cx="-12" cy="-7" r="4" fill="#2A4A2A"/>
+    <circle cx="-18" cy="-11" r="3" fill="#FFFFFF" opacity="0.8"/>
+    <ellipse cx="18" cy="-8" rx="12" ry="13" fill="#FFFFFF" stroke="#2D2D2D" stroke-width="2"/>
+    <circle cx="22" cy="-5" r="7" fill="#4A7A4A"/>
+    <circle cx="24" cy="-7" r="4" fill="#2A4A2A"/>
+    <circle cx="18" cy="-11" r="3" fill="#FFFFFF" opacity="0.8"/>
+    <!-- Bouche -->
+    <path d="M-12,14 Q0,25 12,14" fill="#C43A2F" stroke="#2D2D2D" stroke-width="1.5"/>
+    <!-- Joues -->
+    <ellipse cx="-32" cy="3" rx="10" ry="7" fill="#F0988C" opacity="0.35"/>
+    <ellipse cx="32" cy="3" rx="10" ry="7" fill="#F0988C" opacity="0.35"/>
+  </g>
+
+  <!-- ═══ TITRE ═══ -->
+  <!-- Bannière parchemin -->
+  <path d="M300,2550 Q200,2530 150,2550 L150,2750 Q200,2770 300,2750 L2700,2750 Q2800,2770 2850,2750 L2850,2550 Q2800,2530 2700,2550Z"
+        fill="#FFF2D8" stroke="#C4A060" stroke-width="4" opacity="0.92"/>
+  <text x="1500" y="2630" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="110" font-weight="bold" fill="#6B4828">
+    Les Histoires de
+  </text>
+  <text x="1500" y="2740" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="140" font-weight="bold" fill="#8B3A1A">
+    Papy Babou
+  </text>
+</svg>
