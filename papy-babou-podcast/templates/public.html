@@ -22,7 +22,7 @@
   <link rel="apple-touch-icon" href="/assets/artwork/apple-touch-icon.svg">
   <link rel="manifest" href="/assets/manifest.json">
   <link rel="alternate" type="application/rss+xml" title="Les Histoires de Papy Babou" href="/feed.xml">
-  <meta name="theme-color" content="#4A9FE5">
+  <meta name="theme-color" content="#5B9BD5">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -62,7 +62,7 @@
       --dore-dark: #C4850A;
       --bleu-doux: #7BCBF5;
       --bleu-fonce: #2D7BC4;
-      --bleu-nuit: #4A9FE5;
+      --bleu-nuit: #5B9BD5;
       --rose-tendre: #F26B5E;
       --vert-prairie: #5DBD72;
       --corail: #F26B5E;
@@ -80,7 +80,8 @@
 
       /* Couleurs personnages */
       --antoine-bleu: #4A9FE5;
-      --noemie-rose: #E895A8;
+      --antoine-rouge: #E04040;
+      --noemie-rose: #E8B040;
 
       /* Couleurs externes (plateformes) */
       --apple-purple: #7D5BA6;
@@ -114,9 +115,9 @@
     /* ── Header / Hero ────────────────────────────────────────── */
     .hero {
       background: linear-gradient(175deg,
-        #4A9FE5 0%,
-        #5AADDA 30%,
-        #7BCBF5 55%,
+        #5B9BD5 0%,
+        #6AADE0 30%,
+        #8ECFF5 55%,
         #A8D8F0 75%,
         var(--sable) 100%);
       padding: 3rem 1.5rem 2.5rem;
@@ -454,7 +455,7 @@
     }
 
     .about-card {
-      background: linear-gradient(135deg, var(--blanc) 0%, #FFF0D6 100%);
+      background: linear-gradient(135deg, var(--blanc) 0%, #EDF4FA 100%);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 2rem 2.5rem;
@@ -503,7 +504,7 @@
     }
 
     .char-avatar.papy { background: var(--dore-light); color: var(--gris-texte); }
-    .char-avatar.antoine { background: var(--antoine-bleu); color: var(--blanc); }
+    .char-avatar.antoine { background: var(--antoine-rouge); color: var(--blanc); }
     .char-avatar.noemie { background: var(--noemie-rose); color: var(--blanc); }
     .char-avatar.mamie { background: var(--vert-prairie); color: var(--blanc); }
 
@@ -1267,7 +1268,7 @@
   <!-- ═══ Hero ═══ -->
   <header class="hero">
     <div class="hero-inner">
-      <img src="/assets/artwork/cover.svg" alt="Les Histoires de Papy Babou" class="hero-cover">
+      <img src="/assets/artwork/cover_base.png" alt="Les Histoires de Papy Babou" class="hero-cover">
       <div class="hero-text">
         <div class="hero-badge">Nouveau : Saison 1 disponible !</div>
         <h1 class="hero-title">
