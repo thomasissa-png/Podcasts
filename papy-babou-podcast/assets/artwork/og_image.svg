@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
-  <!-- Open Graph — Les Histoires de Papy Babou — Adventure Edition -->
+  <!-- Open Graph — Les Histoires de Papy Babou — Cornflower Edition -->
   <defs>
     <linearGradient id="ogSky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B3A5C"/>
-      <stop offset="50%" stop-color="#2D4A7A"/>
-      <stop offset="80%" stop-color="#8A9AAE"/>
-      <stop offset="100%" stop-color="#E8C84A"/>
+      <stop offset="0%" stop-color="#5B9BD5"/>
+      <stop offset="50%" stop-color="#4A88C2"/>
+      <stop offset="80%" stop-color="#8ECFF5"/>
+      <stop offset="100%" stop-color="#FFD234"/>
     </linearGradient>
     <linearGradient id="ogParchment" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#F0E0C0"/>
@@ -14,50 +14,48 @@
     </linearGradient>
   </defs>
 
-  <!-- Fond ciel dramatique -->
+  <!-- Fond ciel cornflower lumineux -->
   <rect width="1200" height="630" fill="url(#ogSky)"/>
 
   <!-- Montagnes -->
   <path d="M0,420 L120,280 L200,340 L320,220 L450,320 L550,240 L680,310 L800,200 L920,300 L1000,250 L1100,320 L1200,270 L1200,630 L0,630 Z"
-        fill="#1B3A5C" opacity="0.4"/>
+        fill="#3A4E7A" opacity="0.3"/>
   <path d="M0,480 L100,360 L220,400 L360,300 L500,380 L620,310 L750,370 L880,290 L1000,370 L1100,330 L1200,380 L1200,630 L0,630 Z"
-        fill="#1B3A5C" opacity="0.55"/>
+        fill="#3A4E7A" opacity="0.45"/>
 
   <!-- Zone parchemin basse -->
   <rect y="420" width="1200" height="210" fill="url(#ogParchment)" opacity="0.92"/>
 
-  <!-- Bande doree separation -->
-  <rect y="416" width="1200" height="8" fill="#C9952A" opacity="0.6"/>
+  <!-- Bande dorée séparation -->
+  <rect y="416" width="1200" height="8" fill="#FFD234" opacity="0.7"/>
 
-  <!-- Etoiles -->
-  <circle cx="150" cy="80" r="2" fill="#FFF8E0" opacity="0.8"/>
-  <circle cx="350" cy="120" r="1.5" fill="#FFF8E0" opacity="0.6"/>
-  <circle cx="550" cy="60" r="2.5" fill="#FFF8E0" opacity="0.9"/>
-  <circle cx="850" cy="100" r="2" fill="#FFF8E0" opacity="0.7"/>
-  <circle cx="1050" cy="70" r="1.5" fill="#FFF8E0" opacity="0.6"/>
-  <circle cx="700" cy="150" r="1.5" fill="#FFF8E0" opacity="0.5"/>
+  <!-- Étoiles blanches (style craie comme la couverture) -->
+  <circle cx="150" cy="80" r="2.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="350" cy="120" r="2" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="550" cy="60" r="3" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="850" cy="100" r="2.5" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="1050" cy="70" r="2" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="700" cy="150" r="2" fill="#FFFFFF" opacity="0.5"/>
 
-  <!-- Etoile de Bethlehem -->
+  <!-- Étoile de Bethlehem -->
   <g transform="translate(600, 100)" opacity="0.9">
-    <polygon points="0,-28 6,-8 26,-8 10,4 16,24 0,13 -16,24 -10,4 -26,-8 -6,-8" fill="#FFF8D0"/>
+    <polygon points="0,-28 6,-8 26,-8 10,4 16,24 0,13 -16,24 -10,4 -26,-8 -6,-8" fill="#FFD234"/>
     <circle cx="0" cy="0" r="6" fill="#FFFBE8" opacity="0.5"/>
   </g>
 
-  <!-- Boussole (gauche) -->
+  <!-- Boussole -->
   <g transform="translate(130, 510)">
     <circle cx="0" cy="0" r="65" fill="#F0E0C0" stroke="#C9952A" stroke-width="3" opacity="0.9"/>
-    <!-- Rose des vents simplifiee -->
     <polygon points="0,-52 5,-12 0,-18 -5,-12" fill="#C9952A"/>
     <polygon points="0,52 5,12 0,18 -5,12" fill="#D4883A"/>
     <polygon points="-52,0 -12,5 -18,0 -12,-5" fill="#D4883A"/>
     <polygon points="52,0 12,5 18,0 12,-5" fill="#D4883A"/>
-    <!-- Centre -->
     <circle cx="0" cy="0" r="6" fill="#C9952A"/>
     <circle cx="0" cy="0" r="2.5" fill="#FDF5E6"/>
   </g>
 
   <!-- Titre -->
-  <text x="600" y="490" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="36" fill="#4A5866" letter-spacing="3">
+  <text x="600" y="490" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="36" fill="#3A4E7A" letter-spacing="3">
     Les Histoires de
   </text>
   <text x="600" y="545" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="bold" fill="#C9952A" letter-spacing="4">
@@ -65,25 +63,22 @@
   </text>
 
   <!-- Sous-titre -->
-  <text x="600" y="590" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#4A5866" opacity="0.8">
+  <text x="600" y="590" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#3A4E7A" opacity="0.8">
     Grandes epopees bibliques pour les enfants
   </text>
 
   <!-- Personnages badges -->
   <g transform="translate(870, 440)">
-    <!-- Antoine -->
-    <rect x="0" y="0" width="95" height="30" rx="15" fill="#2D4A7A" opacity="0.25"/>
-    <text x="12" y="21" font-family="Arial, sans-serif" font-size="14" fill="#2D4A7A" font-weight="bold">Antoine</text>
-
-    <!-- Noemie -->
-    <rect x="110" y="0" width="95" height="30" rx="15" fill="#C45A6E" opacity="0.25"/>
-    <text x="122" y="21" font-family="Arial, sans-serif" font-size="14" fill="#C45A6E" font-weight="bold">Noemie</text>
+    <rect x="0" y="0" width="95" height="30" rx="15" fill="#D42533" opacity="0.25"/>
+    <text x="12" y="21" font-family="Arial, sans-serif" font-size="14" fill="#D42533" font-weight="bold">Antoine</text>
+    <rect x="110" y="0" width="95" height="30" rx="15" fill="#E8B040" opacity="0.25"/>
+    <text x="122" y="21" font-family="Arial, sans-serif" font-size="14" fill="#C48A20" font-weight="bold">Noemie</text>
   </g>
 
-  <!-- Badge age -->
-  <rect x="1050" y="555" width="110" height="40" rx="20" fill="#4A8B5A" opacity="0.9"/>
+  <!-- Badge âge -->
+  <rect x="1050" y="555" width="110" height="40" rx="20" fill="#5DBD72" opacity="0.9"/>
   <text x="1105" y="582" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">6-10 ans</text>
 
-  <!-- Bande doree bas -->
-  <rect y="622" width="1200" height="8" fill="#C9952A" opacity="0.4"/>
+  <!-- Bande dorée bas -->
+  <rect y="622" width="1200" height="8" fill="#FFD234" opacity="0.5"/>
 </svg>

@@ -46,13 +46,16 @@ Le fichier `assets/artwork/cover.svg` superpose le titre sur l'illustration :
 | Bleu cornflower | `#5B9BD5` | Fond hero, theme principal | `--bleu-nuit` |
 | Bleu ciel doux | `#8ECFF5` | Gradients, arriere-plans legers | `--bleu-doux` |
 | Bleu fonce | `#2D7BC4` | Liens, accents forts | `--bleu-fonce` |
-| Or/Dore | `#E8A020` | Boutons CTA, badges, Papy Babou | `--dore` |
-| Jaune soleil | `#FFD234` | Titres cover, etoiles, accents | `--dore-light` |
-| Rouge Antoine | `#E04040` | Avatar Antoine, accents energiques | `--antoine-rouge` |
-| Jaune Noemie | `#E8B040` | Avatar Noemie, accents chaleureux | `--noemie-rose` |
+| Chemise Papy | `#3A4E7A` | Titres sections, texte fonce | `--titre-section` / `--papy-chemise` |
+| Or/Dore | `#C9952A` | Boutons CTA, badges, Papy Babou | `--dore` |
+| Jaune soleil | `#FFD234` | Titres cover, etoiles, accents vifs | `--dore-light` |
+| Rouge Antoine | `#D42533` | Avatar Antoine (WCAG AA: 5.1:1) | `--antoine-rouge` |
+| Jaune Noemie | `#E8B040` | Avatar Noemie, accents chaleureux | `--noemie-jaune` |
 | Corail | `#F26B5E` | Alertes, accents | `--corail` |
 | Vert prairie | `#5DBD72` | Mamie Sonia, badges ecoute | `--vert-prairie` |
+| Parchemin | `#F0E0C0` | Surfaces chaudes, accents | `--parchemin` |
 | Sable | `#FFF8ED` | Fond de page | `--sable` |
+| Gris chaud | `#8A9AAE` | Texte secondaire, bordures | `--gris-chaud` |
 | Blanc | `#FFFFFF` | Cards, surfaces | `--blanc` |
 | Gris texte | `#2D2D2D` | Texte principal | `--gris-texte` |
 | Gris leger | `#5A6B78` | Texte secondaire | `--gris-leger` |

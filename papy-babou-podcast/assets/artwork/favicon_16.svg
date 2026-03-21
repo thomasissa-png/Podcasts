@@ -1,20 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <!-- Fond bleu nuit -->
-  <circle cx="8" cy="8" r="8" fill="#1B3A5C"/>
-
-  <!-- Visage simplifié -->
+  <circle cx="8" cy="8" r="8" fill="#5B9BD5"/>
   <circle cx="8" cy="7.5" r="4.5" fill="#F5D6B0"/>
-
-  <!-- Lunettes (le seul élément qui compte à 16px) -->
   <rect x="4.5" y="6.5" width="3" height="2.2" rx="0.8" fill="none" stroke="#2D2D2D" stroke-width="0.9"/>
   <rect x="8.5" y="6.5" width="3" height="2.2" rx="0.8" fill="none" stroke="#2D2D2D" stroke-width="0.9"/>
   <line x1="7.5" y1="7.6" x2="8.5" y2="7.6" stroke="#2D2D2D" stroke-width="0.6"/>
-
-  <!-- Yeux (points) -->
   <circle cx="6" cy="7.6" r="0.6" fill="#2D2D2D"/>
   <circle cx="10" cy="7.6" r="0.6" fill="#2D2D2D"/>
-
-  <!-- Étoile -->
-  <polygon points="13,2.5 13.5,4 15,4 13.8,5 14.3,6.5 13,5.5 11.7,6.5 12.2,5 11,4 12.5,4" fill="#E8C84A" opacity="0.8"/>
+  <polygon points="13,2.5 13.5,4 15,4 13.8,5 14.3,6.5 13,5.5 11.7,6.5 12.2,5 11,4 12.5,4" fill="#FFD234" opacity="0.8"/>
 </svg>
