@@ -9,19 +9,19 @@
   "categories": ["education", "kids"],
   "icons": [
     {
-      "src": "/assets/artwork/icon-192.svg",
+      "src": "/assets/artwork/favicon2.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/artwork/favicon2.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png"
     },
     {
-      "src": "/assets/artwork/icon-512.svg",
+      "src": "/assets/artwork/favicon2.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "/assets/artwork/favicon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

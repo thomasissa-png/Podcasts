@@ -45,7 +45,7 @@ papy-babou-podcast/
 
 ### Serial Production System
 - **Season Plans**: Generated via `planifier-saison`, stored as `saisons/saison_XX.json`
-- **Episode Types**: `ouverture` (30min/3200 words), `standard` (25min/3000), `mi-saison` (30/3200), `final` (35/3800), `bonus` (20/2000)
+- **Episode Types**: `ouverture` (20min/2400 words), `standard` (18min/2100), `mi-saison` (20/2400), `final` (20/2400), `bonus` (15/1800)
 - **STRUCTURES_NARRATIVES**: Template dict in scripteur.py with previously-on, teasing, rituals per type
 - **Character Evolution**: arcs_personnages in season bible, tracked across episodes
 - **Dynamic Characters**: `config.ajouter_personnage()` + `config.personnages_valides()` (set-based)
@@ -1669,7 +1669,7 @@ Orchestrator launched parallel audit of `templates/public.html` with @design (7.
 1. Nav sticky (À propos, Épisodes, Parents, S'abonner)
 2. Hero (title + UVP + meta + CTA)
 3. Wave SVG
-4. Trust bar (Adapté 6-10 ans, 25-35 min, Créé par des parents chrétiens)
+4. Trust bar (Adapté 6-10 ans, 15-20 min, Créé par des parents chrétiens)
 5. Saison tabs + Search
 6. **Episodes** (main content — moved up from position 8)
 7. About (L'équipage + Le podcast biblique + origin story)

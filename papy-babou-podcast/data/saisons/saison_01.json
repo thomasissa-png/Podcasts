@@ -51,7 +51,7 @@
         "resume": "Papy raconte comment Dieu a créé le monde en six jours : la lumière, le ciel, la mer, les plantes, les étoiles, les animaux, et enfin l'homme et la femme. Chaque jour apporte une nouvelle merveille. Le septième jour, Dieu se repose et contemple son œuvre. Les enfants découvrent que tout dans la nature a été voulu et pensé avec amour.",
         "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
         "ambiance": "joyeux",
-        "duree_cible_minutes": 30,
+        "duree_cible_minutes": 20,
         "pretexte": "C'est la rentrée. Antoine et Noémie arrivent chez Papy pour la première fois depuis les vacances. En explorant le jardin, Noémie demande : 'Papy, c'est qui qui a fait les fleurs ?'",
         "personnages_presents": [
           "papy_babou",
@@ -82,7 +82,7 @@
         "resume": "Les hommes sont devenus méchants et Dieu est triste. Il choisit Noé, un homme juste, et lui demande de construire un immense bateau — une arche — pour sauver sa famille et un couple de chaque animal. Tout le monde se moque de Noé, mais il obéit. La pluie tombe pendant quarante jours. Puis l'eau se retire, une colombe rapporte un rameau d'olivier, et l'arc-en-ciel apparaît comme promesse de Dieu.",
         "morale": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
         "ambiance": "dramatique",
-        "duree_cible_minutes": 25,
+        "duree_cible_minutes": 18,
         "pretexte": "Il pleut des cordes dehors. Les enfants sont coincés à l'intérieur chez Papy et regardent la pluie tomber par la fenêtre. Antoine soupire. Papy dit : 'Vous savez, il a plu bien plus fort que ça un jour...'",
         "personnages_presents": [
           "papy_babou",
@@ -115,7 +115,7 @@
         "resume": "Dieu appelle Abraham (alors nommé Abram) et lui demande de quitter son pays, sa famille et tout ce qu'il connaît pour partir vers une terre inconnue. Abraham obéit malgré la peur et l'incertitude. Dieu lui promet une descendance aussi nombreuse que les étoiles du ciel. Abraham et Sara attendent longtemps, très longtemps, et finissent par avoir un fils, Isaac, dans leur vieillesse. La promesse de Dieu se réalise.",
         "morale": "Faire confiance, c'est parfois partir sans savoir où l'on va. Les plus belles aventures commencent par un acte de foi.",
         "ambiance": "calme",
-        "duree_cible_minutes": 25,
+        "duree_cible_minutes": 18,
         "pretexte": "La famille d'Antoine et Noémie va bientôt déménager dans une maison plus grande pour accueillir le bébé. Antoine est inquiet de changer d'école. Papy lui dit : 'Tu sais, un homme a fait un voyage bien plus grand que ça...'",
         "personnages_presents": [
           "papy_babou",
@@ -148,7 +148,7 @@
         "resume": "Joseph est le fils préféré de Jacob. Son père lui offre une magnifique tunique de couleurs, ce qui rend ses frères terriblement jaloux. Ils le vendent comme esclave en Égypte. Là-bas, Joseph traverse la prison mais garde confiance en Dieu. Grâce à son don d'interpréter les rêves, il devient le bras droit du Pharaon et sauve l'Égypte de la famine. Quand ses frères viennent chercher du blé, Joseph les reconnaît et choisit le pardon.",
         "morale": "Le pardon est plus fort que la rancune. Même dans les épreuves les plus dures, quelque chose de beau peut naître.",
         "ambiance": "dramatique",
-        "duree_cible_minutes": 25,
+        "duree_cible_minutes": 18,
         "pretexte": "Antoine est fâché contre un copain qui a été méchant avec lui à l'école. Il ne veut plus jamais lui parler. Papy lui dit : 'Je connais quelqu'un à qui on a fait bien pire, et pourtant il a pardonné...'",
         "personnages_presents": [
           "papy_babou",
@@ -179,7 +179,7 @@
         "resume": "Le Pharaon veut tuer tous les bébés hébreux. La mère de Moïse le cache dans un panier sur le Nil. La fille du Pharaon le trouve et l'élève comme un prince. Devenu adulte, Moïse découvre ses origines. Dieu lui parle dans un buisson ardent et lui confie une mission : libérer son peuple. Après les dix plaies d'Égypte, Moïse guide le peuple vers la liberté. Face à la mer Rouge, Dieu ouvre les eaux. Le peuple traverse à pied sec.",
         "morale": "Dieu choisit les petits et les humbles pour accomplir de grandes choses. Le courage, c'est dire oui même quand on a peur.",
         "ambiance": "dramatique",
-        "duree_cible_minutes": 30,
+        "duree_cible_minutes": 20,
         "pretexte": "C'est l'anniversaire de Noémie ! Elle a 6 ans. Mamie Sonia a préparé un gâteau magnifique. Noémie demande une histoire spéciale comme cadeau d'anniversaire. Papy dit : 'Pour ton anniversaire, je vais te raconter l'histoire d'un bébé qui a changé le monde...'",
         "personnages_presents": [
           "papy_babou",
@@ -218,7 +218,7 @@
         "resume": "Les Philistins menacent Israël. Leur champion Goliath, un géant terrifiant, défie quiconque de l'affronter. Tous les soldats tremblent de peur. Le jeune David, un simple berger venu apporter du pain à ses frères, s'indigne que personne n'ose se lever. Armé de sa fronde et de cinq pierres, il affronte Goliath au nom de Dieu. Une seule pierre suffit. David terrasse le géant et donne courage à tout le peuple.",
         "morale": "Ce n'est pas la taille ou la force qui compte, mais le courage et la foi. Les plus petits peuvent accomplir les plus grandes choses.",
         "ambiance": "joyeux",
-        "duree_cible_minutes": 25,
+        "duree_cible_minutes": 18,
         "pretexte": "Antoine a un tournoi de foot ce week-end et l'équipe adverse est réputée imbattable. Il est découragé. Papy lui dit : 'Tu sais, il y a eu un match encore plus déséquilibré que ça dans l'histoire...'",
         "personnages_presents": [
           "papy_babou",
@@ -249,7 +249,7 @@
         "resume": "David est mort et son fils Salomon devient roi. Dieu lui apparaît en rêve et lui propose de demander ce qu'il veut. Au lieu de la richesse ou la puissance, Salomon demande la sagesse pour bien gouverner son peuple. Dieu, touché, lui accorde la sagesse ET la richesse. Salomon rend des jugements brillants — comme celui des deux mères qui réclament le même bébé. Il construit aussi le magnifique Temple de Jérusalem pour honorer Dieu.",
         "morale": "La vraie richesse, c'est la sagesse — savoir faire les bons choix. Demander de l'aide pour bien agir est une preuve d'intelligence, pas de faiblesse.",
         "ambiance": "calme",
-        "duree_cible_minutes": 25,
+        "duree_cible_minutes": 18,
         "pretexte": "Noémie et Antoine se disputent pour savoir qui aura la plus grande chambre dans la nouvelle maison. Mamie Sonia leur dit d'aller demander à Papy, qui est 'le plus sage'. Papy rit : 'Moi, sage ? Je connais quelqu'un de bien plus sage...'",
         "personnages_presents": [
           "papy_babou",
@@ -282,7 +282,7 @@
         "resume": "Daniel est un jeune homme juif exilé à Babylone. Grâce à sa sagesse et sa droiture, il devient conseiller du roi. Mais des courtisans jaloux piègent Daniel : ils font adopter une loi interdisant de prier un autre dieu que le roi. Daniel refuse de cesser de prier. Il est jeté dans la fosse aux lions. Toute la nuit, Daniel prie. Au matin, le roi accourt : Daniel est vivant, les lions ne l'ont pas touché. Dieu a envoyé un ange pour fermer la gueule des lions.",
         "morale": "Rester fidèle à ce en quoi on croit, même quand c'est dangereux. La foi donne une force que rien ne peut briser.",
         "ambiance": "mystere",
-        "duree_cible_minutes": 25,
+        "duree_cible_minutes": 18,
         "pretexte": "C'est le soir, les enfants dorment chez Papy et Mamie. Antoine dit qu'il a un peu peur du noir. Papy le rassure et lui dit : 'Tu sais, je connais quelqu'un qui a passé toute une nuit dans le noir, entouré de lions...'",
         "personnages_presents": [
           "papy_babou",
@@ -315,7 +315,7 @@
         "resume": "Dieu demande à Jonas d'aller prêcher à Ninive, une ville méchante. Jonas a peur et fuit sur un bateau en direction opposée. Une terrible tempête éclate. Jonas comprend que c'est à cause de lui et demande aux marins de le jeter à la mer. Un énorme poisson l'avale. Pendant trois jours dans le ventre du poisson, Jonas prie et regrette sa fuite. Le poisson le recrache sur la plage. Jonas va finalement à Ninive, et la ville entière se repent. Dieu pardonne à Ninive — et Jonas apprend que l'amour de Dieu est pour tous.",
         "morale": "On ne peut pas fuir ses responsabilités, mais on peut toujours revenir sur le bon chemin. L'amour de Dieu est pour tout le monde, même ceux qu'on croit méchants.",
         "ambiance": "joyeux",
-        "duree_cible_minutes": 25,
+        "duree_cible_minutes": 18,
         "pretexte": "Noémie a fait une bêtise à l'école et elle refuse de s'excuser. Elle dit que c'est pas grave. Papy lui dit : 'Tu sais, il y a quelqu'un qui a essayé de fuir ce qu'il devait faire...'",
         "personnages_presents": [
           "papy_babou",
@@ -348,7 +348,7 @@
         "resume": "La jeune Esther, une orpheline juive élevée par son cousin Mardochée, est choisie pour devenir reine de Perse. Quand le cruel Haman complote pour exterminer tous les Juifs du royaume, Mardochée supplie Esther d'intervenir auprès du roi. Esther risque sa vie en se présentant devant le roi sans y être invitée. Par son courage, son intelligence et sa foi, elle déjoue le complot de Haman et sauve tout son peuple. Le roi fait pendre Haman et les Juifs célèbrent leur délivrance lors de la fête de Pourim.",
         "morale": "Le vrai courage, c'est agir pour les autres même quand on a peur pour soi. Chacun de nous est là pour une raison — il faut oser se lever quand le moment est venu.",
         "ambiance": "dramatique",
-        "duree_cible_minutes": 35,
+        "duree_cible_minutes": 20,
         "pretexte": "C'est un jour très spécial : Lucas est né ! Toute la famille est réunie chez Papy et Mamie pour fêter l'arrivée du bébé. Noémie et Antoine sont surexcités. Papy prend Lucas dans ses bras et dit : 'Pour fêter cette nouvelle vie, je vais vous raconter une dernière histoire extraordinaire — celle d'une femme qui a sauvé tout un peuple.'",
         "personnages_presents": [
           "papy_babou",

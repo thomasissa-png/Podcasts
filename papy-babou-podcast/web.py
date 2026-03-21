@@ -1027,6 +1027,17 @@ def api_public_episodes():
             saisons_info.append({"numero": num, "theme": ""})
     saisons_info.sort(key=lambda s: s["numero"])
 
+    # Charger les plans de saison pour enrichir les épisodes (resume, histoire_biblique)
+    plans_episodes = {}  # {(saison, numero): episode_plan_data}
+    try:
+        saisons_list_all = config.liste_saisons() if hasattr(config, 'liste_saisons') else []
+        for num in saisons_list_all:
+            plan = config.charger_saison(num)
+            for ep_plan in plan.get("saison", {}).get("episodes", []):
+                plans_episodes[(num, ep_plan.get("numero", 0))] = ep_plan
+    except Exception:
+        pass
+
     # Construire la liste d'épisodes publics
     episodes_public = []
     for ep in historique:
@@ -1078,12 +1089,20 @@ def api_public_episodes():
             except (ValueError, TypeError):
                 date_str = str(date_prod)[:10]
 
+        # Enrichir avec le plan de saison (resume, histoire_biblique)
+        plan_ep = plans_episodes.get((saison if isinstance(saison, int) else 1, numero if isinstance(numero, int) else 0), {})
+        resume = ep.get("resume_court", ep.get("resume", ""))
+        if not resume or len(resume) < 30:
+            resume = plan_ep.get("resume", resume)
+        histoire_biblique = plan_ep.get("histoire_biblique", "")
+
         episodes_public.append({
             "episode_id": episode_id,
             "saison": saison if isinstance(saison, int) else 1,
             "numero": numero if isinstance(numero, int) else 0,
             "titre": titre,
-            "resume": ep.get("resume_court", ep.get("resume", "")),
+            "resume": resume,
+            "histoire_biblique": histoire_biblique,
             "morale": ep.get("morale", ""),
             "audio_url": audio_url,
             "cover_url": cover_url,

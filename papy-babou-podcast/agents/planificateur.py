@@ -45,7 +45,7 @@ RÈGLES DE PLANIFICATION :
     épisode 5, ou Joseph épisode 3 + Joseph épisode 4). INTERDIT : "partie 1 / partie 2".
     Le plan sera REJETÉ automatiquement si un personnage apparaît dans plus d'1 épisode.
     Pour chaque personnage, choisir le moment le PLUS emblématique et raconter l'histoire
-    COMPLÈTE de A à Z en un seul épisode (25-35 min = largement suffisant).
+    COMPLÈTE de A à Z en un seul épisode (15-20 min = largement suffisant).
     Exemples CORRECTS (10 épisodes, 10 personnages/histoires différents) :
     Ep1=Création du monde, Ep2=Noé, Ep3=Abraham, Ep4=Joseph,
     Ep5=Moïse, Ep6=David, Ep7=Salomon, Ep8=Daniel, Ep9=Jonas, Ep10=Esther.
