@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" style="color-scheme: light dark;">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -297,7 +297,7 @@
     .episodes-section {
       max-width: var(--max-width);
       margin: 0 auto;
-      padding: 1.5rem;
+      padding: 2rem 1.5rem 1.5rem;
     }
 
     .episodes-section h2 {
@@ -330,6 +330,7 @@
     .episode-card:hover {
       box-shadow: var(--shadow-hover);
       transform: translateY(-2px);
+      transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .episode-play {
@@ -637,18 +638,24 @@
     .player-close:hover { color: var(--corail); background: rgba(242, 107, 94, 0.1); }
 
     /* ── Footer ───────────────────────────────────────────────── */
+    .section-wave-footer {
+      margin-bottom: -1px;
+    }
+    .section-wave-footer svg { display: block; width: 100%; height: 40px; }
+
     .footer {
       text-align: center;
       padding: 2.5rem 1.5rem 2.5rem;
       color: var(--gris-leger);
       font-size: 0.85rem;
       transition: padding-bottom 0.3s;
+      background: linear-gradient(180deg, #F5EDD8 0%, var(--sable) 100%);
     }
     body.player-active .footer {
       padding-bottom: 6rem;
     }
 
-    .footer a { color: var(--dore-dark); font-weight: 600; }
+    .footer a { color: #9A6B08; font-weight: 700; }
 
     .footer-links {
       display: flex;
@@ -754,8 +761,8 @@
     }
     .parents-guide h2 {
       font-family: var(--font-display);
-      font-size: 1.4rem;
-      color: var(--bleu-fonce);
+      font-size: 1.5rem;
+      color: var(--dore-dark);
       margin-bottom: 1rem;
     }
     .parents-guide details {
@@ -801,8 +808,8 @@
     }
     .testimonials-section h2 {
       font-family: var(--font-display);
-      font-size: 1.4rem;
-      color: var(--rose-tendre);
+      font-size: 1.5rem;
+      color: var(--dore-dark);
       margin-bottom: 1rem;
     }
     .testimonials-grid {
@@ -964,7 +971,7 @@
       margin-bottom: 0.3rem;
     }
     .modal-meta .modal-ep-num {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 800;
       color: var(--dore);
       text-transform: uppercase;
@@ -1062,7 +1069,7 @@
     }
     .player-ctrl-btn svg { width: 16px; height: 16px; fill: currentColor; }
     .player-ctrl-btn .ctrl-label {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 800;
       position: absolute;
       bottom: -1px;
@@ -1098,7 +1105,7 @@
       gap: 0.3rem;
       background: var(--dore);
       color: var(--blanc);
-      font-size: 0.72rem;
+      font-size: 0.8rem;
       font-weight: 700;
       padding: 0.2rem 0.6rem;
       border-radius: var(--radius-sm);
@@ -1166,8 +1173,11 @@
       .search-input { background: #252540; border-color: #353555; color: var(--gris-texte); }
       .testimonial { background: #252540; }
       .section-wave svg path { fill: #1a1a2e; }
+      .section-wave-footer svg path { fill: #151528; }
       .section-separator { opacity: 0.3; }
       .subscribe-section { background: #252035; }
+      .footer { background: linear-gradient(180deg, #151528 0%, #1a1a2e 100%); }
+      .footer a { color: #D4A030; }
     }
 
     /* ── Responsive ───────────────────────────────────────────── */
@@ -1206,6 +1216,9 @@
       .modal-header { flex-direction: column; align-items: center; text-align: center; }
       .modal-cover { width: 60px; height: 60px; }
       .modal-meta .modal-info { justify-content: center; }
+      .search-input,
+      .subscribe-email-form input[type="email"] { font-size: 1rem; }
+      .modal-btn { min-height: 44px; }
     }
 
     @media (max-width: 480px) {
@@ -1292,7 +1305,7 @@
       z-index: 0;
       overflow: hidden;
       pointer-events: none;
-      opacity: 0.13;
+      opacity: 0.22;
       background-image:
         /* Microphone */
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='120' viewBox='0 0 80 120' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='40' cy='35' rx='14' ry='22'/%3E%3Cline x1='40' y1='57' x2='40' y2='90'/%3E%3Cline x1='28' y1='90' x2='52' y2='90'/%3E%3Cpath d='M18 40 C18 58 40 70 40 70 C40 70 62 58 62 40' fill='none'/%3E%3Cline x1='30' y1='30' x2='50' y2='30'/%3E%3Cline x1='30' y1='37' x2='50' y2='37'/%3E%3C/svg%3E"),
@@ -1335,8 +1348,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 1.5rem 0;
       gap: 1rem;
-      padding: 1rem 0;
       opacity: 0.4;
     }
     .section-separator::before,
@@ -1450,7 +1463,7 @@
   <!-- ═══ Episodes ═══ -->
   <main class="episodes-section">
     <h2 id="episodes-heading">Les missions</h2>
-    <div class="episodes-list" id="episodes-list">
+    <div class="episodes-list" id="episodes-list" aria-live="polite" aria-relevant="additions removals">
       <!-- Skeletons while loading -->
       <div class="skeleton skeleton-card"></div>
       <div class="skeleton skeleton-card"></div>
@@ -1624,6 +1637,13 @@
     </form>
     <p class="subscribe-success" id="subscribe-success">Merci ! Vous serez prévenu(e) dès la prochaine mission.</p>
   </section>
+
+  <!-- ═══ Wave closing ═══ -->
+  <div class="section-wave section-wave-footer" aria-hidden="true">
+    <svg viewBox="0 0 1440 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z" fill="#F5EDD8"/>
+    </svg>
+  </div>
 
   <!-- ═══ Footer ═══ -->
   <footer class="footer">
