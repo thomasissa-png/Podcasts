@@ -664,6 +664,10 @@
       position: relative;
       padding: 8px 0;
       background-clip: content-box;
+      transition: height 0.15s ease;
+    }
+    .player-progress:hover {
+      height: 16px;
     }
 
     .player-progress-bar {
@@ -1520,13 +1524,16 @@
       .saison-tab { white-space: nowrap; flex-shrink: 0; min-height: 44px; display: inline-flex; align-items: center; }
       .player-volume-wrap { display: none; }
       .player-progress-bar::after { opacity: 1; }
+      .player-progress { padding: 12px 0; }
       .player-time { min-width: auto; }
+      .modal-content { max-width: calc(100vw - 2rem); margin: 0 1rem; }
       .modal-header { flex-direction: column; align-items: center; text-align: center; }
       .modal-cover { width: 60px; height: 60px; }
       .modal-meta .modal-info { justify-content: center; }
+      .modal-actions { flex-direction: column; }
+      .modal-btn { min-height: 44px; width: 100%; justify-content: center; }
       .search-input,
       .subscribe-email-form input[type="email"] { font-size: 1rem; }
-      .modal-btn { min-height: 44px; }
     }
 
     @media (max-width: 480px) {
@@ -1536,6 +1543,21 @@
       .episode-play svg { width: 18px; height: 18px; }
       .episode-meta { gap: 0.6rem; }
       .hero-cta { font-size: 1rem; padding: 0.7rem 1.4rem; }
+      .modal-body { padding: 1rem; }
+      .modal-actions { padding: 0 1rem 1rem; }
+      .testimonials-grid { gap: var(--space-md); }
+      .parents-guide { padding: var(--space-lg); }
+    }
+
+    @media (max-width: 320px) {
+      .hero-title span { font-size: 1.6rem; }
+      .hero-cta { font-size: 0.9rem; padding: 0.6rem 1.2rem; }
+      .episode-card { padding: var(--space-sm); gap: var(--space-sm); }
+      .episode-play { width: 44px; height: 44px; }
+      .episode-play svg { width: 16px; height: 16px; }
+      .episode-cover { width: 50px; height: 50px; }
+      .modal-content { margin: 0 0.5rem; }
+      .saison-tab { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
     }
 
     /* ── Large screens ──────────────────────────────────────── */
@@ -1684,6 +1706,14 @@
     }
     .episode-play:active {
       transform: scale(0.92);
+    }
+    .episode-play:focus-visible {
+      outline: 3px solid var(--bleu-doux);
+      outline-offset: 2px;
+    }
+    .player-progress:focus-visible {
+      outline: 3px solid var(--bleu-doux);
+      outline-offset: 2px;
     }
     @keyframes bounceIn {
       0% { transform: scale(0.8); opacity: 0; }
