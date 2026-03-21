@@ -461,12 +461,26 @@
 
     .about-card {
       background: linear-gradient(135deg, var(--blanc) 0%, #EDF4FA 100%);
+      position: relative;
+      overflow: hidden;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 2rem 2.5rem;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 2rem;
+    }
+
+    .about-card::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, var(--dore-light) 0%, transparent 70%);
+      opacity: 0.12;
+      pointer-events: none;
     }
 
     .about-card h2 {
@@ -640,6 +654,7 @@
     /* ── Footer ───────────────────────────────────────────────── */
     .section-wave-footer {
       margin-bottom: -1px;
+      color: #F5EDD8;
     }
     .section-wave-footer svg { display: block; width: 100%; height: 40px; }
 
@@ -971,7 +986,7 @@
       margin-bottom: 0.3rem;
     }
     .modal-meta .modal-ep-num {
-      font-size: 0.8rem;
+      font-size: 0.88rem;
       font-weight: 800;
       color: var(--dore);
       text-transform: uppercase;
@@ -980,7 +995,7 @@
     .modal-meta .modal-info {
       display: flex;
       gap: 0.8rem;
-      font-size: 0.8rem;
+      font-size: 0.88rem;
       color: var(--gris-leger);
       font-weight: 600;
       margin-top: 0.4rem;
@@ -1036,6 +1051,11 @@
       right: 1rem;
       background: none;
       border: none;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1.5rem;
       cursor: pointer;
       color: var(--gris-leger);
@@ -1069,7 +1089,7 @@
     }
     .player-ctrl-btn svg { width: 16px; height: 16px; fill: currentColor; }
     .player-ctrl-btn .ctrl-label {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 800;
       position: absolute;
       bottom: -1px;
@@ -1105,7 +1125,7 @@
       gap: 0.3rem;
       background: var(--dore);
       color: var(--blanc);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 700;
       padding: 0.2rem 0.6rem;
       border-radius: var(--radius-sm);
@@ -1173,7 +1193,7 @@
       .search-input { background: #252540; border-color: #353555; color: var(--gris-texte); }
       .testimonial { background: #252540; }
       .section-wave svg path { fill: #1a1a2e; }
-      .section-wave-footer svg path { fill: #151528; }
+      .section-wave-footer { color: #151528; }
       .section-separator { opacity: 0.3; }
       .subscribe-section { background: #252035; }
       .footer { background: linear-gradient(180deg, #151528 0%, #1a1a2e 100%); }
@@ -1641,7 +1661,7 @@
   <!-- ═══ Wave closing ═══ -->
   <div class="section-wave section-wave-footer" aria-hidden="true">
     <svg viewBox="0 0 1440 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z" fill="#F5EDD8"/>
+      <path d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z" fill="currentColor"/>
     </svg>
   </div>
 
@@ -2177,11 +2197,25 @@
       else audio.play();
     });
 
+    playerProgress.setAttribute('tabindex', '0');
     playerProgress.addEventListener('click', function(e) {
       if (!audio.duration) return;
       var rect = playerProgress.getBoundingClientRect();
       var pct = (e.clientX - rect.left) / rect.width;
       audio.currentTime = pct * audio.duration;
+    });
+
+    // Keyboard control for progress slider (accessibility)
+    playerProgress.addEventListener('keydown', function(e) {
+      if (!audio.duration) return;
+      var step = audio.duration * 0.05;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        audio.currentTime = Math.min(audio.duration, audio.currentTime + step);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        audio.currentTime = Math.max(0, audio.currentTime - step);
+      }
     });
 
     playerClose.addEventListener('click', function() {
