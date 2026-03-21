@@ -161,7 +161,7 @@
       text-align: center;
       position: relative;
       overflow: hidden;
-      border-bottom: 3px solid var(--dore-light);
+      border-bottom: 3px solid var(--sable-dark);
     }
 
     .hero::before {
@@ -310,13 +310,13 @@
       font-weight: 700;
       font-size: 1rem;
       cursor: pointer;
-      border: 2px solid var(--dore-light);
+      border: 2px solid var(--sable-dark);
       background: var(--blanc);
       color: var(--accent);
       transition: all 0.2s;
     }
 
-    .saison-tab:hover { background: var(--dore-light); color: var(--blanc); }
+    .saison-tab:hover { background: var(--accent); color: var(--blanc); }
     .saison-tab:focus-visible { outline: 3px solid var(--bleu-doux); outline-offset: 2px; }
     .saison-tab.active {
       background: var(--accent);
@@ -348,7 +348,7 @@
       background: var(--blanc);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      border-left: 4px solid var(--dore-light);
+      border-left: 4px solid var(--bleu-doux);
       padding: 1.2rem 1.5rem;
       display: flex;
       align-items: center;
@@ -495,7 +495,7 @@
     }
 
     .about-card {
-      background: linear-gradient(135deg, var(--blanc) 0%, var(--bleu-pale) 100%);
+      background: var(--blanc);
       position: relative;
       overflow: hidden;
       border-radius: var(--radius);
@@ -523,8 +523,7 @@
       font-size: 1.5rem;
       color: var(--titre-section);
       margin-bottom: 0.8rem;
-      border-left: 4px solid var(--bleu-fonce);
-      padding-left: 0.8rem;
+      padding-left: 0;
     }
 
     .about-card p {
@@ -584,7 +583,7 @@
       padding: 1.5rem 2rem;
       background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.06) 0%, rgba(var(--papy-chemise-rgb), 0.04) 100%);
       border-radius: var(--radius);
-      border-left: 4px solid var(--dore-light);
+      border-left: 4px solid var(--accent);
       transition: transform 0.2s, box-shadow 0.2s;
     }
     @media (hover: hover) {
@@ -603,7 +602,7 @@
       position: fixed;
       bottom: 0; left: 0; right: 0;
       background: var(--blanc);
-      border-top: 3px solid var(--dore-light);
+      border-top: 3px solid var(--sable-dark);
       box-shadow: var(--shadow-player);
       z-index: 1000;
       display: none; /* shown via JS when playing */
@@ -737,7 +736,7 @@
       color: var(--gris-leger);
       font-size: 1rem;
       transition: padding-bottom 0.3s;
-      background: linear-gradient(180deg, var(--parchemin-clair) 0%, var(--sable) 100%);
+      background: var(--sable);
     }
     body.player-active .footer {
       padding-bottom: 6rem;
@@ -987,7 +986,7 @@
       max-width: var(--max-width);
       margin: 3rem auto;
       padding: 2rem 1.5rem;
-      background: var(--bleu-pale);
+      background: var(--sable);
       border-radius: var(--radius);
     }
     .parents-guide h2 {
@@ -1400,7 +1399,7 @@
     /* ── Nav scroll state ─────────────────────────────────────── */
     .site-nav.scrolled {
       box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-      border-bottom-color: var(--dore-light);
+      border-bottom-color: var(--sable-dark);
     }
     .site-nav-links a.active {
       background: var(--sable-dark);
@@ -1431,30 +1430,30 @@
       --bleu-pale: #1A2A3A;
       --parchemin-clair: #0A1520;
       }
-      .episode-card { border-left-color: var(--dore-light); }
+      .episode-card { border-left-color: var(--bleu-doux); }
       .episode-card.is-playing { background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.12) 0%, var(--blanc) 30%); }
-      .about-card { background: linear-gradient(135deg, var(--blanc) 0%, var(--sable-dark) 100%); }
-      .parents-guide { background: linear-gradient(135deg, var(--sable-dark) 0%, #1E1E18 100%); }
+      .about-card { background: var(--sable-dark); }
+      .parents-guide { background: var(--sable-dark); }
       .parents-guide summary:hover { background: var(--sable); }
-      .parents-guide details { background: var(--sable-dark); }
+      .parents-guide details { background: var(--blanc); }
       .parents-guide details[open] { background: var(--blanc); }
       .subscribe-section { background: var(--blanc); }
-      .player { background: var(--sable-dark); border-top-color: var(--dore-light); }
+      .player { background: var(--sable-dark); border-top-color: var(--sable-dark); }
       .episode-modal .modal-content { background: var(--blanc); }
-      .badge-trust { background: rgba(91, 155, 213, 0.12); border: 2px solid var(--dore-light); color: var(--gris-texte); }
+      .badge-trust { background: rgba(91, 155, 213, 0.12); border: 2px solid var(--sable-dark); color: var(--gris-texte); }
       .testimonials-section { background: transparent; }
-      .testimonial { background: linear-gradient(135deg, #1E1E18 0%, var(--sable-dark) 100%); }
-      .papy-quote { background: rgba(var(--accent-rgb), 0.08); border-left-color: var(--dore-light); }
+      .testimonial { background: var(--sable-dark); }
+      .papy-quote { background: rgba(var(--accent-rgb), 0.08); border-left-color: var(--accent); }
       .search-input { background: var(--sable-dark); border-color: var(--sable-dark); color: var(--gris-texte); }
       .section-wave svg path { fill: var(--sable); }
       .section-wave-footer { color: var(--parchemin-clair); }
       .section-separator { opacity: 0.3; }
-      .footer { color: var(--gris-leger); background: linear-gradient(180deg, var(--parchemin-clair) 0%, var(--sable) 100%); }
-      .footer a { color: var(--dore-light); }
+      .footer { color: var(--gris-leger); background: var(--sable); }
+      .footer a { color: var(--bleu-doux); }
       .hero-doodles { opacity: 0.12; }
       .subscribe-email-form input[type="email"] { background: var(--sable-dark); border-color: var(--sable-dark); color: var(--gris-texte); }
       .site-nav { background: var(--sable-dark); border-bottom-color: var(--sable-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-      .site-nav.scrolled { border-bottom-color: var(--dore-light); }
+      .site-nav.scrolled { border-bottom-color: var(--sable-dark); }
       .site-nav-brand .logo-light { display: none !important; }
       .site-nav-brand .logo-dark.brand-full { display: inline; }
       .site-nav-brand .logo-dark.brand-icon { display: none; }
@@ -1692,12 +1691,12 @@
       flex: 1;
       max-width: 120px;
       height: 1px;
-      background: var(--accent);
+      background: var(--gris-chaud);
     }
     .section-separator svg {
       width: 28px;
       height: 28px;
-      fill: var(--accent);
+      fill: var(--gris-chaud);
     }
 
     /* ── Micro-animations ──────────────────────────────────── */
@@ -1876,7 +1875,29 @@
     </blockquote>
   </section>
 
-  <!-- ═══ Testimonials (preuve sociale — après présentation) ═══ -->
+  <!-- ═══ Saison tabs ═══ -->
+  <nav class="saison-nav" id="saison-nav" aria-label="Choisir une saison de missions"></nav>
+
+  <!-- ═══ Search ═══ -->
+  <div class="search-bar" id="search-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="search" class="search-input" id="search-input" placeholder="Chercher Noé, David, Jonas..." aria-label="Rechercher une mission">
+    </div>
+  </div>
+
+  <!-- ═══ Episodes ═══ -->
+  <main class="episodes-section">
+    <h2 id="episodes-heading">Choisissez votre mission</h2>
+    <div class="episodes-list" id="episodes-list" aria-live="polite" aria-relevant="additions removals">
+      <!-- Skeletons while loading -->
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </main>
+
+  <!-- ═══ Testimonials (preuve sociale — après les missions) ═══ -->
   <section class="testimonials-section">
     <h2>Ce que les familles en pensent</h2>
     <div class="testimonials-grid">
@@ -1900,28 +1921,6 @@
       </div>
     </div>
   </section>
-
-  <!-- ═══ Saison tabs ═══ -->
-  <nav class="saison-nav" id="saison-nav" aria-label="Choisir une saison de missions"></nav>
-
-  <!-- ═══ Search ═══ -->
-  <div class="search-bar" id="search-bar">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      <input type="search" class="search-input" id="search-input" placeholder="Chercher Noé, David, Jonas..." aria-label="Rechercher une mission">
-    </div>
-  </div>
-
-  <!-- ═══ Episodes ═══ -->
-  <main class="episodes-section">
-    <h2 id="episodes-heading">Choisissez votre mission</h2>
-    <div class="episodes-list" id="episodes-list" aria-live="polite" aria-relevant="additions removals">
-      <!-- Skeletons while loading -->
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-    </div>
-  </main>
 
   <!-- ═══ Écouter sur les plateformes ═══ -->
   <section class="platform-subscribe" id="platform-subscribe">
