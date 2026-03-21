@@ -90,6 +90,14 @@
       --noemie-jaune: #E8B040;
       --papy-chemise: #3A4E7A;
 
+      /* RGB components for rgba() usage */
+      --dore-rgb: 201, 149, 42;
+      --papy-chemise-rgb: 58, 78, 122;
+
+      /* Backgrounds sections */
+      --bleu-pale: #E8F2FC;
+      --parchemin-clair: #F5EDD8;
+
       /* Couleurs externes (plateformes) */
       --apple-purple: #7D5BA6;
       --spotify-green: #1DB954;
@@ -201,9 +209,9 @@
 
     .hero-title {
       font-family: var(--font-display);
-      font-size: clamp(1.4rem, 4vw, 2.5rem);
+      font-size: var(--font-size-xl);
       font-weight: 800;
-      line-height: 1.15;
+      line-height: var(--line-height-tight);
       color: var(--blanc);
       margin-bottom: var(--space-xs);
       text-shadow: 0 2px 8px rgba(27, 42, 74, 0.3);
@@ -212,7 +220,7 @@
     .hero-title span {
       display: block;
       color: var(--dore-light);
-      font-size: clamp(1.7rem, 5vw, 3.2rem);
+      font-size: var(--font-size-hero);
       -webkit-text-stroke: 1.5px rgba(26, 26, 46, 0.25);
       text-shadow: 0 3px 0 rgba(0, 0, 0, 0.15), 0 0 30px rgba(232, 200, 74, 0.25);
     }
@@ -244,14 +252,14 @@
       cursor: pointer;
       text-decoration: none;
       transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 14px rgba(201, 149, 42, 0.35);
+      box-shadow: 0 4px 14px rgba(var(--dore-rgb), 0.35);
       animation: heroCTAPulse 2s ease-in-out 3;
     }
     .hero-cta:hover {
       background: var(--dore);
       filter: brightness(0.88);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(201, 149, 42, 0.5);
+      box-shadow: 0 6px 20px rgba(var(--dore-rgb), 0.5);
       text-decoration: none;
       color: var(--blanc);
     }
@@ -261,8 +269,8 @@
       outline-offset: 3px;
     }
     @keyframes heroCTAPulse {
-      0%, 100% { box-shadow: 0 4px 14px rgba(201, 149, 42, 0.35); transform: scale(1); }
-      50% { box-shadow: 0 4px 20px rgba(201, 149, 42, 0.55); transform: scale(1.03); }
+      0%, 100% { box-shadow: 0 4px 14px rgba(var(--dore-rgb), 0.35); transform: scale(1); }
+      50% { box-shadow: 0 4px 20px rgba(var(--dore-rgb), 0.55); transform: scale(1.03); }
     }
 
     .hero-meta {
@@ -309,6 +317,7 @@
     }
 
     .saison-tab:hover { background: var(--dore-light); color: var(--blanc); }
+    .saison-tab:focus-visible { outline: 3px solid var(--bleu-doux); outline-offset: 2px; }
     .saison-tab.active {
       background: var(--dore);
       color: var(--blanc);
@@ -324,7 +333,7 @@
 
     .episodes-section h2 {
       font-family: var(--font-display);
-      font-size: clamp(1.4rem, 3vw, 1.8rem);
+      font-size: var(--font-size-lg);
       color: var(--titre-section);
       margin-bottom: 1rem;
     }
@@ -455,26 +464,26 @@
     .episode-listened-badge svg { width: 14px; height: 14px; fill: var(--vert-prairie); }
     .episode-card.is-playing {
       border-left-color: var(--dore);
-      background: linear-gradient(90deg, rgba(201, 149, 42, 0.08) 0%, var(--blanc) 30%);
+      background: linear-gradient(90deg, rgba(var(--dore-rgb), 0.08) 0%, var(--blanc) 30%);
     }
     .episode-card.is-playing .episode-play {
       animation: playPulse 1.5s ease-in-out infinite;
     }
     @keyframes playPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(201, 149, 42, 0.4); }
-      50% { box-shadow: 0 0 0 8px rgba(201, 149, 42, 0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(var(--dore-rgb), 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(var(--dore-rgb), 0); }
     }
     .episode-progress-bar {
       height: 3px;
       background: var(--sable-dark);
-      border-radius: 2px;
+      border-radius: var(--radius-bar);
       margin-top: 0.4rem;
       overflow: hidden;
     }
     .episode-progress-bar-inner {
       height: 100%;
       background: var(--dore);
-      border-radius: 2px;
+      border-radius: var(--radius-bar);
       transition: width 0.3s;
     }
 
@@ -486,7 +495,7 @@
     }
 
     .about-card {
-      background: linear-gradient(135deg, var(--blanc) 0%, #E8F2FC 100%);
+      background: linear-gradient(135deg, var(--blanc) 0%, var(--bleu-pale) 100%);
       position: relative;
       overflow: hidden;
       border-radius: var(--radius);
@@ -519,9 +528,12 @@
     }
 
     .about-card p {
-      font-size: 1rem;
-      line-height: 1.7;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-normal);
       color: var(--gris-texte);
+    }
+    .about-card p + p {
+      margin-top: 0.8rem;
     }
 
     .characters { list-style: none; }
@@ -546,6 +558,8 @@
       overflow: hidden;
     }
     .char-avatar svg { display: block; }
+    .char-avatar { transition: transform 0.2s; }
+    @media (hover: hover) { .char-avatar:hover { transform: scale(1.1); } }
 
     .char-name { font-weight: 700; font-size: 1rem; }
 
@@ -568,9 +582,13 @@
       font-style: italic;
       line-height: 1.6;
       padding: 1.5rem 2rem;
-      background: linear-gradient(135deg, rgba(201, 149, 42, 0.06) 0%, rgba(27, 58, 92, 0.04) 100%);
+      background: linear-gradient(135deg, rgba(var(--dore-rgb), 0.06) 0%, rgba(var(--papy-chemise-rgb), 0.04) 100%);
       border-radius: var(--radius);
       border-left: 4px solid var(--dore-light);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    @media (hover: hover) {
+      .papy-quote:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
     }
     .papy-quote footer {
       font-size: 0.92rem;
@@ -705,7 +723,7 @@
     /* ── Footer ───────────────────────────────────────────────── */
     .section-wave-footer {
       margin-bottom: -1px;
-      color: #F5EDD8;
+      color: var(--parchemin-clair);
     }
     .section-wave-footer svg { display: block; width: 100%; height: 40px; }
 
@@ -715,7 +733,7 @@
       color: var(--gris-leger);
       font-size: 1rem;
       transition: padding-bottom 0.3s;
-      background: linear-gradient(180deg, #F5EDD8 0%, var(--sable) 100%);
+      background: linear-gradient(180deg, var(--parchemin-clair) 0%, var(--sable) 100%);
     }
     body.player-active .footer {
       padding-bottom: 6rem;
@@ -723,6 +741,20 @@
 
     .footer a { color: var(--dore); font-weight: 700; display: inline-block; padding: 0.5rem 0; min-height: 44px; line-height: calc(44px - 1rem); }
 
+    .footer-brand {
+      margin-bottom: 0.8rem;
+      font-weight: 700;
+      color: var(--titre-section);
+      font-family: var(--font-display);
+      font-size: var(--font-size-md);
+    }
+    .footer-quote {
+      max-width: 480px;
+      margin: 0 auto 1rem;
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-normal);
+      font-style: italic;
+    }
     .footer-links {
       display: flex;
       justify-content: center;
@@ -940,6 +972,7 @@
       box-shadow: var(--shadow);
       transform: translateY(-1px);
     }
+    .badge-trust:focus-visible { outline: 3px solid var(--bleu-doux); outline-offset: 2px; }
     .badge-trust .badge-icon {
       font-size: 1rem;
       flex-shrink: 0;
@@ -950,7 +983,7 @@
       max-width: var(--max-width);
       margin: 3rem auto;
       padding: 2rem 1.5rem;
-      background: #E8F2FC;
+      background: var(--bleu-pale);
       border-radius: var(--radius);
     }
     .parents-guide h2 {
@@ -1055,7 +1088,7 @@
       margin: 2.5rem auto;
       padding: 2rem 1.5rem;
       text-align: center;
-      background: #E8F2FC;
+      background: var(--bleu-pale);
       border-radius: var(--radius);
     }
     .subscribe-section h2 {
@@ -1196,10 +1229,10 @@
       padding: 1.2rem 1.5rem;
     }
     .modal-body h4 {
-      font-size: 1rem;
+      font-size: var(--font-size-base);
       color: var(--dore);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: var(--letter-spacing-wide);
       margin-bottom: 0.4rem;
       margin-top: 1rem;
     }
@@ -1391,35 +1424,42 @@
       .hero {
         background: linear-gradient(175deg, #1A3050 0%, #254060 30%, #2D5070 55%, #2A3A4A 75%, #3A4A5A 90%, var(--sable) 100%);
       }
+      --bleu-pale: #1A2A3A;
+      --parchemin-clair: #0A1520;
+      }
       .episode-card { border-left-color: var(--dore-light); }
-      .about-card { background: linear-gradient(135deg, var(--blanc) 0%, #1A2A3A 100%); }
-      .parents-guide { background: #162838; }
+      .episode-card.is-playing { background: linear-gradient(90deg, rgba(var(--dore-rgb), 0.12) 0%, var(--blanc) 30%); }
+      .about-card { background: linear-gradient(135deg, var(--blanc) 0%, var(--sable-dark) 100%); }
+      .parents-guide { background: var(--sable-dark); }
       .parents-guide summary:hover { background: var(--sable); }
       .parents-guide details { background: var(--sable-dark); }
-      .subscribe-section { background: #162030; }
-      .player { background: #1A2838; border-top-color: var(--dore-light); }
+      .parents-guide details[open] { background: var(--blanc); }
+      .subscribe-section { background: var(--blanc); }
+      .player { background: var(--sable-dark); border-top-color: var(--dore-light); }
       .episode-modal .modal-content { background: var(--blanc); }
       .badge-trust { background: rgba(91, 155, 213, 0.12); border: 2px solid var(--dore-light); color: var(--gris-texte); }
-      .footer { color: var(--gris-leger); }
-      .search-input { background: var(--sable-dark); border-color: #2A3A4A; color: var(--gris-texte); }
+      .testimonials-section { background: transparent; }
       .testimonial { background: var(--sable-dark); }
-      .papy-quote { background: rgba(201, 149, 42, 0.08); border-left-color: var(--dore-light); }
+      .papy-quote { background: rgba(var(--dore-rgb), 0.08); border-left-color: var(--dore-light); }
+      .search-input { background: var(--sable-dark); border-color: var(--sable-dark); color: var(--gris-texte); }
       .section-wave svg path { fill: var(--sable); }
-      .section-wave-footer { color: #0F1E2E; }
+      .section-wave-footer { color: var(--parchemin-clair); }
       .section-separator { opacity: 0.3; }
-      .footer { background: linear-gradient(180deg, #0A1520 0%, var(--sable) 100%); }
+      .footer { color: var(--gris-leger); background: linear-gradient(180deg, var(--parchemin-clair) 0%, var(--sable) 100%); }
       .footer a { color: var(--dore-light); }
-      .site-nav { background: #1A2838; border-bottom-color: #2A3A4A; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+      .hero-doodles { opacity: 0.12; }
+      .subscribe-email-form input[type="email"] { background: var(--sable-dark); border-color: var(--sable-dark); color: var(--gris-texte); }
+      .site-nav { background: var(--sable-dark); border-bottom-color: var(--sable-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
       .site-nav.scrolled { border-bottom-color: var(--dore-light); }
       .site-nav-brand .logo-light { display: none !important; }
       .site-nav-brand .logo-dark.brand-full { display: inline; }
       .site-nav-brand .logo-dark.brand-icon { display: none; }
-      .site-nav-brand .brand-text { color: #E8ECF0; }
+      .site-nav-brand .brand-text { color: var(--gris-texte); }
       .site-nav-links a { color: var(--gris-texte); }
-      .site-nav-links a.active { background: #2A3A4A; color: var(--dore-light); }
-      .autoplay-toast { background: #2A3A4A; }
+      .site-nav-links a.active { background: var(--sable); color: var(--dore-light); }
+      .autoplay-toast { background: var(--sable-dark); }
       .nav-hamburger { color: var(--gris-texte); }
-      .site-nav-links { background: #1A2838; border-top-color: #2A3A4A; }
+      .site-nav-links { background: var(--sable-dark); border-top-color: var(--sable); }
     }
 
     /* ── Responsive ───────────────────────────────────────────── */
@@ -1783,13 +1823,13 @@
           les héros de la Bible dans des épopées palpitantes ! Chaque semaine,
           une nouvelle aventure extraordinaire.
         </p>
-        <p style="margin-top: 0.8rem;">
+        <p>
           <strong>Le seul podcast où vos enfants ne sont pas spectateurs</strong> — ils participent
           à la mission. Papy Babou pose des questions, Antoine mène l'enquête,
           Noémie imagine des solutions farfelues. Un format interactif qui donne
           envie de réécouter.
         </p>
-        <p style="margin-top: 0.8rem;">
+        <p>
           En voiture, au coucher ou en famille : chaque écoute est une expédition.
           Des récits fidèles aux textes bibliques, portés par un univers sonore
           immersif.
@@ -1965,9 +2005,9 @@
 
   <!-- ═══ Footer ═══ -->
   <footer class="footer">
-    <p style="margin-bottom:0.8rem;font-weight:700;color:var(--titre-section);font-family:var(--font-display);font-size:1.1rem;">Les Histoires de Papy Babou</p>
-    <p style="max-width:480px;margin:0 auto 1rem;font-size:0.95rem;line-height:1.6;font-style:italic;">« Papy Babou referme son grand livre... mais il a encore plein d'histoires à raconter. À la prochaine mission ! »</p>
-    <div class="footer-links" style="margin-bottom:0.5rem;">
+    <p class="footer-brand">Les Histoires de Papy Babou</p>
+    <p class="footer-quote">« Papy Babou referme son grand livre... mais il a encore plein d'histoires à raconter. À la prochaine mission ! »</p>
+    <div class="footer-links">
       <a href="https://podcasts.apple.com/fr/podcast/les-histoires-de-papy-babou" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
       <a href="https://open.spotify.com/show/les-histoires-de-papy-babou" target="_blank" rel="noopener noreferrer">Spotify</a>
       <a href="/feed.xml" target="_blank" rel="noopener noreferrer">Flux RSS</a>
