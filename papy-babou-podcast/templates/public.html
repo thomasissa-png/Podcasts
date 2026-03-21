@@ -21,6 +21,7 @@
   <link rel="icon" type="image/svg+xml" sizes="16x16" href="/assets/artwork/favicon_16.svg">
   <link rel="apple-touch-icon" href="/assets/artwork/apple-touch-icon.svg">
   <link rel="manifest" href="/assets/manifest.json">
+  <link rel="alternate" type="application/rss+xml" title="Les Histoires de Papy Babou" href="/feed.xml">
   <meta name="theme-color" content="#4A9FE5">
   <script type="application/ld+json">
   {
@@ -200,10 +201,43 @@
     }
 
     .hero-description {
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: rgba(255, 255, 255, 0.95);
       max-width: 550px;
       line-height: 1.7;
+    }
+
+    /* ── Hero CTA ──────────────────────────────────────────── */
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.2rem;
+      padding: 0.8rem 1.8rem;
+      background: var(--dore);
+      color: var(--blanc);
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(232, 160, 32, 0.4);
+      animation: heroCTAPulse 2s ease-in-out infinite;
+    }
+    .hero-cta:hover {
+      background: var(--dore-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(232, 160, 32, 0.5);
+      text-decoration: none;
+      color: var(--blanc);
+    }
+    .hero-cta svg { width: 20px; height: 20px; fill: var(--blanc); }
+    @keyframes heroCTAPulse {
+      0%, 100% { box-shadow: 0 4px 14px rgba(232, 160, 32, 0.4); }
+      50% { box-shadow: 0 4px 20px rgba(232, 160, 32, 0.6); }
     }
 
     .hero-meta {
@@ -373,10 +407,44 @@
       border-radius: var(--radius-sm);
       object-fit: cover;
       background: var(--blanc);
-      display: none; /* shown if cover exists */
+      display: block;
     }
 
-    .episode-cover.has-cover { display: block; }
+    /* ── Listened indicator ─────────────────────────────────── */
+    .episode-listened-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--vert-prairie);
+      margin-bottom: 0.2rem;
+    }
+    .episode-listened-badge svg { width: 14px; height: 14px; fill: var(--vert-prairie); }
+    .episode-card.is-playing {
+      border-left-color: var(--dore);
+      background: linear-gradient(90deg, rgba(255, 210, 52, 0.06) 0%, var(--blanc) 30%);
+    }
+    .episode-card.is-playing .episode-play {
+      animation: playPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes playPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(232, 160, 32, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(232, 160, 32, 0); }
+    }
+    .episode-progress-bar {
+      height: 3px;
+      background: var(--sable-dark);
+      border-radius: 2px;
+      margin-top: 0.4rem;
+      overflow: hidden;
+    }
+    .episode-progress-bar-inner {
+      height: 100%;
+      background: var(--dore);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
 
     /* ── About Section ────────────────────────────────────────── */
     .about-section {
@@ -442,7 +510,7 @@
     .char-name { font-weight: 700; font-size: 0.95rem; }
 
     .char-desc {
-      font-size: 0.82rem;
+      font-size: 0.9rem;
       color: var(--gris-leger);
     }
 
@@ -505,7 +573,7 @@
 
     .player-progress {
       flex: 1;
-      height: 8px;
+      height: 12px;
       background: var(--sable-dark);
       border-radius: var(--radius-bar);
       cursor: pointer;
@@ -520,6 +588,24 @@
       border-radius: var(--radius-bar);
       width: 0%;
       transition: width 0.3s;
+      position: relative;
+    }
+    .player-progress-bar::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--dore-dark);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .player-progress:hover .player-progress-bar::after {
+      opacity: 1;
     }
 
     .player-time {
@@ -535,20 +621,26 @@
       background: none;
       border: none;
       cursor: pointer;
-      padding: 0.3rem;
+      padding: 0.4rem;
       color: var(--gris-leger);
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       line-height: 1;
+      border-radius: 50%;
+      transition: background 0.2s, color 0.2s;
     }
 
-    .player-close:hover { color: var(--corail); }
+    .player-close:hover { color: var(--corail); background: rgba(242, 107, 94, 0.1); }
 
     /* ── Footer ───────────────────────────────────────────────── */
     .footer {
       text-align: center;
-      padding: 2.5rem 1.5rem 6rem; /* extra bottom for player */
+      padding: 2.5rem 1.5rem 2.5rem;
       color: var(--gris-leger);
       font-size: 0.85rem;
+      transition: padding-bottom 0.3s;
+    }
+    body.player-active .footer {
+      padding-bottom: 6rem;
     }
 
     .footer a { color: var(--dore-dark); font-weight: 600; }
@@ -639,12 +731,12 @@
       border: 1px solid rgba(232, 196, 74, 0.4);
       border-radius: var(--radius-pill);
       padding: 0.3rem 0.9rem;
-      font-size: 0.78rem;
+      font-size: 0.88rem;
       font-weight: 600;
       color: rgba(255,255,255,0.85);
     }
     .badge-trust .badge-icon {
-      font-size: 0.9rem;
+      font-size: 1rem;
     }
 
     /* ── Parents guide FAQ ───────────────────────────────────── */
@@ -1045,7 +1137,7 @@
       }
 
       .episode-card { padding: 1rem; gap: 0.8rem; }
-      .episode-resume { -webkit-line-clamp: 1; }
+      .episode-resume { -webkit-line-clamp: 2; }
       .episode-cover { width: 60px; height: 60px; }
 
       .trust-badges { justify-content: center; }
@@ -1073,7 +1165,7 @@
       .episode-play svg { width: 18px; height: 18px; }
       .episode-meta { gap: 0.6rem; }
       .trust-badges { flex-direction: column; align-items: center; }
-      .player-speed-btn { display: none; }
+      .hero-cta { font-size: 1rem; padding: 0.7rem 1.4rem; }
     }
 
     /* ── Large screens ──────────────────────────────────────── */
@@ -1126,6 +1218,46 @@
       margin-top: 0.5rem;
       display: none;
     }
+
+    /* ── Platform subscribe section ────────────────────────── */
+    .platform-subscribe {
+      max-width: var(--max-width);
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      text-align: center;
+    }
+    .platform-subscribe h2 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--bleu-fonce);
+      margin-bottom: 0.8rem;
+    }
+
+    /* ── Micro-animations ──────────────────────────────────── */
+    .episode-play {
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .episode-play:active {
+      transform: scale(0.92);
+    }
+    @keyframes bounceIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      60% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    .episode-card {
+      animation: bounceIn 0.4s ease-out backwards;
+    }
+    .episode-card:nth-child(1) { animation-delay: 0s; }
+    .episode-card:nth-child(2) { animation-delay: 0.05s; }
+    .episode-card:nth-child(3) { animation-delay: 0.1s; }
+    .episode-card:nth-child(4) { animation-delay: 0.15s; }
+    .episode-card:nth-child(5) { animation-delay: 0.2s; }
+    .episode-card:nth-child(6) { animation-delay: 0.25s; }
+    .episode-card:nth-child(7) { animation-delay: 0.3s; }
+    .episode-card:nth-child(8) { animation-delay: 0.35s; }
+    .episode-card:nth-child(9) { animation-delay: 0.4s; }
+    .episode-card:nth-child(10) { animation-delay: 0.45s; }
   </style>
 </head>
 <body>
@@ -1163,11 +1295,15 @@
           </div>
         </div>
         <div class="trust-badges">
-          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--dore-light)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Missions conçues pour les 6-10 ans</div>
-          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--dore-light)"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg></span> Zéro pub, 100% gratuit</div>
-          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--dore-light)"><path d="M12 12.75c1.63 0 3.07.39 4.24.9 1.08.48 1.76 1.56 1.76 2.73V18H6v-1.61c0-1.18.68-2.26 1.76-2.73 1.17-.52 2.61-.91 4.24-.91zM4 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm1.13 1.1c-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58A2.01 2.01 0 000 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29zM20 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm4 3.43c0-.81-.48-1.53-1.22-1.85A6.95 6.95 0 0020 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57zM12 6c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/></svg></span> Fabriqué en famille avec passion</div>
-          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="var(--dore-light)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg></span> Récits fidèles aux textes bibliques</div>
+          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--dore-light)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Missions conçues pour les 6-10 ans</div>
+          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--dore-light)"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg></span> Zéro pub, 100% gratuit</div>
+          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--dore-light)"><path d="M12 12.75c1.63 0 3.07.39 4.24.9 1.08.48 1.76 1.56 1.76 2.73V18H6v-1.61c0-1.18.68-2.26 1.76-2.73 1.17-.52 2.61-.91 4.24-.91zM4 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm1.13 1.1c-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58A2.01 2.01 0 000 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29zM20 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm4 3.43c0-.81-.48-1.53-1.22-1.85A6.95 6.95 0 0020 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57zM12 6c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/></svg></span> Fabriqué en famille avec passion</div>
+          <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--dore-light)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg></span> Récits fidèles aux textes bibliques</div>
         </div>
+        <a href="#episodes-heading" class="hero-cta" id="hero-cta">
+          <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+          Écouter la première mission
+        </a>
       </div>
     </div>
   </header>
@@ -1176,7 +1312,7 @@
   <nav class="saison-nav" id="saison-nav" aria-label="Choisir une saison de missions"></nav>
 
   <!-- ═══ Search ═══ -->
-  <div class="search-bar" id="search-bar" style="display:none;">
+  <div class="search-bar" id="search-bar">
     <div class="search-wrap">
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
       <input type="search" class="search-input" id="search-input" placeholder="Trouver une mission..." aria-label="Rechercher une mission">
@@ -1193,6 +1329,25 @@
       <div class="skeleton skeleton-card"></div>
     </div>
   </main>
+
+  <!-- ═══ Écouter sur les plateformes ═══ -->
+  <section class="platform-subscribe" id="platform-subscribe">
+    <h2>Écouter sur votre plateforme préférée</h2>
+    <div class="subscribe-btns">
+      <a href="https://podcasts.apple.com/fr/podcast/les-histoires-de-papy-babou" class="subscribe-btn apple" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Apple Podcasts
+      </a>
+      <a href="https://open.spotify.com/show/les-histoires-de-papy-babou" class="subscribe-btn spotify" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Spotify
+      </a>
+      <a href="/feed.xml" class="subscribe-btn rss" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M6.18 15.64a2.18 2.18 0 010 4.36 2.18 2.18 0 010-4.36zM4 4.44A15.56 15.56 0 0119.56 20h-2.83A12.73 12.73 0 004 7.27V4.44zm0 5.66a9.9 9.9 0 019.9 9.9h-2.83A7.07 7.07 0 004 12.93V10.1z"/></svg>
+        Flux RSS
+      </a>
+    </div>
+  </section>
 
   <!-- ═══ About ═══ -->
   <section class="about-section" id="about-section">
@@ -1405,7 +1560,7 @@
       <!-- Speed -->
       <button class="player-speed-btn" id="player-speed" title="Vitesse de lecture">1x</button>
 
-      <button class="player-close" id="player-close" aria-label="Fermer">&times;</button>
+      <button class="player-close" id="player-close" aria-label="Fermer le lecteur" title="Fermer le lecteur">&times;</button>
     </div>
   </div>
 
@@ -1511,6 +1666,21 @@
       try { localStorage.removeItem('papy_babou_resume'); } catch(e) {}
     }
 
+    // ── Listened episodes tracking ──
+    function getListenedEpisodes() {
+      try {
+        return JSON.parse(localStorage.getItem('papy_babou_listened') || '{}');
+      } catch(e) { return {}; }
+    }
+
+    function markAsListened(episodeId, progress) {
+      try {
+        var listened = getListenedEpisodes();
+        listened[episodeId] = { progress: progress, timestamp: Date.now() };
+        localStorage.setItem('papy_babou_listened', JSON.stringify(listened));
+      } catch(e) {}
+    }
+
     // ── Fetch episodes ──
     async function loadEpisodes() {
       try {
@@ -1519,7 +1689,6 @@
         var data = await resp.json();
         episodes = data.episodes || [];
         saisons = data.saisons || [];
-        if (episodes.length > 10) searchBar.style.display = 'block';
         render();
       } catch (e) {
         console.error('Erreur chargement épisodes:', e);
@@ -1591,11 +1760,15 @@
       }
 
       var resumeData = getResume();
+      var listenedData = getListenedEpisodes();
       listEl.innerHTML = '';
 
       filtered.forEach(function(ep) {
         var card = document.createElement('div');
         card.className = 'episode-card';
+        if (currentEpisodeId === ep.episode_id && isPlaying) {
+          card.className += ' is-playing';
+        }
         card.setAttribute('data-id', ep.episode_id);
         card.setAttribute('tabindex', '0');
         card.setAttribute('role', 'article');
@@ -1607,15 +1780,29 @@
         }
 
         var hasAudio = !!ep.audio_url;
-        var coverHtml = '';
-        if (ep.cover_url) {
-          coverHtml = '<img class="episode-cover has-cover" src="' + escHtml(ep.cover_url) + '" alt="' + escHtml('Couverture de la mission : ' + (ep.titre || '')) + '" loading="lazy">';
+
+        // Cover with fallback to podcast cover
+        var coverSrc = ep.cover_url || '/assets/artwork/cover.svg';
+        var coverHtml = '<img class="episode-cover" src="' + escHtml(coverSrc) + '" alt="' + escHtml('Couverture de la mission : ' + (ep.titre || '')) + '" loading="lazy">';
+
+        // Listened badge
+        var listenedBadge = '';
+        var listenedInfo = listenedData[ep.episode_id];
+        if (listenedInfo && listenedInfo.progress >= 0.9) {
+          listenedBadge = '<div class="episode-listened-badge"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Écouté</div>';
         }
 
         // Resume badge
         var resumeBadge = '';
         if (resumeData && resumeData.episode_id === ep.episode_id) {
           resumeBadge = '<div class="resume-badge">&#9654; Reprendre \u00e0 ' + fmt(resumeData.position) + '</div>';
+        }
+
+        // Progress bar for partially listened episodes
+        var progressBarHtml = '';
+        if (listenedInfo && listenedInfo.progress > 0.02 && listenedInfo.progress < 0.9) {
+          var pctListened = Math.round(listenedInfo.progress * 100);
+          progressBarHtml = '<div class="episode-progress-bar"><div class="episode-progress-bar-inner" style="width:' + pctListened + '%"></div></div>';
         }
 
         var metaHtml = '';
@@ -1629,11 +1816,13 @@
         card.innerHTML =
           '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : 'Bientôt disponible — ') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default" title="Bientôt disponible"') + '>' + playIcon + '</button>' +
           '<div class="episode-info">' +
+            listenedBadge +
             resumeBadge +
             '<div class="episode-number">Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero + '</div>' +
             '<div class="episode-title">' + escHtml(ep.titre) + '</div>' +
             '<div class="episode-resume">' + escHtml(ep.resume || ep.morale || '') + '</div>' +
             '<div class="episode-meta">' + metaHtml + '</div>' +
+            progressBarHtml +
           '</div>' +
           coverHtml;
 
@@ -1757,6 +1946,7 @@
       audio.play();
       playerTitle.textContent = 'S' + String(ep.saison).padStart(2,'0') + 'E' + String(ep.numero).padStart(2,'0') + ' \u2014 ' + ep.titre;
       playerEl.classList.add('visible');
+      document.body.classList.add('player-active');
     }
 
     audio.addEventListener('play', function() {
@@ -1779,6 +1969,10 @@
       iconPlay.style.display = 'block';
       iconPause.style.display = 'none';
       playerProgressBar.style.width = '0%';
+      // Mark episode as fully listened
+      if (currentEpisodeId) {
+        markAsListened(currentEpisodeId, 1.0);
+      }
       clearResume();
       renderEpisodes();
       // Auto-play next episode
@@ -1800,6 +1994,11 @@
       playerProgressBar.style.width = pct + '%';
       playerProgress.setAttribute('aria-valuenow', Math.round(pct));
       playerTime.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+      // Track listening progress
+      if (currentEpisodeId && audio.duration > 0) {
+        var progress = audio.currentTime / audio.duration;
+        if (progress > 0.1) markAsListened(currentEpisodeId, progress);
+      }
     });
 
     // Save position every 5 seconds
@@ -1824,6 +2023,7 @@
       currentEpisodeId = null;
       currentEpisodeData = null;
       playerEl.classList.remove('visible');
+      document.body.classList.remove('player-active');
       renderEpisodes();
     });
 
@@ -1897,6 +2097,17 @@
         subSuccess.style.display = 'block';
       });
     }
+
+    // ── Hero CTA — play first episode ──
+    var heroCta = document.getElementById('hero-cta');
+    heroCta.addEventListener('click', function(e) {
+      e.preventDefault();
+      var firstPlayable = episodes.find(function(ep) { return !!ep.audio_url; });
+      if (firstPlayable) {
+        playEpisode(firstPlayable);
+      }
+      document.getElementById('episodes-heading').scrollIntoView({ behavior: 'smooth' });
+    });
 
     // ── Init ──
     loadEpisodes();
