@@ -1609,8 +1609,97 @@ Full audit of `templates/public.html` covering 10 axes:
 - **Anti-patterns supprimés** : "bientôt disponible" (signale produit inachevé), badge "Nouveau" (deviendra obsolète)
 
 ### Remaining Opportunities (not implemented)
-- Réorganiser l'ordre des sections : About avant Episodes (nécessite restructuration majeure)
-- Déplacer la section Plateformes en bas de page (après témoignages)
 - Ajouter un compteur quantitatif ("Rejoint par 500+ familles")
-- Origin story de Papy Babou (qui est-il, pourquoi raconte-t-il)
 - Bullet points / mise en gras stratégique dans la section About pour la scannabilité
+- Ajouter un 4e témoignage ciblant un enfant de 10 ans
+- Dark mode toggle manuel (bouton jour/nuit dans la nav)
+- Dark mode contraste cards/fond insuffisant (augmenter l'écart --sable/--blanc)
+
+## Gradient Agents Team (Session 22)
+
+### Installation
+Gradient Agents team installed from github.com/thomasissa-png/Agent-Team.
+15 agents added to `.claude/agents/`: orchestrator, creative-strategy, product-manager, data-analyst, design, fullstack, qa, infrastructure, ia, seo, geo, growth, social, reviewer, legal.
+3 custom agents preserved (not overwritten): copywriter.md, designer.md, ux.md.
+`project-context.md` template and `update.sh` added at project root.
+
+### 3-Agent Site Audit (Session 22)
+Orchestrator launched parallel audit of `templates/public.html` with @design (7.75/10), @ux (7.70/10), @copywriter (7.15/10). Consolidated score: 7.5/10.
+
+### 22 Fixes Implemented (Session 22)
+
+**P0 CRITICAL (3):**
+- #1: OG image: generated `og_image.png` 1200x630 from `cover_base.png` (SVG was invisible on social platforms)
+- #2: Favicons: `favicon.svg` now primary `<link>` (SVG files existed but were not referenced)
+- #3: Newsletter error: no longer shows success message on HTTP failure — shows distinct error
+
+**P1 IMPORTANT (11):**
+- #5: UVP added in hero above the fold: "Le seul podcast où vos enfants participent à l'aventure"
+- #6: Episodes moved UP — now directly after trust bar (was section 8 after About + Citation). New order: Hero → Trust → Episodes → About → Citation → Testimonials → CTA → FAQ → Newsletter
+- #7: CTA intermédiaire moved BEFORE newsletter (was after — counter-intuitive)
+- #8: Origin story paragraph added in About: "Chaque soir, dans le salon, Papy Babou ouvre son grand livre..."
+- #9: FAQ "Qui est Papy Babou" enriched: "parents chrétiens", "documenté à partir des textes originaux", "relu et validé"
+- #10: Trust badge "Écoutable partout" → "Créé par des parents chrétiens" (with heart icon)
+- #11: Palette divergences documented in CSS comments (--accent red vs spec gold = deliberate choice)
+- #12: Hero CTA hover now uses visible color change (#B81E2A) instead of filter-only brightness
+- #14: Subscribe button "Me prévenir" → "Rejoindre l'équipage"
+- #15: Vocabulary unified: "Bientôt disponible" → "Disponible prochainement"; search empty state thematic
+- Copy: "c'est LE podcast" → "c'est le podcast" (removed infomercial caps)
+
+**P2 POLISH (8):**
+- #16: Touch target at 320px: play button 44px minimum (was 32px, below WCAG)
+- #17: Manifest `theme_color` aligned to `#5B9BD5` (was `#4A9FE5`)
+- #18: Removed unused Baloo 2 font weight 600
+- #19: Modal "La leçon de l'épisode" → "Le trésor de cette mission"
+- #21: Collective words unified to "équipage" (was bord/équipe/groupe/bande)
+- #22: SEO title tag: "Podcast biblique pour enfants 6-10 ans | Les Histoires de Papy Babou" (keywords first)
+- #23: Episode cards: `role="article"` added for screen readers
+- #24: Nav label "L'équipage" → "À propos" (more intuitive for new visitors)
+- #25: Mobile menu closes on outside click (backdrop event listener)
+- H2 "Rencontrez les aventuriers" → "L'équipage de Papy Babou" (SEO keywords)
+- Error button "Relancer la connexion" → "Réessayer"
+- FAQ "étoiles dans les yeux" → "émerveillés et pleins de questions"
+
+**Excluded by user choice:**
+- #4: Testimonials (kept 3 existing, no changes)
+- #13: Dark mode toggle + contrast (deferred)
+- #20: Noémie "tornade" kept (user preference, not "rêveuse")
+
+### Current page structure (after Session 22)
+1. Nav sticky (À propos, Épisodes, Parents, S'abonner)
+2. Hero (title + UVP + meta + CTA)
+3. Wave SVG
+4. Trust bar (Adapté 6-10 ans, 25-35 min, Créé par des parents chrétiens)
+5. Saison tabs + Search
+6. **Episodes** (main content — moved up from position 8)
+7. About (L'équipage + Le podcast biblique + origin story)
+8. Citation Papy Babou
+9. Testimonials
+10. Plateformes (Apple, Spotify, RSS)
+11. Séparateur doré
+12. FAQ Parents
+13. **CTA intermédiaire** (moved before newsletter)
+14. Newsletter (Rejoindre l'équipage)
+15. Wave closing
+16. Footer
+
+### When modifying public.html (Session 22 patterns)
+- Trust bar 3rd badge is "Créé par des parents chrétiens" (not "Écoutable partout")
+- UVP line exists between hero-subtitle and hero-meta (class="hero-uvp")
+- Episodes section is BEFORE About section (not after)
+- CTA intermédiaire is BEFORE newsletter section (not after)
+- Subscribe button text is "Rejoindre l'équipage" (not "Me prévenir")
+- Hero CTA hover uses explicit `background: #B81E2A` (not filter:brightness)
+- Episode cards have `role="article"` set via JS
+- Mobile nav has document click listener to close on outside click
+- `og_image.png` exists in assets/artwork/ (generated from cover_base.png, 1200x630)
+- favicon.svg is the primary favicon link (not favicon.png)
+- Baloo 2 loads only weight 800 (600 removed)
+- Modal morale label: "Le trésor de cette mission"
+- All character descriptions use "l'équipage" for collective reference
+- Nav uses "À propos" label (not "L'équipage")
+- Title tag has keywords before brand name for SEO
+
+### Git Workflow (Session 22)
+- Branch: `claude/restructure-frontend-admin-J8dKf`
+- Push: `git push -u origin claude/restructure-frontend-admin-J8dKf`
