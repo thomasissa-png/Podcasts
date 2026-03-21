@@ -181,20 +181,15 @@
 
     .hero-badge {
       display: inline-block;
-      background: var(--dore-dark);
-      color: var(--blanc);
-      font-size: 0.92rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      background: rgba(255, 255, 255, 0.18);
+      color: var(--texte-hero);
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
       padding: var(--space-xs) var(--space-md);
       border-radius: var(--radius-pill);
-      margin-bottom: var(--space-md);
-      animation: badgeFadeIn 0.6s ease-out;
-    }
-    @keyframes badgeFadeIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      margin-top: var(--space-md);
     }
 
     .hero-title {
@@ -1658,7 +1653,6 @@
     <div class="hero-inner">
       <img src="/assets/artwork/cover_base.png" alt="Papy Babou, Antoine et Noémie autour d'un livre ouvert" class="hero-cover" width="220" height="220" fetchpriority="high">
       <div class="hero-text">
-        <div class="hero-badge">10 missions disponibles — Saison 1 complète</div>
         <h1 class="hero-title">
           Les Histoires de
           <span>Papy Babou</span>
@@ -1670,11 +1664,8 @@
           intrépides, des défis impossibles et un mystère à résoudre
           avant la fin.
         </p>
+        <div class="hero-badge"><span id="hero-episode-count">10 missions</span> — Saison 1</div>
         <div class="hero-meta">
-          <div class="hero-meta-item">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            <span id="hero-episode-count">10 missions</span>
-          </div>
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
             25-35 min par mission
