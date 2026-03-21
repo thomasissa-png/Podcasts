@@ -797,6 +797,7 @@
       height: 36px;
       width: auto;
     }
+    .site-nav-brand .logo-dark { display: none; }
     .site-nav-links {
       display: flex;
       gap: 0.2rem;
@@ -1388,7 +1389,8 @@
       .footer a { color: #C9952A; }
       .site-nav { background: #222238; border-bottom-color: #3a3a55; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
       .site-nav.scrolled { border-bottom-color: var(--dore); }
-      .site-nav-brand img { background: rgba(255, 248, 237, 0.9); padding: 2px 6px; border-radius: 6px; }
+      .site-nav-brand .logo-light { display: none; }
+      .site-nav-brand .logo-dark { display: inline; }
       .site-nav-links a { color: var(--gris-texte); }
       .site-nav-links a.active { background: #3a3a55; color: #C9952A; }
       .autoplay-toast { background: #3a3a55; }
@@ -1639,7 +1641,7 @@
   <!-- ═══ Sticky Navigation ═══ -->
   <nav class="site-nav" aria-label="Navigation principale">
     <div class="site-nav-inner">
-      <a href="#" class="site-nav-brand"><img src="/assets/artwork/logo-papy-babou.png" alt="Les Histoires de Papy Babou" height="36" style="vertical-align:middle;margin-right:2px;border-radius:4px;"></a>
+      <a href="#" class="site-nav-brand"><img src="/assets/artwork/logo-papy-babou.png" alt="Les Histoires de Papy Babou" class="logo-light" height="36"><img src="/assets/artwork/logo-papy-babou-transparent.png" alt="Les Histoires de Papy Babou" class="logo-dark" height="36"></a>
       <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu" aria-expanded="false">
         <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
       </button>
