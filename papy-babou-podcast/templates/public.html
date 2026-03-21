@@ -854,7 +854,6 @@
     .site-nav-brand .brand-full { height: 72px; width: auto; }
     .site-nav-brand .brand-icon { display: none; height: 40px; width: auto; border-radius: 50%; }
     .site-nav-brand .brand-text { display: none; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--titre-section); white-space: nowrap; }
-    .site-nav-brand .logo-dark { display: none; }
     .site-nav-links {
       display: flex;
       gap: 0.2rem;
@@ -1460,9 +1459,6 @@
       .subscribe-email-form input[type="email"] { background: var(--sable-dark); border-color: var(--sable-dark); color: var(--gris-texte); }
       .site-nav { background: var(--sable-dark); border-bottom-color: var(--sable-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
       .site-nav.scrolled { border-bottom-color: var(--sable-dark); }
-      .site-nav-brand .logo-light { display: none !important; }
-      .site-nav-brand .logo-dark.brand-full { display: inline; }
-      .site-nav-brand .logo-dark.brand-icon { display: none; }
       .site-nav-brand .brand-text { color: var(--gris-texte); }
       .site-nav-links a { color: var(--gris-texte); }
       .site-nav-links a.active { background: var(--sable); color: var(--dore-light); }
@@ -1484,10 +1480,8 @@
 
       /* Logo mobile : icône + texte au lieu du banner complet */
       .site-nav-brand .brand-full { display: none !important; }
-      .site-nav-brand .brand-icon.logo-light { display: block; }
+      .site-nav-brand .brand-icon { display: block; }
       .site-nav-brand .brand-text { display: block; font-size: 1.1rem; }
-      .dark .site-nav-brand .brand-icon.logo-light { display: none !important; }
-      .dark .site-nav-brand .brand-icon.logo-dark { display: block !important; }
 
       /* Hamburger menu */
       .nav-hamburger { display: flex; }
@@ -1784,10 +1778,8 @@
   <nav class="site-nav" aria-label="Navigation principale">
     <div class="site-nav-inner">
       <a href="#" class="site-nav-brand">
-        <img src="/assets/artwork/logo-papy-babou.png" alt="Les Histoires de Papy Babou" class="brand-full logo-light" height="72">
-        <img src="/assets/artwork/logo-papy-babou-transparent.png" alt="Les Histoires de Papy Babou" class="brand-full logo-dark" height="72">
-        <img src="/assets/artwork/logo-papy-icon.png" alt="" class="brand-icon logo-light" height="40">
-        <img src="/assets/artwork/logo-papy-icon-transparent.png" alt="" class="brand-icon logo-dark" height="40">
+        <img src="/assets/artwork/logo-papy-babou-transparent.png" alt="Les Histoires de Papy Babou" class="brand-full" height="72">
+        <img src="/assets/artwork/logo-papy-babou-transparent.png" alt="" class="brand-icon" height="40">
         <span class="brand-text">Papy Babou</span>
       </a>
       <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu" aria-expanded="false">
