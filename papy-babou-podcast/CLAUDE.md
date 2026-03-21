@@ -1551,3 +1551,66 @@ Comprehensive 6-commit session: infrastructure audit, fixed episodes, season inc
 ### Tests (Session 20)
 - Full suite: 749 passed, 7 pre-existing failures, 3 skipped (ffmpeg)
 - No regressions from any of the 6 commits
+
+## Copywriting Audit & Rewrites (Session 21)
+
+### Audit Results (Score: 6.9/10 → ~8.5/10 after fixes)
+
+Full audit of `templates/public.html` covering 10 axes:
+| Axe | Score |
+|-----|-------|
+| Accroche & première impression | 7.0 |
+| Proposition de valeur unique (UVP) | 5.0 → fixed |
+| Hiérarchie des messages | 6.5 |
+| Ton & voix de marque | 8.0 |
+| CTA (Call to Action) | 6.0 → fixed |
+| Preuve sociale & trust | 6.5 → fixed |
+| FAQ / Objections | 7.0 → fixed |
+| Micro-copy & labels UI | 8.0 → fixed |
+| SEO & lisibilité web | 7.5 → fixed |
+| Emotional design & storytelling | 7.0 → fixed |
+
+### 20 Rewrites Applied (P0+P1+P2)
+
+**P0 CRITIQUE (4):**
+1. **UVP ajoutée** dans la section About : "Le seul podcast où vos enfants ne sont pas spectateurs — ils participent à la mission"
+2. **"bientôt disponible" supprimé** de la FAQ → "Écoutez directement sur ce site ou retrouvez-nous sur Apple Podcasts, Spotify..."
+3. **Répétition "mission/mission"** corrigée → "Chaque semaine, une nouvelle épopée extraordinaire"
+4. **Triple "mission" FAQ** corrigée → "Chaque épisode est écrit avec soin..."
+
+**P1 IMPORTANT (8):**
+5. Hero subtitle → "Le podcast qui transforme le coucher en expédition biblique"
+6. Hero description → Suppression duplication, ajout mystère
+7. Hero meta → "Pour les 6-10 ans" (au lieu de "Héros dès 6 ans")
+8. Badge trust → "Créé par des parents chrétiens"
+9. Meta description SEO optimisée avec CTA final
+10. Titre témoignages → "Ce que les familles en pensent"
+11. CTA intermédiaire après témoignages : "Lancez la première mission — c'est gratuit"
+12. 2 nouvelles FAQ : "Est-ce du catéchisme ?" + "À quelle fréquence sortent les épisodes ?"
+
+**P2 POLISH (8):**
+13. Badge hero → "10 missions disponibles — Saison 1 complète"
+14. H2 épisodes → "Choisissez votre mission"
+15. H2 About → "Le podcast biblique pour enfants" (SEO keywords)
+16. H2 FAQ → "Questions fréquentes des parents" (SEO keywords)
+17. Modal buttons → "Lancer la mission" / "Envoyer à un ami"
+18. Subscribe → placeholder "email@famille-dupont.fr" + "Me prévenir à chaque nouvelle mission"
+19. Success message → "Bienvenue dans l'équipage !"
+20. Footer → Citation italique de Papy Babou
+21. Blockquote Papy Babou ajouté entre About et Plateformes
+22. Témoignage 4★ → 5★
+23. Bouton erreur → "Relancer la connexion"
+
+### Key Copy Decisions
+- **UVP différenciante** : format interactif (questions, enquête, solutions farfelues) — unique vs Les Odyssées, Quelle Histoire, etc.
+- **Mot "mission"** : était utilisé 28+ fois → variantes introduites (épopée, épisode, aventure) pour éviter la saturation
+- **Ton** : maintenu l'univers mission/équipage/expédition tout en réduisant les répétitions
+- **SEO** : h2 optimisés avec mots-clés ("podcast biblique pour enfants", "questions fréquentes des parents")
+- **Anti-patterns supprimés** : "bientôt disponible" (signale produit inachevé), badge "Nouveau" (deviendra obsolète)
+
+### Remaining Opportunities (not implemented)
+- Réorganiser l'ordre des sections : About avant Episodes (nécessite restructuration majeure)
+- Déplacer la section Plateformes en bas de page (après témoignages)
+- Ajouter un compteur quantitatif ("Rejoint par 500+ familles")
+- Origin story de Papy Babou (qui est-il, pourquoi raconte-t-il)
+- Bullet points / mise en gras stratégique dans la section About pour la scannabilité
