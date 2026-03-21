@@ -60,7 +60,7 @@
       --sable: #FFF8ED;
       --sable-dark: #EDE4D4;
       --parchemin: #F0E0C0;
-      --dore: #C9952A;
+      --accent: #E05A4A;
       --dore-light: #FFD234;
       /* Hovers via filter:brightness ou bleu — pas de doré foncé */
       --bleu-doux: #8ECFF5;
@@ -91,7 +91,7 @@
       --papy-chemise: #3A4E7A;
 
       /* RGB components for rgba() usage */
-      --dore-rgb: 201, 149, 42;
+      --accent-rgb: 224, 90, 74;
       --papy-chemise-rgb: 58, 78, 122;
 
       /* Backgrounds sections */
@@ -242,7 +242,7 @@
       margin-top: 1.2rem;
       padding: 0.8rem 1.8rem;
       min-height: 48px;
-      background: var(--dore);
+      background: var(--accent);
       color: var(--blanc);
       font-family: var(--font-display);
       font-size: 1.1rem;
@@ -252,25 +252,25 @@
       cursor: pointer;
       text-decoration: none;
       transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 14px rgba(var(--dore-rgb), 0.35);
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.35);
       animation: heroCTAPulse 2s ease-in-out 3;
     }
     .hero-cta:hover {
-      background: var(--dore);
+      background: var(--accent);
       filter: brightness(0.88);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(var(--dore-rgb), 0.5);
+      box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.5);
       text-decoration: none;
       color: var(--blanc);
     }
     .hero-cta svg { width: 20px; height: 20px; fill: var(--blanc); }
     .hero-cta:focus-visible {
-      outline: 3px solid var(--dore);
+      outline: 3px solid var(--accent);
       outline-offset: 3px;
     }
     @keyframes heroCTAPulse {
-      0%, 100% { box-shadow: 0 4px 14px rgba(var(--dore-rgb), 0.35); transform: scale(1); }
-      50% { box-shadow: 0 4px 20px rgba(var(--dore-rgb), 0.55); transform: scale(1.03); }
+      0%, 100% { box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.35); transform: scale(1); }
+      50% { box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.55); transform: scale(1.03); }
     }
 
     .hero-meta {
@@ -312,16 +312,16 @@
       cursor: pointer;
       border: 2px solid var(--dore-light);
       background: var(--blanc);
-      color: var(--dore);
+      color: var(--accent);
       transition: all 0.2s;
     }
 
     .saison-tab:hover { background: var(--dore-light); color: var(--blanc); }
     .saison-tab:focus-visible { outline: 3px solid var(--bleu-doux); outline-offset: 2px; }
     .saison-tab.active {
-      background: var(--dore);
+      background: var(--accent);
       color: var(--blanc);
-      border-color: var(--dore);
+      border-color: var(--accent);
     }
 
     /* ── Episodes List ────────────────────────────────────────── */
@@ -370,7 +370,7 @@
       flex-shrink: 0;
       width: 52px; height: 52px;
       border-radius: 50%;
-      background: var(--dore);
+      background: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -381,7 +381,7 @@
 
     @media (hover: hover) {
       .episode-play:hover {
-        background: var(--dore); filter: brightness(0.88);
+        background: var(--accent); filter: brightness(0.88);
         transform: scale(1.08);
       }
     }
@@ -399,7 +399,7 @@
     .episode-number {
       font-size: 1rem;
       font-weight: 800;
-      color: var(--dore);
+      color: var(--accent);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -463,15 +463,15 @@
     }
     .episode-listened-badge svg { width: 14px; height: 14px; fill: var(--vert-prairie); }
     .episode-card.is-playing {
-      border-left-color: var(--dore);
-      background: linear-gradient(90deg, rgba(var(--dore-rgb), 0.08) 0%, var(--blanc) 30%);
+      border-left-color: var(--accent);
+      background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.08) 0%, var(--blanc) 30%);
     }
     .episode-card.is-playing .episode-play {
       animation: playPulse 1.5s ease-in-out infinite;
     }
     @keyframes playPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(var(--dore-rgb), 0.4); }
-      50% { box-shadow: 0 0 0 8px rgba(var(--dore-rgb), 0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(var(--accent-rgb), 0); }
     }
     .episode-progress-bar {
       height: 3px;
@@ -482,7 +482,7 @@
     }
     .episode-progress-bar-inner {
       height: 100%;
-      background: var(--dore);
+      background: var(--accent);
       border-radius: var(--radius-bar);
       transition: width 0.3s;
     }
@@ -543,7 +543,7 @@
       align-items: center;
       gap: 0.8rem;
       padding: 0.6rem 0;
-      border-bottom: 1px solid rgba(139, 105, 20, 0.15);
+      border-bottom: 1px solid rgba(var(--accent-rgb), 0.15);
     }
 
     .characters li:last-child { border-bottom: none; }
@@ -578,11 +578,11 @@
       text-align: center;
       font-family: var(--font-display);
       font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-      color: var(--dore);
+      color: var(--titre-section);
       font-style: italic;
       line-height: 1.6;
       padding: 1.5rem 2rem;
-      background: linear-gradient(135deg, rgba(var(--dore-rgb), 0.06) 0%, rgba(var(--papy-chemise-rgb), 0.04) 100%);
+      background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.06) 0%, rgba(var(--papy-chemise-rgb), 0.04) 100%);
       border-radius: var(--radius);
       border-left: 4px solid var(--dore-light);
       transition: transform 0.2s, box-shadow 0.2s;
@@ -623,7 +623,7 @@
     .player-btn {
       width: 48px; height: 48px;
       border-radius: 50%;
-      background: var(--dore);
+      background: var(--accent);
       border: none;
       cursor: pointer;
       display: flex;
@@ -633,7 +633,7 @@
       transition: background 0.2s;
     }
 
-    .player-btn:hover { background: var(--dore); filter: brightness(0.88); }
+    .player-btn:hover { background: var(--accent); filter: brightness(0.88); }
     .player-btn svg { width: 18px; height: 18px; fill: var(--blanc); }
 
     .player-info {
@@ -668,7 +668,7 @@
 
     .player-progress-bar {
       height: 100%;
-      background: var(--dore);
+      background: var(--accent);
       border-radius: var(--radius-bar);
       width: 0%;
       transition: width 0.3s;
@@ -683,7 +683,7 @@
       width: 14px;
       height: 14px;
       border-radius: 50%;
-      background: var(--dore);
+      background: var(--accent);
       box-shadow: 0 1px 4px rgba(0,0,0,0.2);
       opacity: 0;
       transition: opacity 0.2s;
@@ -739,7 +739,7 @@
       padding-bottom: 6rem;
     }
 
-    .footer a { color: var(--dore); font-weight: 700; display: inline-block; padding: 0.5rem 0; min-height: 44px; line-height: calc(44px - 1rem); }
+    .footer a { color: var(--bleu-fonce); font-weight: 700; display: inline-block; padding: 0.5rem 0; min-height: 44px; line-height: calc(44px - 1rem); }
 
     .footer-brand {
       margin-bottom: 0.8rem;
@@ -779,7 +779,7 @@
     .empty-state h3 {
       font-family: var(--font-display);
       font-size: 1.3rem;
-      color: var(--dore);
+      color: var(--accent);
       margin-bottom: 0.5rem;
     }
 
@@ -925,7 +925,7 @@
       position: absolute;
       top: -100px;
       left: 0;
-      background: var(--dore);
+      background: var(--accent);
       color: var(--blanc);
       padding: 0.5rem 1.5rem;
       z-index: 9999;
@@ -1013,7 +1013,7 @@
     .parents-guide summary::before {
       content: '▸';
       transition: transform 0.2s;
-      color: var(--dore);
+      color: var(--accent);
       font-size: 1.1rem;
     }
     .parents-guide details[open] summary::before {
@@ -1063,7 +1063,7 @@
       }
     }
     .testimonial .stars {
-      color: var(--dore);
+      color: var(--dore-light);
       font-size: 1.1rem;
       margin-bottom: 0.5rem;
       letter-spacing: 2px;
@@ -1128,7 +1128,7 @@
     }
     .subscribe-btn.apple { background: var(--apple-purple); color: var(--blanc); }
     .subscribe-btn.spotify { background: var(--spotify-green); color: var(--blanc); }
-    .subscribe-btn.rss { background: var(--dore); color: var(--blanc); }
+    .subscribe-btn.rss { background: var(--accent); color: var(--blanc); }
     .subscribe-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
     /* ── Search bar ──────────────────────────────────────────── */
@@ -1149,7 +1149,7 @@
       transition: border-color 0.2s;
       outline: none;
     }
-    .search-input:focus { border-color: var(--dore); }
+    .search-input:focus { border-color: var(--bleu-fonce); }
     .search-wrap {
       position: relative;
     }
@@ -1213,7 +1213,7 @@
     .modal-meta .modal-ep-num {
       font-size: 0.88rem;
       font-weight: 800;
-      color: var(--dore);
+      color: var(--accent);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -1230,7 +1230,7 @@
     }
     .modal-body h4 {
       font-size: var(--font-size-base);
-      color: var(--dore);
+      color: var(--accent);
       text-transform: uppercase;
       letter-spacing: var(--letter-spacing-wide);
       margin-bottom: 0.4rem;
@@ -1261,10 +1261,10 @@
       transition: all 0.2s;
     }
     .modal-btn.primary {
-      background: var(--dore);
+      background: var(--accent);
       color: var(--blanc);
     }
-    .modal-btn.primary:hover { background: var(--dore); filter: brightness(0.88); }
+    .modal-btn.primary:hover { background: var(--accent); filter: brightness(0.88); }
     .modal-btn.secondary {
       background: var(--sable-dark);
       color: var(--gris-texte);
@@ -1310,7 +1310,7 @@
     }
     .player-ctrl-btn:hover {
       background: var(--sable-dark);
-      color: var(--dore);
+      color: var(--accent);
     }
     .player-ctrl-btn svg { width: 16px; height: 16px; fill: currentColor; }
     .player-ctrl-btn .ctrl-label {
@@ -1333,7 +1333,7 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .player-speed-btn:hover { background: var(--dore); color: var(--blanc); }
+    .player-speed-btn:hover { background: var(--accent); color: var(--blanc); }
     .player-volume-wrap {
       display: flex;
       align-items: center;
@@ -1341,7 +1341,7 @@
     }
     .player-volume-range {
       width: 60px;
-      accent-color: var(--dore);
+      accent-color: var(--accent);
       cursor: pointer;
     }
 
@@ -1350,7 +1350,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      background: var(--dore);
+      background: var(--accent);
       color: var(--blanc);
       font-size: 1rem;
       font-weight: 700;
@@ -1366,7 +1366,7 @@
       right: 1.5rem;
       width: 48px; height: 48px;
       border-radius: 50%;
-      background: var(--dore);
+      background: var(--accent);
       color: var(--blanc);
       border: none;
       cursor: pointer;
@@ -1379,7 +1379,7 @@
       opacity: 0;
       visibility: hidden;
     }
-    .back-to-top:hover { background: var(--dore); filter: brightness(0.88); transform: translateY(-2px); }
+    .back-to-top:hover { background: var(--accent); filter: brightness(0.88); transform: translateY(-2px); }
     .back-to-top.visible { opacity: 1; visibility: visible; }
     .back-to-top svg { width: 20px; height: 20px; fill: currentColor; }
 
@@ -1400,7 +1400,7 @@
     }
     .site-nav-links a.active {
       background: var(--sable-dark);
-      color: var(--dore);
+      color: var(--accent);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -1428,7 +1428,7 @@
       --parchemin-clair: #0A1520;
       }
       .episode-card { border-left-color: var(--dore-light); }
-      .episode-card.is-playing { background: linear-gradient(90deg, rgba(var(--dore-rgb), 0.12) 0%, var(--blanc) 30%); }
+      .episode-card.is-playing { background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.12) 0%, var(--blanc) 30%); }
       .about-card { background: linear-gradient(135deg, var(--blanc) 0%, var(--sable-dark) 100%); }
       .parents-guide { background: var(--sable-dark); }
       .parents-guide summary:hover { background: var(--sable); }
@@ -1440,7 +1440,7 @@
       .badge-trust { background: rgba(91, 155, 213, 0.12); border: 2px solid var(--dore-light); color: var(--gris-texte); }
       .testimonials-section { background: transparent; }
       .testimonial { background: var(--sable-dark); }
-      .papy-quote { background: rgba(var(--dore-rgb), 0.08); border-left-color: var(--dore-light); }
+      .papy-quote { background: rgba(var(--accent-rgb), 0.08); border-left-color: var(--dore-light); }
       .search-input { background: var(--sable-dark); border-color: var(--sable-dark); color: var(--gris-texte); }
       .section-wave svg path { fill: var(--sable); }
       .section-wave-footer { color: var(--parchemin-clair); }
@@ -1572,11 +1572,11 @@
       transition: border-color 0.2s;
       outline: none;
     }
-    .subscribe-email-form input[type="email"]:focus { border-color: var(--dore); }
+    .subscribe-email-form input[type="email"]:focus { border-color: var(--bleu-fonce); }
     .subscribe-email-form button {
       padding: 0.7rem 1.5rem;
       border-radius: var(--radius-pill);
-      background: var(--dore);
+      background: var(--accent);
       color: var(--blanc);
       font-weight: 700;
       font-size: 0.92rem;
@@ -1584,7 +1584,7 @@
       cursor: pointer;
       transition: background 0.2s, transform 0.2s;
     }
-    .subscribe-email-form button:hover { background: var(--dore); filter: brightness(0.88); transform: translateY(-1px); }
+    .subscribe-email-form button:hover { background: var(--accent); filter: brightness(0.88); transform: translateY(-1px); }
     .subscribe-success {
       color: var(--vert-prairie);
       font-weight: 700;
@@ -1670,12 +1670,12 @@
       flex: 1;
       max-width: 120px;
       height: 1px;
-      background: var(--dore);
+      background: var(--accent);
     }
     .section-separator svg {
       width: 28px;
       height: 28px;
-      fill: var(--dore);
+      fill: var(--accent);
     }
 
     /* ── Micro-animations ──────────────────────────────────── */
@@ -1774,9 +1774,9 @@
   <!-- ═══ Trust bar ═══ -->
   <div class="trust-bar" aria-label="Garanties">
     <div class="trust-badges">
-      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--dore)"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg></span> Adapté aux 6-10 ans</div>
-      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--dore)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></span> 25-35 min par épisode</div>
-      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--dore)"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z"/></svg></span> Écoutable partout</div>
+      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg></span> Adapté aux 6-10 ans</div>
+      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></span> 25-35 min par épisode</div>
+      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z"/></svg></span> Écoutable partout</div>
     </div>
   </div>
 
@@ -2232,7 +2232,7 @@
           '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
           '<h3>Les missions arrivent bientôt !</h3>' +
           '<p>Papy Babou prépare des épopées extraordinaires...</p>' +
-          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--dore);color:white;border:none;cursor:pointer;font-weight:700;">Relancer la connexion</button></div>';
+          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--accent);color:white;border:none;cursor:pointer;font-weight:700;">Relancer la connexion</button></div>';
       }
     }
 
