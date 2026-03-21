@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Les Histoires de Papy Babou | Podcast biblique pour enfants</title>
+  <title>Podcast biblique pour enfants 6-10 ans | Les Histoires de Papy Babou</title>
   <meta name="description" content="Papy Babou embarque vos enfants dans les plus grandes épopées de la Bible. Podcast gratuit, sans pub, pour les 6-10 ans. Écoutez la première mission !">
   <meta property="og:title" content="Les Histoires de Papy Babou | Podcast biblique pour enfants">
   <meta property="og:description" content="Des missions impossibles, des héros légendaires, des rebondissements incroyables ! Papy Babou embarque Antoine et Noémie dans les plus grandes épopées de la Bible.">
@@ -16,7 +16,7 @@
   <meta name="twitter:description" content="Des missions bibliques extraordinaires pour les 6-10 ans. Gratuit, sans pub, en famille.">
   <meta name="twitter:image" content="/assets/artwork/og_image.png">
   <!-- Favicons & Icons -->
-  <link rel="icon" type="image/png" href="/assets/artwork/favicon.png">
+  <link rel="icon" type="image/svg+xml" href="/assets/artwork/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/artwork/favicon.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/artwork/favicon.png">
   <link rel="apple-touch-icon" href="/assets/artwork/favicon.png">
@@ -48,8 +48,8 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet"></noscript>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;700&display=swap" rel="stylesheet"></noscript>
   <style>
     /* ── Reset & Variables ─────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,6 +57,8 @@
     :root {
       /* Palette Papy Babou — extraite de cover_base.png (Disney audit) */
       /* Contrastes WCAG AA verifies — chemise Papy (#3A4E7A) = 8.7:1 sur blanc */
+      /* NOTE: --accent (#D42533) remplace le dore (#E8A020) de la spec originale pour les CTA.
+         Le rouge offre un meilleur contraste et un CTA plus visible. Choix delibere. */
       --sable: #FFF8ED;
       --sable-dark: #EDE4D4;
       --parchemin: #F0E0C0;
@@ -64,7 +66,7 @@
       --dore-light: #FFD234;
       /* Hovers via filter:brightness ou bleu — pas de doré foncé */
       --bleu-doux: #8ECFF5;
-      --bleu-fonce: #2D7BC4;
+      --bleu-fonce: #2D7BC4;  /* liens et icones — non documente dans spec originale */
       --bleu-nuit: #5B9BD5;
       --titre-section: #3A4E7A;
       --corail: #F26B5E;
@@ -259,8 +261,7 @@
       animation: heroCTAPulse 2s ease-in-out 3;
     }
     .hero-cta:hover {
-      background: var(--accent);
-      filter: brightness(0.88);
+      background: #B81E2A;
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.5);
       text-decoration: none;
@@ -1552,8 +1553,8 @@
       .hero-title span { font-size: 1.6rem; }
       .hero-cta { font-size: 0.9rem; padding: 0.6rem 1.2rem; }
       .episode-card { padding: 0.4rem 0.6rem; gap: 0.5rem; }
-      .episode-play { width: 32px; height: 32px; }
-      .episode-play svg { width: 14px; height: 14px; }
+      .episode-play { width: 44px; height: 44px; }
+      .episode-play svg { width: 16px; height: 16px; }
       .modal-content { margin: 0 0.5rem; }
       .saison-tab { font-size: 0.9rem; padding: 0.4rem 0.8rem; }
     }
@@ -1786,7 +1787,7 @@
         <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
       </button>
       <ul class="site-nav-links" id="site-nav-links">
-        <li><a href="#about-section">L'équipage</a></li>
+        <li><a href="#about-section">À propos</a></li>
         <li><a href="#episodes-heading">Épisodes</a></li>
         <li><a href="#parents-guide">Parents</a></li>
         <li><a href="#platform-subscribe">S'abonner</a></li>
@@ -1805,6 +1806,7 @@
           <span>Papy Babou</span>
         </h1>
         <p class="hero-subtitle">Le podcast qui transforme le coucher en expédition biblique</p>
+        <p class="hero-uvp" style="font-size:0.95rem;color:var(--texte-hero);opacity:0.88;margin-bottom:0.3rem;font-weight:600;">Le seul podcast où vos enfants participent à l'aventure</p>
         <div class="hero-meta">
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
@@ -1839,51 +1841,78 @@
     <div class="trust-badges">
       <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg></span> Adapté aux 6-10 ans</div>
       <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></span> 25-35 min par épisode</div>
-      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z"/></svg></span> Écoutable partout</div>
+      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span> Créé par des parents chrétiens</div>
     </div>
   </div>
 
-  <!-- ═══ About (qui sommes-nous — avant les épisodes) ═══ -->
+  <!-- ═══ Saison tabs ═══ -->
+  <nav class="saison-nav" id="saison-nav" aria-label="Choisir une saison de missions"></nav>
+
+  <!-- ═══ Search ═══ -->
+  <div class="search-bar" id="search-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="search" class="search-input" id="search-input" placeholder="Chercher Noé, David, Jonas..." aria-label="Rechercher une mission">
+    </div>
+  </div>
+
+  <!-- ═══ Episodes ═══ -->
+  <main class="episodes-section">
+    <h2 id="episodes-heading">Choisissez votre mission</h2>
+    <div class="episodes-list" id="episodes-list" aria-live="polite" aria-relevant="additions removals">
+      <!-- Skeletons while loading -->
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </main>
+
+  <!-- ═══ About (qui sommes-nous — après les épisodes) ═══ -->
   <section class="about-section reveal" id="about-section">
     <div class="about-card">
       <div>
-        <h2>Rencontrez les aventuriers</h2>
+        <h2>L'équipage de Papy Babou</h2>
         <ul class="characters">
           <li>
             <div class="char-avatar papy" aria-hidden="true"><svg viewBox="0 0 42 42" width="42" height="42"><circle cx="21" cy="16" r="10" fill="#3A4E7A"/><circle cx="21" cy="36" r="16" fill="#3A4E7A"/><circle cx="16" cy="15" r="3.5" fill="#FFF8ED" stroke="#2D2D2D" stroke-width="0.8"/><circle cx="26" cy="15" r="3.5" fill="#FFF8ED" stroke="#2D2D2D" stroke-width="0.8"/><circle cx="16" cy="15.5" r="1.5" fill="#2D2D2D"/><circle cx="26" cy="15.5" r="1.5" fill="#2D2D2D"/><path d="M18 21 Q21 24 24 21" fill="none" stroke="#FFF8ED" stroke-width="1.2" stroke-linecap="round"/><rect x="6" y="28" width="5" height="8" rx="2" fill="#FFF8ED" opacity="0.6"/></svg></div>
             <div>
               <div class="char-name">Papy Babou</div>
-              <div class="char-desc">Le commandant de bord ! Ses lunettes rondes cachent mille secrets, et quand il ouvre son grand livre, c'est parti pour l'épopée.</div>
+              <div class="char-desc">Le commandant de l'équipage ! Ses lunettes rondes cachent mille secrets, et quand il ouvre son grand livre, c'est parti pour l'épopée.</div>
             </div>
           </li>
           <li>
             <div class="char-avatar antoine" aria-hidden="true"><svg viewBox="0 0 42 42" width="42" height="42"><circle cx="21" cy="16" r="10" fill="#D42533"/><circle cx="21" cy="36" r="16" fill="#D42533"/><path d="M13 12 Q15 5 21 7 Q27 5 29 12" fill="#6B3A20"/><circle cx="17" cy="16" r="1.8" fill="#2D2D2D"/><circle cx="25" cy="16" r="1.8" fill="#2D2D2D"/><path d="M18 20 Q21 23 24 20" fill="none" stroke="#FFF8ED" stroke-width="1.2" stroke-linecap="round"/></svg></div>
             <div>
               <div class="char-name">Antoine, 8 ans</div>
-              <div class="char-desc">Le détective de l'équipe ! Toujours une question piège en réserve et un mystère à résoudre.</div>
+              <div class="char-desc">Le détective de l'équipage ! Toujours une question piège en réserve et un mystère à résoudre.</div>
             </div>
           </li>
           <li>
             <div class="char-avatar noemie" aria-hidden="true"><svg viewBox="0 0 42 42" width="42" height="42"><circle cx="21" cy="16" r="10" fill="#E8B040"/><circle cx="21" cy="36" r="16" fill="#E8B040"/><path d="M14 11 Q16 6 21 8 Q26 6 28 11" fill="#8B6220"/><path d="M28 11 Q30 16 29 22" fill="#8B6220" stroke="#8B6220" stroke-width="1"/><circle cx="17" cy="16" r="1.8" fill="#2D2D2D"/><circle cx="25" cy="16" r="1.8" fill="#2D2D2D"/><path d="M17 21 Q21 25 25 21" fill="none" stroke="#FFF8ED" stroke-width="1.2" stroke-linecap="round"/></svg></div>
             <div>
               <div class="char-name">Noémie, 5 ans</div>
-              <div class="char-desc">La tornade du groupe ! Espiègle, folle d'animaux et championne des idées les plus intrépides.</div>
+              <div class="char-desc">La tornade de l'équipage ! Espiègle, folle d'animaux et championne des idées les plus intrépides.</div>
             </div>
           </li>
           <li>
             <div class="char-avatar mamie" aria-hidden="true"><svg viewBox="0 0 42 42" width="42" height="42"><circle cx="21" cy="16" r="10" fill="#5DBD72"/><circle cx="21" cy="36" r="16" fill="#5DBD72"/><path d="M12 13 Q17 8 21 10 Q25 8 30 13" fill="#E8E0D4"/><circle cx="17" cy="16" r="1.8" fill="#2D2D2D"/><circle cx="25" cy="16" r="1.8" fill="#2D2D2D"/><path d="M17 20 Q21 23 25 20" fill="none" stroke="#FFF8ED" stroke-width="1.2" stroke-linecap="round"/></svg></div>
             <div>
               <div class="char-name">Mamie Sonia</div>
-              <div class="char-desc">L'agent secret de la bande ! Un gâteau dans une main, une blague redoutable dans l'autre.</div>
+              <div class="char-desc">L'agent secret de l'équipage ! Un gâteau dans une main, une blague redoutable dans l'autre.</div>
             </div>
           </li>
         </ul>
       </div>
       <div>
         <h2>Le podcast biblique pour enfants</h2>
+        <p style="font-style:italic;opacity:0.85;margin-bottom:0.8rem;">
+          Chaque soir, dans le salon, Papy Babou ouvre son grand livre.
+          Antoine grimpe sur ses genoux, Noémie serre son doudou, et l'aventure commence.
+          Ce soir, c'est votre famille qui embarque.
+        </p>
         <p>
-          <strong>Les Histoires de Papy Babou</strong>, c'est LE podcast qui propulse
-          les héros de la Bible dans des épopées palpitantes ! Chaque semaine,
+          <strong>Les Histoires de Papy Babou</strong>, c'est le podcast qui plonge
+          vos enfants dans les plus grandes épopées de la Bible. Chaque semaine,
           une nouvelle aventure extraordinaire.
         </p>
         <p>
@@ -1908,28 +1937,6 @@
       <footer>— Papy Babou</footer>
     </blockquote>
   </section>
-
-  <!-- ═══ Saison tabs ═══ -->
-  <nav class="saison-nav" id="saison-nav" aria-label="Choisir une saison de missions"></nav>
-
-  <!-- ═══ Search ═══ -->
-  <div class="search-bar" id="search-bar">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      <input type="search" class="search-input" id="search-input" placeholder="Chercher Noé, David, Jonas..." aria-label="Rechercher une mission">
-    </div>
-  </div>
-
-  <!-- ═══ Episodes ═══ -->
-  <main class="episodes-section">
-    <h2 id="episodes-heading">Choisissez votre mission</h2>
-    <div class="episodes-list" id="episodes-list" aria-live="polite" aria-relevant="additions removals">
-      <!-- Skeletons while loading -->
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-    </div>
-  </main>
 
   <!-- ═══ Testimonials (preuve sociale — après les missions) ═══ -->
   <section class="testimonials-section reveal">
@@ -1989,15 +1996,15 @@
         Absolument ! Chaque épisode est taillé sur mesure pour les 6-10 ans. Les récits bibliques
         sont racontés avec chaleur, sans violence et sans frayeur. Les passages délicats (comme le
         déluge de Noé) sont abordés avec bienveillance, en mettant en avant le courage, la foi et
-        les valeurs positives. Vos enfants repartent avec des étoiles dans les yeux.
+        les valeurs positives. Vos enfants en ressortent émerveillés et pleins de questions.
       </div>
     </details>
     <details>
       <summary>Qui se cache derrière Papy Babou ?</summary>
       <div class="faq-answer">
-        Un projet familial porté par des parents passionnés de récits et de transmission.
-        Chaque épisode est écrit avec soin, relu et validé pour offrir des récits fidèles
-        aux textes bibliques, bienveillants et accessibles à vos enfants.
+        Un projet familial porté par des parents chrétiens passionnés de récits et de transmission
+        biblique. Chaque épisode est documenté à partir des textes originaux, écrit pour les enfants,
+        puis relu et validé pour garantir fidélité et bienveillance.
       </div>
     </details>
     <details>
@@ -2035,25 +2042,25 @@
   </section>
 
 
-  <!-- ═══ Subscribe ═══ -->
-  <section class="subscribe-section reveal">
-    <h2>Ne manquez aucune aventure !</h2>
-    <p class="sub-text">Recevez un email à chaque nouvel épisode. Pas de spam, promis.</p>
-    <form class="subscribe-email-form" id="subscribe-form">
-      <label for="sub-email" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Votre adresse email</label>
-      <input type="email" id="sub-email" placeholder="email@famille-dupont.fr" aria-label="Adresse email" required>
-      <button type="submit">Me prévenir</button>
-    </form>
-    <p class="subscribe-success" id="subscribe-success">Bienvenue dans l'équipage ! Vous recevrez un email à chaque nouvel épisode.</p>
-  </section>
-
-  <!-- CTA intermédiaire -->
+  <!-- CTA intermédiaire (après FAQ, avant newsletter) -->
   <p style="text-align:center;margin:1.5rem auto 2rem;">
     <a href="#episodes-heading" class="hero-cta" style="animation:none;">
       <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
       Lancez la première mission — c'est gratuit
     </a>
   </p>
+
+  <!-- ═══ Subscribe ═══ -->
+  <section class="subscribe-section reveal">
+    <h2>Ne manquez aucune aventure !</h2>
+    <p class="sub-text">Recevez un email à chaque nouvelle mission. Pas de spam, promis.</p>
+    <form class="subscribe-email-form" id="subscribe-form">
+      <label for="sub-email" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Votre adresse email</label>
+      <input type="email" id="sub-email" placeholder="email@famille-dupont.fr" aria-label="Adresse email" required>
+      <button type="submit">Rejoindre l'équipage</button>
+    </form>
+    <p class="subscribe-success" id="subscribe-success">Bienvenue dans l'équipage ! Vous recevrez un email à chaque nouvelle mission.</p>
+  </section>
 
   <!-- ═══ Wave closing ═══ -->
   <div class="section-wave section-wave-footer" aria-hidden="true">
@@ -2099,7 +2106,7 @@
         <h4>L'histoire</h4>
         <p id="modal-resume"></p>
         <div id="modal-morale-wrap" style="display:none;">
-          <h4>La leçon de l'épisode</h4>
+          <h4>Le trésor de cette mission</h4>
           <p id="modal-morale"></p>
         </div>
       </div>
@@ -2291,7 +2298,7 @@
           '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
           '<h3>Les missions arrivent bientôt !</h3>' +
           '<p>Papy Babou prépare des épopées extraordinaires...</p>' +
-          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--accent);color:white;border:none;cursor:pointer;font-weight:700;">Relancer la connexion</button></div>';
+          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--accent);color:white;border:none;cursor:pointer;font-weight:700;">Réessayer</button></div>';
       }
     }
 
@@ -2348,7 +2355,7 @@
 
       if (filtered.length === 0) {
         var emptyMsg = searchQuery
-          ? 'Aucune mission ne correspond à votre recherche.'
+          ? 'Papy Babou a fouillé dans tout son grand livre\u2026 mais il n\u0027a pas trouvé cette mission.'
           : 'Papy Babou prépare de nouvelles missions pour cette saison.';
         listEl.innerHTML = '<div class="empty-state">' +
           '<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>' +
@@ -2369,6 +2376,7 @@
         }
         card.setAttribute('data-id', ep.episode_id);
         card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'article');
         card.setAttribute('aria-label', ep.titre);
 
         var playIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>';
@@ -2411,7 +2419,7 @@
         }
 
         card.innerHTML =
-          '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : 'Bientôt disponible — ') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default" title="Bientôt disponible"') + '>' + playIcon + '</button>' +
+          '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : 'Disponible prochainement — ') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default" title="Disponible prochainement"') + '>' + playIcon + '</button>' +
           '<div class="episode-info">' +
             listenedBadge +
             resumeBadge +
@@ -2731,9 +2739,9 @@
           subForm.style.display = 'none';
           subSuccess.style.display = 'block';
         }).catch(function() {
-          subForm.style.display = 'none';
           subSuccess.style.display = 'block';
-          subSuccess.textContent = 'Bienvenue dans l\u0027équipage ! Nous avons bien noté votre email.';
+          subSuccess.style.color = 'var(--accent)';
+          subSuccess.textContent = 'Une erreur est survenue. Veuillez réessayer.';
         });
       });
     }
@@ -2756,6 +2764,13 @@
       hamburger.addEventListener('click', function() {
         var isOpen = navLinks.classList.toggle('open');
         hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+      // Close mobile menu when clicking outside
+      document.addEventListener('click', function(e) {
+        if (navLinks.classList.contains('open') && !e.target.closest('.site-nav')) {
+          navLinks.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+        }
       });
       // Close on link click
       navLinks.querySelectorAll('a').forEach(function(link) {
