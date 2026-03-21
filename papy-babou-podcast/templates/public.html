@@ -79,7 +79,7 @@
       --sable-bleu: #A8D8F0;
 
       /* Couleurs personnages */
-      --antoine-bleu: #4A9FE5;
+      /* --antoine-bleu: #4A9FE5; (supprimee — non utilisee, remplacee par --antoine-rouge) */
       --antoine-rouge: #E04040;
       --noemie-rose: #E8B040;
 
@@ -105,7 +105,7 @@
       font-family: var(--font-body);
       background: var(--sable);
       color: var(--gris-texte);
-      line-height: 1.6;
+      line-height: 1.8;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -120,10 +120,11 @@
         #8ECFF5 55%,
         #A8D8F0 75%,
         var(--sable) 100%);
-      padding: 3rem 1.5rem 2.5rem;
+      padding: 3.5rem 2rem 3rem;
       text-align: center;
       position: relative;
       overflow: hidden;
+      border-bottom: 3px solid var(--dore-light);
     }
 
     .hero::before {
@@ -167,9 +168,9 @@
 
     .hero-badge {
       display: inline-block;
-      background: var(--dore);
+      background: #8B5E0A;
       color: var(--blanc);
-      font-size: 0.82rem;
+      font-size: 0.92rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.5px;
@@ -190,8 +191,9 @@
     .hero-title span {
       display: block;
       color: var(--dore-light);
-      font-size: 3rem;
-      text-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+      font-size: 3.2rem;
+      -webkit-text-stroke: 1.5px rgba(26, 26, 46, 0.25);
+      text-shadow: 0 3px 0 rgba(0, 0, 0, 0.15), 0 0 30px rgba(255, 210, 52, 0.25);
     }
 
     .hero-subtitle {
@@ -1267,6 +1269,7 @@
 
   <!-- ═══ Hero ═══ -->
   <header class="hero">
+    <div class="hero-doodles" aria-hidden="true"></div>
     <div class="hero-inner">
       <img src="/assets/artwork/cover_base.png" alt="Les Histoires de Papy Babou" class="hero-cover">
       <div class="hero-text">
