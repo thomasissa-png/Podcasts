@@ -61,7 +61,7 @@
       --sable-dark: #EDE4D4;
       --dore: #C9952A;
       --dore-light: #E8C84A;
-      --dore-dark: #8A6A18;
+      --dore-hover: #B07D1E;
       --bleu-doux: #7BCBF5;
       --bleu-fonce: #2D7BC4;
       --bleu-nuit: #1B3A5C;
@@ -231,7 +231,7 @@
       animation: heroCTAPulse 2s ease-in-out 3;
     }
     .hero-cta:hover {
-      background: var(--dore-dark);
+      background: var(--dore-hover);
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(201, 149, 42, 0.5);
       text-decoration: none;
@@ -286,7 +286,7 @@
       cursor: pointer;
       border: 2px solid var(--dore-light);
       background: var(--blanc);
-      color: var(--dore-dark);
+      color: var(--dore-hover);
       transition: all 0.2s;
     }
 
@@ -354,7 +354,7 @@
 
     @media (hover: hover) {
       .episode-play:hover {
-        background: var(--dore-dark);
+        background: var(--dore-hover);
         transform: scale(1.08);
       }
     }
@@ -546,7 +546,7 @@
       text-align: center;
       font-family: var(--font-display);
       font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-      color: var(--dore-dark);
+      color: var(--dore-hover);
       font-style: italic;
       line-height: 1.6;
       padding: 1.5rem 2rem;
@@ -597,7 +597,7 @@
       transition: background 0.2s;
     }
 
-    .player-btn:hover { background: var(--dore-dark); }
+    .player-btn:hover { background: var(--dore-hover); }
     .player-btn svg { width: 18px; height: 18px; fill: var(--blanc); }
 
     .player-info {
@@ -647,7 +647,7 @@
       width: 14px;
       height: 14px;
       border-radius: 50%;
-      background: var(--dore-dark);
+      background: var(--dore-hover);
       box-shadow: 0 1px 4px rgba(0,0,0,0.2);
       opacity: 0;
       transition: opacity 0.2s;
@@ -703,7 +703,7 @@
       padding-bottom: 6rem;
     }
 
-    .footer a { color: #9A6B08; font-weight: 700; display: inline-block; padding: 0.5rem 0; min-height: 44px; line-height: calc(44px - 1rem); }
+    .footer a { color: var(--dore-hover); font-weight: 700; display: inline-block; padding: 0.5rem 0; min-height: 44px; line-height: calc(44px - 1rem); }
 
     .footer-links {
       display: flex;
@@ -729,7 +729,7 @@
     .empty-state h3 {
       font-family: var(--font-display);
       font-size: 1.3rem;
-      color: var(--dore-dark);
+      color: var(--dore-hover);
       margin-bottom: 0.5rem;
     }
 
@@ -794,7 +794,7 @@
       flex-shrink: 0;
     }
     .site-nav-brand img {
-      height: 36px;
+      height: 52px;
       width: auto;
     }
     .site-nav-brand .logo-dark { display: none; }
@@ -818,7 +818,7 @@
       transition: background 0.15s, color 0.15s;
     }
     @media (hover: hover) {
-      .site-nav-links a:hover { background: var(--sable-dark); color: var(--dore-dark); }
+      .site-nav-links a:hover { background: var(--sable-dark); color: var(--dore-hover); }
     }
 
     /* ── Audio loading spinner ─────────────────────────────── */
@@ -1179,7 +1179,7 @@
     }
     .modal-body h4 {
       font-size: 1rem;
-      color: var(--dore-dark);
+      color: var(--dore-hover);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 0.4rem;
@@ -1213,7 +1213,7 @@
       background: var(--dore);
       color: var(--blanc);
     }
-    .modal-btn.primary:hover { background: var(--dore-dark); }
+    .modal-btn.primary:hover { background: var(--dore-hover); }
     .modal-btn.secondary {
       background: var(--sable-dark);
       color: var(--gris-texte);
@@ -1259,7 +1259,7 @@
     }
     .player-ctrl-btn:hover {
       background: var(--sable-dark);
-      color: var(--dore-dark);
+      color: var(--dore-hover);
     }
     .player-ctrl-btn svg { width: 16px; height: 16px; fill: currentColor; }
     .player-ctrl-btn .ctrl-label {
@@ -1328,7 +1328,7 @@
       opacity: 0;
       visibility: hidden;
     }
-    .back-to-top:hover { background: var(--dore-dark); transform: translateY(-2px); }
+    .back-to-top:hover { background: var(--dore-hover); transform: translateY(-2px); }
     .back-to-top.visible { opacity: 1; visibility: visible; }
     .back-to-top svg { width: 20px; height: 20px; fill: currentColor; }
 
@@ -1349,7 +1349,7 @@
     }
     .site-nav-links a.active {
       background: var(--sable-dark);
-      color: var(--dore-dark);
+      color: var(--dore-hover);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -1513,7 +1513,7 @@
       cursor: pointer;
       transition: background 0.2s, transform 0.2s;
     }
-    .subscribe-email-form button:hover { background: var(--dore-dark); transform: translateY(-1px); }
+    .subscribe-email-form button:hover { background: var(--dore-hover); transform: translateY(-1px); }
     .subscribe-success {
       color: var(--vert-prairie);
       font-weight: 700;
@@ -1641,7 +1641,7 @@
   <!-- ═══ Sticky Navigation ═══ -->
   <nav class="site-nav" aria-label="Navigation principale">
     <div class="site-nav-inner">
-      <a href="#" class="site-nav-brand"><img src="/assets/artwork/logo-papy-babou.png" alt="Les Histoires de Papy Babou" class="logo-light" height="36"><img src="/assets/artwork/logo-papy-babou-transparent.png" alt="Les Histoires de Papy Babou" class="logo-dark" height="36"></a>
+      <a href="#" class="site-nav-brand"><img src="/assets/artwork/logo-papy-babou.png" alt="Les Histoires de Papy Babou" class="logo-light" height="52"><img src="/assets/artwork/logo-papy-babou-transparent.png" alt="Les Histoires de Papy Babou" class="logo-dark" height="52"></a>
       <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu" aria-expanded="false">
         <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
       </button>

@@ -27,7 +27,7 @@
   <rect y="420" width="1200" height="210" fill="url(#ogParchment)" opacity="0.92"/>
 
   <!-- Bande doree separation -->
-  <rect y="416" width="1200" height="8" fill="#8A6A18" opacity="0.6"/>
+  <rect y="416" width="1200" height="8" fill="#B07D1E" opacity="0.6"/>
 
   <!-- Etoiles -->
   <circle cx="150" cy="80" r="2" fill="#FFF8E0" opacity="0.8"/>
@@ -45,14 +45,14 @@
 
   <!-- Boussole (gauche) -->
   <g transform="translate(130, 510)">
-    <circle cx="0" cy="0" r="65" fill="#F0E0C0" stroke="#8A6A18" stroke-width="3" opacity="0.9"/>
+    <circle cx="0" cy="0" r="65" fill="#F0E0C0" stroke="#B07D1E" stroke-width="3" opacity="0.9"/>
     <!-- Rose des vents simplifiee -->
-    <polygon points="0,-52 5,-12 0,-18 -5,-12" fill="#8A6A18"/>
+    <polygon points="0,-52 5,-12 0,-18 -5,-12" fill="#B07D1E"/>
     <polygon points="0,52 5,12 0,18 -5,12" fill="#D4883A"/>
     <polygon points="-52,0 -12,5 -18,0 -12,-5" fill="#D4883A"/>
     <polygon points="52,0 12,5 18,0 12,-5" fill="#D4883A"/>
     <!-- Centre -->
-    <circle cx="0" cy="0" r="6" fill="#8A6A18"/>
+    <circle cx="0" cy="0" r="6" fill="#B07D1E"/>
     <circle cx="0" cy="0" r="2.5" fill="#FDF5E6"/>
   </g>
 
@@ -60,7 +60,7 @@
   <text x="600" y="490" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="36" fill="#4A5866" letter-spacing="3">
     Les Histoires de
   </text>
-  <text x="600" y="545" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="bold" fill="#8A6A18" letter-spacing="4">
+  <text x="600" y="545" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="bold" fill="#B07D1E" letter-spacing="4">
     Papy Babou
   </text>
 
@@ -85,5 +85,5 @@
   <text x="1105" y="582" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">6-10 ans</text>
 
   <!-- Bande doree bas -->
-  <rect y="622" width="1200" height="8" fill="#8A6A18" opacity="0.4"/>
+  <rect y="622" width="1200" height="8" fill="#B07D1E" opacity="0.4"/>
 </svg>
