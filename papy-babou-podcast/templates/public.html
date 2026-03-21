@@ -22,6 +22,8 @@
   <link rel="apple-touch-icon" href="/assets/artwork/apple-touch-icon.svg">
   <link rel="manifest" href="/assets/manifest.json">
   <link rel="alternate" type="application/rss+xml" title="Les Histoires de Papy Babou" href="/feed.xml">
+  <link rel="canonical" href="https://papybabou.fr">
+  <link rel="alternate" hreflang="fr" href="https://papybabou.fr">
   <meta name="theme-color" content="#1B3A5C">
   <script type="application/ld+json">
   {
@@ -63,6 +65,7 @@
       --bleu-doux: #7BCBF5;
       --bleu-fonce: #2D7BC4;
       --bleu-nuit: #1B3A5C;
+      --titre-section: #1B3A5C;
       --corail: #D94452;
       --vert-prairie: #5DBD72;
       --gris-texte: #2D2D2D;
@@ -194,7 +197,7 @@
       color: var(--dore-light);
       font-size: clamp(1.7rem, 5vw, 3.2rem);
       -webkit-text-stroke: 1.5px rgba(26, 26, 46, 0.25);
-      text-shadow: 0 3px 0 rgba(0, 0, 0, 0.15), 0 0 30px rgba(255, 210, 52, 0.25);
+      text-shadow: 0 3px 0 rgba(0, 0, 0, 0.15), 0 0 30px rgba(232, 200, 74, 0.25);
     }
 
     .hero-subtitle {
@@ -214,7 +217,7 @@
       margin-top: 1.2rem;
       padding: 0.8rem 1.8rem;
       min-height: 48px;
-      background: var(--corail);
+      background: var(--dore);
       color: var(--blanc);
       font-family: var(--font-display);
       font-size: 1.1rem;
@@ -224,24 +227,24 @@
       cursor: pointer;
       text-decoration: none;
       transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 14px rgba(217, 68, 82, 0.35);
+      box-shadow: 0 4px 14px rgba(201, 149, 42, 0.35);
       animation: heroCTAPulse 2s ease-in-out 3;
     }
     .hero-cta:hover {
-      background: #D85A4E;
+      background: var(--dore-dark);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(217, 68, 82, 0.5);
+      box-shadow: 0 6px 20px rgba(201, 149, 42, 0.5);
       text-decoration: none;
       color: var(--blanc);
     }
     .hero-cta svg { width: 20px; height: 20px; fill: var(--blanc); }
     .hero-cta:focus-visible {
-      outline: 3px solid var(--corail);
+      outline: 3px solid var(--dore);
       outline-offset: 3px;
     }
     @keyframes heroCTAPulse {
-      0%, 100% { box-shadow: 0 4px 14px rgba(217, 68, 82, 0.35); transform: scale(1); }
-      50% { box-shadow: 0 4px 20px rgba(217, 68, 82, 0.55); transform: scale(1.03); }
+      0%, 100% { box-shadow: 0 4px 14px rgba(201, 149, 42, 0.35); transform: scale(1); }
+      50% { box-shadow: 0 4px 20px rgba(201, 149, 42, 0.55); transform: scale(1.03); }
     }
 
     .hero-meta {
@@ -304,7 +307,7 @@
     .episodes-section h2 {
       font-family: var(--font-display);
       font-size: clamp(1.4rem, 3vw, 1.8rem);
-      color: var(--dore-dark);
+      color: var(--titre-section);
       margin-bottom: 1rem;
     }
 
@@ -434,14 +437,14 @@
     .episode-listened-badge svg { width: 14px; height: 14px; fill: var(--vert-prairie); }
     .episode-card.is-playing {
       border-left-color: var(--dore);
-      background: linear-gradient(90deg, rgba(255, 210, 52, 0.06) 0%, var(--blanc) 30%);
+      background: linear-gradient(90deg, rgba(201, 149, 42, 0.08) 0%, var(--blanc) 30%);
     }
     .episode-card.is-playing .episode-play {
       animation: playPulse 1.5s ease-in-out infinite;
     }
     @keyframes playPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(232, 160, 32, 0.4); }
-      50% { box-shadow: 0 0 0 8px rgba(232, 160, 32, 0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201, 149, 42, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(201, 149, 42, 0); }
     }
     .episode-progress-bar {
       height: 3px;
@@ -491,9 +494,9 @@
     .about-card h2 {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--dore-dark);
+      color: var(--titre-section);
       margin-bottom: 0.8rem;
-      border-left: 4px solid var(--dore-light);
+      border-left: 4px solid var(--bleu-fonce);
       padding-left: 0.8rem;
     }
 
@@ -547,7 +550,7 @@
       font-style: italic;
       line-height: 1.6;
       padding: 1.5rem 2rem;
-      background: linear-gradient(135deg, rgba(255, 210, 52, 0.08) 0%, rgba(232, 160, 32, 0.06) 100%);
+      background: linear-gradient(135deg, rgba(201, 149, 42, 0.06) 0%, rgba(27, 58, 92, 0.04) 100%);
       border-radius: var(--radius);
       border-left: 4px solid var(--dore-light);
     }
@@ -679,7 +682,7 @@
       justify-content: center;
     }
 
-    .player-close:hover { color: var(--corail); background: rgba(217, 68, 82, 0.1); }
+    .player-close:hover { color: var(--gris-texte); background: var(--sable-dark); }
 
     /* ── Footer ───────────────────────────────────────────────── */
     .section-wave-footer {
@@ -934,7 +937,7 @@
     .parents-guide h2 {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--dore-dark);
+      color: var(--titre-section);
       margin-bottom: 1rem;
     }
     .parents-guide details {
@@ -986,7 +989,7 @@
     .testimonials-section h2 {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--dore-dark);
+      color: var(--titre-section);
       margin-bottom: 1rem;
     }
     .testimonials-grid {
@@ -1033,13 +1036,13 @@
       margin: 2.5rem auto;
       padding: 2rem 1.5rem;
       text-align: center;
-      background: #FFF5E8;
+      background: #EDF4FA;
       border-radius: var(--radius);
     }
     .subscribe-section h2 {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--dore-dark);
+      color: var(--titre-section);
       margin-bottom: 0.5rem;
     }
     .subscribe-section .sub-text {
@@ -1232,7 +1235,7 @@
       line-height: 1;
       padding: 0.2rem;
     }
-    .modal-close-btn:hover { color: var(--corail); }
+    .modal-close-btn:hover { color: var(--gris-texte); }
 
     /* ── Enhanced player controls ────────────────────────────── */
     .player-controls {
@@ -1354,6 +1357,7 @@
         --sable-dark: #2a2a42;
         --blanc: #282840;
         --gris-texte: #E8E8F0;
+        --titre-section: #7BAFD4;
         --gris-leger: #A8B0BC;
         --texte-hero: rgba(255, 255, 255, 0.95);
         --shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -1376,7 +1380,7 @@
       .footer { color: var(--gris-leger); }
       .search-input { background: var(--sable-dark); border-color: #3a3a55; color: var(--gris-texte); }
       .testimonial { background: var(--sable-dark); }
-      .papy-quote { background: rgba(255, 210, 52, 0.06); border-left-color: var(--dore); }
+      .papy-quote { background: rgba(201, 149, 42, 0.06); border-left-color: var(--dore); }
       .section-wave svg path { fill: var(--sable); }
       .section-wave-footer { color: #181830; }
       .section-separator { opacity: 0.3; }
@@ -1384,7 +1388,7 @@
       .footer a { color: #C9952A; }
       .site-nav { background: #222238; border-bottom-color: #3a3a55; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
       .site-nav.scrolled { border-bottom-color: var(--dore); }
-      .site-nav-brand img { filter: brightness(1.1); }
+      .site-nav-brand img { background: rgba(255, 248, 237, 0.9); padding: 2px 6px; border-radius: 6px; }
       .site-nav-links a { color: var(--gris-texte); }
       .site-nav-links a.active { background: #3a3a55; color: #C9952A; }
       .autoplay-toast { background: #3a3a55; }
@@ -1658,7 +1662,7 @@
           Les Histoires de
           <span>Papy Babou</span>
         </h1>
-        <p class="hero-subtitle">Des aventures bibliques palpitantes pour les 6-10 ans</p>
+        <p class="hero-subtitle">Le podcast qui transforme le coucher en expédition biblique</p>
         <div class="hero-meta">
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
@@ -1696,31 +1700,6 @@
       <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--dore)"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z"/></svg></span> Écoutable partout</div>
     </div>
   </div>
-
-  <!-- ═══ Testimonials (preuve sociale — haut de page) ═══ -->
-  <section class="testimonials-section">
-    <h2>Ce que les familles en pensent</h2>
-    <div class="testimonials-grid">
-      <div class="testimonial">
-        <div class="stars" role="img" aria-label="5 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <p>&laquo; Ma fille de 7 ans se prend pour Noémie et exige sa "mission du soir".
-        Elle redemande la même encore et encore, impossible de l'arrêter ! &raquo;</p>
-        <cite>Nathalie P., maman de Léa (7 ans)</cite>
-      </div>
-      <div class="testimonial">
-        <div class="stars" role="img" aria-label="4 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
-        <p>&laquo; Les 25 minutes passent tellement vite que les enfants ne veulent plus
-        descendre de la voiture ! On aimerait juste que les épisodes sortent plus vite. &raquo;</p>
-        <cite>Sophie L., maman d'Emma et Lucas</cite>
-      </div>
-      <div class="testimonial">
-        <div class="stars" role="img" aria-label="5 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <p>&laquo; Un podcast biblique palpitant et jamais moralisateur. Les enfants rient,
-        s'émerveillent et posent mille questions après. La qualité sonore est bluffante. &raquo;</p>
-        <cite>Xavier M., père de 2 enfants (6 et 9 ans)</cite>
-      </div>
-    </div>
-  </section>
 
   <!-- ═══ About (qui sommes-nous — avant les épisodes) ═══ -->
   <section class="about-section" id="about-section">
@@ -1786,6 +1765,31 @@
       « Mes petits loups, attachez vos ceintures... L'histoire que je vais vous raconter va vous couper le souffle ! »
       <footer>— Papy Babou</footer>
     </blockquote>
+  </section>
+
+  <!-- ═══ Testimonials (preuve sociale — après présentation) ═══ -->
+  <section class="testimonials-section">
+    <h2>Ce que les familles en pensent</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="stars" role="img" aria-label="5 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>&laquo; Ma fille de 7 ans se prend pour Noémie et exige sa "mission du soir".
+        Elle redemande la même encore et encore, impossible de l'arrêter ! &raquo;</p>
+        <cite>Nathalie P., maman de Léa (7 ans)</cite>
+      </div>
+      <div class="testimonial">
+        <div class="stars" role="img" aria-label="5 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>&laquo; Les 25 minutes passent tellement vite que les enfants ne veulent plus
+        descendre de la voiture ! On écoute en boucle, toute la famille est accro. &raquo;</p>
+        <cite>Sophie L., maman d'Emma et Lucas</cite>
+      </div>
+      <div class="testimonial">
+        <div class="stars" role="img" aria-label="5 étoiles sur 5">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>&laquo; Un podcast biblique palpitant et jamais moralisateur. Les enfants rient,
+        s'émerveillent et posent mille questions après. La qualité sonore est bluffante. &raquo;</p>
+        <cite>Xavier M., père de 2 enfants (6 et 9 ans)</cite>
+      </div>
+    </div>
   </section>
 
   <!-- ═══ Saison tabs ═══ -->
@@ -1922,7 +1926,7 @@
 
   <!-- ═══ Footer ═══ -->
   <footer class="footer">
-    <p style="margin-bottom:0.8rem;font-weight:700;color:var(--dore-dark);font-family:var(--font-display);font-size:1.1rem;">Les Histoires de Papy Babou</p>
+    <p style="margin-bottom:0.8rem;font-weight:700;color:var(--titre-section);font-family:var(--font-display);font-size:1.1rem;">Les Histoires de Papy Babou</p>
     <p style="max-width:480px;margin:0 auto 1rem;font-size:0.95rem;line-height:1.6;font-style:italic;">« Papy Babou referme son grand livre... mais il a encore plein d'histoires à raconter. À la prochaine mission ! »</p>
     <div class="footer-links" style="margin-bottom:0.5rem;">
       <a href="https://podcasts.apple.com/fr/podcast/les-histoires-de-papy-babou" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
