@@ -269,6 +269,42 @@ Complete audit of 3→5 validation points (overall score: 5/10 → improved):
 - FIX: `if rapport:` → `if rapport is not None:` (empty dicts are falsy in Python)
 - `_validation_script` return type changed from `dict` to `tuple[dict, float]`
 
+## Identite Visuelle & Design System
+
+### Illustration de reference
+L'identite visuelle est basee sur `assets/artwork/cover_base.png` — illustration style "Quelle Histoire" (ChatGPT). C'est la **reference absolue** pour tout le design.
+
+**Personnages dans l'illustration** :
+- **Papy Babou** : chauve, lunettes noires, chemise bleu marine (#3A4E7A), conteur avec livre ouvert, index leve
+- **Antoine** : cheveux bruns ebouriffes, t-shirt rouge (#E04040), emerveillement
+- **Noemie** : cheveux chatains, queue de cheval, pull jaune moutarde (#E8B040), reveuse
+- **Ambiance** : fond bleu cornflower (#5B9BD5), sol beige, doodles blancs style craie (micro, etoiles, livre, dinosaure)
+
+### Cover podcast (`assets/artwork/cover.svg`)
+SVG superposant le titre sur le PNG : "Les Histoires de" (blanc) + "Papy Babou" (or #FFD234) + sous-titre, banniere degradee semi-transparente en bas.
+
+### Palette CSS du site (alignee sur illustration)
+| Variable | Hex | Role |
+|----------|-----|------|
+| `--bleu-nuit` | `#5B9BD5` | Theme principal, hero |
+| `--bleu-doux` | `#8ECFF5` | Gradients legers |
+| `--dore` | `#E8A020` | CTA, boutons, badges |
+| `--dore-light` | `#FFD234` | Accents, titres |
+| `--antoine-rouge` | `#E04040` | Avatar Antoine |
+| `--noemie-rose` | `#E8B040` | Avatar Noemie (jaune moutarde) |
+| `--corail` | `#F26B5E` | Alertes, accents |
+| `--vert-prairie` | `#5DBD72` | Badges ecoute |
+| `--sable` | `#FFF8ED` | Fond de page |
+
+### Typographie web
+- Corps : Nunito (sans-serif) — `--font-body`
+- Titres : Baloo 2 (display) — `--font-display`
+
+### Agents design
+- `.claude/agents/designer.md` — Agent Design (audit, palette, CSS)
+- `.claude/agents/ux.md` — Agent UX (parcours, interactions, trust signals)
+- `.claude/agents/copywriter.md` — Agent Copywriter (tons, textes)
+
 ## Feedback Memory System (Session 3)
 Complete audit of feedback→memory→future-use chain (overall: 4/10 → fixed). 7 improvements:
 - A1: Producer preferences system (`preferences_producteur.json`) — persistent rules injected into scripteur + planificateur prompts
