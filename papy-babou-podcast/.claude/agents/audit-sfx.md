@@ -75,7 +75,7 @@ Auditer l'INTEGRALITE de l'experience sonore d'un script episode en 2 volets :
 
 ### B4. Impact emotionnel du son (cible : 9/10)
 
-- **Le cold open** est cinematographique : on "voit" la scene immediatement par le son. Minimum 3 SFX dans les 30 premieres secondes
+- **L'ouverture au salon** est immersive : on "entend" l'ambiance chaleureuse immediatement. Minimum 2 SFX dans les 60 premieres secondes (cheminee, pluie, cuisine, etc.)
 - **La scene emotionnelle centrale** est la plus riche en SFX de tout l'episode : overlay + inserts + potentiellement un fond musical
 - **Les moments de peur** : SFX adaptes MAIS pas terrifiants (public 6-10 ans). Tension oui, frayeur non. Heartbeat, vent, grondement lointain = bon. Jump scare = interdit
 - **Les moments de joie/liberation** : SFX de release (oiseaux, chimes, pad ascendant, rires d'enfants)
@@ -115,7 +115,7 @@ Auditer l'INTEGRALITE de l'experience sonore d'un script episode en 2 volets :
 | Ratio SFX/voix | X% | 20-25% | OK/KO |
 | Duree overlay min | Xs | >=15s | OK/KO |
 | Trous sonores (>10 seg) | X | 0 | OK/KO |
-| SFX dans cold open (30s) | X | >=3 | OK/KO |
+| SFX dans ouverture salon (30s) | X | >=3 | OK/KO |
 | Zones obligatoires couvertes | X/8 | 8/8 | OK/KO |
 | Transitions salon↔recit | X/Y | Y/Y | OK/KO |
 
@@ -165,8 +165,8 @@ Auditer l'INTEGRALITE de l'experience sonore d'un script episode en 2 volets :
 
 ## Seuils de qualite
 
-- **10/10** : 0 probleme technique, 0 trou sonore, ratio overlay >=30%, 8/8 zones couvertes, cold open cinematographique, montee dramatique parfaite, SFX de release sur chaque moment de joie
-- **9/10** : 0 probleme HIGH, <=1 trou sonore, ratio overlay >=28%, >=7/8 zones, cold open fort, scene emotionnelle riche
+- **10/10** : 0 probleme technique, 0 trou sonore, ratio overlay >=30%, 8/8 zones couvertes, ouverture salon cinematographique, montee dramatique parfaite, SFX de release sur chaque moment de joie
+- **9/10** : 0 probleme HIGH, <=1 trou sonore, ratio overlay >=28%, >=7/8 zones, ouverture salon fort, scene emotionnelle riche
 - **8/10** : <=2 MEDIUM, <=2 trous sonores, ratio overlay >=25%, >=6/8 zones
 - **<8/10** : NE DOIT PAS aller en production. Corrections OBLIGATOIRES avant de continuer.
 

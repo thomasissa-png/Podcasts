@@ -82,9 +82,9 @@ class TestConfigAudit:
 class TestScripteurPromptAudit:
     """Tests des améliorations du prompt scripteur."""
 
-    def test_cold_open_dans_prompt(self):
-        """Le prompt doit mentionner le cold open."""
-        assert "COLD OPEN" in SYSTEM_PROMPT_BASE
+    def test_pas_de_cold_open_dans_prompt(self):
+        """Le prompt doit interdire le cold open."""
+        assert "PAS DE COLD OPEN" in SYSTEM_PROMPT_BASE
 
     def test_segment_longueur_dans_prompt(self):
         """Le prompt doit mentionner la limite de mots par segment."""
@@ -119,25 +119,29 @@ class TestScripteurPromptAudit:
 class TestStructuresNarratives:
     """Tests des structures narratives mises à jour."""
 
-    def test_cold_open_standard(self):
-        """La structure standard doit commencer par un cold open."""
-        assert "COLD OPEN" in STRUCTURES_NARRATIVES["standard"]
+    def test_no_cold_open_standard(self):
+        """La structure standard ne doit PAS avoir de cold open."""
+        assert "COLD OPEN" not in STRUCTURES_NARRATIVES["standard"]
+        assert "SCÈNE DE VIE" in STRUCTURES_NARRATIVES["standard"]
 
-    def test_cold_open_ouverture(self):
-        """La structure ouverture doit commencer par un cold open."""
-        assert "COLD OPEN" in STRUCTURES_NARRATIVES["ouverture"]
+    def test_no_cold_open_ouverture(self):
+        """La structure ouverture ne doit PAS avoir de cold open."""
+        assert "COLD OPEN" not in STRUCTURES_NARRATIVES["ouverture"]
+        assert "SCÈNE DE VIE" in STRUCTURES_NARRATIVES["ouverture"]
 
-    def test_cold_open_mi_saison(self):
-        """La structure mi-saison doit commencer par un cold open."""
-        assert "COLD OPEN" in STRUCTURES_NARRATIVES["mi-saison"]
+    def test_no_cold_open_mi_saison(self):
+        """La structure mi-saison ne doit PAS avoir de cold open."""
+        assert "COLD OPEN" not in STRUCTURES_NARRATIVES["mi-saison"]
+        assert "SCÈNE DE VIE" in STRUCTURES_NARRATIVES["mi-saison"]
 
-    def test_cold_open_final(self):
-        """La structure final doit commencer par un cold open."""
-        assert "COLD OPEN" in STRUCTURES_NARRATIVES["final"]
+    def test_no_cold_open_final(self):
+        """La structure final ne doit PAS avoir de cold open."""
+        assert "COLD OPEN" not in STRUCTURES_NARRATIVES["final"]
+        assert "SCÈNE DE VIE" in STRUCTURES_NARRATIVES["final"]
 
-    def test_accroche_courte_standard(self):
-        """L'accroche standard doit être de 90 secondes max."""
-        assert "90 secondes" in STRUCTURES_NARRATIVES["standard"]
+    def test_salon_debut_standard(self):
+        """L'accroche standard doit commencer au salon."""
+        assert "AU SALON" in STRUCTURES_NARRATIVES["standard"]
 
     def test_recap_standard(self):
         """La conclusion standard doit inclure un récap."""

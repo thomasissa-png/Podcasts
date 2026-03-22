@@ -160,14 +160,14 @@ RÈGLES STRICTES :
       et par le CONTENU VERBAL, jamais par des onomatopées.
     - Même les petits mots comme "Ah", "Oh", "Eh" en début de phrase sont à ÉVITER.
       Préférer des formulations complètes : "Dis donc !", "Tiens !", "Attends voir !".
-16. COLD OPEN — ACCROCHE IMMÉDIATE :
-    Chaque épisode COMMENCE par un extrait du moment le plus intense de l'histoire biblique
-    (15-20 secondes, 2-3 segments max). C'est Papy qui parle au milieu du récit, avec un ton
-    dramatique ou émerveillé. Puis on coupe avec un SFX de transition et on revient à la scène
-    de vie (le prétexte naturel). Cela accroche immédiatement l'auditeur.
-    Exemple de cold open : "Et c'est à ce moment-là que le buisson a pris feu ! Mais attention...
-    ce n'était PAS un feu ordinaire..." → [SFX: magical transition sound] → Scène de vie.
-    Le cold open doit venir des segments qui apparaîtront plus tard dans le récit.
+16. PAS DE COLD OPEN — DÉBUT PAR LA SCÈNE DE VIE :
+    Chaque épisode commence TOUJOURS par la scène de vie au salon : les enfants arrivent chez
+    Papy Babou, il les accueille, Mamie Sonia prépare le goûter, on s'installe confortablement.
+    C'est seulement APRÈS cette introduction chaleureuse que Papy commence à raconter l'histoire.
+    JAMAIS de cold open (extrait du milieu de l'histoire placé au début). JAMAIS d'in medias res.
+    L'auditeur doit d'abord retrouver les personnages qu'il connaît, se sentir en sécurité dans
+    le salon de Papy, PUIS être emporté dans l'aventure biblique.
+    Comme "Les Odyssées" et "Les aventures de Tina" : on commence par le cadre, pas par l'action.
 17. LONGUEUR DES SEGMENTS — RÈGLE CRITIQUE VOIX IA :
     Les voix IA deviennent monotones sur les segments trop longs. RESPECTER ces limites :
     - Antoine et Noémie : 40 MOTS MAXIMUM par segment (enfants = phrases courtes)
@@ -274,15 +274,12 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 
 STRUCTURES_NARRATIVES = {
     "ouverture": """\
-0. COLD OPEN (15-20 secondes) :
-   - Extrait du moment le plus INTENSE de l'épisode, comme si on était au milieu de l'histoire.
-   - 2-3 segments de Papy avec un ton dramatique/émerveillé + un SFX immersif.
-   - Coupe nette avec un SFX de transition → retour à la scène de vie.
-
-1. ACCROCHE NATURELLE (90 secondes max) :
-   - Scène de vie COURTE : un prétexte naturel amène les enfants chez Papy.
-   - Quelque chose éveille la curiosité des enfants et Papy commence à raconter.
+1. SCÈNE DE VIE + ACCROCHE (2-3 min) :
+   - On commence AU SALON : les enfants arrivent, Papy les accueille chaleureusement.
+   - Mamie Sonia prépare le goûter (détail sensoriel : odeur, boisson chaude, gâteau).
+   - Un prétexte naturel éveille la curiosité des enfants et amène l'histoire.
    - {ritual_accroche}
+   - Papy s'installe et commence à raconter. L'auditeur est en confiance AVANT l'aventure.
 
 2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (22-25 min) :
    - Première grande histoire biblique, racontée EN PROFONDEUR par Papy Babou.
@@ -303,16 +300,13 @@ STRUCTURES_NARRATIVES = {
    - {ritual_au_revoir}""",
 
     "standard": """\
-0. COLD OPEN (15-20 secondes) :
-   - Extrait du moment le plus INTENSE de l'épisode, comme si on était au milieu de l'histoire.
-   - 2-3 segments de Papy avec un ton dramatique/émerveillé + un SFX immersif.
-   - Coupe nette avec un SFX de transition → retour à la scène de vie.
-
-1. ACCROCHE (90 secondes max) :
+1. SCÈNE DE VIE + ACCROCHE (2-3 min) :
    - {previously_on}
-   - Scène de vie COURTE : un prétexte naturel amène l'histoire. Pas de bavardage.
+   - On commence AU SALON : les enfants sont chez Papy, ambiance chaleureuse.
+   - Mamie Sonia intervient (goûter, boisson, petit détail affectueux).
+   - Un prétexte naturel amène l'histoire (un objet, un événement, une question d'enfant).
    - {ritual_accroche}
-   - Papy lance l'histoire rapidement avec un élément d'intrigue.
+   - Papy lance l'histoire avec un élément d'intrigue qui donne envie d'écouter.
 
 2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (18-20 min) :
    - Récit principal de l'histoire biblique raconté EN PROFONDEUR et en détail par Papy Babou.
@@ -338,13 +332,12 @@ STRUCTURES_NARRATIVES = {
    - {ritual_au_revoir}""",
 
     "mi-saison": """\
-0. COLD OPEN (15-20 secondes) :
-   - Extrait du moment le plus INTENSE de l'épisode + SFX → transition → scène de vie.
-
-1. ACCROCHE (90 secondes max) :
+1. SCÈNE DE VIE + ACCROCHE (2-3 min) :
    - {previously_on}
-   - Scène de vie COURTE. Les enfants font le lien avec les histoires précédentes.
+   - On commence AU SALON. Les enfants font le lien avec les histoires précédentes.
+   - Mamie Sonia intervient (goûter, anecdote, détail culturel).
    - {ritual_accroche}
+   - Papy annonce que l'histoire du jour est spéciale — il crée de l'anticipation.
 
 2. DÉVELOPPEMENT — TOURNANT BIBLIQUE DÉTAILLÉ (22-25 min) :
    - Histoire biblique qui représente un tournant important dans le thème abordé.
@@ -364,13 +357,12 @@ STRUCTURES_NARRATIVES = {
    - {ritual_au_revoir}""",
 
     "final": """\
-0. COLD OPEN (15-20 secondes) :
-   - Extrait du moment le plus ÉMOUVANT de l'épisode + SFX → transition → scène de vie.
-
-1. ACCROCHE ÉMOTIONNELLE (90 secondes max) :
+1. SCÈNE DE VIE + ACCROCHE ÉMOTIONNELLE (2-3 min) :
    - {previously_on}
-   - Scène de vie COURTE avec un prétexte spécial (moment intime, occasion particulière).
+   - On commence AU SALON avec un prétexte spécial (moment intime, occasion particulière).
+   - Mamie Sonia a un rôle fort dans cette intro (pas juste le goûter).
    - {ritual_accroche}
+   - L'ambiance est plus posée, plus émotionnelle — c'est la dernière histoire de la saison.
 
 2. DÉVELOPPEMENT — CLIMAX BIBLIQUE DÉTAILLÉ (27-30 min) :
    - Dernière grande histoire biblique du thème, racontée EN PROFONDEUR par Papy Babou.

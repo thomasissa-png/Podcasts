@@ -32,11 +32,11 @@ Evaluer un script episode du podcast "Les Histoires de Papy Babou" avec le regar
 ### 1. Accroche & hook (9/10 minimum)
 
 Ce qui fait un 9+ :
-- **Cold open CINEMATOGRAPHIQUE** : on est DANS l'histoire en 10 secondes. Un son, une image, un mystere. Pas "Bonjour les enfants, aujourd'hui on va parler de..."
-- **Mystere ou question dans les 30 premieres secondes** : l'enfant doit VOULOIR savoir la reponse
-- **Comparaison Les Odyssees** : le gold standard du cold open podcast enfant. Est-ce que ca rivalise ?
+- **Ouverture chaleureuse et immersive** : on retrouve Papy, les enfants, le salon. L'ambiance est posee en 30 secondes (cheminee, gouter, rires). L'enfant se sent en securite et en confiance.
+- **Mystere ou question dans les 90 premieres secondes** : un pretexte naturel eveille la curiosite, l'enfant doit VOULOIR savoir la suite
+- **Comparaison Les Odyssees** : le gold standard de l'ouverture podcast enfant. Est-ce que ca rivalise ?
 - **Test du zapping** : un enfant qui tombe sur cet episode en zappant dans Apple Podcasts, il reste ou il passe ?
-- **Premier SFX dans les 15 secondes** : le son INSTALLE le monde avant meme que l'histoire commence
+- **Premier SFX dans les 15 secondes** : le son INSTALLE l'ambiance du salon (cheminee, pluie dehors, bruits de cuisine)
 
 Ce qui fait un 7 ou moins :
 - "Bonjour les enfants", exposition lente, pas de mystere, premier SFX apres 1 minute
