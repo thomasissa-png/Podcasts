@@ -550,7 +550,7 @@
 
     .characters li {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 0.8rem;
       padding: 0.6rem 0;
       border-bottom: 1px solid rgba(var(--accent-rgb), 0.15);
@@ -559,13 +559,15 @@
     .characters li:last-child { border-bottom: none; }
 
     .char-avatar {
-      width: 56px; height: 56px;
-      border-radius: 14px;
+      width: 72px; height: 48px;
+      min-width: 72px;
+      border-radius: 10px;
       flex-shrink: 0;
       overflow: hidden;
       background-image: url('/assets/artwork/personnages.png');
       background-size: 200% 200%;
       transition: transform 0.2s;
+      margin-top: 0.2rem;
     }
     .char-avatar.papy    { background-position: 100% 0; }
     .char-avatar.antoine  { background-position: 0 0; }
