@@ -168,6 +168,7 @@ SFX_VOLUME_PAR_TON = {
     "epique": -3,
     "solennel": -4,
     "mystere": -5,
+    "mystère": -5,
     "tendre": -8,
     "calme": -9,
     "joyeux": -5,
