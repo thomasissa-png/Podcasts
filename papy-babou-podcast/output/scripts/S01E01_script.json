@@ -417,7 +417,7 @@
       {
         "id": "seg_032",
         "personnage": "papy_babou",
-        "texte": "Exactement, ma puce ! Ce ciel-là, c'est Dieu qui l'a fabriqué le deuxième jour.",
+        "texte": "Exactement, Noémie ! Ce ciel-là, c'est Dieu qui l'a fabriqué le deuxième jour.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -523,7 +523,7 @@
       {
         "id": "seg_043",
         "personnage": "papy_babou",
-        "texte": "Exactement, mon grand ! Et Dieu n'avait pas fini. Il a dit : Que la terre se couvre de verdure ! Et là, mes petits loups, imaginez le spectacle.",
+        "texte": "Exactement, Antoine ! Et Dieu n'avait pas fini. Il a dit : Que la terre se couvre de verdure ! Et là, mes petits loups, imaginez le spectacle.",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -655,7 +655,7 @@
       {
         "id": "seg_055",
         "personnage": "papy_babou",
-        "texte": "Petits mais précieux, ma puce. C'est justement pour cette petite planète que Dieu a tout créé.",
+        "texte": "Petits mais précieux, ma chérie. C'est justement pour cette petite planète que Dieu a tout créé.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -884,7 +884,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "C'est le mot juste, mon grand. Vertigineux. La Bible dit que Dieu a semé les étoiles dans le ciel comme un semeur jette des graines dans un champ. D'un grand geste généreux.",
+        "texte": "C'est le mot juste, Antoine. Vertigineux. La Bible dit que Dieu a semé les étoiles dans le ciel comme un semeur jette des graines dans un champ. D'un grand geste généreux.",
         "ton": "solennel",
         "rythme": "lent",
         "pause_apres_ms": 400,
@@ -1025,7 +1025,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "Imagine un safari géant, mon grand ! Mais sans les voitures et sans les clôtures. Les animaux vivaient libres, en harmonie les uns avec les autres.",
+        "texte": "Imagine un safari géant, Antoine ! Mais sans les voitures et sans les clôtures. Les animaux vivaient libres, en harmonie les uns avec les autres.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300,
@@ -1150,18 +1150,10 @@
       {
         "id": "seg_100b",
         "personnage": "papy_babou",
-        "texte": "Exactement, ma puce. Comme chaque bébé qui vient au monde. Comme le petit bébé de Maman qui va bientôt arriver.",
+        "texte": "Exactement, ma puce. Comme chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance. Comme le petit bébé de Maman qui va bientôt arriver.",
         "ton": "chaleureux",
         "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "personnage": "papy_babou",
-        "texte": "Tout à fait, ma puce ! La première respiration d'Adam, c'est un peu comme la première respiration de chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 350,
-        "id": "seg_101"
+        "pause_apres_ms": 400
       },
       {
         "id": "seg_102",
@@ -1182,7 +1174,7 @@
       {
         "id": "seg_104",
         "personnage": "papy_babou",
-        "texte": "C'est le même prénom, ma puce ! Adam veut dire terre en hébreu, parce qu'il a été fait avec la terre. Et Dieu lui a donné un jardin magnifique pour y vivre, le jardin d'Éden.",
+        "texte": "C'est le même prénom, Noémie ! Adam veut dire terre en hébreu, parce qu'il a été fait avec la terre. Et Dieu lui a donné un jardin magnifique pour y vivre, le jardin d'Éden.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -1369,7 +1361,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "C'est drôle, ma puce ! Adam avait peut-être un peu plus d'inspiration, mais l'idée c'est que Dieu faisait confiance aux hommes. Il leur a donné la responsabilité de prendre soin de tout ce qu'il avait créé.",
+        "texte": "C'est drôle, Noémie ! Adam avait peut-être un peu plus d'inspiration, mais l'idée c'est que Dieu faisait confiance aux hommes. Il leur a donné la responsabilité de prendre soin de tout ce qu'il avait créé.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 350,
@@ -1419,7 +1411,7 @@
       {
         "id": "seg_126",
         "personnage": "papy_babou",
-        "texte": "Bravo, mon grand ! C'est d'ailleurs pour ça que le dimanche est un jour de repos. Dieu a montré l'exemple : après avoir bien travaillé, on prend le temps de se poser et d'admirer ce qu'on a fait.",
+        "texte": "Bravo Antoine ! C'est d'ailleurs pour ça que le dimanche est un jour de repos. Dieu a montré l'exemple : après avoir bien travaillé, on prend le temps de se poser et d'admirer ce qu'on a fait.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -1477,7 +1469,7 @@
       {
         "id": "seg_131",
         "personnage": "papy_babou",
-        "texte": "C'est ce que dit la Bible, ma puce. Six jours pour créer le monde entier. Certaines personnes pensent que ces jours représentent de très longues périodes. Mais le message, c'est que tout a été voulu et créé avec amour.",
+        "texte": "C'est ce que dit la Bible, ma belle. Six jours pour créer le monde entier. Certaines personnes pensent que ces jours représentent de très longues périodes. Mais le message, c'est que tout a été voulu et créé avec amour.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 400
@@ -1542,7 +1534,7 @@
       {
         "id": "seg_138",
         "personnage": "papy_babou",
-        "texte": "C'est magnifique, ma puce. Tu as retenu le plus important.",
+        "texte": "C'est magnifique, Noémie. Tu as retenu le plus important.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300

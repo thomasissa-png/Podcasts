@@ -93,6 +93,14 @@
         "pause_apres_ms": 500
       },
       {
+        "id": "seg_003b",
+        "personnage": "papy_babou",
+        "texte": "Mais ca, mes petits loups, c'etait il y a tres, tres longtemps. Bien avant vous, bien avant moi. Attendez, je vais tout vous raconter depuis le debut.",
+        "ton": "mysterieux",
+        "rythme": "normal",
+        "pause_apres_ms": 500
+      },
+      {
         "id": "sfx_004",
         "personnage": "sfx",
         "texte": "magical whoosh transition with sparkle trail, soft harp glissando descending, settling into warm indoor ambiance with rain on windows",
@@ -177,6 +185,15 @@
         "mode": "overlay"
       },
       {
+        "id": "sfx_005c",
+        "personnage": "sfx",
+        "texte": "warm cozy room with soft fireplace crackling, rain pattering on windows, comfortable indoor atmosphere, clock ticking softly",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 30.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_010",
         "personnage": "antoine",
         "texte": "Dis Papy, la dernière fois tu nous avais dit que les hommes avaient oublié Dieu. Et après ?",
@@ -231,6 +248,15 @@
         "ton": "enthousiaste",
         "rythme": "rapide",
         "pause_apres_ms": 200
+      },
+      {
+        "id": "sfx_005d",
+        "personnage": "sfx",
+        "texte": "cozy indoor evening ambiance, soft fireplace crackling steadily, rain still audible on windows, warm comfortable room tone",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_017",
@@ -344,6 +370,15 @@
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_007c",
+        "personnage": "sfx",
+        "texte": "warm indoor room ambiance continuing, soft fireplace crackling, rain still pattering on windows in background, comfortable evening atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_030",
@@ -471,7 +506,7 @@
       {
         "id": "sfx_008b",
         "personnage": "sfx",
-        "texte": "group laughing mockingly, dismissive snorting, derisive clapping fading away",
+        "texte": "crowd jeering and clapping mockingly, derisive slow clapping fading away, dismissive snorting sounds",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -492,6 +527,15 @@
         "ton": "solennel",
         "rythme": "lent",
         "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_008d",
+        "personnage": "sfx",
+        "texte": "very quiet indoor room ambiance, soft clock ticking, gentle fireplace embers, intimate evening atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 30.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_041b",
@@ -788,6 +832,15 @@
         "pause_apres_ms": 400
       },
       {
+        "id": "sfx_012d",
+        "personnage": "sfx",
+        "texte": "steady rain continuing on wooden hull, muffled thunder in far distance, water dripping inside, somber atmospheric pad",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_072b",
         "personnage": "noemie",
         "texte": "Même les montagnes ? Mais alors il y avait de l'eau partout partout ?",
@@ -1038,7 +1091,7 @@
         "personnage": "sfx",
         "texte": "calm open water surface, gentle lapping waves against wooden hull, light breeze, distant seabird call",
         "ton": "ambiance",
-        "pause_apres_ms": 0,
+        "pause_apres_ms": 200,
         "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
@@ -1159,7 +1212,7 @@
       {
         "id": "sfx_017",
         "personnage": "sfx",
-        "texte": "soft wing flutter approaching slowly from far distance growing louder, gentle bird landing on wooden railing with light tap, small branch rustling in beak",
+        "texte": "soft wing flutter approaching from far distance, gentle bird landing on wooden railing with light tap, warm hopeful string chord swelling gently",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -1320,6 +1373,15 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "sfx_019b",
+        "personnage": "sfx",
+        "texte": "magical whoosh transition with warm harp glissando, settling into cozy indoor ambiance with soft crackling fire",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "seg_113",
         "personnage": "noemie",
         "texte": "Papy, regarde ! Il pleut plus dehors ! Tu crois qu'il y a un arc-en-ciel ?",
@@ -1397,7 +1459,7 @@
       {
         "id": "seg_119",
         "personnage": "antoine",
-        "texte": "Que même quand tout le monde se moque, il faut continuer si on sait qu'on a raison.",
+        "texte": "Que meme si on se moque de toi, faut pas arreter si on sait qu'on a raison.",
         "ton": "déterminé",
         "rythme": "normal",
         "pause_apres_ms": 300
