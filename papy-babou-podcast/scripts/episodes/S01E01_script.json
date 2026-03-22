@@ -19,7 +19,7 @@
       "mamie_sonia"
     ],
     "moments_cles": [
-      "Le cold open : la voix de Dieu dans le néant et la lumière qui jaillit",
+      "L'arrivée des enfants chez Papy et la découverte du jardin qui lance la question sur la création",
       "Noémie qui demande 'c'est qui qui a fait les fleurs' dans le jardin de Papy",
       "L'anecdote de Papy sur les étoiles vues depuis le toit à Dakar",
       "Mamie Sonia qui raconte que chaque animal est une lettre de l'alphabet de Dieu",
@@ -40,67 +40,6 @@
       ]
     },
     "segments": [
-      {
-        "id": "sfx_001",
-        "personnage": "sfx",
-        "texte": "low sub-bass drone slowly rising in pitch, deep rumble growing from silence, dark ambient pad building intensity over 8 seconds",
-        "ton": "ambiance",
-        "pause_apres_ms": 500,
-        "duree_sfx_secondes": 8.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_001",
-        "personnage": "papy_babou",
-        "texte": "Et soudain, dans le noir le plus total, une voix immense a retenti. Une voix si puissante qu'elle a fait trembler le néant tout entier.",
-        "ton": "dramatique",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_002",
-        "personnage": "sfx",
-        "texte": "slow deep inhale and exhale with heavy reverb, breath-like low frequency swell, suspenseful atmospheric drone",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_003",
-        "personnage": "sfx",
-        "texte": "deep thunderous rumble echoing in vast reverberant space, powerful low-frequency vibration shaking the air, no speech",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_002",
-        "personnage": "papy_babou",
-        "texte": "Et cette voix a dit : Que la lumière soit ! Et mes petits loups, à cet instant précis, la lumière a jailli de partout, comme un feu d'artifice géant !",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "sfx_004",
-        "personnage": "sfx",
-        "texte": "massive orchestral swell rising from silence to fortissimo, bright shimmering chimes cascading upward, warm reverberant glow expanding",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_005",
-        "personnage": "sfx",
-        "texte": "magical whoosh transition with sparkle trail, soft harp glissando descending, settling into warm indoor ambiance with soft fireplace",
-        "ton": "ambiance",
-        "pause_apres_ms": 400,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
       {
         "id": "sfx_006",
         "personnage": "sfx",
@@ -170,10 +109,10 @@
       {
         "id": "sfx_008",
         "personnage": "sfx",
-        "texte": "garden gate opening, birds singing in autumn afternoon sun, gentle breeze in trees",
+        "texte": "garden gate opening, birds chirping in autumn afternoon, gentle breeze rustling through tree leaves",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -252,7 +191,7 @@
       {
         "id": "sfx_010",
         "personnage": "sfx",
-        "texte": "magical transition into ancient world, celestial atmosphere building slowly",
+        "texte": "low drone shifting upward in pitch with shimmering high-frequency shimmer, reverberant ambient pad building slowly over 5 seconds",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 5.0,
@@ -302,7 +241,7 @@
       {
         "id": "sfx_012",
         "personnage": "sfx",
-        "texte": "bright orchestral burst rising from silence, shimmering high-frequency chimes cascading outward, warm sustained string chord expanding",
+        "texte": "massive bright tonal burst rising from silence, shimmering high-frequency metallic resonance cascading outward, warm sustained low-frequency hum expanding",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -359,7 +298,7 @@
       {
         "id": "sfx_013",
         "personnage": "sfx",
-        "texte": "single celestial chime ringing softly with long reverb tail, gentle tubular bell resonance fading",
+        "texte": "single clear tubular bell chime ringing softly with long reverb tail, gentle resonance fading",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -417,7 +356,7 @@
       {
         "id": "seg_032",
         "personnage": "papy_babou",
-        "texte": "Exactement, ma puce ! Ce ciel-là, c'est Dieu qui l'a fabriqué le deuxième jour.",
+        "texte": "Exactement, Noémie ! Ce ciel-là, c'est Dieu qui l'a fabriqué le deuxième jour.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -466,7 +405,7 @@
       {
         "id": "sfx_016",
         "personnage": "sfx",
-        "texte": "single celestial chime ringing softly, ethereal tubular bell with long reverb tail",
+        "texte": "single clear tubular bell chime ringing softly, bright metallic resonance with long reverb tail",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -523,7 +462,7 @@
       {
         "id": "seg_043",
         "personnage": "papy_babou",
-        "texte": "Exactement, mon grand ! Et Dieu n'avait pas fini. Il a dit : Que la terre se couvre de verdure ! Et là, mes petits loups, imaginez le spectacle.",
+        "texte": "Exactement, Antoine ! Et Dieu n'avait pas fini. Il a dit : Que la terre se couvre de verdure ! Et là, mes petits loups, imaginez le spectacle.",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -534,7 +473,7 @@
         "texte": "rich forest ambiance emerging, birdsong growing louder and more varied, wind rustling through dense leaves and branches",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -578,12 +517,21 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "sfx_017b",
+        "personnage": "sfx",
+        "texte": "single bright tubular bell chime with long decay and warm harmonic overtones",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "sfx_018",
         "personnage": "sfx",
         "texte": "quiet night ambiance, gentle twinkling high-pitched chimes appearing one by one, subtle cosmic shimmer pad",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -646,7 +594,7 @@
       {
         "id": "seg_055",
         "personnage": "papy_babou",
-        "texte": "Petits mais précieux, ma puce. C'est justement pour cette petite planète que Dieu a tout créé.",
+        "texte": "Petits mais précieux, ma chérie. C'est justement pour cette petite planète que Dieu a tout créé.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -686,7 +634,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "Exactement, Antoine ! Tu sais, quand je vivais en Afrique du Sud, il y avait un baobab devant notre maison. Un arbre énorme, gros comme cette pièce. Et il avait commencé par une toute petite graine.",
+        "texte": "C'est ça, Antoine ! Tu sais, quand je vivais en Afrique du Sud, il y avait un baobab devant notre maison. Un arbre énorme, gros comme cette pièce. Et il avait commencé par une toute petite graine.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 350,
@@ -719,7 +667,7 @@
       {
         "id": "sfx_021",
         "personnage": "sfx",
-        "texte": "ocean depths bubbling, whale song echoing, seagulls calling above waves",
+        "texte": "ocean depths bubbling, whale song echoing, deep water ambiance with rising air bubbles",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 15.0,
@@ -784,6 +732,15 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "sfx_023b",
+        "personnage": "sfx",
+        "texte": "warm indoor room ambiance, soft fireplace crackling gently, distant clock ticking",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_068",
         "personnage": "papy_babou",
         "texte": "Et dans le ciel, des milliers d'oiseaux se sont envolés ! Des aigles majestueux, des colibris tout petits, des perroquets de toutes les couleurs, des hirondelles rapides comme l'éclair.",
@@ -832,6 +789,15 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "sfx_023c",
+        "personnage": "sfx",
+        "texte": "quiet night sky ambiance, very subtle wind, distant owl hoot, peaceful stargazing atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
         "personnage": "noemie",
         "texte": "Papy, les étoiles c'est aussi gros que le soleil ?",
         "ton": "curieux",
@@ -857,7 +823,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "C'est le mot juste, mon grand. Vertigineux. La Bible dit que Dieu a semé les étoiles dans le ciel comme un semeur jette des graines dans un champ. D'un grand geste généreux.",
+        "texte": "C'est le mot juste, Antoine. Vertigineux. La Bible dit que Dieu a semé les étoiles dans le ciel comme un semeur jette des graines dans un champ. D'un grand geste généreux.",
         "ton": "solennel",
         "rythme": "lent",
         "pause_apres_ms": 400,
@@ -871,6 +837,15 @@
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 4.0,
         "mode": "insert"
+      },
+      {
+        "id": "sfx_024b",
+        "personnage": "sfx",
+        "texte": "warm kitchen ambiance, ceramic cups clinking softly, tea being poured, oven warmth humming gently",
+        "ton": "ambiance",
+        "pause_apres_ms": 0,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_078",
@@ -916,7 +891,7 @@
         "id": "seg_083",
         "personnage": "mamie_sonia",
         "texte": "Quand j'étais petite au Caire, ma grand-mère me racontait que chaque animal est une lettre de l'alphabet de Dieu. Ensemble, ils racontent une histoire d'amour.",
-        "ton": "chaleureux",
+        "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 350
       },
@@ -931,17 +906,9 @@
       {
         "id": "seg_085",
         "personnage": "papy_babou",
-        "texte": "Ta Mamie a toujours eu le don de trouver les mots justes. Allez, on continue ! Le sixième jour, mes petits loups, c'est le plus important de tous.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_086",
-        "personnage": "papy_babou",
-        "texte": "Mais mes petits loups, le plus extraordinaire reste à venir. Le sixième jour, c'est le jour où tout va changer.",
+        "texte": "Ta Mamie a toujours eu le don de trouver les mots justes. Allez, on continue ! Mes petits loups, le sixième jour, c'est le jour où tout va changer.",
         "ton": "mystérieux",
-        "rythme": "lent",
+        "rythme": "normal",
         "pause_apres_ms": 400
       },
       {
@@ -975,7 +942,7 @@
         "texte": "galloping horses across plains, wolves howling at sunset, deer running through forest",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay",
         "id": "sfx_027"
       },
@@ -997,7 +964,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "Imagine un safari géant, mon grand ! Mais sans les voitures et sans les clôtures. Les animaux vivaient libres, en harmonie les uns avec les autres.",
+        "texte": "Imagine un safari géant, Antoine ! Mais sans les voitures et sans les clôtures. Les animaux vivaient libres, en harmonie les uns avec les autres.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300,
@@ -1015,7 +982,7 @@
         "personnage": "papy_babou",
         "texte": "Tu sais, Antoine, au fond des océans il y a des créatures tellement bizarres qu'on en découvre encore de nouvelles aujourd'hui. Des poissons qui brillent dans le noir, des pieuvres qui changent de couleur, des méduses transparentes.",
         "ton": "mystérieux",
-        "rythme": "normal",
+        "rythme": "lent",
         "pause_apres_ms": 300,
         "id": "seg_092"
       },
@@ -1029,7 +996,7 @@
       },
       {
         "personnage": "noemie",
-        "texte": "Des lampes sur la tête ? C'est trop drôle ! Ils ressemblent à des lampadaires de la mer !",
+        "texte": "Des lampes sur la tête ? Mais c'est trop bizarre ! Ils font comment pour nager avec ça ?",
         "ton": "joyeux",
         "rythme": "rapide",
         "pause_apres_ms": 250,
@@ -1080,7 +1047,7 @@
       {
         "id": "sfx_030",
         "personnage": "sfx",
-        "texte": "gentle ethereal choir singing sustained notes softly, reverberant cathedral space ambiance, warm organ drone",
+        "texte": "deep reverberant cathedral space ambiance, warm low-frequency tonal drone with harmonic overtones, sustained resonant pad",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -1096,7 +1063,7 @@
       },
       {
         "personnage": "sfx",
-        "texte": "first human breath, heartbeat beginning, gentle wind of life",
+        "texte": "slow deep inhalation followed by gentle exhale, heartbeat beginning with low rhythmic pulse, soft wind gust",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -1113,19 +1080,19 @@
       },
       {
         "personnage": "noemie",
-        "texte": "Comme un bébé qui ouvre les yeux ! Comme Lucas quand il va naître !",
+        "texte": "Il a ouvert les yeux pour la première fois ? Comme un bébé alors ?",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300,
         "id": "seg_100"
       },
       {
+        "id": "seg_100b",
         "personnage": "papy_babou",
-        "texte": "Exactement, ma puce ! La première respiration d'Adam, c'est un peu comme la première respiration de chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance.",
+        "texte": "Exactement, ma puce. Comme chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance. Comme le petit bébé de Maman qui va bientôt arriver.",
         "ton": "chaleureux",
         "rythme": "normal",
-        "pause_apres_ms": 350,
-        "id": "seg_101"
+        "pause_apres_ms": 400
       },
       {
         "id": "seg_102",
@@ -1146,14 +1113,14 @@
       {
         "id": "seg_104",
         "personnage": "papy_babou",
-        "texte": "C'est le même prénom, ma puce ! Adam veut dire terre en hébreu, parce qu'il a été fait avec la terre. Et Dieu lui a donné un jardin magnifique pour y vivre, le jardin d'Éden.",
+        "texte": "C'est le même prénom, Noémie ! Adam veut dire terre en hébreu, parce qu'il a été fait avec la terre. Et Dieu lui a donné un jardin magnifique pour y vivre, le jardin d'Éden.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
       },
       {
         "personnage": "sfx",
-        "texte": "paradise garden ambiance, gentle waterfall, exotic birds, warm peaceful breeze",
+        "texte": "lush garden ambiance with gentle waterfall, exotic birds calling, warm peaceful breeze through tropical leaves",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 15.0,
@@ -1193,6 +1160,15 @@
         "id": "seg_108"
       },
       {
+        "id": "sfx_032b",
+        "personnage": "sfx",
+        "texte": "peaceful garden ambiance, gentle breeze, birds chirping softly in distance, leaves rustling",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
         "personnage": "papy_babou",
         "texte": "Ta maîtresse a raison. Quand j'étais au Liban, on n'était pas loin de cette région. C'est une terre chargée d'histoire, mes petits loups.",
         "ton": "chaleureux",
@@ -1213,7 +1189,7 @@
         "personnage": "papy_babou",
         "texte": "Dieu a vu qu'Adam était seul et il a dit : Il n'est pas bon que l'homme soit seul. Alors pendant qu'Adam dormait, Dieu a pris une de ses côtes et il en a fait la femme. Ève. Et quand Adam l'a vue, il était rempli de joie.",
         "ton": "chaleureux",
-        "rythme": "normal",
+        "rythme": "lent",
         "pause_apres_ms": 400
       },
       {
@@ -1243,9 +1219,9 @@
       {
         "id": "seg_115",
         "personnage": "noemie",
-        "texte": "C'est romantique, Mamie !",
+        "texte": "Comme dans les histoires d'amour !",
         "ton": "joyeux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 200
       },
       {
@@ -1292,7 +1268,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "Exactement ! Et Dieu a dit à Adam de donner un nom à chaque animal. Imagine : chaque animal du monde venait défiler devant Adam et Adam devait inventer un nom pour chacun.",
+        "texte": "Tout à fait ! Et Dieu a dit à Adam de donner un nom à chaque animal. Imagine : chaque animal du monde venait défiler devant Adam et Adam devait inventer un nom pour chacun.",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300,
@@ -1307,8 +1283,24 @@
         "id": "seg_120"
       },
       {
+        "id": "seg_120b",
+        "personnage": "antoine",
+        "texte": "N'importe quoi, Noémie ! Un éléphant ça s'appelle un éléphant !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_120c",
+        "personnage": "noemie",
+        "texte": "Ben Gros-Nez c'est plus rigolo !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 250
+      },
+      {
         "personnage": "papy_babou",
-        "texte": "C'est drôle, ma puce ! Adam avait peut-être un peu plus d'inspiration, mais l'idée c'est que Dieu faisait confiance aux hommes. Il leur a donné la responsabilité de prendre soin de tout ce qu'il avait créé.",
+        "texte": "C'est drôle, Noémie ! Adam avait peut-être un peu plus d'inspiration, mais l'idée c'est que Dieu faisait confiance aux hommes. Il leur a donné la responsabilité de prendre soin de tout ce qu'il avait créé.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 350,
@@ -1316,7 +1308,7 @@
       },
       {
         "personnage": "sfx",
-        "texte": "parade of animals passing by, gentle footsteps, various animal calls, peaceful garden",
+        "texte": "parade of soft hoofsteps on grass, low distant animal rumbles, gentle rustling in peaceful outdoor setting",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 7.0,
@@ -1358,7 +1350,7 @@
       {
         "id": "seg_126",
         "personnage": "papy_babou",
-        "texte": "Exactement, mon grand ! C'est d'ailleurs pour ça que le dimanche est un jour de repos. Dieu a montré l'exemple : après avoir bien travaillé, on prend le temps de se poser et d'admirer ce qu'on a fait.",
+        "texte": "Bravo Antoine ! C'est d'ailleurs pour ça que le dimanche est un jour de repos. Dieu a montré l'exemple : après avoir bien travaillé, on prend le temps de se poser et d'admirer ce qu'on a fait.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -1374,7 +1366,7 @@
       {
         "id": "sfx_036",
         "personnage": "sfx",
-        "texte": "child climbing onto cushioned seat, soft fabric and leather rustling, small contented sigh, settling sounds",
+        "texte": "child climbing onto cushioned seat, soft fabric and leather rustling, settling sounds",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 3.0,
@@ -1416,7 +1408,7 @@
       {
         "id": "seg_131",
         "personnage": "papy_babou",
-        "texte": "C'est ce que dit la Bible, ma puce. Six jours pour créer le monde entier. Certaines personnes pensent que ces jours représentent de très longues périodes. Mais le message, c'est que tout a été voulu et créé avec amour.",
+        "texte": "C'est ce que dit la Bible, ma belle. Six jours pour créer le monde entier. Certaines personnes pensent que ces jours représentent de très longues périodes. Mais le message, c'est que tout a été voulu et créé avec amour.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 400
@@ -1454,6 +1446,15 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "sfx_038b",
+        "personnage": "sfx",
+        "texte": "evening wind gently whistling past window, warm indoor ambiance with distant owl hoot, old house creaking softly",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_136",
         "personnage": "papy_babou",
         "texte": "Bravo Antoine ! Tu as tout retenu dans l'ordre. Et toi, Noémie ?",
@@ -1472,7 +1473,7 @@
       {
         "id": "seg_138",
         "personnage": "papy_babou",
-        "texte": "C'est magnifique, ma puce. Tu as retenu le plus important.",
+        "texte": "C'est magnifique, Noémie. Tu as retenu le plus important.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -1480,10 +1481,10 @@
       {
         "id": "sfx_038",
         "personnage": "sfx",
-        "texte": "warm gentle music box melody playing softly, cozy evening atmosphere",
+        "texte": "warm cozy room ambiance with soft clock ticking, gentle fireplace crackling, evening settling sounds",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
       {
@@ -1513,7 +1514,7 @@
       {
         "id": "seg_142",
         "personnage": "papy_babou",
-        "texte": "Exactement, mon grand. Chaque nouvelle vie est un cadeau de Dieu, comme la Création. Et vous savez quoi ? La prochaine fois que vous viendrez, je vous raconterai ce qui s'est passé dans le plus beau jardin du monde. Le jardin d'Éden.",
+        "texte": "Exactement, mon grand. Chaque nouvelle vie est un cadeau de Dieu, comme la Création. Et vous savez quoi ? La prochaine fois que vous viendrez, je vous raconterai l'histoire du plus grand bateau jamais construit. Et pourquoi il a fallu le construire.",
         "ton": "mystérieux",
         "rythme": "normal",
         "pause_apres_ms": 400
@@ -1541,6 +1542,15 @@
         "ton": "curieux",
         "rythme": "normal",
         "pause_apres_ms": 250
+      },
+      {
+        "id": "sfx_038c",
+        "personnage": "sfx",
+        "texte": "quiet evening settling sounds, gentle breeze through curtains, distant church bells ringing softly, warm indoor atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_146",
@@ -1593,7 +1603,7 @@
       {
         "id": "sfx_039",
         "personnage": "sfx",
-        "texte": "children's footsteps leaving, car doors, engine starting, evening crickets chirping",
+        "texte": "small footsteps on gravel path, car doors, engine starting, evening crickets chirping",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
