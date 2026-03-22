@@ -112,7 +112,7 @@
       {
         "id": "seg_004",
         "personnage": "antoine",
-        "texte": "Pfou, il pleut trop fort. On peut même pas aller dans le jardin.",
+        "texte": "Il pleut tellement fort dehors. On peut même pas aller dans le jardin.",
         "ton": "boudeur",
         "rythme": "normal",
         "pause_apres_ms": 250
@@ -160,7 +160,7 @@
       {
         "id": "sfx_006",
         "personnage": "sfx",
-        "texte": "ceramic mugs clinking, liquid pouring, children settling into cushions",
+        "texte": "ceramic mugs clinking, liquid pouring, fabric rustling on leather sofa",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 4.0,
@@ -169,7 +169,7 @@
       {
         "id": "seg_010",
         "personnage": "antoine",
-        "texte": "Dis Papy, la dernière fois tu nous avais promis l'histoire du plus grand bateau du monde.",
+        "texte": "Dis Papy, la dernière fois tu nous as parlé de la Création. Tu avais dit que les hommes avaient oublié les merveilles de Dieu. Qu'est-ce qui s'est passé après ?",
         "ton": "curieux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -233,7 +233,7 @@
       {
         "id": "seg_018",
         "personnage": "papy_babou",
-        "texte": "Exactement. Dieu avait créé un monde magnifique. Les fleurs, les animaux, les étoiles, et les hommes. Mais après la Création, les hommes ont commencé à oublier toutes ces merveilles.",
+        "texte": "Bravo, vous avez une mémoire formidable ! Dieu avait créé un monde magnifique. Les fleurs, les animaux, les étoiles, et les hommes. Mais après la Création, les hommes ont commencé à oublier toutes ces merveilles.",
         "ton": "solennel",
         "rythme": "normal",
         "pause_apres_ms": 400
@@ -427,7 +427,7 @@
       {
         "id": "sfx_008b",
         "personnage": "sfx",
-        "texte": "crowd laughing mockingly in distance, fingers pointing, derisive jeering fading away",
+        "texte": "crowd laughing mockingly in distance, derisive jeering fading away",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -448,6 +448,14 @@
         "ton": "solennel",
         "rythme": "lent",
         "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_041b",
+        "personnage": "noemie",
+        "texte": "Il avait pas peur, Noé, Papy ?",
+        "ton": "inquiet",
+        "rythme": "normal",
+        "pause_apres_ms": 200
       },
       {
         "id": "seg_042",
@@ -508,7 +516,7 @@
       {
         "id": "seg_049",
         "personnage": "papy_babou",
-        "texte": "Exactement. Et c'est parce qu'il a continué que toute sa famille a été sauvée. Tu vois, mon grand, lever la main en classe, c'est un peu comme construire ton arche à toi.",
+        "texte": "Tout à fait. Et c'est parce qu'il a continué que toute sa famille a été sauvée. Tu vois, mon grand, lever la main en classe, c'est un peu comme construire ton arche à toi.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 400
@@ -516,7 +524,7 @@
       {
         "id": "seg_050",
         "personnage": "mamie_sonia",
-        "texte": "Votre Papy a raison. Et tu sais, quand Papy était petit au Liban, les autres enfants se moquaient de son accent sénégalais. Mais il n'a jamais arrêté de parler.",
+        "texte": "Votre Papy a raison, même s'il exagère parfois un tout petit peu. Et tu sais, quand Papy était petit au Liban, les autres enfants se moquaient de son accent sénégalais. Mais il n'a jamais arrêté de parler.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 350
@@ -578,6 +586,14 @@
         "ton": "espiègle",
         "rythme": "normal",
         "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_055b",
+        "personnage": "noemie",
+        "texte": "C'est trop drôle les girafes !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
       },
       {
         "id": "seg_056",
@@ -745,7 +761,7 @@
       {
         "id": "seg_073",
         "personnage": "noemie",
-        "texte": "Et les gens qui s'étaient moqués de Noé ?",
+        "texte": "Et les méchants, Papy ? Ceux qui riaient ?",
         "ton": "inquiet",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -1070,6 +1086,22 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "seg_105b",
+        "personnage": "noemie",
+        "texte": "Et les papillons ! Ils volent partout !",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_105c",
+        "personnage": "papy_babou",
+        "texte": "Noé a respiré l'air frais pour la première fois depuis des mois. Et il a senti l'herbe mouillée sous ses pieds. La terre était neuve, propre, comme un cadeau tout juste déballé.",
+        "ton": "émerveillé",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
         "id": "seg_106",
         "personnage": "antoine",
         "texte": "Et les girafes qui lèvent la tête et voient le ciel bleu !",
@@ -1121,7 +1153,7 @@
       {
         "id": "seg_111",
         "personnage": "noemie",
-        "texte": "Alors les arcs-en-ciel c'est des promesses de Dieu ?",
+        "texte": "C'est vrai, Papy ? Les arcs-en-ciel c'est des promesses ?",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 250
@@ -1186,7 +1218,7 @@
       {
         "id": "sfx_021",
         "personnage": "sfx",
-        "texte": "plates clinking, cake being sliced, children cheering softly",
+        "texte": "plates clinking, cake being sliced, children laughing softly",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 4.0,
@@ -1276,7 +1308,7 @@
       {
         "id": "seg_127",
         "personnage": "noemie",
-        "texte": "C'est pas juste, Papy ! Tu dis toujours ça !",
+        "texte": "Mais Papy, tu promets pour la prochaine fois ?",
         "ton": "espiègle",
         "rythme": "rapide",
         "pause_apres_ms": 200
