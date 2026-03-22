@@ -441,6 +441,55 @@ def _sync_checkpoint_to_db(episode_id: str) -> None:
         logger.error("Sync checkpoint DB ÉCHOUÉ pour %s : %s", episode_id, e)
 
 
+def _restore_valide_script(episode_id: str) -> bool:
+    """S'assure que _valide.json existe pour un épisode. Retourne True si le fichier existe.
+
+    Restauration 3 couches (défense en profondeur, post-redeploy Replit) :
+    1. Copie locale _script.json → _valide.json
+    2. Object Storage (persistent_storage.restore_script)
+    3. DB (ScriptRepo.charger_valide / charger_derniere_version)
+
+    Appelé par continue-production (avant subprocess) et par les callbacks
+    de chaînage SFX/montage (entre jobs auto-chaînés).
+    """
+    valide_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    if valide_path.exists():
+        return True
+    script_source = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+    # Couche 1 : copie locale
+    if script_source.exists():
+        import shutil
+        shutil.copy2(script_source, valide_path)
+        logger.info("_restore_valide_script: copie locale _script→_valide pour %s", episode_id)
+        return True
+    # Couche 2 : Object Storage
+    try:
+        import persistent_storage
+        persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR)
+        if valide_path.exists():
+            logger.info("_restore_valide_script: restauré depuis Object Storage pour %s", episode_id)
+            return True
+    except Exception as e:
+        logger.debug("_restore_valide_script: Object Storage pour %s : %s", episode_id, e)
+    # Couche 3 : DB
+    if not valide_path.exists():
+        try:
+            from db_models import ScriptRepo
+            db_script = ScriptRepo.charger_valide(episode_id)
+            if not db_script or not db_script.get("episode"):
+                db_script = ScriptRepo.charger_derniere_version(episode_id)
+            if db_script and db_script.get("episode"):
+                config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+                import json as _json
+                with open(valide_path, "w", encoding="utf-8") as f:
+                    _json.dump(db_script, f, ensure_ascii=False, indent=2)
+                logger.info("_restore_valide_script: restauré depuis DB pour %s", episode_id)
+                return True
+        except Exception as e:
+            logger.warning("_restore_valide_script: DB pour %s : %s", episode_id, e)
+    return valide_path.exists()
+
+
 def _restore_checkpoint_from_db(episode_id: str, checkpoint_path) -> None:
     """Restaure un checkpoint depuis la DB si le fichier local n'existe pas.
 
@@ -2198,8 +2247,8 @@ def api_continue_production(episode_id):
         try:
             import persistent_storage
             persistent_storage.restore_checkpoint(episode_id, config.CHECKPOINTS_DIR)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("continue-production: restore checkpoint Object Storage pour %s : %s", episode_id, e)
     if not checkpoint_path.exists():
         _restore_checkpoint_from_db(episode_id, checkpoint_path)
     if not checkpoint_path.exists():
@@ -2208,44 +2257,7 @@ def api_continue_production(episode_id):
     # ── FILET DE SÉCURITÉ : s'assurer que _valide.json existe AVANT le subprocess ──
     # Après un redeploy Replit, le filesystem est wipé. Le subprocess (reprendre)
     # cherche _valide.json mais ne le trouve pas → crash immédiat.
-    # On le restaure ici, dans le même processus que le web server.
-    import json as _json
-    import shutil as _shutil
-    valide_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
-    script_source = config.SCRIPTS_DIR / f"{episode_id}_script.json"
-    if not valide_path.exists():
-        # Étape 1 : copier depuis _script.json s'il existe
-        if script_source.exists():
-            config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
-            _shutil.copy2(script_source, valide_path)
-            logger.info("continue-production: _valide.json créé depuis _script.json pour %s", episode_id)
-        else:
-            # Étape 2 : restaurer depuis Object Storage
-            try:
-                import persistent_storage
-                persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR)
-                if valide_path.exists():
-                    logger.info("continue-production: script restauré depuis Object Storage pour %s", episode_id)
-                elif script_source.exists():
-                    _shutil.copy2(script_source, valide_path)
-                    logger.info("continue-production: _valide.json créé après restore Object Storage pour %s", episode_id)
-            except Exception as _e:
-                logger.debug("continue-production: restore Object Storage pour %s : %s", episode_id, _e)
-            # Étape 3 : restaurer depuis DB
-            if not valide_path.exists() and not script_source.exists():
-                try:
-                    from db_models import ScriptRepo
-                    db_script = ScriptRepo.charger_valide(episode_id)
-                    if not db_script or not db_script.get("episode"):
-                        db_script = ScriptRepo.charger_derniere_version(episode_id)
-                    if db_script and db_script.get("episode"):
-                        config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
-                        with open(valide_path, "w", encoding="utf-8") as f:
-                            _json.dump(db_script, f, ensure_ascii=False, indent=2)
-                        logger.info("continue-production: script restauré depuis DB pour %s", episode_id)
-                except Exception as _e:
-                    logger.warning("continue-production: restore DB pour %s : %s", episode_id, _e)
-    if not valide_path.exists():
+    if not _restore_valide_script(episode_id):
         return jsonify({
             "error": f"Script validé introuvable pour {episode_id}. "
                      f"Validez d'abord le script depuis le dashboard."
@@ -2256,31 +2268,10 @@ def api_continue_production(episode_id):
         # Chaque job dure ~10-15 min au lieu de ~40 min pour les 3 ensemble.
         # Cela permet de survivre aux recyclages container Replit (30-90 min).
         # Entre chaque job, un checkpoint est sauvé → reprise possible.
-        def _ensure_valide_exists(ep_id):
-            """Filet de sécurité : restaurer _valide.json si absent (redeploy entre jobs)."""
-            _vp = config.SCRIPTS_DIR / f"{ep_id}_valide.json"
-            _ss = config.SCRIPTS_DIR / f"{ep_id}_script.json"
-            if _vp.exists():
-                return
-            if _ss.exists():
-                import shutil
-                shutil.copy2(_ss, _vp)
-                logger.info("Chaînage: _valide.json restauré depuis _script.json pour %s", ep_id)
-                return
-            try:
-                import persistent_storage
-                persistent_storage.restore_script(ep_id, config.SCRIPTS_DIR)
-                if not _vp.exists() and _ss.exists():
-                    import shutil
-                    shutil.copy2(_ss, _vp)
-                if _vp.exists():
-                    logger.info("Chaînage: script restauré depuis Object Storage pour %s", ep_id)
-            except Exception:
-                pass
 
         def _chain_sfx_then_montage():
             """Lancé automatiquement après le job audio."""
-            _ensure_valide_exists(episode_id)
+            _restore_valide_script(episode_id)
             _cp = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
             if not _cp.exists():
                 _restore_checkpoint_from_db(episode_id, _cp)
@@ -2290,7 +2281,7 @@ def api_continue_production(episode_id):
 
             def _chain_montage():
                 """Lancé automatiquement après le job SFX."""
-                _ensure_valide_exists(episode_id)
+                _restore_valide_script(episode_id)
                 _cp2 = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
                 if not _cp2.exists():
                     _restore_checkpoint_from_db(episode_id, _cp2)
@@ -2423,8 +2414,8 @@ def api_regenerate_episode(episode_id):
             try:
                 import persistent_storage
                 persistent_storage.restore_checkpoint(episode_id, config.CHECKPOINTS_DIR)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("regenerate: restore checkpoint Object Storage pour %s : %s", episode_id, e)
         if not checkpoint_path.exists():
             _restore_checkpoint_from_db(episode_id, checkpoint_path)
         if checkpoint_path.exists():
@@ -2485,8 +2476,8 @@ def api_regenerate_episode(episode_id):
             try:
                 import persistent_storage
                 persistent_storage.restore_checkpoint(episode_id, config.CHECKPOINTS_DIR)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("regenerate montage: restore checkpoint Object Storage pour %s : %s", episode_id, e)
         if not checkpoint_path.exists():
             _restore_checkpoint_from_db(episode_id, checkpoint_path)
         if not checkpoint_path.exists():
@@ -2519,6 +2510,9 @@ def api_regenerate_episode(episode_id):
                 _sync_rapport_to_db(episode_id, rapport)
             except Exception as e:
                 logger.warning("Erreur mise à jour rapport %s : %s", episode_id, e)
+
+        # Filet de sécurité : restaurer _valide.json (le monteur charge le script)
+        _restore_valide_script(episode_id)
 
         # Forcer la reprise depuis l'étape montage (pas audio — les segments existent déjà)
         try:
