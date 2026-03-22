@@ -413,7 +413,7 @@
       {
         "id": "sfx_007b",
         "personnage": "sfx",
-        "texte": "outdoor construction site ambiance, distant wind blowing through scaffolding, occasional bird call, earth and gravel underfoot, dry hot afternoon atmosphere",
+        "texte": "outdoor construction site ambiance, distant wind blowing through scaffolding, occasional bird call, earth and gravel crunching underfoot, dry rustling leaves in breeze",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 50.0,
@@ -446,7 +446,7 @@
       {
         "id": "sfx_008b",
         "personnage": "sfx",
-        "texte": "group scoffing and jeering sounds, derisive crowd murmur without speech, mocking reaction fading",
+        "texte": "crowd laughing mockingly, dismissive snorting and grunting, derisive reaction fading away",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -821,7 +821,7 @@
       {
         "id": "sfx_012b",
         "personnage": "sfx",
-        "texte": "massive wave slamming against wooden hull, ship timber groaning under stress, objects sliding and crashing inside, animals crying in panic",
+        "texte": "massive wave slamming against wooden hull, ship timber groaning under stress, objects sliding and crashing inside, horses neighing and sheep bleating in distress",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -985,7 +985,7 @@
       {
         "id": "sfx_014",
         "personnage": "sfx",
-        "texte": "rain gradually fading to light drizzle then silence, wind dying down, last drops falling on wood",
+        "texte": "rain gradually fading to light drizzle, wind dying down to gentle breeze, last drops falling on wood, low atmospheric pad settling",
         "ton": "ambiance",
         "pause_apres_ms": 500,
         "duree_sfx_secondes": 8.0,
@@ -1279,7 +1279,7 @@
       {
         "id": "sfx_020",
         "personnage": "sfx",
-        "texte": "child running to window, curtain pushed aside, birds singing outside after rain",
+        "texte": "small quick footsteps on wooden floor, fabric curtain swooshing aside, birds singing outside after rain",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -1468,7 +1468,7 @@
       {
         "id": "sfx_022",
         "personnage": "sfx",
-        "texte": "children's footsteps leaving, car doors closing, engine starting, evening birds singing after rain",
+        "texte": "small footsteps on gravel fading away, car doors closing, engine starting and slowly driving off, evening birds singing after rain",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
