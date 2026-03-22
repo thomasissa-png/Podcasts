@@ -297,6 +297,14 @@ SVG superposant le titre sur le PNG : "Les Histoires de" (blanc) + "Papy Babou" 
 | `--vert-prairie` | `#5DBD72` | Badges ecoute |
 | `--sable` | `#FFF8ED` | Fond de page |
 
+### Favicon — ABSOLUTE RULE (DO NOT CHANGE)
+- **The ONLY favicon is `assets/artwork/favicon2.png`** — PNG format, no SVG
+- ALL pages (public.html, dashboard.html, admin_login.html) MUST use `favicon2.png`
+- NEVER add `favicon.svg`, `favicon_16.svg`, `favicon_32.svg`, or any SVG favicon
+- NEVER add a second `<link rel="icon">` tag — only ONE favicon link per page
+- Route `/favicon.ico` in `web.py` serves `favicon2.png` — do NOT change this
+- This rule has been violated 3+ times — treat any SVG favicon reference as a regression bug
+
 ### Typographie web
 - Corps : Nunito (sans-serif) — `--font-body`
 - Titres : Baloo 2 (display) — `--font-display`
@@ -1696,7 +1704,7 @@ Orchestrator launched parallel audit of `templates/public.html` with @design (7.
 - Episode cards have `role="article"` set via JS
 - Mobile nav has document click listener to close on outside click
 - `og_image.png` exists in assets/artwork/ (generated from cover_base.png, 1200x630)
-- favicon.svg is the primary favicon link (not favicon.png)
+- favicon2.png is the ONLY favicon (no SVG — see "Favicon — ABSOLUTE RULE" section)
 - Baloo 2 loads only weight 800 (600 removed)
 - Modal morale label: "Le trésor de cette mission"
 - All character descriptions use "l'équipage" for collective reference
