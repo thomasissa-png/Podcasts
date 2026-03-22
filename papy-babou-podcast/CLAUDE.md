@@ -1248,6 +1248,8 @@ Three file types were created locally but never uploaded:
 ### When modifying web.py (Session 17)
 - `/api/episode/<id>`: restores cover art from Object Storage if missing locally
 - All `persistent_storage` imports remain inside try/except blocks
+- `continue-production` route MUST ensure `_valide.json` exists BEFORE launching subprocess (3-layer restore: local copy → Object Storage → DB → 400 error)
+- Auto-chaining callbacks (`_chain_sfx_then_montage`, `_chain_montage`) call `_ensure_valide_exists()` to handle redeploys between jobs
 
 ### Complete Object Storage Upload/Restore Map
 | File Type | Upload Location | Restore Location | Prefix |
