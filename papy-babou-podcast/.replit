@@ -1,4 +1,4 @@
-run = "pip install -r requirements.txt && gunicorn -c gunicorn.conf.py web:app"
+run = "pip install -q -r requirements.txt 2>/dev/null; gunicorn -c gunicorn.conf.py web:app"
 entrypoint = "web.py"
 language = "python3"
 
@@ -19,4 +19,4 @@ defaultBucketID = "replit-objstore-production"
 # Replit mettra a jour automatiquement le defaultBucketID ci-dessus.
 
 [deployment]
-run = ["sh", "-c", "pip install -r requirements.txt && gunicorn -c gunicorn.conf.py web:app"]
+run = ["sh", "-c", "gunicorn -c gunicorn.conf.py web:app"]
