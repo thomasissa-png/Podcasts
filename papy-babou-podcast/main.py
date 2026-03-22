@@ -34,7 +34,7 @@ from rich.prompt import Prompt
 from rich.style import Style
 
 import config
-from utils import fichier_lock, ouvrir_fichier, slug as _slug
+from utils import fichier_lock, ouvrir_fichier, slug as _slug, compute_script_hash
 from agents import (
     Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur,
     Metadonnees, Publisher, CoverArt, Planificateur, DirecteurPodcast,
@@ -3185,6 +3185,7 @@ def _pipeline_inner(
             "chemin_script_valide": str(chemin_valide),
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": stop_after,
+            "script_content_hash": compute_script_hash(script),
         })
 
         # ── Validation humaine : script ──────────────────────────────────────
@@ -3440,6 +3441,7 @@ def _pipeline_inner(
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
                 "stop_after": stop_after,
+                "script_content_hash": compute_script_hash(script),
             })
 
     # ── Stop après audio (survie au recyclage container) ──────────────────────
@@ -3454,6 +3456,7 @@ def _pipeline_inner(
             "dry_run": dry_run, "rapport": rapport,
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": "montage",  # Destination finale, pas l'étape intermédiaire
+            "script_content_hash": compute_script_hash(script),
         })
         rapport["stop_after"] = "audio"
         rapport["status"] = "audio_done"
@@ -3594,6 +3597,7 @@ def _pipeline_inner(
             "dry_run": dry_run, "rapport": rapport,
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": stop_after,
+            "script_content_hash": compute_script_hash(script),
         })
 
     # ── Stop après SFX (survie au recyclage container) ────────────────────────

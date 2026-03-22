@@ -1,6 +1,7 @@
 """Utilitaires partagés — Parsing JSON, file locking, helpers communs."""
 
 import fcntl
+import hashlib
 import json
 import logging
 import platform
@@ -184,6 +185,30 @@ def ouvrir_fichier(chemin: Path) -> bool:
     except (OSError, FileNotFoundError) as e:
         logger.warning("Impossible d'ouvrir %s : %s", chemin, e)
         return False
+
+
+def compute_script_hash(script: dict) -> str:
+    """Calcule un hash du contenu audio-pertinent d'un script.
+
+    Prend en compte pour chaque segment : id, personnage, texte, ton, rythme.
+    Si le script est modifié (même si les IDs ne changent pas), le hash change,
+    ce qui force la régénération audio.
+
+    Returns:
+        Hash SHA-256 tronqué à 16 caractères hex.
+    """
+    segments = script.get("episode", {}).get("segments", [])
+    h = hashlib.sha256()
+    for seg in segments:
+        # Champs qui impactent l'audio généré
+        h.update(seg.get("id", "").encode("utf-8"))
+        h.update(seg.get("personnage", "").encode("utf-8"))
+        h.update(seg.get("texte", "").encode("utf-8"))
+        h.update(seg.get("ton", "").encode("utf-8"))
+        h.update(seg.get("rythme", "").encode("utf-8"))
+        # SFX prompts
+        h.update(seg.get("description", "").encode("utf-8"))
+    return h.hexdigest()[:16]
 
 
 def slug(texte: str) -> str:
