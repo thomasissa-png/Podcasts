@@ -669,19 +669,17 @@ class Monteur:
                 numero_saison = episode.get("saison")
                 intro = self._charger_jingle("intro", type_episode, numero_saison)
                 outro = self._charger_jingle("outro", type_episode, numero_saison)
-                signature = self._charger_signature()
 
                 # Exporter intro/outro en WAV temporaires
                 intro_wav = self._export_jingle_wav(intro, _tmp_dir / "intro.wav", "intro")
                 outro_wav = self._export_jingle_wav(outro, _tmp_dir / "outro.wav", "outro")
-                sig_wav = self._export_jingle_wav(signature, _tmp_dir / "sig.wav", "signature")
-                del intro, outro, signature
+                del intro, outro
                 gc.collect()
 
-                # Concaténer : intro + voix_fond + outro + signature
-                # (signature uniquement en fin — évite 5s de vide au début)
+                # Concaténer : intro + voix_fond + outro
+                # (signature jingle supprimé — qualité insuffisante)
                 # Diagnostic : log sample rates pour détecter les incohérences
-                _concat_inputs = [intro_wav, voix_fond_wav, outro_wav, sig_wav]
+                _concat_inputs = [intro_wav, voix_fond_wav, outro_wav]
                 for _ci in _concat_inputs:
                     _sr = self._ffprobe_sample_rate(_ci)
                     _d = self._ffprobe_duration(_ci)
@@ -701,7 +699,7 @@ class Monteur:
                     f"({_ep_dur/60:.1f} min)\n"
                 )
                 _sys.stderr.flush()
-                for f in [intro_wav, outro_wav, sig_wav, voix_fond_wav]:
+                for f in [intro_wav, outro_wav, voix_fond_wav]:
                     f.unlink(missing_ok=True)
                 logger.info(
                     "  [6/9] Épisode assemblé (%.1fs = %.1f min)",
@@ -2163,7 +2161,7 @@ class Monteur:
         voix_avec_fond: AudioSegment,
         outro: AudioSegment,
     ) -> AudioSegment:
-        """Assemble signature + intro + contenu + outro + signature avec transitions."""
+        """Assemble intro + contenu + outro avec transitions."""
         intro_duree = config.PRODUCTION["intro_jingle_duree_ms"]
         outro_duree = config.PRODUCTION["outro_jingle_duree_ms"]
 
@@ -2180,17 +2178,10 @@ class Monteur:
 
         silence_transition = AudioSegment.silent(duration=SILENCE_TRANSITION_MS)
 
-        # Générique signature récurrent (identique à chaque épisode)
-        signature = self._charger_signature()
-        if signature.channels == 1:
-            signature = signature.set_channels(2)
-        signature = signature.fade_in(200).fade_out(300)
-
         return (
             intro + silence_transition
             + voix_avec_fond
             + silence_transition + outro
-            + silence_transition + signature
         )
 
     def _generer_chapitres(
@@ -2203,7 +2194,6 @@ class Monteur:
         """
         chapitres = []
         # Offset initial : intro jingle + silence transition
-        # (signature supprimée du début — uniquement en fin d'épisode)
         intro_ms = config.PRODUCTION["intro_jingle_duree_ms"]
         temps_courant_ms = intro_ms + SILENCE_TRANSITION_MS
 
