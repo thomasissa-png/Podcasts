@@ -559,20 +559,20 @@
     .characters li:last-child { border-bottom: none; }
 
     .char-avatar {
-      width: 72px; height: 48px;
-      min-width: 72px;
+      width: 56px; height: 56px;
+      min-width: 56px;
       border-radius: 10px;
       flex-shrink: 0;
       overflow: hidden;
-      background-image: url('/assets/artwork/personnages.png');
-      background-size: 200% 200%;
+      background-size: cover;
+      background-position: center;
       transition: transform 0.2s;
       margin-top: 0.2rem;
     }
-    .char-avatar.papy    { background-position: 100% 0; }
-    .char-avatar.antoine  { background-position: 0 0; }
-    .char-avatar.noemie   { background-position: 0 100%; }
-    .char-avatar.mamie    { background-position: 100% 100%; }
+    .char-avatar.papy    { background-image: url('/assets/artwork/avatar_papy.png'); }
+    .char-avatar.antoine  { background-image: url('/assets/artwork/avatar_antoine.png'); }
+    .char-avatar.noemie   { background-image: url('/assets/artwork/avatar_noemie.png'); }
+    .char-avatar.mamie    { background-image: url('/assets/artwork/avatar_mamie.png'); }
     @media (hover: hover) { .char-avatar:hover { transform: scale(1.1); } }
 
     .char-name { font-weight: 700; font-size: 1rem; }
@@ -1372,11 +1372,12 @@
       gap: 0.3rem;
       background: var(--accent);
       color: var(--blanc);
-      font-size: 1rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      padding: 0.2rem 0.6rem;
+      padding: 0.15rem 0.5rem;
       border-radius: var(--radius-sm);
-      margin-bottom: 0.3rem;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     /* ── Back to top ─────────────────────────────────────────── */
@@ -2431,9 +2432,9 @@
 
         card.innerHTML =
           '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : 'Disponible prochainement — ') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default" title="Disponible prochainement"') + '>' + playIcon + '</button>' +
+          resumeBadge +
           '<div class="episode-info">' +
             listenedBadge +
-            resumeBadge +
             '<div class="episode-number">Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero + '</div>' +
             '<div class="episode-title">' + escHtml(ep.titre) + '</div>' +
             '<div class="episode-resume">' + escHtml(ep.resume || ep.morale || '') + '</div>' +
