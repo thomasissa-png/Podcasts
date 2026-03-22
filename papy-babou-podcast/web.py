@@ -2040,6 +2040,31 @@ def api_validate_episode(episode_id):
             # Sans ce fichier, il crash immédiatement avec FileNotFoundError.
             valide_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
             script_source = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+
+            # BUG #7: Restaurer le script depuis Object Storage si les fichiers
+            # locaux sont absents (cas fréquent après redéploiement Replit).
+            if not valide_path.exists() and not script_source.exists():
+                try:
+                    import persistent_storage
+                    persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR)
+                    logger.info("Script restauré depuis Object Storage pour validation %s", episode_id)
+                except Exception as e:
+                    logger.debug("Restauration script Object Storage pour %s : %s", episode_id, e)
+                # Fallback DB si Object Storage n'a rien restauré
+                if not valide_path.exists() and not script_source.exists():
+                    try:
+                        from db_models import ScriptRepo
+                        db_script = ScriptRepo.charger_valide(episode_id)
+                        if not db_script or not db_script.get("episode"):
+                            db_script = ScriptRepo.charger_derniere_version(episode_id)
+                        if db_script and db_script.get("episode"):
+                            config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+                            with open(valide_path, "w", encoding="utf-8") as f:
+                                _json.dump(db_script, f, ensure_ascii=False, indent=2)
+                            logger.info("Script %s restauré depuis DB pour validation", episode_id)
+                    except Exception as e:
+                        logger.warning("Restauration script DB pour %s échouée : %s", episode_id, e)
+
             if not valide_path.exists() and script_source.exists():
                 import shutil
                 shutil.copy2(script_source, valide_path)
@@ -2048,6 +2073,21 @@ def api_validate_episode(episode_id):
             # CRITICAL: Mettre à jour validation_humaine dans le checkpoint
             # Le pipeline lit cette valeur depuis checkpoint_data.etapes.script
             checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+
+            # BUG #6: Restaurer le checkpoint depuis Object Storage / DB si le
+            # fichier local est absent (redéploiement Replit). Sans cela, le
+            # checkpoint n'est jamais mis à jour avec validation_humaine=True,
+            # et la publication sera bloquée plus tard.
+            if not checkpoint_path.exists():
+                try:
+                    import persistent_storage
+                    persistent_storage.restore_checkpoint(episode_id, config.CHECKPOINTS_DIR)
+                    logger.info("Checkpoint restauré depuis Object Storage pour validation %s", episode_id)
+                except Exception:
+                    pass
+            if not checkpoint_path.exists():
+                _restore_checkpoint_from_db(episode_id, checkpoint_path)
+
             if checkpoint_path.exists():
                 try:
                     with fichier_lock(checkpoint_path):
