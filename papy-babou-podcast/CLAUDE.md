@@ -213,6 +213,7 @@ python -m pytest tests/test_corrections.py -v  # Bug regression tests only
 - Plan JSON may contain `instructions_producteur` list (A5) and `decisions_humaines` list
 
 ## Common Pitfalls
+- **MANDATORY**: When a script is modified (audit corrections, manual edits, regeneration), `validation_humaine` MUST be reset to `false` in BOTH the checkpoint and rapport files. Otherwise the dashboard shows "déjà validé" for the old version and skips re-validation. This applies to ALL script modifications — audit P0/P1 corrections, manual JSON edits, regeneration via pipeline.
 - ffmpeg is not available in test environment — mock `AudioSegment.from_mp3` and `silence.export`
 - Tests that create audio files must use `write_bytes(b"fake")` + mock
 - `config.charger_saison(N)` returns `{}` (not None) when season doesn't exist
