@@ -1950,3 +1950,55 @@ That's it. The pipeline will detect and use it automatically.
 ### Git Workflow (Session 25)
 - Branch: `claude/episode-2-script-QbSiY`
 - Push: `git push -u origin claude/episode-2-script-QbSiY`
+
+## Reference Script Patterns (Session 26) — MANDATORY for all future episodes
+
+### Source: S01E01 (9.2/10) + S01E02 (9.0/10) — validated and audited
+
+All 24 rules stored in `data/preferences_producteur.json` and auto-injected into scripteur prompt via `{preferences_producteur}`. These are the NON-NEGOTIABLE quality standards for every future episode.
+
+### Structure (7 rules)
+- **One topic per episode**: One complete biblical story A to Z, never part 1/2
+- **5-act structure**: Arrivée (~15 seg) → Début récit (~40) → Cœur (~50) → Dénouement+morale (~25) → Au revoir (~15)
+- **Cold open**: SFX ambiance + child's line immediately, NO narration, NO exposition
+- **Natural transition**: Bible story starts from a child's SPONTANEOUS question, never Papy announcing
+- **Closing ritual**: Papy teases next ep → Antoine thanks → Noémie thanks Mamie for snack (by name) → Mamie's poetic goodbye → SFX departure
+- **Teasing**: Mysterious, child asks "pourquoi?", Papy refuses = cliffhanger. No meta-language
+- **Max variety**: Each episode = unique subject, no redundancy in season
+
+### Personnages (4 rules)
+- **Ratios**: Papy 46-51%, Antoine 23%, Noémie 21-25%, Mamie 5-6% of voice segments
+- **Role separation**: Antoine = scientific/logical questions. Noémie = emotional/empathetic reactions. NEVER swap
+- **Mamie Sonia**: 3-5 spaced appearances, ONLY in real-life scenes (arrival, snack, goodbye), NEVER during biblical narrative
+- **Thematic snack**: Mamie prepares a DIFFERENT snack each episode, themed to the biblical story. Mentioned 3 times (arrival, pause, departure)
+
+### Rythme (3 rules)
+- **Segment length**: Papy 25-30 words, Antoine 11-14, Noémie 8-12, Mamie 20-25. Max 60 adult, 40 child
+- **Tone variety**: Min 12 distinct tones per episode, alternate every 2-3 lines
+- **Rhythm distribution**: ~60% normal, ~15-20% rapide (excitement), ~12-15% lent (moral, revelations)
+
+### Audio SFX (6 rules)
+- **SFX density**: 35-41 SFX for ~145 voice segments (ratio 1:3-4)
+- **Coverage**: Max 10 consecutive voice segments without SFX
+- **Overlays**: 15-25s duration, min 7 for 25min episode, 10-15 for 30+min
+- **Real-life scenes**: MUST have ambiance (fireplace for salon, kitchen for snack, crickets for departure)
+- **Ambiance par acte**: 3 distinct ambiances per episode matching emotional arc
+- **SFX prompts**: English, concrete audio vocabulary, no visual/abstract/silent descriptions
+
+### Audio Voix (1 rule)
+- **TTS rules**: No onomatopoeia, no hyphenated syllables, phonetic for rare names, numbers spelled out
+
+### Éducatif (2 rules)
+- **Fun facts**: Min 3 per episode with visual metaphors (basketball/pinhead), born from Antoine's questions
+- **Natural moral**: Never stated frontally. Child observes → Papy expands → other child reformulates
+
+### Engagement (2 rules)
+- **Running gag**: Installed before seg 25, callback at emotional climax, carried by Noémie or Mamie
+- **3 emotional peaks**: One per act, each linking Bible story to child's real life (school, family, friends)
+
+### When writing scripts for future episodes
+1. Follow ALL 24 rules from `preferences_producteur.json` (auto-injected into prompt)
+2. Use S01E01 and S01E02 as reference templates — read them before generating
+3. Run `@audit-episode` after generation to verify compliance
+4. Cold open pattern: E01 = car arrival + excitement, E02 = weather + Papy comforts → pick context matching the story
+5. Personal parallel pattern: E02's Antoine/Maxime schoolyard courage = gold standard for emotional peaks
