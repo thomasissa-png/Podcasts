@@ -3022,16 +3022,27 @@ async function loadSaisonProgress() {
                 btn.style.display = 'none';
             }
 
-            /* Auto-charger le premier actionnable en inline s'il a un script */
-            var premierAvecScript = actionnables.find(function(e) {
+            /* Auto-charger un épisode actionnable en inline s'il a un script.
+               Si un épisode est déjà sélectionné (_psInlineEpisodeId), le conserver
+               s'il est encore actionnable — sinon prendre le premier. */
+            var actionnablesAvecScript = actionnables.filter(function(e) {
                 return e.status === 'attente_validation_script'
                     || e.status === 'script_valide'
                     || e.status === 'attente_validation_montage'
                     || e.status === 'montage_valide';
             });
-            if (premierAvecScript) {
+            var cible = null;
+            if (_psInlineEpisodeId) {
+                cible = actionnablesAvecScript.find(function(e) {
+                    return e.episode_id === _psInlineEpisodeId;
+                });
+            }
+            if (!cible && actionnablesAvecScript.length > 0) {
+                cible = actionnablesAvecScript[0];
+            }
+            if (cible) {
                 btn.style.display = 'none';
-                psInlineLoadEpisode(premierAvecScript.episode_id);
+                psInlineLoadEpisode(cible.episode_id);
             }
         }
     } catch (err) {
