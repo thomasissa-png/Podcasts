@@ -1275,6 +1275,12 @@
 
             <!-- ── Zone de validation inline (script / audio / publication) ─── -->
             <div id="ps-inline-validation" style="display: none; margin-bottom: 1.5rem;">
+                <!-- Bandeau d'identification épisode -->
+                <div id="ps-iv-episode-banner" style="background: linear-gradient(135deg, rgba(91,155,213,0.12), rgba(91,155,213,0.04)); border: 1px solid var(--bleu-doux); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <span id="ps-iv-episode-id" style="font-weight: 800; font-size: 1.1rem; color: var(--turquoise); background: rgba(91,155,213,0.15); padding: 0.2rem 0.6rem; border-radius: 6px;"></span>
+                    <span id="ps-iv-episode-titre" style="font-weight: 700; font-size: 0.95rem; color: var(--texte);"></span>
+                    <span id="ps-iv-episode-meta" style="margin-left: auto; font-size: 0.8rem; color: var(--texte-dim);"></span>
+                </div>
                 <!-- Étapes visuelles -->
                 <div id="ps-iv-steps" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; font-size: 0.85rem; font-weight: 700;"></div>
 
@@ -1329,7 +1335,7 @@
                 <div id="ps-iv-audio-zone" style="display: none;">
                     <div class="card" style="margin-bottom: 1rem; border: 2px solid var(--bleu-doux);">
                         <div class="card-header" style="background: rgba(91,155,213,0.08);">
-                            <span class="icon">&#127911;</span> Écouter l'épisode
+                            <span class="icon">&#127911;</span> Écouter le montage
                         </div>
                         <div class="card-body" id="ps-iv-audio-body">
                             <p style="color: var(--texte-light);">Pas d'audio disponible.</p>
@@ -3172,6 +3178,18 @@ async function psInlineLoadEpisode(episodeId) {
         var hasScript = !!(ep.script);
         var hasAudio = !!(ep.audio_preview || ep.audio_hq);
 
+        /* ── Bandeau d'identification ── */
+        document.getElementById('ps-iv-episode-id').textContent = episodeId;
+        document.getElementById('ps-iv-episode-titre').textContent = ep.titre || '';
+        var metaParts = [];
+        if (ep.type) metaParts.push(ep.type);
+        if (ep.score_review) metaParts.push('Score : ' + ep.score_review + '/10');
+        if (ep.rapport && ep.rapport.debut) {
+            var d = new Date(ep.rapport.debut);
+            if (!isNaN(d)) metaParts.push('Produit le ' + d.toLocaleDateString('fr-FR'));
+        }
+        document.getElementById('ps-iv-episode-meta').textContent = metaParts.join(' — ');
+
         /* ── Étapes visuelles ── */
         var stepsHtml = '';
         var stepDef = [
@@ -3274,15 +3292,27 @@ function _renderAudioInline(ep, containerId) {
     var audioFile = ep.audio_preview || ep.audio_hq;
     if (!audioFile) { el.innerHTML = '<p style="color: var(--texte-light);">Pas d\'audio disponible.</p>'; return; }
     var cacheBust = '?v=' + Date.now();
-    var html = '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
-        + '<source src="/audio/episodes/' + escapeHtml(audioFile) + cacheBust + '" type="audio/mpeg"></audio>';
+
+    /* Informations de production du montage */
+    var infoHtml = '<div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem; font-size: 0.82rem; color: var(--texte-dim);">';
+    var montageData = (ep.rapport && ep.rapport.etapes && ep.rapport.etapes.montage) || {};
+    if (montageData.date || (ep.rapport && ep.rapport.debut)) {
+        var dateStr = montageData.date || ep.rapport.debut;
+        var d = new Date(dateStr);
+        if (!isNaN(d)) infoHtml += '<span>&#128197; ' + d.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}) + '</span>';
+    }
     if (ep.duree_secondes) {
         var min = Math.floor(ep.duree_secondes / 60);
         var sec = Math.round(ep.duree_secondes % 60);
-        html += '<p style="font-size: 0.82rem; color: var(--texte-dim);">Durée : ' + min + ':' + String(sec).padStart(2, '0');
-        if (ep.taille_mb) html += ' — ' + ep.taille_mb + ' MB';
-        html += '</p>';
+        infoHtml += '<span>&#9202; ' + min + ':' + String(sec).padStart(2, '0') + '</span>';
     }
+    if (ep.taille_mb) infoHtml += '<span>&#128190; ' + ep.taille_mb + ' MB</span>';
+    if (ep.score_review) infoHtml += '<span>&#11088; Script : ' + ep.score_review + '/10</span>';
+    infoHtml += '</div>';
+
+    var html = infoHtml;
+    html += '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
+        + '<source src="/audio/episodes/' + escapeHtml(audioFile) + cacheBust + '" type="audio/mpeg"></audio>';
     if (ep.audio_hq) {
         html += '<p style="margin-top: 0.3rem;"><a href="/audio/episodes/' + escapeHtml(ep.audio_hq) + '" download style="color: var(--turquoise); font-weight: 700; text-decoration: none; font-size: 0.85rem;">&#11015; Télécharger HQ</a></p>';
     }
