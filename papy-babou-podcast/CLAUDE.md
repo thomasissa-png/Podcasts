@@ -1770,3 +1770,128 @@ Complete rewrite of 5 audit agents with 9/10 minimum quality threshold.
 ### Git Workflow (Session 23)
 - Branch: `claude/episode-2-script-QbSiY`
 - Push: `git push -u origin claude/episode-2-script-QbSiY`
+
+## Checkpoint Corruption & Recovery (Session 24)
+
+### ROOT CAUSE: Test runs overwrite production checkpoints
+A test production of S01E01 (titre "Test", dry_run=true, type "standard") overwrote the real checkpoint (titre "La création du monde", type "ouverture", validation_humaine=true). When `continue-production` was called via web dashboard, it loaded the corrupted checkpoint → subprocess crashed → `web_job_id` never persisted → "90 tentatives" error.
+
+**Symptom**: `web_job_id non persisté pour S01E01 après 90 tentatives` — this is ALWAYS a symptom, never the root cause. It means the subprocess crashed before creating a production row in DB. Look at the checkpoint and rapport files to find the real cause.
+
+### How to restore a corrupted checkpoint
+When a checkpoint is corrupted (wrong title, wrong type, failed status from test run), manually recreate it:
+
+```json
+{
+  "episode_id": "S01EXX",
+  "etape": "waiting_script",
+  "timestamp": "2026-XX-XXTXX:XX:XX.000000",
+  "data": {
+    "episode_id": "S01EXX",
+    "titre": "[EXACT title from saison_01.json]",
+    "resume": "[from historique or script]",
+    "saison": 1,
+    "numero": X,
+    "morale": "[from script]",
+    "type_episode": "[ouverture|standard|mi-saison|final]",
+    "dry_run": false,
+    "rapport": {
+      "episode_id": "S01EXX",
+      "titre": "[same title]",
+      "dry_run": false,
+      "debut": "[original date]",
+      "etapes": {
+        "script": {
+          "status": "waiting_script",
+          "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01EXX_script.json",
+          "score_review": X.X,
+          "validation_humaine": true
+        }
+      },
+      "decisions_humaines": []
+    },
+    "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01EXX_script.json",
+    "pubdate_offset_seconds": [numero * 3600],
+    "stop_after": "script"
+  }
+}
+```
+
+**Critical fields**:
+- `etape`: must be `"waiting_script"` (not `"erreur"` or `"failed"`)
+- `validation_humaine`: must be `true` for audio production to proceed
+- `type_episode`: must match the season plan (ouverture for E01, standard for E02-E04/E06-E09, etc.)
+- `dry_run`: must be `false` for real production
+- `stop_after`: `"script"` if the script was produced with `--stop-after script`
+- Also restore `logs/S01EXX_rapport.json` with matching data
+
+### Prevention
+- NEVER run test/dry-run productions with the same episode_id as a real production
+- If you must test, use a different episode_id (e.g., S99E99)
+- Checkpoints are in `.gitignore` — they don't survive git operations. After any git pull/merge, verify checkpoint integrity before launching production
+
+## Custom Cover Art (Session 24)
+
+### How it works
+The pipeline now checks for custom cover art BEFORE calling DALL-E:
+1. Checks `assets/covers/{episode_id}_cover.png` (also .jpg, .jpeg)
+2. If found → uses it directly, no DALL-E call, no OpenAI cost
+3. If not found → generates via DALL-E as before
+4. Source tracked in `rapport["etapes"]["metadonnees"]["cover_art_source"]`: `"custom"` or `"dalle3"`
+
+### To add a custom cover for an episode
+```bash
+cp my_cover.png assets/covers/S01EXX_cover.png
+```
+That's it. The pipeline will detect and use it automatically.
+
+### Files
+- `coverepisode2.png` at repo root → copied to `assets/covers/S01E02_cover.png`
+- `assets/covers/S01E01_cover.png` — E01 cover (from Session 21)
+
+## Production Workflow — Step by Step (for future sessions)
+
+### Episode Production via Web Dashboard (the CORRECT flow)
+
+**Phase 1 — Script generation** (done in Claude Code session):
+1. Generate script via pipeline: `python main.py produire -e "Titre" -s 1 -n X -r "..." -m "..." --auto --stop-after script`
+2. Run Audio IA audit: `@audit-episode output/scripts/S01EXX_script.json`
+3. Apply P0+P1 corrections from audit
+4. Verify checkpoint file has correct data (especially `validation_humaine`, `type_episode`, `dry_run: false`)
+5. Verify rapport file has matching data
+
+**Phase 2 — Audio production** (via web dashboard):
+1. Open web dashboard → navigate to episode → click "Valider le script"
+2. This sets `validation_humaine: true` in checkpoint
+3. Click "Lancer la production audio" → calls `POST /api/episode/S01EXX/continue-production` with `{"phase": "audio"}`
+4. Auto-chaining: audio → SFX → montage (3 separate jobs, each ~10-15 min)
+5. Each job saves checkpoint → survives Replit redeploy
+
+**Phase 3 — Publication** (via web dashboard):
+1. Listen to montage preview
+2. Validate montage → click "Publier"
+3. Calls `continue-production` with `{"phase": "publication"}`
+
+### Debugging production failures
+1. **Check checkpoint**: `cat checkpoints/S01EXX_checkpoint.json` — is `etape` correct? Is `dry_run: false`? Is `validation_humaine: true`?
+2. **Check rapport**: `cat logs/S01EXX_rapport.json` — what's the `status`? Any `erreur`?
+3. **Check deployment logs**: The web server logs show subprocess stderr. Look for `[reprendre]` prefix lines.
+4. **"web_job_id non persisté"**: This is ALWAYS a symptom. The real error is in the checkpoint/rapport or subprocess stderr.
+5. **Restore from Object Storage**: If files are missing after redeploy, they should be auto-restored. If not, check `persistent_storage.py` functions.
+
+### S01E02 Status (Session 24)
+- Script: `output/scripts/S01E02_script.json` (65 KB, score 9.0/10)
+- Audits: SFX + voix + reviewer + copywriter completed
+- Cover art: `assets/covers/S01E02_cover.png` (custom, 1.9 MB)
+- Checkpoint: `waiting_script`, `validation_humaine: false` (needs web dashboard validation)
+- Next step: Validate script via web dashboard → launch audio production
+
+### S01E01 Status (Session 24 — restored)
+- Script: `output/scripts/S01E01_script.json` (190 segments, 3314 words, 41 SFX, score 9.2/10)
+- Cover art: `assets/covers/S01E01_cover.png`
+- Checkpoint: RESTORED — `waiting_script`, `validation_humaine: true`, type `ouverture`
+- Next step: Launch audio production via web dashboard (`continue-production` phase=audio)
+
+### Git Workflow (Session 24)
+- Branch: `claude/episode-2-script-QbSiY`
+- Push: `git push -u origin claude/episode-2-script-QbSiY`
