@@ -1,23 +1,21 @@
 {
   "episode_id": "S01E01",
-  "etape": "waiting_script",
-  "timestamp": "2026-03-20T06:46:39.946976",
+  "etape": "erreur",
+  "timestamp": "2026-03-22T13:33:44.355814",
   "data": {
     "episode_id": "S01E01",
-    "titre": "La création du monde — quand Dieu a tout inventé",
-    "resume": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
+    "titre": "Test",
+    "resume": "Résumé",
     "saison": 1,
     "numero": 1,
-    "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
-    "type_episode": "ouverture",
-    "dry_run": false,
-    "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01E01_script.json",
-    "stop_after": "script",
+    "morale": "",
+    "type_episode": "standard",
+    "dry_run": true,
     "rapport": {
       "episode_id": "S01E01",
-      "titre": "La création du monde — quand Dieu a tout inventé",
-      "dry_run": false,
-      "debut": "2026-03-20T06:46:39.946689",
+      "titre": "Test",
+      "dry_run": true,
+      "debut": "2026-03-22T13:33:44.164427",
       "etapes": {
         "script": {
           "status": "waiting_script",
@@ -26,7 +24,12 @@
           "validation_humaine": false
         }
       },
+      "erreur": "Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CZJCpTAZbfF35UAXxPJvB'}",
+      "status": "failed",
+      "fin": "2026-03-22T13:33:44.355214",
       "decisions_humaines": []
-    }
+    },
+    "pubdate_offset_seconds": 0,
+    "stop_after": ""
   }
 }
