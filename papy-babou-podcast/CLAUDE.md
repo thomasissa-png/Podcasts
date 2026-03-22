@@ -2002,3 +2002,13 @@ All 24 rules stored in `data/preferences_producteur.json` and auto-injected into
 3. Run `@audit-episode` after generation to verify compliance
 4. Cold open pattern: E01 = car arrival + excitement, E02 = weather + Papy comforts → pick context matching the story
 5. Personal parallel pattern: E02's Antoine/Maxime schoolyard courage = gold standard for emotional peaks
+
+## Character Avatars — ABSOLUTE RULE (DO NOT CHANGE)
+- **Source file**: `assets/artwork/personnages.png` — 2x2 grid with all 4 characters
+- **Avatar files**: `avatar_papy.png`, `avatar_antoine.png`, `avatar_noemie.png`, `avatar_mamie.png` in `assets/artwork/`
+- **How they were made**: Extracted from `personnages.png` by detecting quadrant boundaries, tight-cropped, squared on white background
+- **NEVER re-crop from `cover_base.png`** — that image has overlapping characters, bad framing
+- **NEVER use `object-fit: cover`** on avatars — images are already square, just use simple `<img>` sizing
+- **NEVER add `overflow: hidden`** on avatar containers — causes edge clipping
+- **CSS rule**: `.char-avatar img { width: 56px; height: 56px; display: block; border-radius: 12px; }` — no object-fit, no overflow
+- This rule has been violated 3+ times — treat any avatar regression as a blocking bug
