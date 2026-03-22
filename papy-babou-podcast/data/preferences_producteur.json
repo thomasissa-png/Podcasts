@@ -118,5 +118,29 @@
     "source_episode": "S01E01,S01E02",
     "categorie": "structure",
     "date": "2026-03-22"
+  },
+  {
+    "regle": "TRANSITION SCÈNE DE VIE → RÉCIT BIBLIQUE : La transition vers l'histoire biblique doit TOUJOURS naître d'une QUESTION ou OBSERVATION SPONTANÉE d'un enfant, jamais d'une annonce de Papy ('Aujourd'hui je vais vous raconter...'). L'enfant remarque quelque chose dans le quotidien qui rappelle l'histoire biblique. Exemples validés : E01 = Noémie demande 'C'est qui qui a fait les fleurs ?' en voyant le jardin → Papy enchaîne sur la Création. E02 = Il pleut fort → Papy dit 'La pluie me rappelle une histoire...' → Noé. Le prétexte doit être NATUREL et lié au contexte de la scène de vie.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "structure",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "RUNNING GAG OBLIGATOIRE : Chaque épisode doit installer UN running gag récurrent, introduit avant le segment 25, avec un callback au moment du climax émotionnel. Le running gag doit être porté par Noémie ou Mamie (jamais Papy). Exemples validés : E01 = les sablés étoiles de Mamie (introduits seg_024, callback à la morale, re-mentionnés au départ). E02 = Noémie demande 'Un gâteau ?' à des moments inappropriés (dove qui revient avec le rameau → 'Un gâteau ?' = décalage comique parfait). Le running gag casse le rythme et crée de l'attente chez l'auditeur.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "engagement",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "3 PICS ÉMOTIONNELS PAR ÉPISODE : Chaque épisode doit contenir exactement 3 pics émotionnels distribués sur les 3 actes, chacun reliant l'histoire biblique à la VIE RÉELLE de l'enfant auditeur. Pattern validé : Pic 1 (Acte 1) = souvenir personnel de Papy ou anecdote familiale. Pic 2 (Acte 2) = parallèle entre le personnage biblique et une situation quotidienne d'enfant (école, amis, fratrie). Pic 3 (Acte 3) = connexion familiale (naissance de Lucas, lien grands-parents). Exemples : E02 = Antoine compare le courage de Noé avec Maxime qui se fait moquer à l'école → c'est le cœur émotionnel de l'épisode. C'est ce qui différencie le podcast du catéchisme audio.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "engagement",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "ANTOINE = QUESTIONS SCIENTIFIQUES, NOÉMIE = RÉACTIONS ÉMOTIONNELLES : Ne jamais intervertir les rôles. Antoine pose des questions de logique, science, comparaison ('C'est plus gros qu'un terrain de foot ?', 'Comment il savait construire un bateau ?'). Noémie réagit avec empathie, indignation ou émerveillement ('C'est pas gentil de se moquer !', 'C'est trop beau !', 'Il avait pas peur ?'). Alterner systématiquement : Antoine scientifique → Noémie émotionnelle → Antoine logique → Noémie wonder. Jamais deux questions du même type à la suite.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "personnages",
+    "date": "2026-03-22"
   }
 ]
