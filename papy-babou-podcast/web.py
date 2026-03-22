@@ -2033,17 +2033,43 @@ def api_validate_episode(episode_id):
         except Exception as e:
             logger.debug("Object Storage indisponible pour rapport : %s", e)
 
-        # Si validation du script → marquer le script comme validé en DB
-        # et sauvegarder le checkpoint/script en Object Storage
+        # Si validation du script → créer _valide.json, mettre à jour checkpoint, sync DB
         if step == "script" and action == "validate":
+            # CRITICAL: Créer _valide.json à partir de _script.json
+            # Le pipeline (reprendre) cherche _valide.json pour l'étape audio.
+            # Sans ce fichier, il crash immédiatement avec FileNotFoundError.
+            valide_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+            script_source = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+            if not valide_path.exists() and script_source.exists():
+                import shutil
+                shutil.copy2(script_source, valide_path)
+                logger.info("Script validé créé : %s → %s", script_source.name, valide_path.name)
+
+            # CRITICAL: Mettre à jour validation_humaine dans le checkpoint
+            # Le pipeline lit cette valeur depuis checkpoint_data.etapes.script
+            checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+            if checkpoint_path.exists():
+                try:
+                    with fichier_lock(checkpoint_path):
+                        with open(checkpoint_path, "r", encoding="utf-8") as f:
+                            cp = _json.load(f)
+                        cp_data = cp.get("data", cp)
+                        cp_rapport = cp_data.setdefault("rapport", {})
+                        cp_rapport.setdefault("etapes", {}).setdefault("script", {})
+                        cp_rapport["etapes"]["script"]["validation_humaine"] = True
+                        with open(checkpoint_path, "w", encoding="utf-8") as f:
+                            _json.dump(cp, f, ensure_ascii=False, indent=2)
+                    logger.info("Checkpoint %s mis à jour : validation_humaine=True", episode_id)
+                except Exception as cp_err:
+                    logger.warning("Échec mise à jour checkpoint %s : %s", episode_id, cp_err)
+
             _sync_script_validated_to_db(episode_id)
             _sync_checkpoint_to_db(episode_id)
             # Upload script validé et checkpoint en Object Storage
             try:
                 import persistent_storage
-                script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
-                if script_path.exists():
-                    persistent_storage.upload_script(episode_id, script_path)
+                if valide_path.exists():
+                    persistent_storage.upload_script(episode_id, valide_path)
                 checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
                 if checkpoint_path.exists():
                     persistent_storage.upload_checkpoint(episode_id, checkpoint_path)

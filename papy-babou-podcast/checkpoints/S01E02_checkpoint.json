@@ -21,7 +21,7 @@
           "status": "waiting_script",
           "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01E02_script.json",
           "score_review": 9.0,
-          "validation_humaine": false
+          "validation_humaine": true
         }
       },
       "decisions_humaines": []

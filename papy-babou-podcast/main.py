@@ -2626,6 +2626,15 @@ def _pipeline_inner(
 
     # Si on reprend, charger le script existant et restaurer le score
     if etape_idx > 0:
+        # Fallback : si _valide.json n'existe pas mais _script.json oui, copier
+        # (cas fréquent : validation web crée le checkpoint mais pas le _valide.json
+        # — ou redéploiement perd le _valide.json mais pas le _script.json)
+        if not chemin_valide.exists():
+            script_source = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+            if script_source.exists():
+                import shutil
+                shutil.copy2(script_source, chemin_valide)
+                logger.info("Script _valide créé depuis _script.json : %s", chemin_valide)
         # Restaurer depuis Object Storage / DB si le fichier local est absent
         # (cas fréquent après un redéploiement Replit qui remet le FS à zéro)
         if not chemin_valide.exists():
