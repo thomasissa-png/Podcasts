@@ -3,63 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Les Histoires de Papy Babou</title>
+    <title>Back Office — Les Histoires de Papy Babou</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/artwork/favicon2.png">
     <link rel="icon" type="image/svg+xml" href="/assets/artwork/favicon.svg">
-    <link rel="icon" type="image/svg+xml" sizes="32x32" href="/assets/artwork/favicon_32.svg">
-    <link rel="icon" type="image/svg+xml" sizes="16x16" href="/assets/artwork/favicon_16.svg">
-    <link rel="apple-touch-icon" href="/assets/artwork/apple-touch-icon.svg">
+    <link rel="apple-touch-icon" href="/assets/artwork/favicon2.png">
+    <link rel="manifest" href="/assets/manifest.json">
     <meta name="theme-color" content="#5B9BD5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════════════════════════
-           PALETTE PAPY BABOU — Chaud & Enfantin (inspiré Minilek)
+           PALETTE PAPY BABOU — Alignée sur identité visuelle
+           Ref: CLAUDE.md "Identite Visuelle & Design System"
            ═══════════════════════════════════════════════════════════════ */
         :root {
-            --soleil: #E8C84A;
-            --corail: #D94452;
-            --turquoise: #13A69C;
-            --bleu-doux: #7BCBF5;
+            --soleil: #FFD234;           /* doré-light — accents, titres */
+            --dore: #E8A020;             /* doré — CTA, badges */
+            --corail: #F26B5E;           /* alertes, accents (aligné public) */
+            --turquoise: #13A69C;        /* stat cards */
+            --bleu-doux: #8ECFF5;        /* gradients légers (aligné spec) */
             --rose-tendre: #E895A8;
-            --vert-prairie: #5DBD72;
+            --vert-prairie: #5DBD72;     /* badges écoute */
             --violet-doux: #A78BDB;
-            --orange-chaud: #5B9BD5;
-            --sable: #FFF8ED;
+            --bleu-accent: #5B9BD5;      /* bleu nuit — thème principal */
+            --orange-chaud: #5B9BD5;     /* alias rétrocompat → bleu-accent */
+            --sable: #FFF8ED;            /* fond de page (aligné spec) */
             --blanc: #FFFFFF;
-            --fond: #FFFAF2;
+            --fond: #FFF8ED;             /* aligné --sable (était #FFFAF2) */
             --fond-carte: #FFFFFF;
             --texte: #2D2D2D;
             --texte-dim: #5A6B78;
             --texte-light: #8A9AAE;
             --border: #EDE4D4;
             --border-hover: #D4CFC0;
-            --ombre: 0 2px 12px rgba(74, 159, 229, 0.08);
-            --ombre-hover: 0 4px 20px rgba(74, 159, 229, 0.14);
+            --ombre: 0 2px 12px rgba(91, 155, 213, 0.08);
+            --ombre-hover: 0 4px 20px rgba(91, 155, 213, 0.14);
             --radius: 18px;
             --radius-sm: 12px;
             --radius-xs: 8px;
+            --font-display: 'Baloo 2', 'Nunito', sans-serif;
+            --font-body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+            font-family: var(--font-body);
             background: var(--fond);
             color: var(--texte);
             line-height: 1.6;
             min-height: 100vh;
         }
 
+        h1, h2, h3, .page-header h2, .section-title {
+            font-family: var(--font-display);
+        }
+
         /* ── Header ──────────────────────────────────────────────── */
         .header {
-            background: linear-gradient(135deg, #4A9FE5 0%, #7BCBF5 100%);
+            background: linear-gradient(135deg, var(--bleu-accent) 0%, var(--bleu-doux) 100%);
             padding: 1.25rem 2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 1rem;
-            box-shadow: 0 4px 20px rgba(74, 159, 229, 0.3);
+            box-shadow: 0 4px 20px rgba(91, 155, 213, 0.3);
         }
 
         .header-title {
@@ -706,7 +716,14 @@
             word-break: break-word;
             display: none;
             margin-top: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: #5A5548 #2D2A24;
         }
+
+        .console-output::-webkit-scrollbar { width: 8px; }
+        .console-output::-webkit-scrollbar-track { background: #2D2A24; border-radius: 4px; }
+        .console-output::-webkit-scrollbar-thumb { background: #5A5548; border-radius: 4px; }
+        .console-output::-webkit-scrollbar-thumb:hover { background: #7A7568; }
 
         .console-output.show { display: block; }
 
@@ -896,7 +913,7 @@
 
             .nav-tab {
                 padding: 0.7rem 0.65rem;
-                font-size: 0.72rem;
+                font-size: 0.8rem;
                 min-height: 44px;
             }
             .nav-tab .tab-icon { font-size: 1rem; }
@@ -963,7 +980,7 @@
         @media (max-width: 480px) {
             .nav-tab {
                 padding: 0.65rem 0.5rem;
-                font-size: 0.68rem;
+                font-size: 0.75rem;
             }
 
             .main { padding: 0.75rem; }
@@ -987,13 +1004,13 @@
 
         /* ── Delete episode ──────────────────────────────────────────── */
         .btn-danger {
-            background: #DC3545;
+            background: var(--corail);
             color: var(--blanc);
             border: none;
         }
 
         .btn-danger:hover {
-            background: #C82333;
+            background: #D94A3C;
         }
 
         .delete-confirm-zone {
