@@ -5,4 +5,4 @@ __pycache__/
 *.pyc
 .venv/
 venv/
-papy-babou-podcast/logs/production.log
+logs/production.log
