@@ -621,6 +621,7 @@ def _sigterm_handler(signum, frame):
                 "rapport": rapport,
                 "pubdate_offset_seconds": pipeline_ctx.get("pubdate_offset_seconds", 0),
                 "stop_after": pipeline_ctx.get("stop_after", ""),
+                "script_content_hash": pipeline_ctx.get("script_content_hash", ""),
             })
         except Exception as e:
             logger.error("Impossible de sauvegarder le checkpoint SIGTERM : %s", e)
@@ -2412,6 +2413,7 @@ def pipeline(
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
                 "stop_after": stop_after,
+                "script_content_hash": rapport.get("script_content_hash", ""),
             })
         except Exception:
             logger.debug("Impossible de sauvegarder le checkpoint d'erreur")
