@@ -93,7 +93,7 @@
       {
         "id": "seg_009",
         "personnage": "mamie_sonia",
-        "texte": "Bien sûr ma puce, trois chamallows chacun. Et il y a un cake à l'orange qui refroidit dans la cuisine.",
+        "texte": "Bien sûr ma puce, trois chamallows chacun. Et il y a un gâteau à l'orange qui refroidit dans la cuisine.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 250
@@ -640,7 +640,7 @@
       {
         "id": "seg_065",
         "personnage": "papy_babou",
-        "texte": "Le cake de Mamie attend sagement dans la cuisine, ma puce. Il ne va pas s'envoler. Alors, quand tous les animaux furent entrés, Noé et sa famille sont montés à bord.",
+        "texte": "Le gâteau de Mamie attend sagement dans la cuisine, ma puce. Il ne va pas s'envoler. Alors, quand tous les animaux furent entrés, Noé et sa famille sont montés à bord.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -1295,7 +1295,7 @@
       {
         "id": "seg_116",
         "personnage": "mamie_sonia",
-        "texte": "Mon chéri, c'est l'heure du cake à l'orange. On peut écouter la fin en mangeant, non ?",
+        "texte": "Mon chéri, c'est l'heure du gâteau à l'orange. On peut écouter la fin en mangeant, non ?",
         "ton": "espiègle",
         "rythme": "normal",
         "pause_apres_ms": 250
@@ -1303,7 +1303,7 @@
       {
         "id": "seg_117",
         "personnage": "noemie",
-        "texte": "Oui ! Le cake ! Le cake !",
+        "texte": "Oui ! Le gâteau ! Le gâteau !",
         "ton": "excite",
         "rythme": "rapide",
         "pause_apres_ms": 200
@@ -1425,7 +1425,7 @@
       {
         "id": "seg_130",
         "personnage": "noemie",
-        "texte": "Merci Papy Babou ! Et merci Mamie pour le cake à l'orange !",
+        "texte": "Merci Papy Babou ! Et merci Mamie pour le gâteau à l'orange !",
         "ton": "joyeux",
         "rythme": "rapide",
         "pause_apres_ms": 200

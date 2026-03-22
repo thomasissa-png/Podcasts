@@ -678,9 +678,10 @@ class Monteur:
                 del intro, outro, signature
                 gc.collect()
 
-                # Concaténer : signature + intro + voix_fond + outro + signature
+                # Concaténer : intro + voix_fond + outro + signature
+                # (signature uniquement en fin — évite 5s de vide au début)
                 # Diagnostic : log sample rates pour détecter les incohérences
-                _concat_inputs = [sig_wav, intro_wav, voix_fond_wav, outro_wav, sig_wav]
+                _concat_inputs = [intro_wav, voix_fond_wav, outro_wav, sig_wav]
                 for _ci in _concat_inputs:
                     _sr = self._ffprobe_sample_rate(_ci)
                     _d = self._ffprobe_duration(_ci)
@@ -2186,8 +2187,7 @@ class Monteur:
         signature = signature.fade_in(200).fade_out(300)
 
         return (
-            signature + silence_transition
-            + intro + silence_transition
+            intro + silence_transition
             + voix_avec_fond
             + silence_transition + outro
             + silence_transition + signature
@@ -2202,10 +2202,10 @@ class Monteur:
         plutôt que du texte tronqué.
         """
         chapitres = []
-        # Offset initial : signature + silence + intro jingle + silence transition
-        signature_ms = 5000  # Durée signature jingle (cf. _charger_signature: 5s)
+        # Offset initial : intro jingle + silence transition
+        # (signature supprimée du début — uniquement en fin d'épisode)
         intro_ms = config.PRODUCTION["intro_jingle_duree_ms"]
-        temps_courant_ms = signature_ms + SILENCE_TRANSITION_MS + intro_ms + SILENCE_TRANSITION_MS
+        temps_courant_ms = intro_ms + SILENCE_TRANSITION_MS
 
         # Identifier les chapitres logiques (max 5-7 chapitres)
         nb_segments_depuis_chapitre = 0
