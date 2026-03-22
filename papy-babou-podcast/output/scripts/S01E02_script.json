@@ -378,6 +378,22 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "seg_033b",
+        "personnage": "papy_babou",
+        "texte": "Et figurez-vous que des scientifiques ont calculé que l'arche aurait pu transporter autant de choses que cinq cents wagons de train. Cinq cents !",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_033c",
+        "personnage": "antoine",
+        "texte": "Cinq cents wagons ? Mais c'est le plus gros bateau du monde !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
         "id": "seg_034",
         "personnage": "mamie_sonia",
         "texte": "Tu sais Antoine, le cyprès, c'est un arbre magnifique. Au Liban, il y a les fameux cèdres. Des arbres tellement grands et forts que les rois venaient de loin pour les utiliser.",
@@ -796,6 +812,14 @@
         "pause_apres_ms": 400
       },
       {
+        "id": "seg_074c",
+        "personnage": "papy_babou",
+        "texte": "Dieu était triste pour eux aussi, tu sais. Il avait essayé de les prévenir par Noé. Mais ils n'avaient pas voulu écouter.",
+        "ton": "triste",
+        "rythme": "lent",
+        "pause_apres_ms": 350
+      },
+      {
         "id": "seg_074b",
         "personnage": "antoine",
         "texte": "Ils auraient dû écouter Noé.",
@@ -849,7 +873,7 @@
         "personnage": "papy_babou",
         "texte": "Figure-toi que pendant la pire nuit de la tempête, une vague gigantesque a frappé l'arche. Tout a tremblé à l'intérieur. Les animaux criaient, le bois craquait de partout.",
         "ton": "dramatique",
-        "rythme": "lent",
+        "rythme": "rapide",
         "pause_apres_ms": 400
       },
       {
@@ -1008,6 +1032,15 @@
         "pause_apres_ms": 500,
         "duree_sfx_secondes": 8.0,
         "mode": "insert"
+      },
+      {
+        "id": "sfx_014b",
+        "personnage": "sfx",
+        "texte": "calm open water surface, gentle lapping waves against wooden hull, light breeze, distant seabird call",
+        "ton": "ambiance",
+        "pause_apres_ms": 0,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_087",
