@@ -4045,8 +4045,33 @@ def _pipeline_inner(
             except Exception as e:
                 logger.warning("DB indisponible pour métadonnées : %s", e)
 
-        # Générer le cover art si configuré
-        if meta.get("cover_art_prompt") and config.COVER_ART_CONFIG.get("enabled"):
+        # Vérifier si un cover art custom existe déjà (fourni manuellement)
+        cover_custom = None
+        for ext in (".png", ".jpg", ".jpeg"):
+            p = config.COVERS_DIR / f"{episode_id}_cover{ext}"
+            if p.exists():
+                cover_custom = p
+                break
+
+        if cover_custom:
+            # Cover art custom fourni — pas de génération DALL-E
+            meta["cover_art_path"] = str(cover_custom)
+            metadonnees.sauvegarder(meta, chemin_meta)
+            rapport["etapes"]["metadonnees"]["cover_art_path"] = str(cover_custom)
+            rapport["etapes"]["metadonnees"]["cover_art_source"] = "custom"
+            console.print(f"  Cover art custom détecté : {cover_custom}")
+
+            # Upload cover art vers Object Storage
+            try:
+                import persistent_storage
+                cover_key = persistent_storage.upload_cover(episode_id, cover_custom)
+                if cover_key:
+                    rapport["etapes"]["metadonnees"]["object_storage_cover"] = cover_key
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour cover art : %s", e)
+
+        elif meta.get("cover_art_prompt") and config.COVER_ART_CONFIG.get("enabled"):
+            # Générer le cover art via DALL-E
             console.print("  Génération du cover art...")
             cover_agent = CoverArt()
             cover_path = cover_agent.generer(meta["cover_art_prompt"], episode_id)
@@ -4054,6 +4079,7 @@ def _pipeline_inner(
                 meta["cover_art_path"] = str(cover_path)
                 metadonnees.sauvegarder(meta, chemin_meta)
                 rapport["etapes"]["metadonnees"]["cover_art_path"] = str(cover_path)
+                rapport["etapes"]["metadonnees"]["cover_art_source"] = "dalle3"
                 console.print(f"  Cover art : {cover_path}")
                 rapport["etapes"]["metadonnees"]["cover_art_cout"] = config.COUTS["openai_dalle3_par_image"]
 
