@@ -2767,6 +2767,14 @@ def api_prochain_episode(saison_num):
         validation_script = False
         validation_montage = False
 
+        # Info fichier script (date de dernière modification)
+        script_path = config.SCRIPTS_DIR / f"{ep_id}_script.json"
+        script_modifie = None
+        if script_path.exists():
+            import datetime as _dt
+            mtime = script_path.stat().st_mtime
+            script_modifie = _dt.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+
         rapport = dashboard_data_mod.charger_rapport(ep_id)
         if rapport:
             etapes = rapport.get("etapes", {})
@@ -2784,7 +2792,9 @@ def api_prochain_episode(saison_num):
                     status = "attente_validation_montage"
                 else:
                     status = "script_valide"
-            elif etapes.get("script", {}).get("chemin") or rapport.get("status") == "waiting_validation":
+            elif (etapes.get("script", {}).get("chemin")
+                  or etapes.get("script", {}).get("script_path")
+                  or rapport.get("status") in ("waiting_validation", "waiting_script")):
                 # Script existe (produit ou rejeté) → en attente de validation
                 # BUG #3: Après rejet, validation_humaine=False mais le script existe
                 # toujours — l'utilisateur doit pouvoir le modifier/régénérer
@@ -2794,6 +2804,10 @@ def api_prochain_episode(saison_num):
         elif checkpoint_path.exists():
             status = "en_cours"
 
+        # Fallback : si le script existe sur le disque, c'est au moins attente_validation_script
+        if status in ("a_faire", "en_cours") and script_path.exists():
+            status = "attente_validation_script"
+
         episodes_status.append({
             "numero": ep["numero"],
             "episode_id": ep_id,
@@ -2802,29 +2816,29 @@ def api_prochain_episode(saison_num):
             "status": status,
             "validation_script": validation_script,
             "validation_montage": validation_montage,
+            "script_modifie": script_modifie,
         })
 
-    # Trouver le prochain épisode à produire (premier non terminé)
-    # B3: Un épisode est "prêt" quand script ET montage sont validés
-    # (pas besoin d'attendre la publication pour passer au suivant)
+    # Identifier tous les épisodes actionnables (pas de blocage séquentiel)
     STATUTS_PRETS = ("termine", "montage_valide")
-    prochain = None
-    bloque_par = None
-    for i, ep_s in enumerate(episodes_status):
-        if ep_s["status"] in STATUTS_PRETS:
-            continue
-        # Vérifier que l'épisode précédent est prêt (sauf pour le premier)
-        if i > 0 and episodes_status[i - 1]["status"] not in STATUTS_PRETS:
-            bloque_par = episodes_status[i - 1]
-        prochain = ep_s
-        break
+    STATUTS_ACTIONNABLES = (
+        "attente_validation_script", "script_valide",
+        "attente_validation_montage", "a_faire",
+    )
+    actionnables = [
+        ep_s for ep_s in episodes_status
+        if ep_s["status"] in STATUTS_ACTIONNABLES
+    ]
+    # Rétrocompatibilité : prochain = premier actionnable, bloque_par toujours None
+    prochain = actionnables[0] if actionnables else None
 
     return jsonify({
         "saison": saison_num,
         "theme": saison_data.get("theme", ""),
         "episodes": episodes_status,
         "prochain": prochain,
-        "bloque_par": bloque_par,
+        "bloque_par": None,
+        "actionnables": actionnables,
         "total": len(episodes_plan),
         "termines": sum(1 for e in episodes_status if e["status"] == "termine"),
     })
@@ -2832,11 +2846,10 @@ def api_prochain_episode(saison_num):
 
 @app.route("/api/produire-saison", methods=["POST"])
 def api_produire_saison():
-    """Produit le prochain épisode d'une saison (un seul à la fois).
+    """Produit un épisode d'une saison (un seul à la fois).
 
-    La production sérielle est séquentielle : chaque épisode doit être validé
-    avant de passer au suivant, pour que le scripteur puisse lire les scripts
-    précédents et assurer la continuité narrative.
+    La production est libre : n'importe quel épisode dont le script est prêt
+    peut être lancé en production audio, indépendamment de l'ordre.
     """
     err = _check_api_key("ANTHROPIC_API_KEY")
     if err:
@@ -2863,26 +2876,6 @@ def api_produire_saison():
         return jsonify({"error": f"Épisode {numero} introuvable dans le plan de saison {saison}."}), 404
 
     episode_id = f"S{saison:02d}E{numero:02d}"
-
-    # Vérifier que les épisodes précédents sont terminés (DB + fichier)
-    for n in range(1, numero):
-        prev_id = f"S{saison:02d}E{n:02d}"
-        rp = dashboard_data_mod.charger_rapport(prev_id)
-        if not rp:
-            return jsonify({
-                "error": f"L'épisode {prev_id} doit être terminé avant de produire {episode_id}. "
-                         f"La production sérielle est séquentielle."
-            }), 409
-        etapes = rp.get("etapes", {})
-        script_ok = etapes.get("script", {}).get("validation_humaine", False)
-        montage_ok = etapes.get("montage", {}).get("validation_humaine", False)
-        if not (script_ok and montage_ok):
-            return jsonify({
-                "error": f"L'épisode {prev_id} n'est pas entièrement validé "
-                         f"(script: {'OK' if script_ok else 'en attente'}, "
-                         f"montage: {'OK' if montage_ok else 'en attente'}). "
-                         f"Terminez-le avant de passer à {episode_id}."
-            }), 409
 
     # Produire l'épisode avec --stop-after script (workflow séquentiel)
     cmd = [

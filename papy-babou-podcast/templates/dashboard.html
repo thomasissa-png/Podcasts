@@ -2955,82 +2955,66 @@ async function loadSaisonProgress() {
         if (data.theme) html += '<strong>Thème :</strong> ' + escapeHtml(data.theme) + ' — ';
         html += '<strong>' + data.termines + '/' + data.total + '</strong> épisodes terminés</div>';
 
-        /* Grille des épisodes */
+        /* Grille des épisodes — cliquables */
+        var actionnableIds = new Set((data.actionnables || []).map(function(e) { return e.episode_id; }));
         html += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">';
         for (var i = 0; i < data.episodes.length; i++) {
             var ep = data.episodes[i];
             var color = statusColors[ep.status] || 'var(--border)';
             var label = statusLabels[ep.status] || ep.status;
-            var isNext = data.prochain && ep.episode_id === data.prochain.episode_id;
-            var border = isNext ? '3px solid var(--turquoise)' : '1px solid ' + color;
-            html += '<div style="border: ' + border + '; border-radius: 8px; padding: 0.5rem 0.75rem; min-width: 120px; background: var(--fond-sidebar); text-align: center;">';
+            var isActionnable = actionnableIds.has(ep.episode_id);
+            var isSelected = _psInlineEpisodeId === ep.episode_id;
+            var border = isSelected ? '3px solid var(--turquoise)' : (isActionnable ? '2px solid var(--orange-chaud)' : '1px solid ' + color);
+            var cursor = (isActionnable || ep.status !== 'a_faire') ? 'pointer' : 'default';
+            var onclick = (isActionnable || ep.status !== 'a_faire') ? ' onclick="psSelectEpisode(\'' + ep.episode_id + '\', ' + ep.numero + ')"' : '';
+            html += '<div style="border: ' + border + '; border-radius: 8px; padding: 0.5rem 0.75rem; min-width: 120px; background: var(--fond-sidebar); text-align: center; cursor: ' + cursor + ';"' + onclick + '>';
             html += '<div style="font-weight: 700; font-size: 0.9rem;">' + escapeHtml(ep.episode_id) + '</div>';
             html += '<div style="font-size: 0.78rem; color: var(--texte-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" title="' + escapeHtml(ep.titre) + '">' + escapeHtml(ep.titre) + '</div>';
             html += '<div style="font-size: 0.72rem; margin-top: 0.25rem; color: ' + color + '; font-weight: 600;">' + label + '</div>';
+            if (ep.script_modifie) {
+                html += '<div style="font-size: 0.65rem; margin-top: 0.15rem; color: var(--texte-light);">Script : ' + escapeHtml(ep.script_modifie) + '</div>';
+            }
             html += '</div>';
         }
         html += '</div>';
         zone.innerHTML = html;
 
-        /* Afficher le prochain épisode ou le message */
-        if (!data.prochain) {
+        /* Afficher l'état global et les épisodes actionnables */
+        var actionnables = data.actionnables || [];
+        if (actionnables.length === 0 && !data.prochain) {
             /* Tous terminés */
             completeZone.style.display = 'block';
-        } else if (data.bloque_par) {
-            /* Bloqué par un épisode précédent — afficher la validation inline
-               pour l'épisode bloquant directement */
-            var blocker = data.bloque_par;
-            var needsInlineBlocker = (blocker.status.includes('attente_validation') || blocker.status.includes('valide'));
-            if (needsInlineBlocker) {
-                /* Afficher la validation inline pour l'épisode bloquant */
-                nextZone.style.display = 'block';
-                document.getElementById('ps-next-titre').textContent = blocker.episode_id + ' — en attente de validation';
-                document.getElementById('ps-next-details').innerHTML =
-                    '<span style="font-size: 0.85rem; color: var(--orange-chaud);">' + escapeHtml(statusLabels[blocker.status] || blocker.status) + '</span>'
-                    + ' <span style="font-size: 0.82rem; color: var(--texte-dim);">(puis ' + escapeHtml(data.prochain.episode_id) + ')</span>';
-                document.getElementById('btn-produire-saison').style.display = 'none';
-                psInlineLoadEpisode(blocker.episode_id);
-            } else {
-                blockedZone.style.display = 'block';
-                var msg = 'L\'épisode <strong>' + escapeHtml(blocker.episode_id)
-                    + '</strong> (' + escapeHtml(statusLabels[blocker.status] || blocker.status) + ') '
-                    + 'doit être terminé avant de produire <strong>' + escapeHtml(data.prochain.episode_id) + '</strong>.';
-                document.getElementById('ps-blocked-msg').innerHTML = msg;
-                nextZone.style.display = 'block';
-                document.getElementById('ps-next-titre').textContent = 'Prochain : ' + data.prochain.episode_id + ' — ' + data.prochain.titre;
-                document.getElementById('ps-next-details').innerHTML =
-                    '<span style="font-size: 0.85rem; color: var(--texte-dim);">Type : ' + escapeHtml(data.prochain.type) + '</span>';
-                document.getElementById('btn-produire-saison').disabled = true;
-                document.getElementById('btn-produire-saison').style.display = '';
-            }
         } else {
-            /* Prêt à produire */
-            var ep = data.prochain;
+            /* Afficher un résumé des épisodes actionnables */
             nextZone.style.display = 'block';
-            document.getElementById('ps-next-titre').textContent = 'Prochain : ' + ep.episode_id + ' — ' + ep.titre;
-            var details = '<span style="font-size: 0.85rem;">Type : <strong>' + escapeHtml(ep.type) + '</strong></span>';
-            if (ep.status !== 'a_faire') {
-                details += ' &mdash; <span style="color: var(--orange-chaud);">' + escapeHtml(statusLabels[ep.status] || ep.status) + '</span>';
-            }
-            document.getElementById('ps-next-details').innerHTML = details;
+            var nActionnables = actionnables.length;
+            document.getElementById('ps-next-titre').textContent = nActionnables + ' épisode(s) en attente d\'action';
+            document.getElementById('ps-next-details').innerHTML =
+                '<span style="font-size: 0.85rem; color: var(--texte-dim);">Cliquez sur un épisode ci-dessus pour le gérer</span>';
+
+            /* Si un seul épisode actionnable et c'est "a_faire", proposer le bouton directement */
+            var aFaire = actionnables.filter(function(e) { return e.status === 'a_faire'; });
             var btn = document.getElementById('btn-produire-saison');
-
-            /* Si l'épisode est en attente de validation ou a des étapes intermédiaires,
-               afficher la zone de validation inline (pas de navigation vers Section 6) */
-            var needsInline = (ep.status === 'attente_validation_script'
-                || ep.status === 'script_valide'
-                || ep.status === 'attente_validation_montage'
-                || ep.status === 'montage_valide');
-
-            if (needsInline) {
-                btn.style.display = 'none';
-                psInlineLoadEpisode(ep.episode_id);
-            } else {
+            if (aFaire.length > 0) {
                 btn.style.display = '';
                 btn.disabled = false;
                 btn.innerHTML = '&#127908; Lancer le script';
-                /* Masquer la zone inline si elle était visible d'un épisode précédent */
-                document.getElementById('ps-inline-validation').style.display = 'none';
+                /* Le bouton lance le premier "a_faire" par défaut */
+                _psSelectedNumero = aFaire[0].numero;
+            } else {
+                btn.style.display = 'none';
+            }
+
+            /* Auto-charger le premier actionnable en inline s'il a un script */
+            var premierAvecScript = actionnables.find(function(e) {
+                return e.status === 'attente_validation_script'
+                    || e.status === 'script_valide'
+                    || e.status === 'attente_validation_montage'
+                    || e.status === 'montage_valide';
+            });
+            if (premierAvecScript) {
+                btn.style.display = 'none';
+                psInlineLoadEpisode(premierAvecScript.episode_id);
             }
         }
     } catch (err) {
@@ -3038,12 +3022,69 @@ async function loadSaisonProgress() {
     }
 }
 
+var _psSelectedNumero = null;
+
+/* Clic sur un épisode dans la grille */
+function psSelectEpisode(episodeId, numero) {
+    _psInlineEpisodeId = episodeId;
+    _psSelectedNumero = numero;
+    /* Trouver l'épisode dans les données */
+    var ep = _saisonProgressData.episodes.find(function(e) { return e.episode_id === episodeId; });
+    if (!ep) return;
+
+    var nextZone = document.getElementById('ps-next-episode-zone');
+    nextZone.style.display = 'block';
+    document.getElementById('ps-next-titre').textContent = ep.episode_id + ' — ' + ep.titre;
+    var statusLabels = {
+        'termine': 'Terminé', 'montage_valide': 'Montage validé',
+        'attente_validation_montage': 'Audio prêt', 'script_valide': 'Script validé',
+        'attente_validation_script': 'Script prêt', 'en_cours': 'En cours', 'a_faire': 'À faire'
+    };
+    var details = '<span style="font-size: 0.85rem;">Type : <strong>' + escapeHtml(ep.type) + '</strong></span>';
+    details += ' &mdash; <span style="color: var(--orange-chaud);">' + escapeHtml(statusLabels[ep.status] || ep.status) + '</span>';
+    if (ep.script_modifie) {
+        details += ' &mdash; <span style="font-size: 0.82rem; color: var(--texte-light);">Script modifié : ' + escapeHtml(ep.script_modifie) + '</span>';
+    }
+    document.getElementById('ps-next-details').innerHTML = details;
+
+    var btn = document.getElementById('btn-produire-saison');
+    var needsInline = (ep.status === 'attente_validation_script'
+        || ep.status === 'script_valide'
+        || ep.status === 'attente_validation_montage'
+        || ep.status === 'montage_valide');
+
+    if (needsInline) {
+        btn.style.display = 'none';
+        psInlineLoadEpisode(ep.episode_id);
+    } else if (ep.status === 'a_faire') {
+        btn.style.display = '';
+        btn.disabled = false;
+        btn.innerHTML = '&#127908; Lancer le script de ' + ep.episode_id;
+        document.getElementById('ps-inline-validation').style.display = 'none';
+    } else if (ep.status === 'termine') {
+        btn.style.display = 'none';
+        psInlineLoadEpisode(ep.episode_id);
+    } else {
+        btn.style.display = 'none';
+        document.getElementById('ps-inline-validation').style.display = 'none';
+    }
+
+    /* Re-render la grille pour mettre à jour la sélection visuelle */
+    loadSaisonProgress();
+}
+
 async function produireProchainEpisode() {
-    if (!_saisonProgressData || !_saisonProgressData.prochain) return;
+    if (!_saisonProgressData) return;
     hideAlert('alert-produire-saison');
 
     var saison = _saisonProgressData.saison;
-    var ep = _saisonProgressData.prochain;
+    /* Utiliser l'épisode sélectionné ou le premier a_faire */
+    var numero = _psSelectedNumero;
+    var ep = _saisonProgressData.episodes.find(function(e) { return e.numero === numero; });
+    if (!ep) {
+        ep = _saisonProgressData.prochain;
+        if (!ep) return;
+    }
     var dryRun = document.getElementById('ps-dryrun').checked;
 
     var btn = document.getElementById('btn-produire-saison');
