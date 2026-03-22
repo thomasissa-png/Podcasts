@@ -38,8 +38,16 @@ papy-babou-podcast/
 │   ├── personnages.json     # Character bible
 │   ├── preferences_producteur.json  # Persistent producer preferences/rules
 │   └── saisons/             # Season plans (saison_01.json, etc.)
-└── output/                  # Generated episodes, scripts, segments
+├── scripts/episodes/        # Episode scripts (config.SCRIPTS_DIR) — THE canonical location
+└── output/                  # Generated audio, segments
 ```
+
+### Script File Location — ABSOLUTE RULE
+- **ALL scripts MUST be in `scripts/episodes/`** (= `config.SCRIPTS_DIR`)
+- NEVER create or reference scripts in `output/scripts/` — that directory is NOT used by the pipeline or web routes
+- When creating scripts manually (outside pipeline), ALWAYS use `config.SCRIPTS_DIR`
+- Checkpoint `script_path` MUST point to `scripts/episodes/S01EXX_script.json`
+- This rule has caused 2 production failures — treat any `output/scripts/` script reference as a bug
 
 ## Key Concepts
 
@@ -772,7 +780,7 @@ Esther replaces the old Jonas finale. Jonas moves to E09 (standard). Esther beco
 - **Teasing S2**: "Il y a un homme dont je n'ai pas encore parlé — le plus grand de tous"
 
 ### S01E01 Script — VALIDATED (do not regenerate)
-- Script at `output/scripts/S01E01_script.json` — 190 segments, 3314 words, 39 SFX
+- Script at `scripts/episodes/S01E01_script.json` — 190 segments, 3314 words, 39 SFX
 - Score: 9.2/10 (directeur validation)
 - Audio IA audit: 0 remaining issues (26 SFX prompts + 4 voice segments corrected)
 - Status: `waiting_script` in pipeline (ready for audio production)
@@ -803,7 +811,7 @@ Before any script goes to audio production, run this audit:
 - `config.py` — `PERIMETRES_SAISONS[1]["episodes_imposes"]` updated
 - `agents/planificateur.py` — prompt examples updated
 - `data/preferences_producteur.json` — 2 new rules (audio_sfx + audio_voix)
-- `output/scripts/S01E01_script.json` — audited script with all SFX/voice fixes
+- `scripts/episodes/S01E01_script.json` — audited script with all SFX/voice fixes
 - `data/historique_episodes.json` — S01E01 entry for frontend visibility
 - `logs/S01E01_rapport.json` — rapport with waiting_script status
 - `checkpoints/S01E01_checkpoint.json` — checkpoint for pipeline resume
@@ -1729,7 +1737,7 @@ Complete rewrite of 5 audit agents with 9/10 minimum quality threshold.
 | **audit-episode** | Orchestrateur | Consolide 4 audits, plan d'action, corrections auto | P0 technique, P1 convergences, P2 un seul, P3 optionnel |
 
 ### How to run audits
-- Full audit: `@audit-episode output/scripts/S01EXX_script.json`
+- Full audit: `@audit-episode scripts/episodes/S01EXX_script.json`
 - Individual: `@audit-sfx`, `@audit-voix`, `@audit-marc`, `@audit-claire`
 - Phase 1 (technique) runs in parallel, Phase 2 (creatif) runs in parallel
 - P0+P1 corrections applied automatically, P2+P3 listed for human decision
@@ -1814,14 +1822,14 @@ When a checkpoint is corrupted (wrong title, wrong type, failed status from test
       "etapes": {
         "script": {
           "status": "waiting_script",
-          "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01EXX_script.json",
+          "script_path": "/home/user/Podcasts/papy-babou-podcast/scripts/episodes/S01EXX_script.json",
           "score_review": X.X,
           "validation_humaine": true
         }
       },
       "decisions_humaines": []
     },
-    "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01EXX_script.json",
+    "script_path": "/home/user/Podcasts/papy-babou-podcast/scripts/episodes/S01EXX_script.json",
     "pubdate_offset_seconds": [numero * 3600],
     "stop_after": "script"
   }
@@ -1866,7 +1874,7 @@ That's it. The pipeline will detect and use it automatically.
 
 **Phase 1 — Script generation** (done in Claude Code session):
 1. Generate script via pipeline: `python main.py produire -e "Titre" -s 1 -n X -r "..." -m "..." --auto --stop-after script`
-2. Run Audio IA audit: `@audit-episode output/scripts/S01EXX_script.json`
+2. Run Audio IA audit: `@audit-episode scripts/episodes/S01EXX_script.json`
 3. Apply P0+P1 corrections from audit
 4. Verify checkpoint file has correct data (especially `validation_humaine`, `type_episode`, `dry_run: false`)
 5. Verify rapport file has matching data
@@ -1891,14 +1899,14 @@ That's it. The pipeline will detect and use it automatically.
 5. **Restore from Object Storage**: If files are missing after redeploy, they should be auto-restored. If not, check `persistent_storage.py` functions.
 
 ### S01E02 Status (Session 24)
-- Script: `output/scripts/S01E02_script.json` (65 KB, score 9.0/10)
+- Script: `scripts/episodes/S01E02_script.json` (65 KB, score 9.0/10)
 - Audits: SFX + voix + reviewer + copywriter completed
 - Cover art: `assets/covers/S01E02_cover.png` (custom, 1.9 MB)
 - Checkpoint: `waiting_script`, `validation_humaine: false` (needs web dashboard validation)
 - Next step: Validate script via web dashboard → launch audio production
 
 ### S01E01 Status (Session 24 — restored)
-- Script: `output/scripts/S01E01_script.json` (190 segments, 3314 words, 41 SFX, score 9.2/10)
+- Script: `scripts/episodes/S01E01_script.json` (190 segments, 3314 words, 41 SFX, score 9.2/10)
 - Cover art: `assets/covers/S01E01_cover.png`
 - Checkpoint: RESTORED — `waiting_script`, `validation_humaine: true`, type `ouverture`
 - Next step: Launch audio production via web dashboard (`continue-production` phase=audio)
