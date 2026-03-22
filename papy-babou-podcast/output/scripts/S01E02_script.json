@@ -584,7 +584,7 @@
       {
         "id": "sfx_009b",
         "personnage": "sfx",
-        "texte": "warm outdoor afternoon ambiance, gentle breeze, distant birds singing, soft earth footsteps approaching",
+        "texte": "warm outdoor afternoon ambiance, gentle breeze, distant birds chirping, soft earth footsteps approaching",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 18.0,
@@ -667,7 +667,7 @@
       {
         "id": "seg_064",
         "personnage": "antoine",
-        "texte": "Chut Noémie ! Laisse Papy finir ! Les animaux viennent d'entrer dans l'arche !",
+        "texte": "Noémie, laisse Papy finir ! Les animaux viennent d'entrer dans l'arche !",
         "ton": "impatient",
         "rythme": "rapide",
         "pause_apres_ms": 200
@@ -1133,7 +1133,7 @@
       {
         "id": "seg_101",
         "personnage": "noemie",
-        "texte": "Oh non ! Elle s'est perdue ?",
+        "texte": "Non ! Elle s'est perdue ?",
         "ton": "inquiet",
         "rythme": "rapide",
         "pause_apres_ms": 200
@@ -1157,7 +1157,7 @@
       {
         "id": "sfx_018",
         "personnage": "sfx",
-        "texte": "massive wooden door creaking open, birds singing joyfully, animals calling and moving, footsteps on wet earth",
+        "texte": "massive wooden door creaking open, birds chirping joyfully, animals calling and moving, footsteps on wet earth",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -1174,7 +1174,7 @@
       {
         "id": "seg_105",
         "personnage": "papy_babou",
-        "texte": "Oh oui ! Imagine les oiseaux qui s'envolent dans le ciel, les chevaux qui galopent dans les prairies, les lapins qui sautent dans l'herbe toute neuve.",
+        "texte": "Bien sûr ! Imagine les oiseaux qui s'envolent dans le ciel, les chevaux qui galopent dans les prairies, les lapins qui sautent dans l'herbe toute neuve.",
         "ton": "joyeux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -1222,7 +1222,7 @@
       {
         "id": "sfx_019",
         "personnage": "sfx",
-        "texte": "bright shimmering chimes cascading upward, warm resonant bell tones ascending gently, sparkling high-frequency arpeggios with soft reverb tail",
+        "texte": "shimmering chimes cascading upward, warm resonant bell tones ascending gently, sparkling high-frequency arpeggios with soft reverb tail",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 6.0,
@@ -1279,7 +1279,7 @@
       {
         "id": "sfx_020",
         "personnage": "sfx",
-        "texte": "small quick footsteps on wooden floor, fabric curtain swooshing aside, birds singing outside after rain",
+        "texte": "small quick footsteps on wooden floor, fabric curtain swooshing aside, birds chirping outside after rain",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -1320,7 +1320,7 @@
       {
         "id": "sfx_021",
         "personnage": "sfx",
-        "texte": "plates clinking, cake being sliced, children giggling softly",
+        "texte": "plates clinking, cake being sliced, utensils tapping on ceramic",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 4.0,
@@ -1468,7 +1468,7 @@
       {
         "id": "sfx_022",
         "personnage": "sfx",
-        "texte": "small footsteps on gravel fading away, car doors closing, engine starting and slowly driving off, evening birds singing after rain",
+        "texte": "small footsteps on gravel fading away, car doors closing, engine starting and slowly driving off, evening birds chirping after rain",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
