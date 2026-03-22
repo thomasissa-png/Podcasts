@@ -2276,6 +2276,15 @@ def pipeline(
     }
 
     # Enregistrer le contexte du pipeline pour le handler SIGTERM
+    # Propager script_content_hash depuis le checkpoint (si présent) pour que
+    # le hash guard puisse détecter les modifications de script sur resume.
+    _checkpoint_hash = ""
+    if checkpoint_data:
+        _checkpoint_hash = (
+            checkpoint_data.get("script_content_hash")
+            or checkpoint_data.get("etapes", {}).get("script", {}).get("script_content_hash")
+            or ""
+        )
     _production_local.pipeline_context = {
         "episode_id": episode_id, "titre": titre, "resume": resume,
         "saison": saison, "numero": numero, "morale": morale,
@@ -2283,6 +2292,7 @@ def pipeline(
         "rapport": rapport, "etape_courante": etape_depart,
         "pubdate_offset_seconds": pubdate_offset_seconds,
         "stop_after": stop_after,
+        "script_content_hash": _checkpoint_hash,
     }
     # Installer le handler SIGTERM (uniquement depuis le thread principal)
     try:
@@ -3280,6 +3290,19 @@ def _pipeline_inner(
                         pass
                 _log_direct(f"Segments purgés : {_nb_purges} fichiers supprimés")
             etape_idx = 2  # Forcer régénération audio complète
+        elif not _hash_checkpoint:
+            # Ancien checkpoint sans hash (production pré-hash-guard).
+            # Stocker le hash du script actuel pour que tout futur rework
+            # soit détecté. Sans cela, la première reprise après déploiement
+            # du hash guard ne détecterait jamais de changement.
+            _log_direct(
+                f"Ancien checkpoint sans hash — initialisation du hash de référence "
+                f"({_hash_actuel[:8]})"
+            )
+            logger.info(
+                "Initialisation script_content_hash pour %s (ancien checkpoint) : %s",
+                episode_id, _hash_actuel,
+            )
 
         # Stocker le hash actuel dans le rapport pour les checkpoints suivants
         rapport["script_content_hash"] = _hash_actuel
