@@ -7,8 +7,8 @@
     "duree_cible_minutes": 18,
     "ambiance": "dramatique",
     "ambiance_par_acte": [
+      "mystere",
       "dramatique",
-      "tendu",
       "joyeux"
     ],
     "morale": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
@@ -425,6 +425,15 @@
         "pause_apres_ms": 350
       },
       {
+        "id": "sfx_008b",
+        "personnage": "sfx",
+        "texte": "crowd laughing mockingly in distance, fingers pointing, derisive jeering fading away",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "seg_040",
         "personnage": "antoine",
         "texte": "Et Noé, il a arrêté ?",
@@ -536,6 +545,15 @@
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
         "mode": "insert"
+      },
+      {
+        "id": "sfx_009b",
+        "personnage": "sfx",
+        "texte": "warm outdoor afternoon ambiance, gentle breeze, distant birds singing, soft earth footsteps approaching",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_053",
@@ -759,7 +777,7 @@
       {
         "id": "seg_077",
         "personnage": "papy_babou",
-        "texte": "La pluie a duré quarante jours et quarante nuits. Et pendant tout ce temps, l'arche flottait sur les eaux, portée par les vagues immenses.",
+        "texte": "La pluie a duré quarante jours et quarante nuits. Puis l'eau est restée encore longtemps, cent cinquante jours en tout. Et pendant tout ce temps, l'arche flottait sur les eaux, portée par les vagues.",
         "ton": "dramatique",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -772,6 +790,15 @@
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
         "mode": "insert"
+      },
+      {
+        "id": "sfx_013b",
+        "personnage": "sfx",
+        "texte": "wooden ship interior creaking rhythmically, muffled rain on hull above, distant animal sounds echoing inside large wooden structure, hay rustling",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_078",
@@ -971,7 +998,7 @@
       {
         "id": "sfx_017",
         "personnage": "sfx",
-        "texte": "gentle dove cooing returning, soft wing flutter landing, warm hopeful string chord swelling",
+        "texte": "soft wing flutter approaching from distance, delicate bird landing on wooden railing, warm hopeful string chord swelling gently",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -1162,6 +1189,15 @@
         "texte": "plates clinking, cake being sliced, children cheering softly",
         "ton": "ambiance",
         "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_020b",
+        "personnage": "sfx",
+        "texte": "warm harp glissando descending gently, settling into cozy fireplace crackling, clock ticking softly",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
         "mode": "insert"
       },
