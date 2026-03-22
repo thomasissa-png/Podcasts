@@ -86,7 +86,7 @@
       {
         "id": "sfx_004",
         "personnage": "sfx",
-        "texte": "massive orchestral swell rising from silence to fortissimo, bright shimmering chimes cascading upward, warm reverberant glow expanding",
+        "texte": "massive bright burst rising from silence, shimmering high-frequency metallic resonance cascading outward, warm sustained tonal hum expanding",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -95,7 +95,7 @@
       {
         "id": "sfx_005",
         "personnage": "sfx",
-        "texte": "magical whoosh transition with sparkle trail, soft harp glissando descending, settling into warm indoor ambiance with soft fireplace",
+        "texte": "bright descending metallic shimmer with sparkle texture, settling into warm indoor ambiance with soft fireplace crackling",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 4.0,
@@ -170,10 +170,10 @@
       {
         "id": "sfx_008",
         "personnage": "sfx",
-        "texte": "garden gate opening, birds singing in autumn afternoon sun, gentle breeze in trees",
+        "texte": "garden gate opening, birds chirping in autumn afternoon, gentle breeze rustling through tree leaves",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -252,7 +252,7 @@
       {
         "id": "sfx_010",
         "personnage": "sfx",
-        "texte": "magical transition into ancient world, celestial atmosphere building slowly",
+        "texte": "low drone shifting upward in pitch with shimmering high-frequency shimmer, reverberant ambient pad building slowly over 5 seconds",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 5.0,
@@ -302,7 +302,7 @@
       {
         "id": "sfx_012",
         "personnage": "sfx",
-        "texte": "bright orchestral burst rising from silence, shimmering high-frequency chimes cascading outward, warm sustained string chord expanding",
+        "texte": "massive bright tonal burst rising from silence, shimmering high-frequency metallic resonance cascading outward, warm sustained low-frequency hum expanding",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -359,7 +359,7 @@
       {
         "id": "sfx_013",
         "personnage": "sfx",
-        "texte": "single celestial chime ringing softly with long reverb tail, gentle tubular bell resonance fading",
+        "texte": "single clear tubular bell chime ringing softly with long reverb tail, gentle resonance fading",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -466,7 +466,7 @@
       {
         "id": "sfx_016",
         "personnage": "sfx",
-        "texte": "single celestial chime ringing softly, ethereal tubular bell with long reverb tail",
+        "texte": "single clear tubular bell chime ringing softly, bright metallic resonance with long reverb tail",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -534,7 +534,7 @@
         "texte": "rich forest ambiance emerging, birdsong growing louder and more varied, wind rustling through dense leaves and branches",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -583,7 +583,7 @@
         "texte": "quiet night ambiance, gentle twinkling high-pitched chimes appearing one by one, subtle cosmic shimmer pad",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -719,7 +719,7 @@
       {
         "id": "sfx_021",
         "personnage": "sfx",
-        "texte": "ocean depths bubbling, whale song echoing, seagulls calling above waves",
+        "texte": "ocean depths bubbling, whale song echoing, deep water ambiance with rising air bubbles",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 15.0,
@@ -782,6 +782,15 @@
         "ton": "excite",
         "rythme": "rapide",
         "pause_apres_ms": 200
+      },
+      {
+        "id": "sfx_023b",
+        "personnage": "sfx",
+        "texte": "warm indoor room ambiance, soft fireplace crackling gently, distant clock ticking",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_068",
@@ -975,7 +984,7 @@
         "texte": "galloping horses across plains, wolves howling at sunset, deer running through forest",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay",
         "id": "sfx_027"
       },
@@ -1080,7 +1089,7 @@
       {
         "id": "sfx_030",
         "personnage": "sfx",
-        "texte": "gentle ethereal choir singing sustained notes softly, reverberant cathedral space ambiance, warm organ drone",
+        "texte": "deep reverberant cathedral space ambiance, warm low-frequency tonal drone with harmonic overtones, sustained resonant pad",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -1096,7 +1105,7 @@
       },
       {
         "personnage": "sfx",
-        "texte": "first human breath, heartbeat beginning, gentle wind of life",
+        "texte": "slow deep inhalation followed by gentle exhale, heartbeat beginning with low rhythmic pulse, soft wind gust",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -1153,7 +1162,7 @@
       },
       {
         "personnage": "sfx",
-        "texte": "paradise garden ambiance, gentle waterfall, exotic birds, warm peaceful breeze",
+        "texte": "lush garden ambiance with gentle waterfall, exotic birds calling, warm peaceful breeze through tropical leaves",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 15.0,
@@ -1191,6 +1200,15 @@
         "rythme": "normal",
         "pause_apres_ms": 250,
         "id": "seg_108"
+      },
+      {
+        "id": "sfx_032b",
+        "personnage": "sfx",
+        "texte": "peaceful garden ambiance, gentle breeze, birds singing softly in distance, leaves rustling",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
       },
       {
         "personnage": "papy_babou",
@@ -1316,7 +1334,7 @@
       },
       {
         "personnage": "sfx",
-        "texte": "parade of animals passing by, gentle footsteps, various animal calls, peaceful garden",
+        "texte": "parade of soft hoofsteps on grass, low distant animal rumbles, gentle rustling in peaceful outdoor setting",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 7.0,
@@ -1454,6 +1472,15 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "sfx_038b",
+        "personnage": "sfx",
+        "texte": "warm cozy evening room ambiance, gentle fireplace with occasional soft pop, clock ticking steadily",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_136",
         "personnage": "papy_babou",
         "texte": "Bravo Antoine ! Tu as tout retenu dans l'ordre. Et toi, Noémie ?",
@@ -1480,10 +1507,10 @@
       {
         "id": "sfx_038",
         "personnage": "sfx",
-        "texte": "warm gentle music box melody playing softly, cozy evening atmosphere",
+        "texte": "warm cozy room ambiance with soft clock ticking, gentle fireplace crackling, evening settling sounds",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
       {
