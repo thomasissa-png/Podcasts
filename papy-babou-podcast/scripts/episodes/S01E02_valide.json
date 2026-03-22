@@ -42,66 +42,6 @@
     },
     "segments": [
       {
-        "id": "sfx_001",
-        "personnage": "sfx",
-        "texte": "heavy rain falling on roof tiles, distant thunder rumble, wind gusting against windows",
-        "ton": "ambiance",
-        "pause_apres_ms": 500,
-        "duree_sfx_secondes": 8.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_001",
-        "personnage": "papy_babou",
-        "texte": "Il faisait nuit en plein jour. Le ciel était devenu noir comme de l'encre. Et la pluie tombait, tombait, tombait sans jamais s'arrêter.",
-        "ton": "dramatique",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_002",
-        "personnage": "sfx",
-        "texte": "thunder crack close and loud, deep bass rumble rolling away slowly",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_002",
-        "personnage": "papy_babou",
-        "texte": "L'eau montait, montait, montait. Elle recouvrait les collines, puis les montagnes. Tout disparaissait sous les flots.",
-        "ton": "dramatique",
-        "rythme": "lent",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "sfx_003",
-        "personnage": "sfx",
-        "texte": "massive wave crashing and rushing water, deep low-frequency water surge, heavy flooding sound",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_003",
-        "personnage": "papy_babou",
-        "texte": "Mais au milieu de ce chaos, un immense bateau flottait tranquillement. Un bateau si grand qu'on n'en avait jamais vu de pareil.",
-        "ton": "mystérieux",
-        "rythme": "normal",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "sfx_004",
-        "personnage": "sfx",
-        "texte": "magical whoosh transition with sparkle trail, soft harp glissando descending, settling into warm indoor ambiance with rain on windows",
-        "ton": "ambiance",
-        "pause_apres_ms": 400,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
         "id": "sfx_005",
         "personnage": "sfx",
         "texte": "rain pattering on windows, cozy fireplace crackling, clock ticking softly in background",
