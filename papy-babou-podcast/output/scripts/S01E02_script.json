@@ -114,7 +114,7 @@
         "id": "seg_004",
         "personnage": "antoine",
         "texte": "Il pleut tellement fort dehors. On peut même pas aller dans le jardin.",
-        "ton": "boudeur",
+        "ton": "impatient",
         "rythme": "normal",
         "pause_apres_ms": 250
       },
@@ -173,7 +173,7 @@
         "texte": "cozy indoor atmosphere, soft fireplace crackling, rain tapping on windows, occasional clock chime in background",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 45.0,
+        "duree_sfx_secondes": 25.0,
         "mode": "overlay"
       },
       {
@@ -416,7 +416,16 @@
         "texte": "outdoor construction site ambiance, distant wind blowing through scaffolding, occasional bird call, earth and gravel crunching underfoot, dry rustling leaves in breeze",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 50.0,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_008c",
+        "personnage": "sfx",
+        "texte": "outdoor daytime ambiance with distant crowd murmuring, occasional derisive laugh, dry wind across open field, scattered tool sounds in background",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
         "mode": "overlay"
       },
       {
@@ -439,14 +448,14 @@
         "id": "seg_039",
         "personnage": "papy_babou",
         "texte": "Non, ce n'est pas gentil. Ils disaient : Regarde le vieux fou qui construit un bateau en plein milieu de la terre ! Il n'y a même pas de mer ici !",
-        "ton": "moqueur",
+        "ton": "espiègle",
         "rythme": "normal",
         "pause_apres_ms": 350
       },
       {
         "id": "sfx_008b",
         "personnage": "sfx",
-        "texte": "crowd laughing mockingly, dismissive snorting and grunting, derisive reaction fading away",
+        "texte": "group laughing mockingly, dismissive snorting, derisive clapping fading away",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -552,7 +561,7 @@
         "id": "seg_050",
         "personnage": "mamie_sonia",
         "texte": "Votre Papy a raison, même s'il exagère parfois un tout petit peu. Et tu sais, quand Papy était petit au Liban, les autres enfants se moquaient de son accent sénégalais. Mais il n'a jamais arrêté de parler.",
-        "ton": "chaleureux",
+        "ton": "espiègle",
         "rythme": "normal",
         "pause_apres_ms": 350
       },
@@ -903,6 +912,15 @@
         "mode": "overlay"
       },
       {
+        "id": "sfx_013c",
+        "personnage": "sfx",
+        "texte": "wooden hull creaking rhythmically with waves, hay rustling softly, occasional distant animal sound echoing in large enclosed space, water dripping slowly",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_078",
         "personnage": "noemie",
         "texte": "Et dans l'arche, les animaux ils faisaient quoi ?",
@@ -1190,8 +1208,8 @@
       {
         "id": "seg_105d",
         "personnage": "noemie",
-        "texte": "Les animaux devaient être tellement contents de courir !",
-        "ton": "joyeux",
+        "texte": "Papy, et les escargots ? Ils mettaient trop longtemps à sortir ?",
+        "ton": "espiegle",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -1323,24 +1341,6 @@
         "texte": "plates clinking, cake being sliced, utensils tapping on ceramic",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_020a",
-        "personnage": "sfx",
-        "texte": "gentle whoosh transition settling into warm indoor space, soft harp note descending, cozy room ambiance fading in with fireplace crackle",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 3.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_020b",
-        "personnage": "sfx",
-        "texte": "soft melodic chime descending gently, cozy fireplace crackling resuming, clock ticking softly",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
         "mode": "insert"
       },
