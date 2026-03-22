@@ -280,8 +280,11 @@ class ProducteurAudio:
             voice_id = cloned_id
             logger.debug("Utilisation de la voix clonée pour '%s'", personnage)
 
-        # Vitesse vocale par personnage
-        speed = config.VOICE_SPEED.get(personnage, 1.0)
+        # Vitesse vocale par personnage, modulée par le champ "rythme" du segment
+        base_speed = config.VOICE_SPEED.get(personnage, 1.0)
+        rythme = segment.get("rythme", "normal")
+        rythme_factor = config.RYTHME_SPEED_FACTOR.get(rythme, 1.0)
+        speed = round(base_speed * rythme_factor, 2)
 
         # Choisir l'endpoint : with-timestamps (speech marks) ou standard
         use_timestamps = config.SPEECH_MARKS_ENABLED

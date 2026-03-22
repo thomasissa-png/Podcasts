@@ -155,12 +155,25 @@ FADE_JINGLE_MS = 1500          # Durée du fade in/out pour les jingles
 SILENCE_TRANSITION_MS = 300     # Silence entre jingle et contenu (réduit de 500)
 FADE_AMBIANCE_MS = 3000         # Durée du fade in/out pour la musique de fond
 FALLBACK_ASSET_DUREE_MS = 5000  # Durée du silence de remplacement d'un asset manquant
-CROSSFADE_VOIX_MS = 200         # Crossfade entre segments voix pour transitions naturelles
+CROSSFADE_VOIX_MS = 200         # Crossfade entre segments voix du MÊME personnage
+CROSSFADE_INTER_PERSO_MS = 50   # Crossfade entre personnages différents (évite chevauchement)
 MAX_PAUSE_MS = 2500             # Plafond de pause pour éviter les silences excessifs
 RESPIRATION_DUREE_MS = 80       # Durée micro-respiration entre certaines répliques
 RESPIRATION_PROBABILITE = 0.35  # 35% des transitions voix incluent une micro-respiration
-DUCKING_GAIN_DB = -6            # Atténuation voix pendant un SFX overlay (side-chain)
-DUCKING_FADE_MS = 150           # Durée du fade pour l'entrée/sortie du ducking
+# Probabilité de micro-respiration par personnage (plus pour Papy, moins pour Noémie)
+RESPIRATION_PAR_PERSONNAGE = {
+    "papy_babou": 0.50,         # Papy respire plus (conteur, phrases longues)
+    "mamie_sonia": 0.45,        # Mamie calme, respiration régulière
+    "antoine": 0.30,            # Enfant dynamique, respire moins
+    "noemie": 0.20,             # Petite fille rapide, presque pas de pauses respiratoires
+    "narrateur": 0.40,
+}
+DUCKING_GAIN_DB = -6            # Atténuation overlay pendant voix adulte (side-chain)
+DUCKING_ENFANT_GAIN_DB = -8     # Atténuation overlay pendant voix enfant (meilleure intelligibilité)
+DUCKING_FADE_MS = 150           # Durée du fade ducking pour tons dramatiques/épiques
+DUCKING_FADE_DOUX_MS = 250      # Durée du fade ducking pour tons doux/tendres/calmes
+# Personnages enfants (ducking plus fort pour l'intelligibilité)
+PERSONNAGES_ENFANTS = {"antoine", "noemie"}
 
 # Volume SFX contextuel selon le ton du segment précédent
 SFX_VOLUME_PAR_TON = {
@@ -213,13 +226,19 @@ AMBIANCE_ROOM_TONE = {
     "joyeux": "jour",
     "humoristique": "jour",
     "mystere": "soir",
+    "mystère": "soir",
     "fond_doux": "defaut",
 }
 
 # EQ boost médiums — fréquences de coupure pour le filtre passe-bande (Hz)
-EQ_VOICE_BOOST_LOW_HZ = 2000    # Borne basse du boost voix
-EQ_VOICE_BOOST_HIGH_HZ = 5000   # Borne haute du boost voix
+# Adultes (Papy, Mamie) : boost 2-5 kHz (zone de présence classique)
+# Enfants (Antoine, Noémie) : boost décalé 3-6 kHz (voix plus aigues)
+EQ_VOICE_BOOST_LOW_HZ = 2000    # Borne basse boost voix adultes
+EQ_VOICE_BOOST_HIGH_HZ = 5000   # Borne haute boost voix adultes
 EQ_VOICE_BOOST_DB = 2.5         # Gain du boost en dB
+EQ_ENFANT_BOOST_LOW_HZ = 3000   # Borne basse boost voix enfants
+EQ_ENFANT_BOOST_HIGH_HZ = 6000  # Borne haute boost voix enfants
+EQ_ENFANT_BOOST_DB = 2.5        # Gain du boost enfants (même intensité)
 
 # True peak limiter — facteur d'oversampling
 TRUE_PEAK_OVERSAMPLE = 4        # 4x oversampling pour détection inter-sample
@@ -1294,15 +1313,22 @@ class Monteur:
                 dernier_ton = seg.get("ton", "")
 
                 # Micro-respiration naturelle entre certaines répliques
+                # Probabilité adaptée par personnage (Papy respire plus, Noémie moins)
+                prob_respiration = RESPIRATION_PAR_PERSONNAGE.get(
+                    seg["personnage"], RESPIRATION_PROBABILITE
+                )
                 if (len(resultat) > 0
-                        and random.random() < RESPIRATION_PROBABILITE
+                        and random.random() < prob_respiration
                         and seg["personnage"] != prev_personnage):
                     resultat += self._generer_micro_respiration()
 
-                # Crossfade entre segments voix pour transitions plus naturelles
-                if (len(resultat) > CROSSFADE_VOIX_MS
-                        and len(audio) > CROSSFADE_VOIX_MS):
-                    resultat = resultat.append(audio, crossfade=CROSSFADE_VOIX_MS)
+                # Crossfade adaptatif : court entre personnages différents,
+                # normal entre segments du même personnage
+                meme_personnage = (prev_personnage == seg["personnage"])
+                crossfade_ms = CROSSFADE_VOIX_MS if meme_personnage else CROSSFADE_INTER_PERSO_MS
+                if (len(resultat) > crossfade_ms
+                        and len(audio) > crossfade_ms):
+                    resultat = resultat.append(audio, crossfade=crossfade_ms)
                 else:
                     resultat += audio
 
@@ -1798,25 +1824,40 @@ class Monteur:
         return respiration
 
     @staticmethod
-    def _appliquer_ducking(voix: AudioSegment, sfx: AudioSegment) -> AudioSegment:
-        """Applique un ducking side-chain : baisse la voix pendant le SFX overlay.
+    def _appliquer_ducking(
+        voix: AudioSegment,
+        sfx: AudioSegment,
+        personnage: str = "",
+        ton: str = "",
+    ) -> AudioSegment:
+        """Applique un ducking side-chain : baisse le SFX overlay pendant la voix.
 
-        La voix est atténuée de DUCKING_GAIN_DB pendant la durée du SFX,
-        avec des fades doux pour éviter les transitions brusques (A2).
+        Ducking adaptatif :
+        - Voix enfants (antoine, noemie) : -8 dB pour meilleure intelligibilité
+        - Voix adultes (papy_babou, mamie_sonia) : -6 dB standard
+        - Tons doux (tendre, calme) : fade plus long (250ms) pour transition douce
+        - Tons dramatiques : fade court (150ms) pour impact
         """
+        # Ducking adaptatif par personnage
+        gain = (DUCKING_ENFANT_GAIN_DB if personnage in PERSONNAGES_ENFANTS
+                else DUCKING_GAIN_DB)
+        # Fade adaptatif par ton
+        tons_doux = {"tendre", "calme", "chaleureux", "rassurant", "fond_doux"}
+        fade_ms = DUCKING_FADE_DOUX_MS if ton in tons_doux else DUCKING_FADE_MS
+
         duree_sfx = len(sfx)
         duree_voix = len(voix)
 
         if duree_sfx >= duree_voix:
             # SFX couvre toute la voix — ducking uniforme + overlay
-            voix_ducked = voix.apply_gain(DUCKING_GAIN_DB)
+            voix_ducked = voix.apply_gain(gain)
             return voix_ducked.overlay(sfx)
 
         # Découper la voix en 3 parties : avant SFX, pendant SFX, après SFX
-        fade = min(DUCKING_FADE_MS, duree_sfx // 2)
+        fade = min(fade_ms, duree_sfx // 2)
 
         # Partie pendant le SFX — voix atténuée
-        voix_pendant = voix[:duree_sfx].apply_gain(DUCKING_GAIN_DB)
+        voix_pendant = voix[:duree_sfx].apply_gain(gain)
         if fade > 0:
             voix_pendant = voix_pendant.fade_in(fade).fade_out(fade)
         voix_pendant = voix_pendant.overlay(sfx)

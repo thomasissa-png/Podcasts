@@ -621,6 +621,15 @@
         "mode": "insert"
       },
       {
+        "id": "sfx_009c",
+        "personnage": "sfx",
+        "texte": "warm outdoor ambiance with various distant animal sounds, soft earth footsteps, gentle breeze through dry grass",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_058",
         "personnage": "antoine",
         "texte": "Mais Papy, comment les animaux savaient qu'il fallait venir ?",
@@ -1240,6 +1249,15 @@
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_020c",
+        "personnage": "sfx",
+        "texte": "warm cozy room ambiance, soft fireplace crackling gently, peaceful evening atmosphere with distant clock",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_119",

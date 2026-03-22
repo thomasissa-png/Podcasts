@@ -220,6 +220,15 @@ VOICE_SPEED = {
     "narrateur": 1.0,       # Vitesse standard
 }
 
+# ── Modulation de vitesse par champ "rythme" du script ────────────────────────
+# Le champ "rythme" (lent/normal/rapide) module le VOICE_SPEED du personnage.
+# Vitesse finale = VOICE_SPEED[personnage] × RYTHME_SPEED_FACTOR[rythme]
+RYTHME_SPEED_FACTOR = {
+    "lent": 0.88,           # -12% — moments solennels, dramatiques, mystérieux
+    "normal": 1.0,          # Pas de modification
+    "rapide": 1.15,         # +15% — excitation, joie, urgence
+}
+
 # ── Voice cloning — IDs des voix clonées (Professional Voice Cloning) ────────
 # Si configuré, ces voix sont utilisées à la place des voix standard.
 # Pour cloner : utiliser l'API ElevenLabs /v1/voices/add avec des échantillons
