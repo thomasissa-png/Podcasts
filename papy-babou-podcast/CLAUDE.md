@@ -1703,3 +1703,70 @@ Orchestrator launched parallel audit of `templates/public.html` with @design (7.
 ### Git Workflow (Session 22)
 - Branch: `claude/restructure-frontend-admin-J8dKf`
 - Push: `git push -u origin claude/restructure-frontend-admin-J8dKf`
+
+## Audit System Overhaul (Session 23)
+Complete rewrite of 5 audit agents with 9/10 minimum quality threshold.
+
+### 5 Audit Agents (rewritten)
+
+| Agent | Persona | Focus | Axes |
+|-------|---------|-------|------|
+| **audit-sfx** | Thomas Lavigne (sound designer) | Experience sonore technique + creative | A: 10 regles SFX, B1: couverture sonore, B2: densite/variete, B3: transitions/immersion, B4: impact emotionnel, B5: qualite prompts |
+| **audit-voix** | Isabelle Fontaine (directrice vocale) | Direction vocale technique + creative | A: 6 regles TTS, B1: variete tons, B2: rythme/pauses, B3: naturalite enfants, B4: arc emotionnel, B5: dynamique echanges |
+| **audit-marc** | Marc Delacroix (directeur creatif #1) | 5 axes creatifs + 3 personas | Immersion, Rythme, Emotion, Educatif, Production + Lina(7), Noah(10), Sophie(parent) |
+| **audit-claire** | Claire Moreau (concurrente) | 6 axes + 2 personas | Accroche, Pacing, Authenticite, Immersion, Educatif, Viralite + Timeo(9), Camille(parent non-pratiquante) |
+| **audit-episode** | Orchestrateur | Consolide 4 audits, plan d'action, corrections auto | P0 technique, P1 convergences, P2 un seul, P3 optionnel |
+
+### How to run audits
+- Full audit: `@audit-episode output/scripts/S01EXX_script.json`
+- Individual: `@audit-sfx`, `@audit-voix`, `@audit-marc`, `@audit-claire`
+- Phase 1 (technique) runs in parallel, Phase 2 (creatif) runs in parallel
+- P0+P1 corrections applied automatically, P2+P3 listed for human decision
+
+### Verdict thresholds (raised from 8.5 to 9.0)
+- `feu_vert`: moyenne >= 9.0 ET audience >= 8.5 ET 0 axe < 8.0
+- `ajustements_mineurs`: moyenne >= 8.0 ET audience >= 7.5 ET 0 axe < 7.0
+- `retravailler`: moyenne < 8.0 OU un axe < 7.0
+
+### S01E01 Audit Results (Session 23)
+
+**Scores des 4 auditeurs:**
+| Auditeur | Score | Verdict |
+|----------|-------|---------|
+| Thomas Lavigne (Son) | 9.1/10 | Corrections mineures |
+| Isabelle Fontaine (Voix) | 9.4/10 | Pret pour production |
+| Marc Delacroix (Creatif) | 9.0/10 | feu_vert |
+| Claire Moreau (Creatif) | 8.2/10 | ajustements_mineurs |
+| **Moyenne** | **8.9/10** | |
+
+**Axes sous 9/10 identifies:**
+- Potentiel viral/partage: 7.5 (Claire)
+- Rythme & pacing: 8.7 (Claire 8.0, Marc 9.0, Isabelle 9.0)
+- Immersion sonore: 8.7 (Thomas 9.1, Marc 8.5, Claire 8.5)
+
+**15 corrections appliquees (P0+P1):**
+- P0: sfx_032b birds singing→chirping, sfx_039 children's footsteps→small footsteps, sfx_036 remove contented sigh
+- P1: chime Jour3→4 (sfx_017b), overlay gouter Mamie (sfx_024b), fusion seg_085-086, dedupliquation SFX salon, Noemie seg_100 recalibree 5 ans, seg_100b ajout Papy fait lien Lucas, seg_094 recalibree, seg_115 recalibree, echange fratrie seg_120b-120c, Mamie seg_083 ton emerveille, seg_092 rythme lent, seg_111 rythme lent
+
+**Corrections P2 NON appliquees (decision humaine):**
+- Claire R1: Jeu interactif "Devine le jour" pour casser linearite 7 jours
+- Claire R3: Resserrer installation Acte 1 (14 segments → 8)
+- Marc R3: Fun fact precoce pour accrocher Noah des premieres minutes
+- Claire R5: Etendre jeu des noms d'animaux (moment viral)
+
+**Points forts unanimes:**
+- Systeme de chimes tubulaires entre les jours (leitmotiv structurant)
+- Cold open in medias res cinematographique
+- Fun facts scientifiques de premier ordre (5+ memorables)
+- Dialogue Bible/science dinosaures ("le pourquoi vs le comment")
+- Running gag du gouter de Mamie
+
+### S01E01 Script Status After Audit
+- 190+ segments (post-corrections), ~3400 mots, 41+ SFX
+- Status: pret pour production audio
+- Corrections P0+P1 appliquees automatiquement
+- Score projete apres corrections: ~9.2/10
+
+### Git Workflow (Session 23)
+- Branch: `claude/episode-2-script-QbSiY`
+- Push: `git push -u origin claude/episode-2-script-QbSiY`

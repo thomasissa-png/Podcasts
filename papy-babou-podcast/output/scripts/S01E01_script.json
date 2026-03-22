@@ -578,6 +578,15 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "sfx_017b",
+        "personnage": "sfx",
+        "texte": "single bright tubular bell chime with long decay and warm harmonic overtones",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "sfx_018",
         "personnage": "sfx",
         "texte": "quiet night ambiance, gentle twinkling high-pitched chimes appearing one by one, subtle cosmic shimmer pad",
@@ -891,6 +900,15 @@
         "mode": "insert"
       },
       {
+        "id": "sfx_024b",
+        "personnage": "sfx",
+        "texte": "warm kitchen ambiance, ceramic cups clinking softly, tea being poured, oven warmth humming gently",
+        "ton": "ambiance",
+        "pause_apres_ms": 0,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_078",
         "personnage": "mamie_sonia",
         "texte": "Mes petits chéris ! J'ai fait des sablés en forme d'étoile pour le goûter. Votre Papy vous raconte la Création ?",
@@ -934,7 +952,7 @@
         "id": "seg_083",
         "personnage": "mamie_sonia",
         "texte": "Quand j'étais petite au Caire, ma grand-mère me racontait que chaque animal est une lettre de l'alphabet de Dieu. Ensemble, ils racontent une histoire d'amour.",
-        "ton": "chaleureux",
+        "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 350
       },
@@ -949,17 +967,9 @@
       {
         "id": "seg_085",
         "personnage": "papy_babou",
-        "texte": "Ta Mamie a toujours eu le don de trouver les mots justes. Allez, on continue ! Le sixième jour, mes petits loups, c'est le plus important de tous.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_086",
-        "personnage": "papy_babou",
-        "texte": "Mais mes petits loups, le plus extraordinaire reste à venir. Le sixième jour, c'est le jour où tout va changer.",
+        "texte": "Ta Mamie a toujours eu le don de trouver les mots justes. Allez, on continue ! Mes petits loups, le sixième jour, c'est le jour où tout va changer.",
         "ton": "mystérieux",
-        "rythme": "lent",
+        "rythme": "normal",
         "pause_apres_ms": 400
       },
       {
@@ -1033,7 +1043,7 @@
         "personnage": "papy_babou",
         "texte": "Tu sais, Antoine, au fond des océans il y a des créatures tellement bizarres qu'on en découvre encore de nouvelles aujourd'hui. Des poissons qui brillent dans le noir, des pieuvres qui changent de couleur, des méduses transparentes.",
         "ton": "mystérieux",
-        "rythme": "normal",
+        "rythme": "lent",
         "pause_apres_ms": 300,
         "id": "seg_092"
       },
@@ -1047,7 +1057,7 @@
       },
       {
         "personnage": "noemie",
-        "texte": "Des lampes sur la tête ? C'est trop drôle ! Ils ressemblent à des lampadaires de la mer !",
+        "texte": "Des lampes sur la tête ? Mais c'est trop bizarre ! Ils font comment pour nager avec ça ?",
         "ton": "joyeux",
         "rythme": "rapide",
         "pause_apres_ms": 250,
@@ -1131,11 +1141,19 @@
       },
       {
         "personnage": "noemie",
-        "texte": "Comme un bébé qui ouvre les yeux ! Comme Lucas quand il va naître !",
+        "texte": "Il a ouvert les yeux pour la première fois ? Comme un bébé alors ?",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300,
         "id": "seg_100"
+      },
+      {
+        "id": "seg_100b",
+        "personnage": "papy_babou",
+        "texte": "Exactement, ma puce. Comme chaque bébé qui vient au monde. Comme le petit bébé de Maman qui va bientôt arriver.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 350
       },
       {
         "personnage": "papy_babou",
@@ -1213,7 +1231,7 @@
       {
         "id": "sfx_032b",
         "personnage": "sfx",
-        "texte": "peaceful garden ambiance, gentle breeze, birds singing softly in distance, leaves rustling",
+        "texte": "peaceful garden ambiance, gentle breeze, birds chirping softly in distance, leaves rustling",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 18.0,
@@ -1240,7 +1258,7 @@
         "personnage": "papy_babou",
         "texte": "Dieu a vu qu'Adam était seul et il a dit : Il n'est pas bon que l'homme soit seul. Alors pendant qu'Adam dormait, Dieu a pris une de ses côtes et il en a fait la femme. Ève. Et quand Adam l'a vue, il était rempli de joie.",
         "ton": "chaleureux",
-        "rythme": "normal",
+        "rythme": "lent",
         "pause_apres_ms": 400
       },
       {
@@ -1270,9 +1288,9 @@
       {
         "id": "seg_115",
         "personnage": "noemie",
-        "texte": "C'est romantique, Mamie !",
+        "texte": "Comme dans les histoires d'amour !",
         "ton": "joyeux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 200
       },
       {
@@ -1332,6 +1350,22 @@
         "rythme": "rapide",
         "pause_apres_ms": 200,
         "id": "seg_120"
+      },
+      {
+        "id": "seg_120b",
+        "personnage": "antoine",
+        "texte": "N'importe quoi, Noémie ! Un éléphant ça s'appelle un éléphant !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_120c",
+        "personnage": "noemie",
+        "texte": "Ben Gros-Nez c'est plus rigolo !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 250
       },
       {
         "personnage": "papy_babou",
@@ -1401,7 +1435,7 @@
       {
         "id": "sfx_036",
         "personnage": "sfx",
-        "texte": "child climbing onto cushioned seat, soft fabric and leather rustling, small contented sigh, settling sounds",
+        "texte": "child climbing onto cushioned seat, soft fabric and leather rustling, settling sounds",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 3.0,
@@ -1483,7 +1517,7 @@
       {
         "id": "sfx_038b",
         "personnage": "sfx",
-        "texte": "warm cozy evening room ambiance, gentle fireplace with occasional soft pop, clock ticking steadily",
+        "texte": "evening wind gently whistling past window, warm indoor ambiance with distant owl hoot, old house creaking softly",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
@@ -1581,7 +1615,7 @@
       {
         "id": "sfx_038c",
         "personnage": "sfx",
-        "texte": "warm evening room settling, gentle fireplace embers, distant crickets through window, peaceful goodbye atmosphere",
+        "texte": "quiet evening settling sounds, gentle breeze through curtains, distant church bells ringing softly, warm indoor atmosphere",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
@@ -1638,7 +1672,7 @@
       {
         "id": "sfx_039",
         "personnage": "sfx",
-        "texte": "children's footsteps leaving, car doors, engine starting, evening crickets chirping",
+        "texte": "small footsteps on gravel path, car doors, engine starting, evening crickets chirping",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
