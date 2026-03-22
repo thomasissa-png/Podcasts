@@ -106,7 +106,7 @@
         "texte": "rain pattering on windows, cozy fireplace crackling, clock ticking softly in background",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
       {
@@ -289,7 +289,7 @@
       {
         "id": "sfx_007",
         "personnage": "sfx",
-        "texte": "warm orchestral swell with gentle strings, hopeful melody rising softly",
+        "texte": "warm sustained pad chord slowly rising in volume, gentle resonant tone with soft shimmer",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -427,7 +427,7 @@
       {
         "id": "sfx_008b",
         "personnage": "sfx",
-        "texte": "crowd laughing mockingly in distance, derisive jeering fading away",
+        "texte": "group scoffing and jeering sounds, derisive crowd murmur without speech, mocking reaction fading",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -731,7 +731,7 @@
         "texte": "rain starting light then rapidly intensifying to torrential downpour, strong wind howling, thunder rolling continuously",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 10.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -908,7 +908,7 @@
       {
         "id": "seg_088",
         "personnage": "noemie",
-        "texte": "Enfin !",
+        "texte": "Enfin ! C'est fini la pluie !",
         "ton": "soulagé",
         "rythme": "rapide",
         "pause_apres_ms": 200
@@ -1014,7 +1014,7 @@
       {
         "id": "sfx_017",
         "personnage": "sfx",
-        "texte": "soft wing flutter approaching from distance, delicate bird landing on wooden railing, warm hopeful string chord swelling gently",
+        "texte": "soft wing flutter approaching from distance, delicate bird landing on wooden railing with gentle thud",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -1120,7 +1120,7 @@
       {
         "id": "sfx_019",
         "personnage": "sfx",
-        "texte": "bright orchestral swell with warm strings rising, shimmering high chimes cascading, harp arpeggios ascending gently",
+        "texte": "bright shimmering chimes cascading upward, warm resonant bell tones ascending gently, radiant high-frequency shimmer",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 6.0,
@@ -1227,7 +1227,7 @@
       {
         "id": "sfx_020b",
         "personnage": "sfx",
-        "texte": "warm harp glissando descending gently, settling into cozy fireplace crackling, clock ticking softly",
+        "texte": "soft melodic chime descending gently, cozy fireplace crackling resuming, clock ticking softly",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
