@@ -1,0 +1,477 @@
+{
+  "episode": {
+    "titre": "Abraham — celui qui a tout quitté par confiance",
+    "numero": 3,
+    "saison": 1,
+    "duree_cible_minutes": 13,
+    "ambiance": "calme",
+    "morale": "Faire confiance, c'est parfois partir sans savoir où l'on va. Les plus belles aventures commencent par un acte de foi.",
+    "personnages_presents": ["papy_babou", "antoine", "noemie", "mamie_sonia", "narrateur"],
+    "moments_cles": [
+      "Abraham regarde les étoiles et essaie de les compter",
+      "Noémie demande si Sara était aussi vieille que Mamie",
+      "La naissance d'Isaac — la joie après l'attente",
+      "Mamie Sonia raconte qu'elle aussi a eu peur en déménageant",
+      "Antoine fait le parallèle avec son propre déménagement"
+    ],
+    "segments": [
+      {
+        "id": "sfx_001",
+        "personnage": "sfx",
+        "texte": "Warm crackling fireplace ambiance with soft bird chirps in background, gentle and cozy atmosphere pad",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 6.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_001",
+        "personnage": "narrateur",
+        "texte": "Chez Papy Babou, c'est un après-midi calme. Le soleil entre doucement par la fenêtre du salon. Antoine est assis sur le canapé, le regard un peu soucieux. Noémie, elle, dessine par terre avec ses crayons de couleur.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_002",
+        "personnage": "papy_babou",
+        "texte": "Mes petits loups, installez-vous bien confortablement, Papy a une histoire extraordinaire à vous raconter aujourd'hui. Mais d'abord, Antoine, tu as l'air tout pensif. Qu'est-ce qui te tracasse ?",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_003",
+        "personnage": "antoine",
+        "texte": "C'est à cause du déménagement, Papy. Maman a dit qu'on allait changer de maison pour le bébé. Mais moi, je veux pas changer d'école. Tous mes copains sont là-bas.",
+        "ton": "inquiet",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_004",
+        "personnage": "noemie",
+        "texte": "Moi, je veux une chambre avec des étoiles au plafond dans la nouvelle maison !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_005",
+        "personnage": "papy_babou",
+        "texte": "Eh bien, mes trésors, ça tombe à merveille. Parce que justement, l'histoire d'aujourd'hui parle d'un homme qui a dû tout quitter. Vous vous souvenez de Noé, la dernière fois ?",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_006",
+        "personnage": "antoine",
+        "texte": "Oui ! Celui qui a construit l'arche et qui s'est fait moquer par tout le monde. Et après, l'arc-en-ciel, c'était la promesse de Dieu !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_007",
+        "personnage": "noemie",
+        "texte": "Et on avait demandé si les animaux s'entendaient bien dans l'arche. Moi je suis sûre que oui.",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_008",
+        "personnage": "papy_babou",
+        "texte": "Figurez-vous que, après le déluge, la terre s'est repeuplée. Des familles, puis des villages, puis des villes entières. Des générations et des générations ont passé. Et un jour, Dieu a choisi un homme pour commencer une grande, grande histoire.",
+        "ton": "dramatique",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_009",
+        "personnage": "antoine",
+        "texte": "Comme un super-héros choisi pour une mission ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_010",
+        "personnage": "papy_babou",
+        "texte": "Un peu, oui. Sauf que ce héros-là n'avait pas de cape ni de pouvoirs magiques. Il s'appelait Abrame. Il vivait dans une grande ville appelée Our, en Mésopotamie. C'est très loin d'ici, au Moyen-Orient.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_002",
+        "personnage": "sfx",
+        "texte": "Warm Middle Eastern string drone with soft wind layer, evoking a desert landscape, gentle reverb tail",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_011",
+        "personnage": "papy_babou",
+        "texte": "Abrame avait une belle maison, une famille, des troupeaux. Il ne manquait de rien. Et il avait une femme qu'il aimait beaucoup, Saraï. Ils étaient heureux là-bas. Mais il leur manquait une chose : ils n'avaient pas d'enfant.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_012",
+        "personnage": "noemie",
+        "texte": "Oh non, le pauvre. Ils devaient être tristes.",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_013",
+        "personnage": "papy_babou",
+        "texte": "Oui, ma puce, c'était une grande tristesse pour eux. Mais un jour, quelque chose d'incroyable est arrivé. Et devinez quoi ? Dieu lui-même a parlé à Abrame.",
+        "ton": "dramatique",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_003",
+        "personnage": "sfx",
+        "texte": "Deep resonant sub-bass swell building slowly, with ethereal high-pitched shimmer overtones, reverent and mysterious",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_014",
+        "personnage": "papy_babou",
+        "texte": "Dieu a dit à Abrame : quitte ton pays, quitte ta famille, quitte tout ce que tu connais. Pars vers un pays que je te montrerai. Je ferai de toi un grand peuple, et toutes les familles de la terre seront bénies grâce à toi.",
+        "ton": "dramatique",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "seg_015",
+        "personnage": "antoine",
+        "texte": "Attends, attends, je comprends pas ! Il devait tout quitter sans même savoir où il allait ? Mais c'est pas possible !",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_016",
+        "personnage": "papy_babou",
+        "texte": "C'est exactement ça, mon bonhomme. Pas de carte, pas de plan. Juste la voix de Dieu et une promesse. Comme disait ma grand-mère : la confiance, c'est marcher dans le noir en sachant que le chemin est là.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_017",
+        "personnage": "noemie",
+        "texte": "Il avait pas peur, Papy ? Moi, j'aurais eu super peur de partir comme ça.",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_018",
+        "personnage": "papy_babou",
+        "texte": "Bien sûr qu'il avait peur, ma puce. Abrame avait soixante-quinze ans quand il est parti. Soixante-quinze ! Avec sa femme Saraï, son neveu Lotte, ses troupeaux, ses serviteurs. Toute une caravane dans le désert.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_004",
+        "personnage": "sfx",
+        "texte": "Gentle rhythmic camel bells with soft sandy footsteps, distant wind whisper, slow caravan travel ambiance",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_019",
+        "personnage": "narrateur",
+        "texte": "Alors Abrame a marché. Des jours, des semaines, des mois. À travers le désert brûlant, sous un soleil immense. Sa femme Saraï marchait à ses côtés, courageuse elle aussi.",
+        "ton": "neutre",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_020",
+        "personnage": "antoine",
+        "texte": "Et après, qu'est-ce qui s'est passé ? Il a trouvé le pays que Dieu lui avait promis ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_021",
+        "personnage": "papy_babou",
+        "texte": "Attendez, attendez, j'y viens ! Abrame est arrivé au pays de Canane. Et là, Dieu lui a dit : regarde autour de toi. Tout ce que tu vois, je te le donne, à toi et à ta descendance pour toujours.",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_022",
+        "personnage": "noemie",
+        "texte": "C'est quoi, la descendance, Papy ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_023",
+        "personnage": "papy_babou",
+        "texte": "La descendance, c'est les enfants, et les enfants de tes enfants, et ainsi de suite. Toute la famille qui vient après toi. Comme toi, tu es la descendance de ta maman et de ton papa.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_024",
+        "personnage": "antoine",
+        "texte": "Mais Papy, pourquoi Dieu lui promettait des enfants s'il en avait pas ? C'est bizarre, non ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_025",
+        "personnage": "papy_babou",
+        "texte": "Ah, justement ! C'est là que l'histoire devient vraiment belle. Un soir, Dieu a emmené Abrame dehors, sous le ciel étoilé. Et il lui a dit : lève les yeux. Regarde les étoiles. Essaie de les compter.",
+        "ton": "dramatique",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "sfx_005",
+        "personnage": "sfx",
+        "texte": "Soft night cricket ambiance with gentle twinkling high-frequency shimmer pads evoking starlight, wide stereo field",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 6.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_026",
+        "personnage": "noemie",
+        "texte": "Mais on peut pas compter les étoiles, Papy ! Il y en a beaucoup trop !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_027",
+        "personnage": "papy_babou",
+        "texte": "C'est pas merveilleux, ça ? Dieu a dit à Abrame : ta descendance sera aussi nombreuse que ces étoiles. Et à ce moment-là, Dieu lui a donné un nouveau nom. Abrame est devenu Abraame, et Saraï est devenue Sara.",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_028",
+        "personnage": "antoine",
+        "texte": "Trop cool ! Un nouveau nom, comme un nouveau départ !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_029",
+        "personnage": "papy_babou",
+        "texte": "Exactement, Antoine. Un nouveau nom pour une nouvelle vie. Mais les années ont passé. Abraame et Sara vieillissaient, et toujours pas d'enfant. Abraame avait quatre-vingt-dix-neuf ans. Sara en avait quatre-vingt-dix.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_030",
+        "personnage": "noemie",
+        "texte": "Quatre-vingt-dix ans ? Elle était aussi vieille que Mamie Sonia ?",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_031",
+        "personnage": "mamie_sonia",
+        "texte": "Mes petits chéris, je suis peut-être pas toute jeune, mais quand même, quatre-vingt-dix ans ! Votre Papy exagère toujours un peu, mais là, c'est la Bible qui le dit !",
+        "ton": "joyeux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_032",
+        "personnage": "papy_babou",
+        "texte": "Mamie a raison. Sara était bien plus âgée que Mamie Sonia. Et quand Dieu a annoncé qu'elle aurait un enfant, vous savez ce que Sara a fait ? Elle a ri ! Elle a ri parce qu'elle n'y croyait plus.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_033",
+        "personnage": "noemie",
+        "texte": "Papy, c'est quoi le goûter aujourd'hui ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_034",
+        "personnage": "antoine",
+        "texte": "Chut, laisse Papy finir ! Je veux savoir si elle a eu le bébé !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_035",
+        "personnage": "mamie_sonia",
+        "texte": "Qui veut une part de gâteau ? Mais après l'histoire, promis !",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_036",
+        "personnage": "papy_babou",
+        "texte": "Vous voyez, mes enfants, Dieu a tenu sa promesse. Même après toutes ces années d'attente, même quand ça semblait impossible. Sara a eu un fils. Un magnifique petit garçon.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_006",
+        "personnage": "sfx",
+        "texte": "Soft warm major-key harp arpeggio with gentle reverb bloom, tender and joyful newborn moment",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_037",
+        "personnage": "papy_babou",
+        "texte": "Et ils l'ont appelé Isaac. Et devinez ce que signifie Isaac ? Ça veut dire « il rit ». Parce que Sara avait ri quand Dieu lui avait fait cette promesse. Mais cette fois, c'était un rire de bonheur.",
+        "ton": "joyeux",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_038",
+        "personnage": "noemie",
+        "texte": "Et ils étaient contents après ? C'est trop beau ! Comme maman qui attend le petit Lucas !",
+        "ton": "joyeux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_039",
+        "personnage": "antoine",
+        "texte": "C'est vrai, Papy ? Abraham a jamais regretté d'être parti de chez lui ?",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_040",
+        "personnage": "papy_babou",
+        "texte": "Ah mes petits loups, c'est la plus belle question. Non, Abraame n'a jamais regretté. Parce qu'en partant, il a trouvé bien plus que ce qu'il avait laissé. Il a trouvé le sens de sa vie. Sa grande aventure.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_041",
+        "personnage": "mamie_sonia",
+        "texte": "Mes petits chéris, vous savez, quand Papy et moi on a déménagé ici en Provence, j'avais très peur. Je quittais tous mes amis. Mais finalement, c'est ici qu'on a trouvé notre plus beau bonheur.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_042",
+        "personnage": "antoine",
+        "texte": "Mais Papy, pourquoi c'est si dur de partir même quand on sait que ça va bien se passer ? Moi, le déménagement, ça me fait un peu peur.",
+        "ton": "inquiet",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_043",
+        "personnage": "papy_babou",
+        "texte": "Parce que la confiance, mon grand, ça ne veut pas dire ne pas avoir peur. Ça veut dire avancer malgré la peur. Abraame aussi avait peur. Mais il a fait un pas, puis un autre, puis un autre.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_044",
+        "personnage": "noemie",
+        "texte": "Moi je l'aurais aidé, Abraame ! Je lui aurais tenu la main pour marcher dans le désert.",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_045",
+        "personnage": "papy_babou",
+        "texte": "Et c'est exactement ce que Dieu a fait, ma puce. Il lui a tenu la main tout le long du chemin. Même quand Abraame ne le voyait pas.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_046",
+        "personnage": "antoine",
+        "texte": "Alors peut-être que le déménagement, c'est un peu comme Abraame. On part, on a peur, mais peut-être qu'on va trouver des trucs encore mieux.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_047",
+        "personnage": "papy_babou",
+        "texte": "Voilà, mon grand. Tu as tout compris. De nouveaux amis, une nouvelle chambre, et le petit Lucas qui va arriver. C'est ta grande aventure à toi.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_007",
+        "personnage": "sfx",
+        "texte": "Gentle warm orchestral pad swell resolving to a soft major chord, feeling of peace and resolution",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_048",
+        "personnage": "papy_babou",
+        "texte": "Maintenant, c'est le moment du petit mot de Papy. Fermez les yeux un instant, mes petits loups. Et pensez à quelque chose qui vous fait peur, un changement, quelque chose de nouveau. Est-ce que vous pouvez faire un tout petit pas vers cette chose-là, même avec la peur au ventre ?",
+        "ton": "chaleureux",
+        "pause_apres_ms": 2500
+      },
+      {
+        "id": "seg_049",
+        "personnage": "papy_babou",
+        "texte": "Parce que la leçon d'Abraame, c'est celle-ci : faire confiance, c'est parfois partir sans savoir où l'on va. Et les plus belles aventures commencent par un acte de foi. Un seul petit pas suffit.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_050",
+        "personnage": "noemie",
+        "texte": "Raconte encore, Papy ! Qu'est devenu Isaac en grandissant ?",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_051",
+        "personnage": "papy_babou",
+        "texte": "Ah, Isaac a eu une vie incroyable aussi. Mais ça, ce sera pour une autre fois. Parce que la prochaine histoire, figurez-vous que c'est celle d'un garçon qui avait un manteau tellement beau que ses frères en étaient jaloux.",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_052",
+        "personnage": "antoine",
+        "texte": "Wahou ! Et il a gagné à la fin ? Et ça a mal tourné à cause du manteau ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_053",
+        "personnage": "papy_babou",
+        "texte": "Ça a très mal tourné, mon bonhomme. Mais Dieu avait un plan. Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_054",
+        "personnage": "noemie",
+        "texte": "Mais ça finit bien, hein Papy ? La prochaine histoire, elle finit bien ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_055",
+        "personnage": "papy_babou",
+        "texte": "Avec Dieu, mes petits loups, ça finit toujours bien. À la prochaine !",
+        "ton": "joyeux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_008",
+        "personnage": "sfx",
+        "texte": "Warm outro music with soft acoustic guitar melody fading out, gentle reverb, cozy and hopeful closing feel",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      }
+    ]
+  }
+}
