@@ -30,5 +30,38 @@
     "ratio_biblique": 0,
     "ratio_enfants": 0,
     "elements_fil_rouge": ""
+  },
+  {
+    "episode_id": "S01E02",
+    "saison": 1,
+    "numero": 2,
+    "titre": "Noé et le déluge — l'arche qui a sauvé le monde",
+    "morale": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
+    "resume_court": "Il faisait nuit en plein jour. Le ciel était devenu noir comme de l'encre. Et la pluie tombait, tombait, tombait sans jamais s'arrêter. L'eau montait, montait, montait. Elle recouvrait les collines, p",
+    "date_production": "2026-03-22T13:16:08.848760",
+    "score_review": 9.0,
+    "personnages_presents": [
+      "papy_babou",
+      "antoine",
+      "noemie",
+      "mamie_sonia"
+    ],
+    "moments_cles": [
+      "Le cold open : le déluge vu de l'extérieur, l'arche flottant dans la tempête",
+      "Noémie qui veut savoir comment les girafes sont entrées dans l'arche",
+      "Antoine qui fait le lien entre les moqueries de Noé et celles de Maxime à l'école",
+      "La nuit de la grande vague — l'arche tremble mais tient bon grâce à la prière de Noé",
+      "Le moment où la pluie s arrête enfin — silence puis joie",
+      "La colombe qui revient avec le rameau d'olivier",
+      "L arc-en-ciel comme promesse — Noémie court à la fenêtre chercher un vrai arc-en-ciel"
+    ],
+    "questions_ouvertes": [],
+    "evolutions_personnages": "Antoine est touché par le courage de Noé face aux moqueries. Il fait le lien avec Maxime qui se moque de lui à l'école quand il lève la main. Il comprend que le vrai courage, c'est de faire ce qui est juste même quand on se moque de vous. Il promet d être courageux comme Noé. Noémie développe son empathie pour les animaux et sa curiosité.",
+    "ambiance": "dramatique",
+    "type_episode": "standard",
+    "retours_humains": "",
+    "ratio_biblique": 0,
+    "ratio_enfants": 0,
+    "elements_fil_rouge": ""
   }
 ]

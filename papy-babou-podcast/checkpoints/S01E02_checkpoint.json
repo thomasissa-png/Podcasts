@@ -1,0 +1,32 @@
+{
+  "episode_id": "S01E02",
+  "etape": "waiting_script",
+  "timestamp": "2026-03-22T13:16:08.848760",
+  "data": {
+    "episode_id": "S01E02",
+    "titre": "Noé et le déluge — l'arche qui a sauvé le monde",
+    "resume": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
+    "saison": 1,
+    "numero": 2,
+    "morale": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
+    "type_episode": "standard",
+    "dry_run": false,
+    "rapport": {
+      "episode_id": "S01E02",
+      "titre": "Noé et le déluge — l'arche qui a sauvé le monde",
+      "dry_run": false,
+      "debut": "2026-03-22T13:16:08.848760",
+      "etapes": {
+        "script": {
+          "status": "waiting_script",
+          "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01E02_script.json",
+          "score_review": 9.0,
+          "validation_humaine": false
+        }
+      },
+      "decisions_humaines": []
+    },
+    "script_path": "output/scripts/S01E02_script.json",
+    "stop_after": "script"
+  }
+}
