@@ -1914,3 +1914,39 @@ That's it. The pipeline will detect and use it automatically.
 ### Git Workflow (Session 24)
 - Branch: `claude/episode-2-script-QbSiY`
 - Push: `git push -u origin claude/episode-2-script-QbSiY`
+
+## Homepage & Public Site Fixes (Session 25)
+
+### Episode List Layout Fix
+- **Bug**: Episodes displayed side-by-side (2 columns) on large screens instead of vertical list
+- **Cause**: `@media (min-width: 1200px)` had `grid-template-columns: 1fr 1fr` overriding the `flex-direction: column` base
+- **Fix**: Removed the 2-column grid override — episodes always stack vertically (standard podcast list pattern)
+
+### Homepage Episode Visibility Rules
+- **Filter by cover**: Only episodes with a `cover_url` appear on the public homepage (`api_public_episodes()`)
+- Episodes without cover art are excluded even if they have an entry in `historique_episodes.json`
+- **"À venir" badge**: Gold pill badge (`episode-coming-soon-badge`) shown when episode has cover but no audio
+- Play button is completely hidden (not disabled) when no audio — badge replaces it
+- Badge uses `&#9202;` (timer emoji) + "À venir" text, styled with `var(--dore)` color and translucent gold background
+
+### Character Avatar Fixes
+- **Alignment**: Added `padding: 0; margin: 0` to `.characters` `<ul>` — browser default `padding-left: 40px` was pushing avatars right
+- **Cropping**: Changed `.char-avatar img` from `object-fit: cover` to `object-fit: contain` — avatars show in full without being cropped
+
+### When modifying public.html (Session 25 patterns)
+- `.characters` must have `padding: 0; margin: 0` (browser default padding pushes list items right)
+- `.char-avatar img` uses `object-fit: contain` (not `cover`) to prevent avatar cropping
+- `.episodes-list` must NOT have `grid-template-columns` in any media query — always vertical flex
+- Episodes without audio: no play button rendered (not just disabled), badge "À venir" shown instead
+- `episode-coming-soon-badge` class: gold pill, `var(--dore)` color, `border-radius: 999px`
+
+### When modifying web.py (Session 25)
+- `api_public_episodes()` filters: `[ep for ep in episodes_public if ep.get("cover_url")]`
+- Episodes without cover are excluded from public API (admin API `/api/episodes` is unaffected)
+
+### .gitignore Fix
+- `papy-babou-podcast/logs/production.log` → `logs/production.log` (paths are relative to `.gitignore` location)
+
+### Git Workflow (Session 25)
+- Branch: `claude/episode-2-script-QbSiY`
+- Push: `git push -u origin claude/episode-2-script-QbSiY`
