@@ -47,8 +47,8 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;700&display=swap" rel="stylesheet"></noscript>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;700&family=Pacifico&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;700&family=Pacifico&display=swap" rel="stylesheet"></noscript>
   <style>
     /* ── Reset & Variables ─────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -213,13 +213,25 @@
 
     .hero-title {
       margin-bottom: var(--space-xs);
+      line-height: 1.1;
     }
 
-    .hero-logo {
-      max-width: 380px;
-      width: 100%;
-      height: auto;
-      filter: drop-shadow(0 2px 8px rgba(27, 42, 74, 0.3));
+    .hero-title-top {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--blanc);
+      letter-spacing: 0.02em;
+    }
+
+    .hero-title-bottom {
+      display: block;
+      font-family: 'Pacifico', cursive;
+      font-size: 3.2rem;
+      font-weight: 400;
+      color: var(--bleu-nuit);
+      text-shadow: 0 2px 8px rgba(27, 42, 74, 0.25);
     }
 
     .hero-subtitle {
@@ -1467,6 +1479,7 @@
         text-align: center;
       }
       .hero-text { text-align: center; }
+      .hero-title-bottom { font-size: 2.4rem; }
       .hero-cover { width: 160px; height: 160px; }
       .hero-meta { justify-content: center; }
       .hero-doodles { display: none; }
@@ -1794,7 +1807,8 @@
       <img src="/assets/artwork/cover_base.png" alt="Papy Babou, Antoine et Noémie autour d'un livre ouvert" class="hero-cover" width="220" height="220" fetchpriority="high">
       <div class="hero-text">
         <h1 class="hero-title">
-          <img src="/assets/artwork/logo-text-only.png" alt="Les Histoires de Papy Babou" class="hero-logo">
+          <span class="hero-title-top">Les Histoires de</span>
+          <span class="hero-title-bottom">Papy Babou</span>
         </h1>
         <p class="hero-subtitle">Le podcast qui transforme le coucher en expédition biblique</p>
         <div class="hero-meta">
