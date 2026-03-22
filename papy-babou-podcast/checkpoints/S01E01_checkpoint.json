@@ -1,6 +1,6 @@
 {
   "episode_id": "S01E01",
-  "etape": "waiting_script",
+  "etape": "sfx_done",
   "timestamp": "2026-03-21T14:40:00.000000",
   "data": {
     "episode_id": "S01E01",
@@ -24,12 +24,18 @@
           "validation_humaine": true,
           "validation_web": true,
           "validation_date": "2026-03-21T14:40:00.000000"
+        },
+        "audio": {
+          "status": "audio_done"
+        },
+        "sfx": {
+          "status": "sfx_done"
         }
       },
       "decisions_humaines": []
     },
     "script_path": "/home/user/Podcasts/papy-babou-podcast/scripts/episodes/S01E01_script.json",
     "pubdate_offset_seconds": 3600,
-    "stop_after": "script"
+    "stop_after": "montage"
   }
 }

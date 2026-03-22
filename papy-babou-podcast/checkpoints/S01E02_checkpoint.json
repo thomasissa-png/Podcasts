@@ -27,6 +27,13 @@
       "decisions_humaines": []
     },
     "script_path": "/home/user/Podcasts/papy-babou-podcast/scripts/episodes/S01E02_script.json",
-    "stop_after": "script"
+    "stop_after": "script",
+    "segments_a_regenerer": [
+      "seg_009",
+      "seg_065",
+      "seg_116",
+      "seg_117",
+      "seg_130"
+    ]
   }
 }

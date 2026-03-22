@@ -3346,6 +3346,29 @@ def _pipeline_inner(
             )
             etape_idx = 2  # Reculer à l'étape audio
 
+        # ── Suppression ciblée de segments à regénérer ──
+        # Si le checkpoint contient 'segments_a_regenerer', supprimer ces fichiers
+        # pour forcer le producteur audio à les regénérer (ex: texte modifié).
+        _segs_a_regen = (checkpoint_data or {}).get("segments_a_regenerer", [])
+        if _segs_a_regen and segments_episode_dir.exists():
+            _nb_regen = 0
+            for _sid in _segs_a_regen:
+                _regen_path = segments_episode_dir / f"{_sid}.mp3"
+                if _regen_path.exists():
+                    try:
+                        _regen_path.unlink()
+                        _nb_regen += 1
+                    except OSError:
+                        pass
+            if _nb_regen > 0:
+                _log_direct(
+                    f"Segments à regénérer : {_nb_regen} fichiers supprimés "
+                    f"(texte modifié : {', '.join(_segs_a_regen)})"
+                )
+                logger.info(
+                    "Segments à regénérer supprimés : %s", _segs_a_regen
+                )
+
         # ── Nettoyage des segments périmés ──
         # Après restauration depuis Object Storage, il peut y avoir des segments
         # d'anciennes productions (IDs différents du script actuel).

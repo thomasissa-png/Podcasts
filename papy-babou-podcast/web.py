@@ -2246,8 +2246,8 @@ def api_continue_production(episode_id):
     body = request.get_json(force=True)
     phase = body.get("phase", "").strip()
 
-    if phase not in ("audio", "publication"):
-        return jsonify({"error": "Phase invalide. Valeurs acceptées : audio, publication"}), 400
+    if phase not in ("audio", "montage", "publication"):
+        return jsonify({"error": "Phase invalide. Valeurs acceptées : audio, montage, publication"}), 400
 
     # Vérifier qu'un checkpoint existe pour cet épisode
     # Si le fichier n'existe pas (redéploiement), restaurer depuis Object Storage ou DB
@@ -2334,6 +2334,22 @@ def api_continue_production(episode_id):
         except ValueError as e:
             return jsonify({"error": str(e)}), 409
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "audio"})
+
+    elif phase == "montage":
+        # Re-montage uniquement : reprend depuis le checkpoint avec stop_after=montage
+        # Utile quand les segments audio sont OK mais le montage doit être refait
+        # (ex: changement monteur, suppression cold open, etc.)
+        cmd = [
+            "reprendre",
+            "-c", str(checkpoint_path),
+            "--auto",
+            "--stop-after", "montage",
+        ]
+        try:
+            job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 409
+        return jsonify({"status": "accepted", "job_id": job_id, "phase": "montage"})
 
     elif phase == "publication":
         # C1: Injecter validation_humaine dans le checkpoint pour que
