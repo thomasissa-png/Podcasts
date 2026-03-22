@@ -1165,6 +1165,9 @@ def api_public_episodes():
             "date": date_str,
         })
 
+    # Filtrer: uniquement les épisodes avec couverture
+    episodes_public = [ep for ep in episodes_public if ep.get("cover_url")]
+
     # Trier par saison puis numéro
     episodes_public.sort(key=lambda e: (e["saison"], e["numero"]))
 

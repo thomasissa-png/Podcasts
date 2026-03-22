@@ -469,6 +469,18 @@
       flex-shrink: 0;
     }
     .episode-listened-badge svg { width: 14px; height: 14px; fill: var(--vert-prairie); }
+    .episode-coming-soon-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--dore);
+      background: rgba(232, 160, 32, 0.1);
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
     .episode-card.is-playing {
       border-left-color: var(--accent);
       background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.08) 0%, var(--blanc) 30%);
@@ -545,7 +557,7 @@
       margin-top: 0.8rem;
     }
 
-    .characters { list-style: none; }
+    .characters { list-style: none; padding: 0; margin: 0; }
 
     .characters li {
       display: flex;
@@ -2397,10 +2409,12 @@
         var coverSrc = ep.cover_url || '/assets/artwork/cover.svg';
         var coverHtml = '<img class="episode-cover" src="' + escHtml(coverSrc) + '" alt="' + escHtml('Couverture de la mission : ' + (ep.titre || '')) + '" loading="lazy">';
 
-        // Listened badge
+        // Listened badge or coming soon badge
         var listenedBadge = '';
         var listenedInfo = listenedData[ep.episode_id];
-        if (listenedInfo && listenedInfo.progress >= 0.9) {
+        if (!hasAudio) {
+          listenedBadge = '<div class="episode-coming-soon-badge">&#9202; À venir</div>';
+        } else if (listenedInfo && listenedInfo.progress >= 0.9) {
           listenedBadge = '<div class="episode-listened-badge"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Écouté</div>';
         }
 
@@ -2426,7 +2440,7 @@
         }
 
         card.innerHTML =
-          '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : 'Disponible prochainement — ') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default" title="Disponible prochainement"') + '>' + playIcon + '</button>' +
+          (hasAudio ? '<button class="episode-play" aria-label="Écouter ' + escHtml(ep.titre) + '">' + playIcon + '</button>' : '') +
           resumeBadge +
           '<div class="episode-info">' +
             listenedBadge +
@@ -2438,8 +2452,9 @@
           '</div>';
 
         // Play button click
-        if (hasAudio) {
-          card.querySelector('.episode-play').addEventListener('click', function(e) {
+        var playBtn = card.querySelector('.episode-play');
+        if (playBtn && hasAudio) {
+          playBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             playEpisode(ep);
           });
