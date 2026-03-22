@@ -1289,50 +1289,134 @@
     ]
   },
   "validation_directeur": {
-    "note_globale": 0,
-    "verdict": "en_attente",
-    "note_audience": 0,
-    "axes": {
-      "immersion_sonore": {
-        "note": 0,
-        "commentaire": "22 SFX au total. Cold open avec tempête immersive. Bruitages de construction de l'arche (marteau, scie). Procession des animaux avec sons variés. Crescendo de la tempête avec overlay. Colombe avec sons délicats. Arc-en-ciel souligné par swell orchestral."
+    "directeur": {
+      "note_globale": 8.4,
+      "verdict": "feu_vert",
+      "synthese": "Un excellent deuxième épisode qui installe parfaitement les rituels du podcast et exploite le thème de Noé avec intelligence. Le parallèle Antoine/Maxime est le point fort émotionnel — c'est exactement le type de moment qui crée de la fidélisation chez les 8-10 ans. L'arrivée de Mamie Sonia est naturelle et bien dosée. Le cold open dramatique puis la bascule vers le salon cosy créent un contraste sonore immédiat qui capte l'attention.",
+      "axes": {
+        "immersion_sonore": {
+          "note": 7.5,
+          "commentaire": "22 SFX au total — bon volume. Le cold open tempête est immersif (sfx_001 à 003). La transition magique vers le salon (sfx_004) fonctionne. Bons moments ponctuels : construction arche (sfx_008), porte qui se ferme (sfx_011), procession animaux (sfx_010). POINTS FAIBLES : seulement 3 overlays sur 22 SFX — le ratio est déséquilibré. Il manque un overlay d'ambiance pendant la scène des moqueries (seg_037-052, 17 segments sans SFX = le plus grand trou sonore du script). L'ambiance_par_acte [dramatique, tendu, joyeux] manque de nuance — \"tendu\" et \"dramatique\" sont trop proches, \"mystérieux\" aurait mieux fonctionné pour l'acte 1 (construction + moqueries). Il manque un SFX de transition entre le récit biblique et le retour au salon pour le \"petit mot de Papy\"."
+        },
+        "rythme_accroche": {
+          "note": 8.5,
+          "commentaire": "Le cold open est excellent — 3 segments de narration dramatique pure avec SFX de tempête, puis transition magique vers le salon. L'auditeur est happé en 30 secondes. Le lien avec E01 (\"Vous vous souvenez de la dernière fois ?\") est naturel et rapide. Le running gag Noémie/goûter est bien placé (seg_063 au milieu de la procession des animaux). Le rythme est soutenu tout au long avec de bons mini-cliffhangers (\"Devinez quoi\" pour le rameau d'olivier). La séquence colombe en 3 envois crée un suspense progressif efficace. Seul léger temps mort : la section dans l'arche pendant le déluge (seg_077-081) pourrait être plus dynamique."
+        },
+        "emotion_personnages": {
+          "note": 9.0,
+          "commentaire": "Le moment Antoine/Maxime (seg_044-049) est le coeur émotionnel de l'épisode — brillamment amené par le parallèle avec Noé. La réponse de Papy (\"lever la main en classe, c'est construire ton arche\") est mémorable et quotable. Mamie Sonia a 8 répliques bien distribuées : chocolat chaud libanais, cèdres du Liban, anecdote de l'accent de Papy, symbole de la colombe — chaque intervention enrichit sans surcharger. Noémie est parfaite en chipie (\"Un gâteau ?\", \"Papy avait un accent rigolo ?\") et en peureuse (porte qui se ferme). La dynamique frère-soeur (\"Chut Noémie !\") est naturelle. Le fil rouge bébé (\"je serai son arche\") est touchant sans être forcé."
+        },
+        "valeur_educative": {
+          "note": 8.5,
+          "commentaire": "Récit biblique fidèle et complet : corruption de l'humanité, choix de Noé, dimensions de l'arche, animaux deux par deux, 40 jours, corbeau puis colombe, rameau d'olivier, arc-en-ciel comme alliance. Fun facts bien calibrés : arche vs terrain de foot (parle aux enfants), éléphant = 150 kg/jour, prisme et arc-en-ciel, colombe = symbole de paix. Morale doublement portée : courage face aux moqueries + persévérance. Le lien avec la vraie vie d'Antoine la rend concrète et applicable. Quiz bien construit avec niveaux facile/avancé. Petit bémol : on ne mentionne pas que l'eau est restée 150 jours (seulement les 40 jours de pluie) — détail biblique mineur mais que Sophie (parent catho) pourrait noter."
+        },
+        "compatibilite_voix_ia": {
+          "note": 9.0,
+          "commentaire": "Aucune onomatopée dans les textes parlés. Tous les segments respectent les limites de mots (max 60 adultes, max 40 enfants vérifiés). Nombres en toutes lettres (quarante, cent trente-sept, sept, huit). Pas d'ellipses. Bonne variété de tons : dramatique, mystérieux, chaleureux, solennel, espiègle, émerveillé, triste, rassurant, déterminé. Les rythmes alternent bien entre lent/normal/rapide. Les pauses sont bien calibrées (200-500ms). Les segments courts de Noémie (5-10 mots) passeront très bien en voix IA enfant."
+        },
+        "qualite_sfx": {
+          "note": 7.5,
+          "commentaire": "Descriptions en anglais, spécifiques et reproductibles. Bons exemples : \"massive heavy wooden door slowly closing with deep creak, loud final thud echoing, iron latch locking with metallic clang\" (sfx_011), \"hammer hitting wood rhythmically, saw cutting through timber\" (sfx_008). Les durées sont cohérentes (3-10s). Cependant : ratio overlay/insert déséquilibré (3/19 — il faudrait plus d'overlays d'ambiance). Le trou de 17 segments sans SFX (seg_037-060) est trop long. sfx_016 et sfx_017 sont trop similaires (\"gentle dove cooing\" deux fois — manque de variété). Il manque un overlay d'ambiance dans l'arche pendant le déluge (craquements du bois, animaux au loin).",
+          "sfx_problematiques": [
+            {
+              "id": "sfx_017",
+              "probleme": "Trop similaire à sfx_016 (\"gentle dove cooing\" x2)",
+              "suggestion": "soft wing flutter approaching, delicate bird landing on wooden railing, warm hopeful string chord swelling"
+            },
+            {
+              "id": "zone seg_037-060",
+              "probleme": "17 segments consécutifs sans SFX — trou sonore pendant les moqueries et la procession des animaux",
+              "suggestion": "Ajouter un overlay d'ambiance extérieure avec crowd murmuring et un insert de crowd laughing mockingly pendant les moqueries (seg_039)"
+            },
+            {
+              "id": "zone seg_077-086",
+              "probleme": "Manque un overlay d'ambiance dans l'arche pendant le déluge",
+              "suggestion": "Ajouter un overlay : wooden ship creaking rhythmically, muffled rain on hull, distant animal sounds inside large wooden structure (15s)"
+            }
+          ]
+        }
       },
-      "rythme_accroche": {
-        "note": 0,
-        "commentaire": "Cold open dramatique avec le déluge. Transition douce vers le salon de Papy. Lien explicite avec E01. Montée en tension progressive. Running gag Noémie/goûter installé. Moment d'émotion avec Antoine/Maxime. Arc-en-ciel comme climax joyeux."
-      },
-      "emotion_personnages": {
-        "note": 0,
-        "commentaire": "Mamie Sonia a 6 répliques — première vraie apparition avec chocolat chaud, anecdote du Liban (cèdres), symbole de la paix, cake à l orange. Antoine ouvre son coeur sur les moqueries à l'école — moment pivot. Noémie chipie (gâteau dans le bec de la colombe) et peureuse (porte qui se ferme). Dynamique frère-soeur maintenue."
-      },
-      "valeur_educative": {
-        "note": 0,
-        "commentaire": "Récit biblique fidèle et complet. Fun facts : taille de l'arche vs terrain de foot, alimentation des éléphants (150 kg/jour), prisme et arc-en-ciel, colombe symbole de paix. Morale claire sur le courage face aux moqueries. Lien personnel avec la vie d Antoine."
-      },
-      "compatibilite_voix_ia": {
-        "note": 0,
-        "commentaire": "Aucune onomatopée dans les textes parlés. Segments dans les limites de mots (60 adultes, 40 enfants). Tons variés et explicites. Nombres écrits en toutes lettres. Pas d ellipses. Bonne alternance de personnages."
-      }
+      "recommandations": [
+        {
+          "priorite": "important",
+          "texte": "Combler le trou sonore entre seg_037 et seg_060 (moqueries + procession animaux) — ajouter au moins 2 SFX : un overlay d'ambiance extérieure et un insert de rires moqueurs."
+        },
+        {
+          "priorite": "important",
+          "texte": "Ajouter un overlay d'ambiance dans l'arche pendant le déluge (seg_077-086) — craquements du bois, pluie étouffée sur la coque, animaux au loin. C'est LE moment immersif de l'épisode."
+        },
+        {
+          "priorite": "important",
+          "texte": "Revoir ambiance_par_acte : remplacer [\"dramatique\", \"tendu\", \"joyeux\"] par [\"mystere\", \"dramatique\", \"joyeux\"] pour plus de contraste entre les actes."
+        },
+        {
+          "priorite": "suggestion",
+          "texte": "Ajouter un SFX de transition sonore entre le récit biblique (arc-en-ciel) et le retour au salon de Papy pour le \"petit mot de Papy\" — type warm harp transition."
+        },
+        {
+          "priorite": "suggestion",
+          "texte": "Varier sfx_017 par rapport à sfx_016 — la colombe revient mais le moment est différent (espoir vs départ), le SFX doit refléter cette évolution émotionnelle."
+        },
+        {
+          "priorite": "suggestion",
+          "texte": "Mentionner brièvement que l'eau est restée 150 jours au total (pas seulement 40 jours de pluie) — détail biblique que les parents cathos connaissent."
+        }
+      ],
+      "points_forts": [
+        "Le parallèle Antoine/Maxime est un moment de pure émotion qui ancre la morale dans le quotidien — c'est ce qui distingue ce podcast des \"cours de caté audio\"",
+        "La blague de Noémie \"Un gâteau ?\" quand la colombe revient avec le rameau — parfait pour le running gag et le rythme comique",
+        "Mamie Sonia est intégrée de façon naturelle et enrichissante (Liban, symbole de paix) sans voler le show à Papy",
+        "Le cold open dramatique est très efficace et crée un contraste fort avec le salon cosy — excellent hook",
+        "La séquence colombe en 3 envois crée un mini-suspense narratif très engageant pour les enfants",
+        "Le fil rouge bébé (\"je serai son arche\") est touchant et avance l'arc de la saison sans forcer"
+      ]
     },
     "personas": {
       "lina_7ans": {
-        "note": 0,
-        "commentaire": "Les animaux deux par deux la captiveront. La question des girafes et éléphants est irrésistible. La colombe est touchante. L arc-en-ciel est un moment magique. Noémie est un excellent miroir pour cette persona."
+        "reaction": "J'ai adoré les animaux qui rentrent dans l'arche ! Surtout les girafes qui baissent la tête, c'est trop drôle. Et quand Noémie dit \"un gâteau\" j'ai trop rigolé. Par contre quand la porte se ferme et que la pluie arrive, j'ai eu un peu peur. Mais Papy dit qu'ils sont en sécurité alors ça va. Et l'arc-en-ciel à la fin c'est trop beau ! Moi aussi je vais chercher un arc-en-ciel par la fenêtre.",
+        "accrocherait": true,
+        "moments_preferes": [
+          "Les girafes qui baissent la tête pour entrer dans l'arche",
+          "Noémie qui répond \"Un gâteau ?\" pour le bec de la colombe",
+          "L'arc-en-ciel comme promesse de Dieu",
+          "Le chocolat chaud de Mamie avec des chamallows"
+        ],
+        "points_decrochage": [
+          "La section sur les moqueries de Noé (seg_037-049) est un peu longue sans action ni SFX pour une 7 ans — elle pourrait décrocher pendant le dialogue Antoine/Maxime qu'elle ne vit pas directement"
+        ],
+        "note": 8.0
       },
       "noah_10ans": {
-        "note": 0,
-        "commentaire": "Les dimensions de l'arche (plus grand qu'un terrain de foot) parlent à son imagination. Le fun fact sur les éléphants et le prisme arc-en-ciel sont calibrés pour lui. Le thème du courage face aux moqueries résonne."
+        "reaction": "L'histoire de Noé c'est un classique mais j'ai bien aimé les détails. Genre l'arche plus grande qu'un terrain de foot et les éléphants qui mangent 150 kilos par jour, ça c'est des trucs que mes potes savent pas. Et le passage sur le courage de Noé face aux moqueries, ça m'a fait réfléchir parce que moi aussi des fois on se moque quand tu fais un truc bien. Le cold open avec la tempête était trop bien, on se serait cru dans un film.",
+        "accrocherait": true,
+        "moments_preferes": [
+          "Le cold open dramatique avec la tempête et l'arche",
+          "Les dimensions de l'arche (137m = plus qu'un terrain de foot)",
+          "Le fun fact éléphant 150kg/jour",
+          "Le parallèle moqueries de Noé / moqueries à l'école"
+        ],
+        "points_decrochage": [
+          "Les questions de Noémie sur les girafes et éléphants sont un peu \"bébé\" pour un 10 ans — il tolérera parce que c'est court, mais n'accrochera pas sur ces passages"
+        ],
+        "note": 8.0
       },
       "sophie_parent": {
-        "note": 0,
-        "commentaire": "Le parallèle Antoine/Maxime est un moment d éducation émotionnelle précieux. Mamie Sonia apporte chaleur et culture. La morale sur le courage est applicable au quotidien. Récit biblique fidèle."
+        "reaction": "Je suis impressionnée par la qualité de cet épisode. Le récit biblique est fidèle et complet, avec tous les éléments clés : la corruption de l'humanité, l'appel de Dieu à Noé, les dimensions de l'arche, les animaux deux par deux, les 40 jours, le corbeau, la colombe et le rameau d'olivier, l'arc-en-ciel comme alliance. Le moment où Antoine parle de Maxime m'a touchée — c'est exactement le type de pont entre la Bible et la vie quotidienne que je cherche pour mes enfants. Mamie Sonia apporte une touche culturelle bienvenue. Je recommanderais sans hésiter.",
+        "recommanderait": true,
+        "points_positifs": [
+          "Fidélité biblique excellente — tous les éléments clés sont présents",
+          "Le parallèle Noé/Maxime rend la morale concrète et applicable",
+          "Mamie Sonia enrichit culturellement sans être intrusive",
+          "Le ton est juste — transmission de valeurs sans moralisation pesante",
+          "Le quiz à deux niveaux permet de vérifier la compréhension"
+        ],
+        "reserves": [
+          "Les 150 jours d'eau après les 40 jours de pluie ne sont pas mentionnés — un détail biblique mineur mais que je connais (Genèse 7:24)",
+          "La question sur le sort des gens moqueurs (seg_073-074) est traitée rapidement — un parent pourrait vouloir plus de nuance sur le jugement de Dieu"
+        ],
+        "note": 8.5
       }
     },
-    "recommandations": [
-      {
-        "type": "note",
-        "detail": "Notes à 0 — en attente de validation par le directeur artistique."
-      }
-    ]
+    "note_audience": 8.2
   }
 }
