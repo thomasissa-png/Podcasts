@@ -1,6 +1,6 @@
 {
   "episode_id": "S01E01",
-  "etape": "sfx_done",
+  "etape": "waiting_script",
   "timestamp": "2026-03-21T14:40:00.000000",
   "data": {
     "episode_id": "S01E01",
@@ -24,12 +24,6 @@
           "validation_humaine": true,
           "validation_web": true,
           "validation_date": "2026-03-21T14:40:00.000000"
-        },
-        "audio": {
-          "status": "audio_done"
-        },
-        "sfx": {
-          "status": "sfx_done"
         }
       },
       "decisions_humaines": []
