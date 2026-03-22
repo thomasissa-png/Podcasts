@@ -41,67 +41,6 @@
     },
     "segments": [
       {
-        "id": "sfx_001",
-        "personnage": "sfx",
-        "texte": "low sub-bass drone slowly rising in pitch, deep rumble growing from silence, dark ambient pad building intensity over 8 seconds",
-        "ton": "ambiance",
-        "pause_apres_ms": 500,
-        "duree_sfx_secondes": 8.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_001",
-        "personnage": "papy_babou",
-        "texte": "Et soudain, dans le noir le plus total, une voix immense a retenti. Une voix si puissante qu'elle a fait trembler le néant tout entier.",
-        "ton": "dramatique",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_002",
-        "personnage": "sfx",
-        "texte": "slow deep inhale and exhale with heavy reverb, breath-like low frequency swell, suspenseful atmospheric drone",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_003",
-        "personnage": "sfx",
-        "texte": "deep thunderous rumble echoing in vast reverberant space, powerful low-frequency vibration shaking the air, no speech",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_002",
-        "personnage": "papy_babou",
-        "texte": "Et cette voix a dit : Que la lumière soit ! Et mes petits loups, à cet instant précis, la lumière a jailli de partout, comme un feu d'artifice géant !",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "sfx_004",
-        "personnage": "sfx",
-        "texte": "massive bright burst rising from silence, shimmering high-frequency metallic resonance cascading outward, warm sustained tonal hum expanding",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_005",
-        "personnage": "sfx",
-        "texte": "bright descending metallic shimmer with sparkle texture, settling into warm indoor ambiance with soft fireplace crackling",
-        "ton": "ambiance",
-        "pause_apres_ms": 400,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
         "id": "sfx_006",
         "personnage": "sfx",
         "texte": "car doors closing, gravel path footsteps approaching wooden house, distant children laughing",
@@ -1154,14 +1093,6 @@
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 350
-      },
-      {
-        "personnage": "papy_babou",
-        "texte": "Tout à fait, ma puce ! La première respiration d'Adam, c'est un peu comme la première respiration de chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 350,
-        "id": "seg_101"
       },
       {
         "id": "seg_102",
