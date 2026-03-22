@@ -564,15 +564,14 @@
       border-radius: 10px;
       flex-shrink: 0;
       overflow: hidden;
-      background-size: cover;
-      background-position: center;
       transition: transform 0.2s;
       margin-top: 0.2rem;
     }
-    .char-avatar.papy    { background-image: url('/assets/artwork/avatar_papy.png'); }
-    .char-avatar.antoine  { background-image: url('/assets/artwork/avatar_antoine.png'); }
-    .char-avatar.noemie   { background-image: url('/assets/artwork/avatar_noemie.png'); }
-    .char-avatar.mamie    { background-image: url('/assets/artwork/avatar_mamie.png'); }
+    .char-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
     @media (hover: hover) { .char-avatar:hover { transform: scale(1.1); } }
 
     .char-name { font-weight: 700; font-size: 1rem; }
@@ -1885,28 +1884,28 @@
         <h2>L'équipage de Papy Babou</h2>
         <ul class="characters">
           <li>
-            <div class="char-avatar papy" aria-hidden="true"></div>
+            <div class="char-avatar"><img src="/assets/artwork/avatar_papy.png" alt="Papy Babou" width="56" height="56" loading="lazy"></div>
             <div>
               <div class="char-name">Papy Babou</div>
               <div class="char-desc">Le commandant de l'équipage ! Ses lunettes rondes cachent mille secrets, et quand il ouvre son grand livre, c'est parti pour l'épopée.</div>
             </div>
           </li>
           <li>
-            <div class="char-avatar antoine" aria-hidden="true"></div>
+            <div class="char-avatar"><img src="/assets/artwork/avatar_antoine.png" alt="Antoine" width="56" height="56" loading="lazy"></div>
             <div>
               <div class="char-name">Antoine, 8 ans</div>
               <div class="char-desc">Le détective de l'équipage ! Toujours une question piège en réserve et un mystère à résoudre.</div>
             </div>
           </li>
           <li>
-            <div class="char-avatar noemie" aria-hidden="true"></div>
+            <div class="char-avatar"><img src="/assets/artwork/avatar_noemie.png" alt="Noémie" width="56" height="56" loading="lazy"></div>
             <div>
               <div class="char-name">Noémie, 5 ans</div>
               <div class="char-desc">La tornade de l'équipage ! Espiègle, folle d'animaux et championne des idées les plus intrépides.</div>
             </div>
           </li>
           <li>
-            <div class="char-avatar mamie" aria-hidden="true"></div>
+            <div class="char-avatar"><img src="/assets/artwork/avatar_mamie.png" alt="Mamie Sonia" width="56" height="56" loading="lazy"></div>
             <div>
               <div class="char-name">Mamie Sonia</div>
               <div class="char-desc">L'agent secret de l'équipage ! Un gâteau dans une main, une blague redoutable dans l'autre.</div>
