@@ -841,6 +841,15 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "sfx_023c",
+        "personnage": "sfx",
+        "texte": "quiet night sky ambiance, very subtle wind, distant owl hoot, peaceful stargazing atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
         "personnage": "noemie",
         "texte": "Papy, les étoiles c'est aussi gros que le soleil ?",
         "ton": "curieux",
@@ -1568,6 +1577,15 @@
         "ton": "curieux",
         "rythme": "normal",
         "pause_apres_ms": 250
+      },
+      {
+        "id": "sfx_038c",
+        "personnage": "sfx",
+        "texte": "warm evening room settling, gentle fireplace embers, distant crickets through window, peaceful goodbye atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_146",
