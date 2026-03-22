@@ -166,9 +166,9 @@ VOICE_SETTINGS = {
         "style": 0.4,
     },
     "noemie": {
-        "stability": 0.65,
-        "similarity_boost": 0.80,
-        "style": 0.35,
+        "stability": 0.55,
+        "similarity_boost": 0.75,
+        "style": 0.45,
     },
     "mamie_sonia": {
         "stability": 0.75,

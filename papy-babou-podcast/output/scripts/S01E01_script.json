@@ -686,7 +686,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "Exactement, Antoine ! Tu sais, quand je vivais en Afrique du Sud, il y avait un baobab devant notre maison. Un arbre énorme, gros comme cette pièce. Et il avait commencé par une toute petite graine.",
+        "texte": "C'est ça, Antoine ! Tu sais, quand je vivais en Afrique du Sud, il y avait un baobab devant notre maison. Un arbre énorme, gros comme cette pièce. Et il avait commencé par une toute petite graine.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 350,
@@ -1121,7 +1121,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "Exactement, ma puce ! La première respiration d'Adam, c'est un peu comme la première respiration de chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance.",
+        "texte": "Tout à fait, ma puce ! La première respiration d'Adam, c'est un peu comme la première respiration de chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 350,
@@ -1292,7 +1292,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "Exactement ! Et Dieu a dit à Adam de donner un nom à chaque animal. Imagine : chaque animal du monde venait défiler devant Adam et Adam devait inventer un nom pour chacun.",
+        "texte": "Tout à fait ! Et Dieu a dit à Adam de donner un nom à chaque animal. Imagine : chaque animal du monde venait défiler devant Adam et Adam devait inventer un nom pour chacun.",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300,
@@ -1358,7 +1358,7 @@
       {
         "id": "seg_126",
         "personnage": "papy_babou",
-        "texte": "Exactement, mon grand ! C'est d'ailleurs pour ça que le dimanche est un jour de repos. Dieu a montré l'exemple : après avoir bien travaillé, on prend le temps de se poser et d'admirer ce qu'on a fait.",
+        "texte": "Bravo, mon grand ! C'est d'ailleurs pour ça que le dimanche est un jour de repos. Dieu a montré l'exemple : après avoir bien travaillé, on prend le temps de se poser et d'admirer ce qu'on a fait.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -1513,7 +1513,7 @@
       {
         "id": "seg_142",
         "personnage": "papy_babou",
-        "texte": "Exactement, mon grand. Chaque nouvelle vie est un cadeau de Dieu, comme la Création. Et vous savez quoi ? La prochaine fois que vous viendrez, je vous raconterai ce qui s'est passé dans le plus beau jardin du monde. Le jardin d'Éden.",
+        "texte": "Exactement, mon grand. Chaque nouvelle vie est un cadeau de Dieu, comme la Création. Et vous savez quoi ? La prochaine fois que vous viendrez, je vous raconterai l'histoire du plus grand bateau jamais construit. Et pourquoi il a fallu le construire.",
         "ton": "mystérieux",
         "rythme": "normal",
         "pause_apres_ms": 400

@@ -36,6 +36,13 @@ TONE_VOICE_ADJUSTMENTS: dict[str, dict[str, float]] = {
     "espiègle":      {"stability": -0.15, "similarity_boost": 0.0,   "style": +0.20},
     "émerveillé":    {"stability": -0.10, "similarity_boost": +0.05, "style": +0.20},
     "effrayé":       {"stability": -0.20, "similarity_boost": +0.05, "style": +0.20},
+    "déterminé":     {"stability": +0.10, "similarity_boost": +0.05, "style": +0.05},
+    "moqueur":       {"stability": -0.15, "similarity_boost": -0.05, "style": +0.25},
+    "indigné":       {"stability": -0.20, "similarity_boost": 0.0,   "style": +0.20},
+    "soulagé":       {"stability": +0.05, "similarity_boost": 0.0,   "style": +0.10},
+    "admiratif":     {"stability": -0.05, "similarity_boost": +0.05, "style": +0.15},
+    "boudeur":       {"stability": +0.05, "similarity_boost": 0.0,   "style": +0.15},
+    "impatient":     {"stability": -0.15, "similarity_boost": 0.0,   "style": +0.20},
     "ambiance":      {"stability": 0.0,   "similarity_boost": 0.0,   "style": 0.0},
 }
 
