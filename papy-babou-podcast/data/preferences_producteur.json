@@ -40,5 +40,83 @@
     "source_episode": "S01E01,S01E02",
     "categorie": "audio_sfx",
     "date": "2026-03-22"
+  },
+  {
+    "regle": "STRUCTURE NARRATIVE RÉFÉRENCE (basée sur S01E01 score 9.2 + S01E02 score 9.0) : Chaque épisode DOIT suivre cette structure en 5 actes : ACTE 1 (Arrivée, ~15 segments) — Cold open avec SFX d'arrivée, salutations enthousiastes, installation chez Papy, goûter de Mamie Sonia, prétexte naturel pour lancer l'histoire (un élément du quotidien rappelle l'histoire biblique). ACTE 2 (Début du récit, ~40 segments) — Papy ouvre son grand livre, mise en place du contexte biblique, introduction du personnage principal. ACTE 3 (Cœur du récit, ~50 segments) — Les événements majeurs, les péripéties, les moments dramatiques. ACTE 4 (Dénouement + morale, ~25 segments) — Résolution, morale naturellement amenée dans le dialogue (jamais de leçon frontale), fun facts scientifiques/culturels. ACTE 5 (Au revoir, ~15 segments) — Retour à la scène de vie, récap ludique, teasing épisode suivant, au revoir chaleureux, SFX de départ.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "structure",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "RATIOS DE PERSONNAGES RÉFÉRENCE : Papy Babou doit représenter 46-51% des segments voix (narrateur principal). Antoine : 23% (le questionneur curieux, scientifique). Noémie : 21-25% (la rêveuse spontanée, émotionnelle). Mamie Sonia : 5-6% (apparaît uniquement dans les scènes de vie — goûter et au revoir, JAMAIS pendant le récit biblique). Les enfants DOIVENT intervenir régulièrement pendant le récit biblique (pas juste écouter passivement) — questions, réactions émotionnelles, digressions drôles.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "personnages",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "COLD OPEN RÉFÉRENCE : L'épisode commence TOUJOURS par un SFX d'ambiance (arrivée chez Papy OU situation météo/quotidienne), suivi immédiatement d'une réplique d'enfant (Antoine ou Noémie). Papy répond chaleureusement en 3e ou 4e position. JAMAIS de narration en voix off. JAMAIS de description. On est directement dans l'action. Exemples validés : E01 = bruits de voiture + gravier + Antoine 'Papy ! On est là !'. E02 = pluie sur les fenêtres + Antoine se plaint de la pluie + Papy rassure.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "structure",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "CLOSING RÉFÉRENCE : Les 5 derniers segments suivent TOUJOURS ce schéma : 1) Papy annonce la fin ('Allez, mes petits loups, c'est l'heure de rentrer') avec teasing du prochain épisode. 2) Antoine remercie Papy avec enthousiasme + référence à l'histoire. 3) Noémie remercie Papy ET Mamie pour le goûter (nommant le goûter spécifique de l'épisode). 4) Mamie Sonia dit au revoir avec un mot doux personnalisé en lien avec l'histoire. 5) SFX de départ (gravier, voiture, criquets du soir). Le goûter de Mamie doit être DIFFÉRENT à chaque épisode (sablés étoiles, gâteau à l'orange, etc.).",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "structure",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "LONGUEUR DES SEGMENTS RÉFÉRENCE : Papy Babou : 25-30 mots/segment en moyenne (narrateur). Antoine : 11-14 mots/segment (questions courtes et percutantes). Noémie : 8-12 mots/segment (réactions spontanées, plus courtes qu'Antoine car plus jeune — 5 ans). Mamie Sonia : 20-25 mots/segment (chaleureuse mais concise). JAMAIS de monologue de Papy de plus de 60 mots. Si le récit nécessite un long passage, le COUPER avec une interruption d'enfant (question, réaction, digression).",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "rythme",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "VARIÉTÉ DES TONS OBLIGATOIRE : Chaque épisode doit utiliser au minimum 12 tons différents parmi : chaleureux, curieux, dramatique, enthousiaste, espiègle, excité, inquiet, joyeux, mystérieux, rassurant, solennel, émerveillé, admiratif, déterminé, impatient, indigné, soulagé, triste. Les tons doivent CHANGER fréquemment (pas 5 segments 'chaleureux' d'affilée). Un bon épisode alterne au moins 3 tonalités différentes par section de 10 segments.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "rythme",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "RYTHME VARIÉ OBLIGATOIRE : Utiliser les 3 rythmes (rapide, normal, lent) dans chaque épisode. Référence : ~15-20% rapide (excitation, action, urgence), ~60% normal (narration courante), ~12-15% lent (moments solennels, émotionnels, révélations). Le rythme 'lent' DOIT être utilisé pour : la morale, les moments de révélation divine, les descriptions majestueuses. Le rythme 'rapide' DOIT être utilisé pour : l'excitation des enfants, les moments d'action, les questions enthousiastes.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "rythme",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "DENSITÉ SFX RÉFÉRENCE : Un épisode standard (25 min, ~145 segments voix) doit avoir 35-41 SFX. Ratio cible : 1 SFX tous les 3-4 segments voix. Chaque changement de lieu ou de scène doit être ponctué par un SFX d'ambiance. Les moments clés de l'histoire biblique (miracles, événements importants) DOIVENT avoir un SFX dédié. Exemples validés : E01 = 41 SFX pour 150 segments voix (ratio 1:3.7). E02 = 36 SFX pour 142 segments voix (ratio 1:3.9).",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "audio_sfx",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "AMBIANCE PAR ACTE OBLIGATOIRE : Chaque épisode DOIT définir 'ambiance_par_acte' avec exactement 3 ambiances correspondant aux 3 phases émotionnelles de l'épisode. Référence : E01 = ['mystere', 'émerveillé', 'chaleureux']. E02 = ['mystere', 'dramatique', 'joyeux']. Pattern type : Acte 1 = ambiance d'ouverture/intrigue, Acte 2 = ambiance du cœur de l'histoire (dramatique, émerveillé, etc.), Acte 3 = ambiance de résolution (chaleureux, joyeux, rassurant).",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "audio_sfx",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "FUN FACTS SCIENTIFIQUES/CULTURELS : Chaque épisode doit contenir au minimum 3 fun facts liés à l'histoire biblique mais apportant un éclairage scientifique, historique ou culturel. Ils sont amenés naturellement par Antoine (le curieux scientifique) ou par Papy en réponse à une question. Exemples validés : E01 = dinosaures vs création, taille de l'univers, nombre d'espèces animales. E02 = dimensions réelles de l'arche, durée du déluge, géologie. Les fun facts servent à ancrer le récit biblique dans le réel et à satisfaire les enfants plus grands (8-10 ans).",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "educatif",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "MORALE NATURELLE : La morale de l'épisode ne doit JAMAIS être assénée frontalement ('la leçon de cette histoire c'est...'). Elle doit émerger naturellement du dialogue entre Papy et les enfants. Pattern validé : un enfant fait une observation sur l'histoire → Papy rebondit pour en tirer un enseignement universel → l'autre enfant reformule avec ses mots d'enfant. La morale doit être applicable au quotidien de l'enfant (courage, confiance, obéissance, etc.).",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "educatif",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "GOÛTER DE MAMIE SONIA : Mamie Sonia prépare un goûter DIFFÉRENT et THÉMATIQUE à chaque épisode. Le goûter doit être en lien avec l'histoire biblique du jour. Exemples validés : E01 (Création) = sablés en forme d'étoiles. E02 (Noé/Déluge) = gâteau à l'orange. Le goûter est mentionné 2-3 fois : à l'arrivée (Mamie l'annonce), pendant une pause dans le récit (les enfants en mangent), et au départ (Noémie remercie Mamie en nommant le goûter).",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "personnages",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "TEASING ÉPISODE SUIVANT : Chaque épisode se termine par un teasing du prochain épisode, prononcé par Papy Babou dans l'avant-dernière réplique voix. Le teasing doit être mystérieux et donner envie sans tout révéler. Pattern : 'La prochaine fois, je vous raconterai l'histoire de [personnage/événement]... [accroche mystérieuse]'. Le teasing NE DOIT PAS contenir de méta-langage ('abonnez-vous', 'prochain épisode', 'restez à l'écoute').",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "structure",
+    "date": "2026-03-22"
   }
 ]
