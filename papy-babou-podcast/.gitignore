@@ -1,9 +1,6 @@
 .env
 audio/segments/*.mp3
 output/episodes/*.mp3
-scripts/episodes/
-logs/
-checkpoints/
 __pycache__/
 *.pyc
 .venv/

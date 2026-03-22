@@ -304,15 +304,26 @@ def restore_episode_audio(episode_id: str, dest_dir: Path) -> dict:
 def restore_script(episode_id: str, dest_dir: Path) -> Path | None:
     """Restaure le script validé depuis Object Storage.
 
+    Tente d'abord _valide.json, puis _script.json comme fallback.
+
     Returns:
         Chemin du fichier restauré, ou None si indisponible.
     """
-    key = _storage_key(PREFIX_SCRIPT, f"{episode_id}_valide.json")
-    dest = dest_dir / f"{episode_id}_valide.json"
-    if dest.exists():
-        return dest
-    if download_file(key, dest):
-        return dest
+    # Essayer _valide.json d'abord
+    key_valide = _storage_key(PREFIX_SCRIPT, f"{episode_id}_valide.json")
+    dest_valide = dest_dir / f"{episode_id}_valide.json"
+    if dest_valide.exists():
+        return dest_valide
+    if download_file(key_valide, dest_valide):
+        return dest_valide
+    # Fallback : _script.json
+    key_script = _storage_key(PREFIX_SCRIPT, f"{episode_id}_script.json")
+    dest_script = dest_dir / f"{episode_id}_script.json"
+    if dest_script.exists():
+        return dest_script
+    if download_file(key_script, dest_script):
+        logger.info("restore_script: fallback _script.json pour %s", episode_id)
+        return dest_script
     return None
 
 

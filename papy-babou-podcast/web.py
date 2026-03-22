@@ -467,7 +467,13 @@ def _restore_valide_script(episode_id: str) -> bool:
         import persistent_storage
         persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR)
         if valide_path.exists():
-            logger.info("_restore_valide_script: restauré depuis Object Storage pour %s", episode_id)
+            logger.info("_restore_valide_script: restauré _valide depuis Object Storage pour %s", episode_id)
+            return True
+        # Object Storage peut avoir _script.json mais pas _valide.json
+        if script_source.exists():
+            import shutil
+            shutil.copy2(script_source, valide_path)
+            logger.info("_restore_valide_script: restauré _script depuis OS puis copie vers _valide pour %s", episode_id)
             return True
     except Exception as e:
         logger.debug("_restore_valide_script: Object Storage pour %s : %s", episode_id, e)
