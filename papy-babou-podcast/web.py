@@ -173,10 +173,10 @@ def handle_exception(e):
 
 @app.route("/favicon.ico")
 def favicon():
-    """Sert le favicon SVG ou retourne 204 si absent."""
-    favicon_path = _THIS_DIR / "assets" / "artwork" / "favicon.svg"
+    """Sert le favicon PNG ou retourne 204 si absent."""
+    favicon_path = _THIS_DIR / "assets" / "artwork" / "favicon2.png"
     if favicon_path.exists():
-        response = send_from_directory(str(favicon_path.parent), favicon_path.name, mimetype="image/svg+xml")
+        response = send_from_directory(str(favicon_path.parent), favicon_path.name, mimetype="image/png")
         response.cache_control.max_age = 2592000  # 30 jours
         return response
     return "", 204

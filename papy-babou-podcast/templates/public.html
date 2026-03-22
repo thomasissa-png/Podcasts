@@ -137,7 +137,7 @@
       --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.18);
     }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 
     body {
       font-family: var(--font-body);
@@ -212,28 +212,21 @@
     .hero-text { text-align: left; }
 
     .hero-title {
-      font-family: var(--font-display);
-      font-size: var(--font-size-xl);
-      font-weight: 800;
-      line-height: var(--line-height-tight);
-      color: var(--blanc);
       margin-bottom: var(--space-xs);
-      text-shadow: 0 2px 8px rgba(27, 42, 74, 0.3);
     }
 
-    .hero-title span {
-      display: block;
-      color: var(--dore-light);
-      font-size: var(--font-size-hero);
-      -webkit-text-stroke: 1.5px rgba(26, 26, 46, 0.25);
-      text-shadow: 0 3px 0 rgba(0, 0, 0, 0.15), 0 0 30px rgba(232, 200, 74, 0.25);
+    .hero-logo {
+      max-width: 380px;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 2px 8px rgba(27, 42, 74, 0.3));
     }
 
     .hero-subtitle {
       font-size: 1.15rem;
       font-weight: 700;
       color: var(--texte-hero);
-      font-style: italic;
+      font-style: normal;
       margin-bottom: 0.4rem;
       opacity: 0.92;
     }
@@ -1801,11 +1794,9 @@
       <img src="/assets/artwork/cover_base.png" alt="Papy Babou, Antoine et Noémie autour d'un livre ouvert" class="hero-cover" width="220" height="220" fetchpriority="high">
       <div class="hero-text">
         <h1 class="hero-title">
-          Les Histoires de
-          <span>Papy Babou</span>
+          <img src="/assets/artwork/logo-papy-babou-transparent.png" alt="Les Histoires de Papy Babou" class="hero-logo">
         </h1>
         <p class="hero-subtitle">Le podcast qui transforme le coucher en expédition biblique</p>
-        <p class="hero-uvp" style="font-size:0.95rem;color:var(--texte-hero);opacity:0.88;margin-bottom:0.3rem;font-weight:600;">Le seul podcast où vos enfants participent à l'aventure</p>
         <div class="hero-meta">
           <div class="hero-meta-item">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
