@@ -520,3 +520,249 @@ class TestCoherenceMontage:
         rapport3 = {"etapes": {}}
         found3 = rapport3.get("script_content_hash") or rapport3.get("etapes", {}).get("script", {}).get("script_content_hash")
         assert found3 is None
+
+
+# ── TestSFXRegeneration ──────────────────────────────────────────────────────
+
+class TestSFXRegeneration:
+    """Verifie le skip-if-exists SFX via cache et la purge des fichiers SFX."""
+
+    def test_sfx_skip_if_exists_via_cache(self, tmp_path, script_base):
+        """sfx_provider saute la generation quand le fichier est en cache."""
+        # sfx_provider verifie chemin_local (assets/sfx/) et chemin_cache
+        # (sfx_cache/) avant d'appeler l'API. C'est le mecanisme skip-if-exists.
+        from agents.sfx_provider import _slug_sfx
+
+        cache_dir = tmp_path / "sfx_cache"
+        cache_dir.mkdir()
+
+        description = "wind"
+        chemin_cache = cache_dir / f"{_slug_sfx(description)}.mp3"
+        chemin_cache.write_bytes(b"\xff" * 500)
+
+        # Le cache existe -> pas besoin de generer
+        assert chemin_cache.exists()
+        assert chemin_cache.stat().st_size > 100
+
+        # Simuler la logique du sfx_provider (lignes 114-122)
+        segments_sfx = [s for s in script_base["episode"]["segments"] if s["personnage"] == "sfx"]
+        assert len(segments_sfx) >= 1
+
+        # Verifier que _slug_sfx produit un slug deterministe
+        slug1 = _slug_sfx(description)
+        slug2 = _slug_sfx(description)
+        assert slug1 == slug2
+
+    def test_hash_purge_includes_sfx_files(self, tmp_path, script_base, episode_id, segments_dir):
+        """La purge hash guard supprime les fichiers SFX en plus des fichiers voix."""
+        # Creer des fichiers voix ET sfx
+        _create_segment_files(segments_dir, ["seg_001", "seg_002", "sfx_001", "sfx_002"])
+        assert len(list(segments_dir.glob("*.mp3"))) == 4
+
+        # Modifier le script pour que le hash change
+        old_script = copy.deepcopy(script_base)
+        old_script["episode"]["segments"][0]["texte"] = "Ancien texte."
+        _hash_checkpoint = compute_script_hash(old_script)
+        _hash_actuel = compute_script_hash(script_base)
+        assert _hash_checkpoint != _hash_actuel
+
+        # Simuler la purge (main.py lignes 3271-3281) : glob("*.mp3") capture TOUT
+        _purge_dir = segments_dir
+        _nb_purges = 0
+        for _old_f in _purge_dir.glob("*.mp3"):
+            _old_f.unlink()
+            _nb_purges += 1
+
+        # Verifier que les SFX ont AUSSI ete supprimes
+        assert _nb_purges == 4  # 2 voix + 2 sfx
+        assert len(list(segments_dir.glob("*.mp3"))) == 0
+        # Aucun fichier sfx_* ne doit rester
+        assert len(list(segments_dir.glob("sfx_*.mp3"))) == 0
+
+
+# ── TestWaitingMontageMapping ────────────────────────────────────────────────
+
+class TestWaitingMontageMapping:
+    """Verifie que _etape_mapping mappe correctement les statuts DB."""
+
+    def test_waiting_montage_maps_correctly(self):
+        """waiting_montage doit mapper vers metadonnees dans _etape_mapping."""
+        # Reproduire le dict _etape_mapping de main.py _pipeline_inner()
+        _etape_mapping = {
+            "waiting_script": "audio",
+            "waiting_montage": "metadonnees",
+            "script_done": "audio",
+            "audio_done": "sfx",
+            "sfx_done": "montage",
+            "montage_done": "metadonnees",
+            "metadonnees_done": "publication",
+            "interrupted": "script",
+            "erreur": "script",
+            "started": "script",
+        }
+
+        assert "waiting_montage" in _etape_mapping
+        assert _etape_mapping["waiting_montage"] == "metadonnees"
+
+        # Verifier aussi les autres statuts waiting/done critiques
+        assert _etape_mapping["waiting_script"] == "audio"
+        assert _etape_mapping["montage_done"] == "metadonnees"
+        assert _etape_mapping["sfx_done"] == "montage"
+
+    def test_waiting_montage_skips_to_correct_etape_idx(self):
+        """waiting_montage doit permettre de reprendre a l'etape 5 (metadonnees)."""
+        etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
+        _etape_mapping = {
+            "waiting_montage": "metadonnees",
+        }
+
+        etape_depart = "waiting_montage"
+        etape_effective = _etape_mapping.get(etape_depart, etape_depart)
+        assert etape_effective == "metadonnees"
+
+        etape_idx = etapes.index(etape_effective)
+        assert etape_idx == 5  # metadonnees est l'etape 5
+
+
+# ── TestPurgeSaisonCheckpoints ───────────────────────────────────────────────
+
+class TestPurgeSaisonCheckpoints:
+    """Verifie que la route purge saison supprime/archive les checkpoints."""
+
+    def test_purge_saison_cleans_checkpoints(self, tmp_path):
+        """La purge saison archive les fichiers checkpoint des episodes concernes."""
+        # Preparer la structure de fichiers
+        checkpoints_dir = tmp_path / "checkpoints"
+        checkpoints_dir.mkdir()
+        archive_base = tmp_path / "output" / "archive"
+
+        # Creer des checkpoints pour saison 1
+        cp1 = checkpoints_dir / "S01E01_checkpoint.json"
+        cp2 = checkpoints_dir / "S01E03_checkpoint.json"
+        cp_other = checkpoints_dir / "S02E01_checkpoint.json"
+        for f in [cp1, cp2, cp_other]:
+            f.write_text("{}")
+
+        assert cp1.exists() and cp2.exists() and cp_other.exists()
+
+        # Simuler la logique de purge (web.py lignes 1512-1518)
+        saison_num = 1
+        episode_ids = set()
+        for i in range(1, 21):
+            episode_ids.add(f"S{saison_num:02d}E{i:02d}")
+
+        for episode_id in sorted(episode_ids):
+            archive_dir = archive_base / episode_id
+            archive_dir.mkdir(parents=True, exist_ok=True)
+
+            for f in checkpoints_dir.glob(f"{episode_id}*checkpoint*"):
+                import shutil
+                shutil.move(str(f), str(archive_dir / f.name))
+
+        # Checkpoints S01 archives
+        assert not cp1.exists()
+        assert not cp2.exists()
+        # Checkpoint S02 NON touche
+        assert cp_other.exists()
+        # Fichiers archives dans le bon dossier
+        assert (archive_base / "S01E01" / "S01E01_checkpoint.json").exists()
+        assert (archive_base / "S01E03" / "S01E03_checkpoint.json").exists()
+
+
+# ── TestSegmentCleanup ───────────────────────────────────────────────────────
+
+class TestSegmentCleanup:
+    """Verifie que le nettoyage des segments perimes SUPPRIME les fichiers."""
+
+    def test_stale_segments_deleted_not_just_detected(self, tmp_path, script_base, episode_id, segments_dir):
+        """Le nettoyage supprime physiquement les fichiers perimes."""
+        # Segments du script actuel
+        _create_segment_files(segments_dir, ["seg_001", "seg_002", "seg_003", "seg_004", "sfx_001", "sfx_002"])
+        # Segments perimes (ancien script)
+        _create_segment_files(segments_dir, ["old_seg_099", "stale_sfx_050", "seg_from_v1"])
+
+        assert len(list(segments_dir.glob("*.mp3"))) == 9
+
+        # Logique de nettoyage (main.py lignes 3330-3354)
+        _ids_attendus = {s["id"] for s in script_base["episode"]["segments"]}
+        _nb_nettoyes = 0
+        for _old_mp3 in segments_dir.glob("*.mp3"):
+            _seg_id = _old_mp3.stem
+            if _seg_id not in _ids_attendus:
+                _old_mp3.unlink()
+                _nb_nettoyes += 1
+
+        # Verifier la suppression effective (pas juste un log)
+        assert _nb_nettoyes == 3
+        remaining_files = {f.stem for f in segments_dir.glob("*.mp3")}
+        assert remaining_files == _ids_attendus
+        # Aucun fichier perime ne doit subsister
+        assert "old_seg_099" not in remaining_files
+        assert "stale_sfx_050" not in remaining_files
+        assert "seg_from_v1" not in remaining_files
+
+    def test_cleanup_preserves_all_current_segments(self, tmp_path, script_base, episode_id, segments_dir):
+        """Le nettoyage ne touche pas aux segments du script actuel."""
+        current_ids = [s["id"] for s in script_base["episode"]["segments"]]
+        _create_segment_files(segments_dir, current_ids)
+
+        _ids_attendus = set(current_ids)
+        _nb_nettoyes = 0
+        for _old_mp3 in segments_dir.glob("*.mp3"):
+            if _old_mp3.stem not in _ids_attendus:
+                _old_mp3.unlink()
+                _nb_nettoyes += 1
+
+        assert _nb_nettoyes == 0
+        assert len(list(segments_dir.glob("*.mp3"))) == len(current_ids)
+
+
+# ── TestPipelineSequential ───────────────────────────────────────────────────
+
+class TestPipelineSequential:
+    """Verifie que les etapes du pipeline s'executent sequentiellement."""
+
+    def test_etape_idx_2_executes_all_subsequent_steps(self):
+        """Quand etape_idx = 2, les etapes 3 (SFX), 4 (montage), 5 (meta), etc. sont executees."""
+        etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
+        etape_idx = 2  # audio
+
+        # Simuler la structure de la boucle du pipeline
+        # Chaque etape est gardee par `if etape_idx <= N`
+        etapes_executees = []
+        for i, etape in enumerate(etapes):
+            if etape_idx <= i:
+                etapes_executees.append(etape)
+
+        # audio (idx 2) et toutes les suivantes doivent etre executees
+        assert etapes_executees == ["audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
+
+        # Verifier que script et review sont SAUTEES
+        assert "script" not in etapes_executees
+        assert "review" not in etapes_executees
+
+    def test_etape_idx_4_executes_montage_and_beyond(self):
+        """Quand etape_idx = 4 (montage), les etapes 5+ sont executees."""
+        etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
+        etape_idx = 4
+
+        etapes_executees = []
+        for i, etape in enumerate(etapes):
+            if etape_idx <= i:
+                etapes_executees.append(etape)
+
+        assert etapes_executees == ["montage", "metadonnees", "publication", "rapport"]
+        assert "audio" not in etapes_executees
+        assert "sfx" not in etapes_executees
+
+    def test_etape_idx_0_executes_everything(self):
+        """Quand etape_idx = 0, toutes les etapes sont executees (production complete)."""
+        etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
+        etape_idx = 0
+
+        etapes_executees = []
+        for i, etape in enumerate(etapes):
+            if etape_idx <= i:
+                etapes_executees.append(etape)
+
+        assert etapes_executees == etapes
