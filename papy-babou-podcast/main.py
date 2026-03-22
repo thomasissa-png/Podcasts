@@ -3242,6 +3242,46 @@ def _pipeline_inner(
                 logger.warning("DB indisponible pour maj_etape waiting_script : %s", e)
         return rapport
 
+    # ── Garde hash : si le script a été modifié depuis la dernière production
+    #    audio, purger tous les segments et forcer la régénération complète.
+    #    Cela arrive quand un script est corrigé (texte, ton, SFX) après que
+    #    les segments aient déjà été générés pour l'ancienne version.
+    if not dry_run and etape_idx > 2 and script:
+        _hash_actuel = compute_script_hash(script)
+        _hash_checkpoint = rapport.get("script_content_hash") or rapport.get(
+            "etapes", {}
+        ).get("script", {}).get("script_content_hash")
+        # Aussi chercher dans checkpoint_data passé via reprendre()
+        if not _hash_checkpoint and hasattr(_production_local, 'pipeline_context'):
+            _ctx = getattr(_production_local, 'pipeline_context', {})
+            _hash_checkpoint = _ctx.get("script_content_hash")
+
+        if _hash_checkpoint and _hash_actuel != _hash_checkpoint:
+            _log_direct(
+                f"Script modifié depuis la dernière production audio — "
+                f"régénération complète (hash {_hash_checkpoint[:8]}→{_hash_actuel[:8]})"
+            )
+            logger.warning(
+                "Script content hash mismatch : checkpoint=%s, actuel=%s. "
+                "Purge des segments et régénération audio.",
+                _hash_checkpoint, _hash_actuel,
+            )
+            # Purger tous les segments existants
+            _purge_dir = config.SEGMENTS_DIR / episode_id
+            if _purge_dir.exists():
+                _nb_purges = 0
+                for _old_f in _purge_dir.glob("*.mp3"):
+                    try:
+                        _old_f.unlink()
+                        _nb_purges += 1
+                    except OSError:
+                        pass
+                _log_direct(f"Segments purgés : {_nb_purges} fichiers supprimés")
+            etape_idx = 2  # Forcer régénération audio complète
+
+        # Stocker le hash actuel dans le rapport pour les checkpoints suivants
+        rapport["script_content_hash"] = _hash_actuel
+
     # ── Garde : si le checkpoint demande montage mais que les segments audio
     #    sont introuvables (ni local, ni Object Storage), reculer à l'étape audio
     #    pour régénérer. Cela arrive quand les segments ont été générés avant
@@ -3610,6 +3650,7 @@ def _pipeline_inner(
             "dry_run": dry_run, "rapport": rapport,
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": "montage",  # Destination finale, pas l'étape intermédiaire
+            "script_content_hash": compute_script_hash(script),
         })
         rapport["stop_after"] = "sfx"
         rapport["status"] = "sfx_done"
@@ -3801,6 +3842,7 @@ def _pipeline_inner(
                     "dry_run": dry_run, "rapport": rapport,
                     "pubdate_offset_seconds": pubdate_offset_seconds,
                     "stop_after": stop_after,
+                    "script_content_hash": compute_script_hash(script),
                 })
                 raise  # Re-raise pour que le outer handler marque failed en DB
 
@@ -3864,6 +3906,7 @@ def _pipeline_inner(
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
                 "stop_after": stop_after,
+                "script_content_hash": compute_script_hash(script),
             })
 
     # ── Validation humaine : montage ─────────────────────────────────────────
@@ -3941,6 +3984,7 @@ def _pipeline_inner(
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
                 "stop_after": stop_after,
+                "script_content_hash": compute_script_hash(script),
             })
         else:
             logger.warning(

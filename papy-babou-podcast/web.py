@@ -2097,6 +2097,27 @@ def api_validate_episode(episode_id):
                         cp_rapport = cp_data.setdefault("rapport", {})
                         cp_rapport.setdefault("etapes", {}).setdefault("script", {})
                         cp_rapport["etapes"]["script"]["validation_humaine"] = True
+                        # Stocker le hash du script validé pour détecter les changements
+                        # Si le script est modifié après validation, le hash changera et
+                        # la garde des segments dans main.py purgera les anciens audio.
+                        _script_for_hash = None
+                        if valide_path.exists():
+                            try:
+                                with open(valide_path, "r", encoding="utf-8") as sf:
+                                    _script_for_hash = _json.load(sf)
+                            except Exception:
+                                pass
+                        elif script_source.exists():
+                            try:
+                                with open(script_source, "r", encoding="utf-8") as sf:
+                                    _script_for_hash = _json.load(sf)
+                            except Exception:
+                                pass
+                        if _script_for_hash:
+                            from utils import compute_script_hash
+                            _script_hash = compute_script_hash(_script_for_hash)
+                            cp_data["script_content_hash"] = _script_hash
+                            cp_rapport["script_content_hash"] = _script_hash
                         with open(checkpoint_path, "w", encoding="utf-8") as f:
                             _json.dump(cp, f, ensure_ascii=False, indent=2)
                     logger.info("Checkpoint %s mis à jour : validation_humaine=True", episode_id)
