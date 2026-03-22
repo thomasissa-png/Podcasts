@@ -1699,12 +1699,21 @@ def api_episode_detail(episode_id):
 
     # Load script content (filesystem → Object Storage → DB)
     script = None
+    # Chercher le script : _valide.json d'abord, puis _script.json (scripts écrits hors pipeline)
     script_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    if not script_path.exists():
+        script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
     if not script_path.exists():
         # Tenter de restaurer depuis Object Storage
         try:
             import persistent_storage
             persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR)
+            # Re-vérifier après restauration
+            for suffix in ("_valide.json", "_script.json"):
+                p = config.SCRIPTS_DIR / f"{episode_id}{suffix}"
+                if p.exists():
+                    script_path = p
+                    break
         except Exception:
             pass
     if script_path.exists():

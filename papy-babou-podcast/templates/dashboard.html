@@ -3069,8 +3069,13 @@ function psSelectEpisode(episodeId, numero) {
         document.getElementById('ps-inline-validation').style.display = 'none';
     }
 
-    /* Re-render la grille pour mettre à jour la sélection visuelle */
-    loadSaisonProgress();
+    /* Mettre à jour la sélection visuelle dans la grille (sans re-fetch) */
+    var cards = document.querySelectorAll('#ps-progress-zone div[onclick]');
+    cards.forEach(function(card) {
+        var isThis = card.getAttribute('onclick').indexOf("'" + episodeId + "'") !== -1;
+        card.style.borderWidth = isThis ? '3px' : '';
+        card.style.borderColor = isThis ? 'var(--turquoise)' : '';
+    });
 }
 
 async function produireProchainEpisode() {
