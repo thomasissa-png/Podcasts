@@ -22,6 +22,7 @@
       "Le cold open : le déluge vu de l'extérieur, l'arche flottant dans la tempête",
       "Noémie qui veut savoir comment les girafes sont entrées dans l'arche",
       "Antoine qui fait le lien entre les moqueries de Noé et celles de Maxime à l'école",
+      "La nuit de la grande vague — l'arche tremble mais tient bon grâce à la prière de Noé",
       "Le moment où la pluie s arrête enfin — silence puis joie",
       "La colombe qui revient avec le rameau d'olivier",
       "L arc-en-ciel comme promesse — Noémie court à la fenêtre chercher un vrai arc-en-ciel"
@@ -167,9 +168,18 @@
         "mode": "insert"
       },
       {
+        "id": "sfx_005b",
+        "personnage": "sfx",
+        "texte": "cozy indoor atmosphere, soft fireplace crackling, rain tapping on windows, occasional clock chime in background",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 45.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_010",
         "personnage": "antoine",
-        "texte": "Dis Papy, la dernière fois tu nous as parlé de la Création. Tu avais dit que les hommes avaient oublié les merveilles de Dieu. Qu'est-ce qui s'est passé après ?",
+        "texte": "Dis Papy, la dernière fois tu nous avais dit que les hommes avaient oublié Dieu. Et après ?",
         "ton": "curieux",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -401,6 +411,15 @@
         "mode": "overlay"
       },
       {
+        "id": "sfx_007b",
+        "personnage": "sfx",
+        "texte": "outdoor construction site ambiance, distant wind blowing through scaffolding, occasional bird call, earth and gravel underfoot, dry hot afternoon atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 50.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_037",
         "personnage": "papy_babou",
         "texte": "Et devinez quoi ? Quand les voisins de Noé ont vu ce qu'il faisait, ils se sont moqués de lui. Ils le montraient du doigt et riaient.",
@@ -476,10 +495,18 @@
       {
         "id": "seg_044",
         "personnage": "antoine",
-        "texte": "C'est un peu comme à l'école. Des fois, Maxime se moque de moi parce que je lève la main pour répondre. Il dit que c'est pas cool.",
+        "texte": "C'est un peu comme Maxime à l'école. Il se moque de moi parce que je lève la main.",
         "ton": "triste",
         "rythme": "normal",
         "pause_apres_ms": 350
+      },
+      {
+        "id": "seg_044b",
+        "personnage": "antoine",
+        "texte": "Il dit que c'est pas cool de répondre aux questions.",
+        "ton": "triste",
+        "rythme": "normal",
+        "pause_apres_ms": 300
       },
       {
         "id": "seg_045",
@@ -596,22 +623,6 @@
         "pause_apres_ms": 200
       },
       {
-        "id": "seg_056",
-        "personnage": "noemie",
-        "texte": "Et les éléphants ? Ils passaient par la porte ?",
-        "ton": "curieux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_057",
-        "personnage": "papy_babou",
-        "texte": "L'arche faisait trois étages et cent trente-sept mètres de long, ma puce. Il y avait de la place pour tout le monde, même pour les éléphants !",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
         "id": "sfx_010",
         "personnage": "sfx",
         "texte": "various animal sounds layered: elephant trumpet in distance, lion roar, birds chirping, horse neighing, sheep bleating",
@@ -630,36 +641,12 @@
         "mode": "overlay"
       },
       {
-        "id": "seg_058",
-        "personnage": "antoine",
-        "texte": "Mais Papy, comment les animaux savaient qu'il fallait venir ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
         "id": "seg_059",
         "personnage": "papy_babou",
-        "texte": "C'est Dieu qui les a guidés. Les animaux sont venus d'eux-mêmes, deux par deux, comme une grande procession. Les lions marchaient à côté des agneaux, les aigles volaient au-dessus des souris.",
+        "texte": "C'est Dieu qui les a guidés. Les animaux sont venus d'eux-mêmes, deux par deux, comme une grande procession silencieuse.",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_060",
-        "personnage": "noemie",
-        "texte": "Les lions ils ont pas mangé les agneaux ?",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_061",
-        "personnage": "papy_babou",
-        "texte": "Non, ma puce. Dieu veillait sur eux. Pendant ce voyage vers l'arche, tous les animaux vivaient en paix. Comme dans le jardin d'Éden.",
-        "ton": "rassurant",
-        "rythme": "normal",
-        "pause_apres_ms": 300
       },
       {
         "id": "seg_062",
@@ -727,6 +714,14 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "seg_068b",
+        "personnage": "noemie",
+        "texte": "Comme nous avec Papy, on est en sécurité !",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
         "id": "seg_069",
         "personnage": "papy_babou",
         "texte": "Et alors, le ciel est devenu tout noir. Les nuages se sont rassemblés comme une armée immense. Et la pluie a commencé à tomber.",
@@ -768,6 +763,14 @@
         "pause_apres_ms": 400
       },
       {
+        "id": "seg_072b",
+        "personnage": "noemie",
+        "texte": "Même les montagnes ? Mais alors il y avait de l'eau partout partout ?",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
         "id": "seg_073",
         "personnage": "noemie",
         "texte": "Et les méchants, Papy ? Ceux qui riaient ?",
@@ -782,6 +785,14 @@
         "ton": "triste",
         "rythme": "lent",
         "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_074b",
+        "personnage": "antoine",
+        "texte": "Ils auraient dû écouter Noé.",
+        "ton": "triste",
+        "rythme": "lent",
+        "pause_apres_ms": 250
       },
       {
         "id": "seg_075",
@@ -806,6 +817,72 @@
         "ton": "dramatique",
         "rythme": "normal",
         "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_012b",
+        "personnage": "sfx",
+        "texte": "massive wave slamming against wooden hull, ship timber groaning under stress, objects sliding and crashing inside, animals crying in panic",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_077b",
+        "personnage": "antoine",
+        "texte": "Papy, et si l'arche avait une fuite ? Et si l'eau entrait ?",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_077c",
+        "personnage": "papy_babou",
+        "texte": "Figure-toi que pendant la pire nuit de la tempête, une vague gigantesque a frappé l'arche. Tout a tremblé à l'intérieur. Les animaux criaient, le bois craquait de partout.",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_077d",
+        "personnage": "noemie",
+        "texte": "Et Noé, il a fait quoi ?",
+        "ton": "inquiet",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_077e",
+        "personnage": "papy_babou",
+        "texte": "Il a serré ses fils dans ses bras. Et il a prié. Il a dit : Seigneur, tu m'as promis. Je te fais confiance.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_012c",
+        "personnage": "sfx",
+        "texte": "storm gradually calming, wood settling with deep creak, waves becoming rhythmic and steady, distant thunder fading",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_077f",
+        "personnage": "papy_babou",
+        "texte": "Et l'arche a tenu bon. Le bois de cyprès n'a pas cédé. Pas une seule goutte d'eau n'est entrée.",
+        "ton": "rassurant",
+        "rythme": "normal",
+        "pause_apres_ms": 350
+      },
+      {
+        "id": "seg_077g",
+        "personnage": "antoine",
+        "texte": "Parce que c'est Dieu qui lui avait dit comment la construire !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
       },
       {
         "id": "sfx_013",
@@ -840,6 +917,14 @@
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_079b",
+        "personnage": "noemie",
+        "texte": "Ils faisaient des câlins aux animaux aussi ?",
+        "ton": "curieux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
       },
       {
         "id": "seg_080",
@@ -1023,7 +1108,7 @@
       {
         "id": "sfx_017",
         "personnage": "sfx",
-        "texte": "soft wing flutter approaching from distance, delicate bird landing on wooden railing with gentle thud",
+        "texte": "soft wing flutter approaching slowly from far distance growing louder, gentle bird landing on wooden railing with light tap, small branch rustling in beak",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -1103,6 +1188,14 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "seg_105d",
+        "personnage": "noemie",
+        "texte": "Les animaux devaient être tellement contents de courir !",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
         "id": "seg_105c",
         "personnage": "papy_babou",
         "texte": "Noé a respiré l'air frais pour la première fois depuis des mois. Et il a senti l'herbe mouillée sous ses pieds. La terre était neuve, propre, comme un cadeau tout juste déballé.",
@@ -1129,7 +1222,7 @@
       {
         "id": "sfx_019",
         "personnage": "sfx",
-        "texte": "bright shimmering chimes cascading upward, warm resonant bell tones ascending gently, radiant high-frequency shimmer",
+        "texte": "bright shimmering chimes cascading upward, warm resonant bell tones ascending gently, sparkling high-frequency arpeggios with soft reverb tail",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 6.0,
@@ -1227,10 +1320,19 @@
       {
         "id": "sfx_021",
         "personnage": "sfx",
-        "texte": "plates clinking, cake being sliced, children laughing softly",
+        "texte": "plates clinking, cake being sliced, children giggling softly",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_020a",
+        "personnage": "sfx",
+        "texte": "gentle whoosh transition settling into warm indoor space, soft harp note descending, cozy room ambiance fading in with fireplace crackle",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 3.0,
         "mode": "insert"
       },
       {
