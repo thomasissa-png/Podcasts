@@ -92,11 +92,20 @@ RÈGLES STRICTES :
     - Le champ "mode" indique "overlay" (superposé aux voix suivantes) ou "insert" (séquentiel).
       Utilise "overlay" pour les ambiances de fond (vent, pluie, nature) et "insert" pour les
       effets ponctuels (tonnerre, porte qui claque, cri d'animal).
-    - DURÉE MINIMALE OVERLAY : les SFX "overlay" d'ambiance doivent durer au moins 15 secondes
-      pour couvrir les passages de narration. Une ambiance de 3 secondes ne sert à rien.
+    - DURÉE MINIMALE OVERLAY : les SFX "overlay" d'ambiance doivent durer entre 15 et 25 secondes.
+      Une ambiance de 3 secondes ne sert à rien. Préférer 20-25s pour les scènes longues.
     - OBLIGATOIRE : au minimum 25 bruitages par épisode, idéalement 30-35. Chaque acte doit avoir
       au moins 8 bruitages. Les SFX doivent être CONTINUS — il ne doit JAMAIS y avoir plus de
       2 minutes sans un bruitage "overlay" ou "insert".
+    - COUVERTURE SANS TROU : il ne doit JAMAIS y avoir plus de 10 segments de voix consécutifs
+      sans un SFX. TOUTES les sections du script doivent être couvertes : scènes de vie,
+      récit biblique, digressions des enfants, récapitulatif, teasing, et au revoir.
+      Les zones souvent oubliées : questions hors-sujet des enfants (dinosaures, étoiles...),
+      la morale/récap en fin d'épisode, le teasing, et les au revoir.
+    - SCÈNES DE VIE : les scènes chez Papy ne sont PAS des pauses sonores. Elles doivent avoir
+      leur overlay d'ambiance propre (salon cosy, cuisine, jardin, départ en voiture).
+    - MINIMUM OVERLAYS : un épisode standard (25 min) doit avoir au minimum 7 overlays.
+      Un épisode long (30-35 min) doit en avoir 10-15.
     - AMBIANCES CONTINUES : pendant le récit biblique, place des "overlay" qui tournent en
       fond TOUT AU LONG du récit (bruit du désert, marché antique, mer, vent dans les oliviers).
       Ces ambiances changent quand le LIEU de l'histoire change.
@@ -1112,6 +1121,9 @@ class Scripteur:
         # Vérifier les mots interdits dans le texte généré
         self._verifier_mots_interdits(script)
 
+        # Vérifier la couverture SFX (pas de trous > 10 segments sans SFX)
+        self._verifier_couverture_sfx(script)
+
         # Nettoyer les onomatopées résiduelles (le LLM n'est pas infaillible)
         self._nettoyer_onomatopees(script)
 
@@ -1200,6 +1212,69 @@ class Scripteur:
                     "Tics de langage : %s utilise %d/%d tics.",
                     nom, tics_trouves, len(tics),
                 )
+
+    @staticmethod
+    def _verifier_couverture_sfx(script: dict) -> None:
+        """Vérifie qu'il n'y a pas de trou > 10 segments de voix sans SFX.
+
+        Émet un warning pour chaque zone du script qui manque de couverture
+        sonore. Cela permet de repérer les scènes de vie, digressions,
+        récaps ou au revoir laissés sans ambiance.
+        """
+        segments = script.get("episode", {}).get("segments", [])
+        if not segments:
+            return
+
+        last_sfx_idx = -1
+        gaps = []
+        overlay_count = 0
+
+        for i, seg in enumerate(segments):
+            if seg.get("personnage") == "sfx":
+                voice_gap = i - last_sfx_idx - 1
+                if voice_gap > 10 and last_sfx_idx >= 0:
+                    # Identifier le contexte du trou
+                    mid = (last_sfx_idx + i) // 2
+                    mid_seg = segments[min(mid, len(segments) - 1)]
+                    contexte = mid_seg.get("personnage", "?")
+                    gaps.append((last_sfx_idx, i, voice_gap, contexte))
+                last_sfx_idx = i
+                if seg.get("mode") == "overlay":
+                    overlay_count += 1
+
+        # Vérifier la fin du script
+        if last_sfx_idx >= 0:
+            voice_gap = len(segments) - last_sfx_idx - 1
+            if voice_gap > 10:
+                gaps.append((last_sfx_idx, len(segments), voice_gap, "fin"))
+
+        for start, end, gap, ctx in gaps:
+            logger.warning(
+                "Trou de couverture SFX : %d segments de voix consécutifs "
+                "sans SFX (idx %d-%d, contexte: %s). "
+                "Ajouter un overlay d'ambiance dans cette zone.",
+                gap, start, end, ctx,
+            )
+
+        # Vérifier le nombre minimum d'overlays
+        min_overlays = 7
+        ep = script.get("episode", {})
+        type_ep = ep.get("type", "standard")
+        if type_ep in ("ouverture", "mi-saison", "final"):
+            min_overlays = 10
+
+        if overlay_count < min_overlays:
+            logger.warning(
+                "Seulement %d overlays d'ambiance (minimum recommandé : %d "
+                "pour un épisode de type '%s'). Ajouter des overlays pour "
+                "couvrir les scènes de vie, le récit, et la conclusion.",
+                overlay_count, min_overlays, type_ep,
+            )
+        else:
+            logger.info(
+                "Couverture SFX : %d overlays d'ambiance, %d trous détectés.",
+                overlay_count, len(gaps),
+            )
 
     @staticmethod
     def _verifier_mots_interdits(script: dict) -> None:

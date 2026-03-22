@@ -22,5 +22,23 @@
     "source_episode": "S01E01",
     "categorie": "audio_voix",
     "date": "2026-03-20"
+  },
+  {
+    "regle": "COUVERTURE SONORE OBLIGATOIRE : il ne doit JAMAIS y avoir plus de 10 segments de voix consécutifs sans un SFX (overlay ou insert). Chaque section de dialogue (scène de vie, récit biblique, récap, teasing, au revoir) DOIT avoir au moins un overlay d'ambiance active. Les zones typiquement oubliées : questions des enfants sur des digressions (dinosaures, étoiles, etc.), le récapitulatif/morale en fin d'épisode, le teasing de l'épisode suivant, et les au revoir. Vérifier systématiquement ces zones.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "audio_sfx",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "DURÉES DES OVERLAYS D'AMBIANCE : les overlays doivent durer entre 15 et 25 secondes (jamais moins de 15s, sinon l'ambiance se coupe trop vite). Pour les scènes longues (récit biblique, récap final), préférer 20-25s. Pour les scènes courtes (transition, au revoir), 15s suffit. Un épisode standard (25 min) doit avoir au minimum 7 overlays d'ambiance. Un épisode long (30-35 min) doit en avoir au minimum 10-15.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "audio_sfx",
+    "date": "2026-03-22"
+  },
+  {
+    "regle": "SCÈNES DE VIE = AMBIANCE OBLIGATOIRE : les scènes de vie chez Papy (arrivée des enfants, goûter avec Mamie, au revoir) ne sont PAS des pauses sonores. Elles DOIVENT avoir leur propre overlay d'ambiance : 'warm cozy room, fireplace crackling, clock ticking' pour le salon, 'kitchen sounds, cups clinking, cookies baking' pour le goûter, 'evening crickets, car doors, footsteps on gravel' pour le départ. Ne jamais laisser une scène de vie sans ambiance sonore.",
+    "source_episode": "S01E01,S01E02",
+    "categorie": "audio_sfx",
+    "date": "2026-03-22"
   }
 ]
