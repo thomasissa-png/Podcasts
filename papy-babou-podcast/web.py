@@ -1203,7 +1203,7 @@ def api_public_episodes():
         elif cover_url:
             ep_status = "coming_soon"
         else:
-            ep_status = "coming_soon"
+            ep_status = "planned"
 
         episodes_public.append({
             "episode_id": episode_id,
