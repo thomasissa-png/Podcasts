@@ -417,6 +417,47 @@ Coordonne 4 audits spécialisés en 4 phases :
 - **`ajustements_mineurs`** : moyenne >= 8.0 ET audience >= 7.5 ET 0 axe < 7.0
 - **`retravailler`** : moyenne < 8.0 OU un axe < 7.0 OU audience < 7.5
 
+## Rédaction de Script — Bonnes Pratiques (Session 8)
+
+### Gestion des timeouts lors de la rédaction
+Les scripts d'épisode sont longs (20+ segments). La génération/édition d'un script complet en une seule passe provoque systématiquement des timeouts.
+
+**Stratégie anti-timeout pour la rédaction :**
+1. **Ne JAMAIS réécrire tout le script d'un coup** — toujours travailler segment par segment ou par petits groupes (3-5 segments max)
+2. **Préparer le texte avant l'outil Edit** — rédiger le contenu dans la réponse, puis faire un seul `Edit` ciblé
+3. **Découper les modifications en passes successives** :
+   - Passe 1 : corrections structurelles (personnages_presents, métadonnées)
+   - Passe 2 : réécriture des segments un par un
+4. **Pour les gros segments** (>15 lignes de dialogue) : les traiter individuellement
+5. **Valider après chaque modification** — ne pas attendre d'avoir tout fait pour vérifier
+
+### Gestion des timeouts lors des audits (`audit-episode`)
+Les agents d'audit (audit-sfx, audit-voix, audit-marc, audit-claire) sont lancés en parallèle et lisent chacun le script complet + la bible des personnages. Cela peut provoquer des timeouts sur les phases de consolidation.
+
+**Stratégie anti-timeout pour les audits :**
+1. **Phase 1 + 2 en parallèle** : Lancer les 4 agents en parallèle est OK (c'est le design voulu)
+2. **Si un agent timeout** : le relancer seul (pas besoin de relancer les 4)
+3. **Phase 3 (consolidation)** : Si elle timeout, découper :
+   - D'abord synthétiser les rapports techniques (SFX + voix)
+   - Puis synthétiser les rapports créatifs (Marc + Claire)
+   - Enfin fusionner les deux synthèses
+4. **Phase 4 (corrections)** : Appliquer les corrections P0/P1 segment par segment, pas en bloc
+5. **Sauvegarder les rapports individuels au fur et à mesure** — ne pas attendre la consolidation
+
+### Suppression du narrateur — Pattern récurrent
+Le narrateur (`narrateur`) n'est PAS un personnage et ne doit JAMAIS apparaître dans `personnages_presents`. C'est un artefact du LLM qui le confond avec papy_babou.
+
+**Règle** : Après chaque génération de script, vérifier `personnages_presents` et retirer `"narrateur"` s'il y est. Les segments attribués au narrateur doivent être réattribués à `papy_babou` (le vrai narrateur de l'histoire).
+
+### Réécriture de segments — Qualité 9/10
+Pour atteindre le niveau 9/10 exigé par les auditeurs :
+- **Naturalité** : Utiliser des interjections naturelles ("Oh", "Hé", "Dis"), des hésitations ("euh"), des questions rhétoriques
+- **Interaction** : Les enfants (Marc, Claire) doivent poser des questions, réagir, pas juste écouter
+- **Immersion sonore** : Les SFX doivent être intégrés dans le dialogue ("Tu entends ce bruit ?"), pas juste décoratifs
+- **Arc émotionnel** : Chaque segment a une émotion dominante — varier sur l'ensemble de l'épisode
+- **Rituels** : Respecter les rituels de début (chanson d'intro, "Installez-vous bien") et de fin ("À la semaine prochaine")
+- **Tons vocaux** : Varier les `ton` dans les répliques (curieux, émerveillé, mystérieux, tendre, solennel) — jamais le même ton 3 fois de suite
+
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`
 - Push: `git push -u origin claude/podcast-production-system-YkngW`
