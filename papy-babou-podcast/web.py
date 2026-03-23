@@ -2498,6 +2498,173 @@ def api_continue_production(episode_id):
         return jsonify({"status": "accepted", "job_id": job_id, "phase": "publication"})
 
 
+@app.route("/api/episode/<episode_id>/kill-productions", methods=["POST"])
+def api_kill_productions(episode_id):
+    """Marque TOUTES les productions non-terminales d'un épisode comme 'failed'.
+
+    Empêche l'auto-resume de relancer de vieilles productions après un redeploy.
+    À appeler AVANT launch-fresh pour partir de zéro.
+    """
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format invalide"}), 400
+    if not _DB_AVAILABLE:
+        return jsonify({"status": "ok", "killed": 0, "message": "DB indisponible, pas de productions à tuer"})
+    try:
+        from db_models import get_cursor
+        with get_cursor() as cur:
+            cur.execute(
+                """UPDATE productions
+                   SET status = 'failed', etape_courante = 'killed_by_api'
+                   WHERE episode_id = %s
+                     AND status NOT IN ('completed', 'failed')
+                   RETURNING id""",
+                (episode_id,),
+            )
+            killed = cur.rowcount
+        return jsonify({"status": "ok", "killed": killed})
+    except Exception as e:
+        logger.warning("kill-productions %s : %s", episode_id, e)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/episode/<episode_id>/launch-fresh", methods=["POST"])
+def api_launch_fresh(episode_id):
+    """Lance la production audio from scratch pour un script déjà validé.
+
+    1. Vérifie que _script.json existe sur le filesystem (pushé via git)
+    2. Copie _script.json → _valide.json
+    3. Crée un checkpoint neuf (étape=audio, validation_humaine=true)
+    4. Lance audio → SFX → montage en auto-chaînage
+
+    Ne touche PAS au script. Ne régénère rien. Utilise tel quel ce qui est dans git.
+    """
+    import json as _json
+    from datetime import datetime
+
+    if not re.match(r'^S\d{2}E\d{2}$', episode_id):
+        return jsonify({"error": "Format invalide"}), 400
+
+    # Vérifier que le script existe
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+    if not script_path.exists():
+        return jsonify({"error": f"Script introuvable: {script_path}"}), 404
+
+    # Lire le script pour extraire les métadonnées
+    try:
+        with open(script_path, "r", encoding="utf-8") as f:
+            script = _json.load(f)
+        ep = script.get("episode", {})
+        titre = ep.get("titre", episode_id)
+        nb_segments = len(ep.get("segments", []))
+        nb_voix = len([s for s in ep.get("segments", []) if s.get("personnage") != "sfx"])
+        nb_sfx = nb_segments - nb_voix
+        logger.info("launch-fresh %s : %d segments (%d voix + %d SFX)", episode_id, nb_segments, nb_voix, nb_sfx)
+    except Exception as e:
+        return jsonify({"error": f"Script illisible: {e}"}), 400
+
+    # Copier vers _valide.json
+    valide_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    import shutil
+    shutil.copy2(script_path, valide_path)
+
+    # Extraire saison/numéro depuis l'episode_id
+    saison = int(episode_id[1:3])
+    numero = int(episode_id[4:6])
+    now = datetime.utcnow().isoformat()
+
+    # Créer un checkpoint neuf à l'étape "audio"
+    checkpoint_data = {
+        "episode_id": episode_id,
+        "etape": "audio",
+        "timestamp": now,
+        "data": {
+            "episode_id": episode_id,
+            "titre": titre,
+            "resume": ep.get("morale", ""),
+            "saison": saison,
+            "numero": numero,
+            "morale": ep.get("morale", ""),
+            "type_episode": ep.get("type", "standard"),
+            "dry_run": False,
+            "rapport": {
+                "episode_id": episode_id,
+                "titre": titre,
+                "dry_run": False,
+                "debut": now,
+                "etapes": {
+                    "script": {
+                        "status": "ok",
+                        "script_path": str(valide_path),
+                        "validation_humaine": True,
+                        "nb_mots": sum(len(s.get("texte", "").split()) for s in ep.get("segments", []) if s.get("personnage") != "sfx"),
+                        "nb_segments": nb_segments,
+                    }
+                },
+                "decisions_humaines": [],
+            },
+            "script_path": str(valide_path),
+            "pubdate_offset_seconds": numero * 3600,
+            "stop_after": "",
+        },
+    }
+
+    checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    config.CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(checkpoint_path, "w", encoding="utf-8") as f:
+        _json.dump(checkpoint_data, f, ensure_ascii=False, indent=2)
+    logger.info("launch-fresh %s : checkpoint créé à %s", episode_id, checkpoint_path)
+
+    # Lancer audio → SFX → montage (même chaînage que continue-production)
+    def _chain_sfx_then_montage():
+        _restore_valide_script(episode_id)
+        _cp = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+        if not _cp.exists():
+            _restore_checkpoint_from_db(episode_id, _cp)
+        if not _cp.exists():
+            logger.warning("launch-fresh chaînage sfx impossible : checkpoint %s introuvable", episode_id)
+            return
+
+        def _chain_montage():
+            _restore_valide_script(episode_id)
+            _cp2 = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+            if not _cp2.exists():
+                _restore_checkpoint_from_db(episode_id, _cp2)
+            if not _cp2.exists():
+                logger.warning("launch-fresh chaînage montage impossible : checkpoint %s introuvable", episode_id)
+                return
+            cmd_montage = ["reprendre", "-c", str(_cp2), "--auto", "--stop-after", "montage"]
+            try:
+                _start_job(cmd_montage, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
+                logger.info("launch-fresh : montage lancé pour %s", episode_id)
+            except ValueError:
+                logger.debug("launch-fresh montage ignoré (job déjà en cours) pour %s", episode_id)
+
+        cmd_sfx = ["reprendre", "-c", str(_cp), "--auto", "--stop-after", "sfx"]
+        try:
+            _start_job(cmd_sfx, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id, on_success_fn=_chain_montage)
+            logger.info("launch-fresh : SFX lancé pour %s", episode_id)
+        except ValueError:
+            logger.debug("launch-fresh SFX ignoré (job déjà en cours) pour %s", episode_id)
+
+    cmd = ["reprendre", "-c", str(checkpoint_path), "--auto", "--stop-after", "audio"]
+    try:
+        job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id, on_success_fn=_chain_sfx_then_montage)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+
+    return jsonify({
+        "status": "accepted",
+        "job_id": job_id,
+        "phase": "audio→sfx→montage",
+        "script": {
+            "segments": nb_segments,
+            "voix": nb_voix,
+            "sfx": nb_sfx,
+            "titre": titre,
+        },
+    })
+
+
 @app.route("/api/episode/<episode_id>/regenerate", methods=["POST"])
 def api_regenerate_episode(episode_id):
     """Relance une étape de production avec les instructions du producteur.
