@@ -71,6 +71,13 @@ if app.secret_key == _default_secret:
 
 
 ## ── Admin Authentication ─────────────────────────────────────────────────────
+_CLAUDE_API_SECRET = os.getenv("CLAUDE_API_SECRET", "")
+if not _CLAUDE_API_SECRET:
+    logger.info(
+        "CLAUDE_API_SECRET non configurée — endpoints /api/claude/ désactivés. "
+        "Configurez CLAUDE_API_SECRET dans les Secrets Replit pour activer l'accès DB distant."
+    )
+
 _ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "papybabou")
 if _ADMIN_PASSWORD == "papybabou":
     logger.warning(
@@ -100,6 +107,15 @@ def _check_admin_auth():
     for prefix in _PUBLIC_PREFIXES:
         if path.startswith(prefix):
             return None
+
+    # Routes /api/claude/ : authentification par Bearer token (pas session)
+    if path.startswith("/api/claude/"):
+        if not _CLAUDE_API_SECRET:
+            return jsonify({"error": "CLAUDE_API_SECRET non configurée sur le serveur"}), 503
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header == f"Bearer {_CLAUDE_API_SECRET}":
+            return None  # Authentifié
+        return jsonify({"error": "Bearer token invalide"}), 401
 
     # Pages et API admin : exiger authentification
     if path.startswith("/admin") or path.startswith("/api/"):
@@ -3295,6 +3311,240 @@ def _auto_resume_interrupted():
 
 # Lancer la reprise automatique dans un thread daemon
 threading.Thread(target=_auto_resume_interrupted, daemon=True, name="auto-resume").start()
+
+
+# ── API Claude Code (accès DB distant via Bearer token) ─────────────────────
+
+_CLAUDE_ALLOWED_TABLES = frozenset({
+    "productions", "scripts", "fichiers_audio", "saisons",
+    "historique_episodes", "episodes", "audit_log",
+})
+
+_CLAUDE_SAFE_OPS = frozenset({"SELECT"})
+_CLAUDE_WRITE_OPS = frozenset({"UPDATE", "INSERT", "DELETE"})
+
+
+@app.route("/api/claude/status")
+def api_claude_db_status():
+    """Vérifie la connexion DB et retourne les tables disponibles."""
+    if not _DB_AVAILABLE:
+        return jsonify({"ok": False, "error": "DATABASE_URL non configurée"}), 503
+    try:
+        with database.get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT table_name FROM information_schema.tables "
+                    "WHERE table_schema = 'public' ORDER BY table_name"
+                )
+                tables = [r[0] for r in cur.fetchall()]
+        return jsonify({"ok": True, "tables": tables})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/claude/query", methods=["POST"])
+def api_claude_query():
+    """Exécute une requête SELECT (lecture seule) et retourne les résultats en JSON.
+
+    Body JSON: {"sql": "SELECT ...", "params": [...]}
+    Limite automatique à 200 lignes.
+    """
+    if not _DB_AVAILABLE:
+        return jsonify({"error": "DATABASE_URL non configurée"}), 503
+
+    data = request.get_json(silent=True) or {}
+    sql = (data.get("sql") or "").strip()
+    params = data.get("params") or []
+
+    if not sql:
+        return jsonify({"error": "Champ 'sql' requis"}), 400
+
+    # Sécurité : seules les requêtes SELECT sont autorisées
+    first_word = sql.split()[0].upper() if sql.split() else ""
+    if first_word not in _CLAUDE_SAFE_OPS:
+        return jsonify({"error": f"Seules les requêtes SELECT sont autorisées (reçu: {first_word})"}), 403
+
+    # Limite automatique
+    if "LIMIT" not in sql.upper():
+        sql = sql.rstrip(";") + " LIMIT 200"
+
+    try:
+        with database.get_conn() as conn:
+            with conn.cursor(cursor_factory=database.psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(sql, params)
+                rows = cur.fetchall()
+                columns = [desc[0] for desc in cur.description] if cur.description else []
+        # Sérialiser les types non-JSON (datetime, etc.)
+        result = []
+        for row in rows:
+            result.append({k: _serialize_value(v) for k, v in row.items()})
+        return jsonify({"ok": True, "columns": columns, "rows": result, "count": len(result)})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/claude/execute", methods=["POST"])
+def api_claude_execute():
+    """Exécute une requête d'écriture (UPDATE, INSERT, DELETE).
+
+    Body JSON: {"sql": "UPDATE ...", "params": [...]}
+    Requiert confirmation: {"confirm": true}
+    """
+    if not _DB_AVAILABLE:
+        return jsonify({"error": "DATABASE_URL non configurée"}), 503
+
+    data = request.get_json(silent=True) or {}
+    sql = (data.get("sql") or "").strip()
+    params = data.get("params") or []
+    confirm = data.get("confirm", False)
+
+    if not sql:
+        return jsonify({"error": "Champ 'sql' requis"}), 400
+
+    first_word = sql.split()[0].upper() if sql.split() else ""
+    if first_word not in _CLAUDE_WRITE_OPS:
+        return jsonify({"error": f"Opérations autorisées: UPDATE, INSERT, DELETE (reçu: {first_word})"}), 403
+
+    # Protection contre DROP, TRUNCATE, ALTER injectés
+    sql_upper = sql.upper()
+    for forbidden in ("DROP ", "TRUNCATE ", "ALTER ", "CREATE ", "GRANT ", "REVOKE "):
+        if forbidden in sql_upper:
+            return jsonify({"error": f"Opération interdite: {forbidden.strip()}"}), 403
+
+    if not confirm:
+        return jsonify({
+            "warning": "Requête d'écriture détectée. Renvoyez avec confirm=true pour exécuter.",
+            "sql": sql,
+            "params": params,
+        }), 200
+
+    try:
+        with database.get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql, params)
+                affected = cur.rowcount
+            conn.commit()
+        return jsonify({"ok": True, "rows_affected": affected})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/claude/table/<table_name>")
+def api_claude_table_info(table_name):
+    """Retourne le schéma d'une table (colonnes, types) + les 10 dernières lignes."""
+    if not _DB_AVAILABLE:
+        return jsonify({"error": "DATABASE_URL non configurée"}), 503
+
+    if table_name not in _CLAUDE_ALLOWED_TABLES:
+        return jsonify({"error": f"Table non autorisée. Tables: {sorted(_CLAUDE_ALLOWED_TABLES)}"}), 403
+
+    try:
+        with database.get_conn() as conn:
+            with conn.cursor(cursor_factory=database.psycopg2.extras.RealDictCursor) as cur:
+                # Schéma
+                cur.execute(
+                    "SELECT column_name, data_type, is_nullable, column_default "
+                    "FROM information_schema.columns "
+                    "WHERE table_schema = 'public' AND table_name = %s "
+                    "ORDER BY ordinal_position",
+                    (table_name,)
+                )
+                columns = [dict(r) for r in cur.fetchall()]
+
+                # Count
+                cur.execute(f'SELECT COUNT(*) AS total FROM "{table_name}"')
+                total = cur.fetchone()["total"]
+
+                # Sample (10 dernières lignes)
+                # Trouver la colonne de tri
+                sort_col = None
+                for c in columns:
+                    if c["column_name"] in ("updated_at", "started_at", "created_at", "date_production"):
+                        sort_col = c["column_name"]
+                        break
+                if sort_col:
+                    cur.execute(f'SELECT * FROM "{table_name}" ORDER BY "{sort_col}" DESC LIMIT 10')
+                else:
+                    cur.execute(f'SELECT * FROM "{table_name}" LIMIT 10')
+                sample = [
+                    {k: _serialize_value(v) for k, v in row.items()}
+                    for row in cur.fetchall()
+                ]
+
+        return jsonify({
+            "ok": True,
+            "table": table_name,
+            "columns": columns,
+            "total_rows": total,
+            "sample": sample,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/claude/productions")
+def api_claude_productions():
+    """Vue synthétique des productions récentes."""
+    if not _DB_AVAILABLE:
+        return jsonify({"error": "DATABASE_URL non configurée"}), 503
+
+    try:
+        with database.get_conn() as conn:
+            with conn.cursor(cursor_factory=database.psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT id, episode_id, titre, status, etape_courante,
+                           started_at, updated_at, completed_at,
+                           dry_run, stop_after
+                    FROM productions
+                    ORDER BY updated_at DESC NULLS LAST
+                    LIMIT 30
+                """)
+                rows = [
+                    {k: _serialize_value(v) for k, v in row.items()}
+                    for row in cur.fetchall()
+                ]
+        return jsonify({"ok": True, "productions": rows, "count": len(rows)})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/claude/episodes")
+def api_claude_episodes():
+    """Vue synthétique des épisodes en base."""
+    if not _DB_AVAILABLE:
+        return jsonify({"error": "DATABASE_URL non configurée"}), 503
+
+    try:
+        with database.get_conn() as conn:
+            with conn.cursor(cursor_factory=database.psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT episode_id, titre, saison, numero, type_episode,
+                           score_review, status, date_production
+                    FROM historique_episodes
+                    ORDER BY saison, numero
+                """)
+                rows = [
+                    {k: _serialize_value(v) for k, v in row.items()}
+                    for row in cur.fetchall()
+                ]
+        return jsonify({"ok": True, "episodes": rows, "count": len(rows)})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+def _serialize_value(v):
+    """Convertit les types Python non-JSON en string."""
+    if v is None:
+        return None
+    if isinstance(v, datetime):
+        return v.isoformat()
+    if isinstance(v, (dict, list)):
+        return v
+    if isinstance(v, (int, float, bool)):
+        return v
+    if isinstance(v, bytes):
+        return v.decode("utf-8", errors="replace")
+    return str(v)
 
 
 # ── Lancement ────────────────────────────────────────────────────────────────
