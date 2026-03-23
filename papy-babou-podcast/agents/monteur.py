@@ -832,12 +832,12 @@ class Monteur:
                  "-i", str(concat_list),
                  "-ar", "44100", "-ac", "2",
                  str(output_wav)],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True, text=True, timeout=600,
                 check=True,
             )
         except _subprocess.TimeoutExpired as e:
-            logger.error("ffmpeg concat timeout après 300s")
-            raise RuntimeError("ffmpeg concat timeout après 300s") from e
+            logger.error("ffmpeg concat timeout après 600s")
+            raise RuntimeError("ffmpeg concat timeout après 600s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg concat failed: %s", e.stderr[-500:] if e.stderr else "no stderr")
             raise RuntimeError(f"ffmpeg concat échoué: {e.stderr[-200:]}") from e
@@ -982,12 +982,12 @@ class Monteur:
                  "-af", af_chain,
                  "-ar", "44100", "-ac", "2",
                  str(output_wav)],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True, text=True, timeout=600,
                 check=True,
             )
         except _subprocess.TimeoutExpired as e:
-            logger.error("ffmpeg master+volume timeout après 300s")
-            raise RuntimeError("ffmpeg master+volume timeout après 300s") from e
+            logger.error("ffmpeg master+volume timeout après 600s")
+            raise RuntimeError("ffmpeg master+volume timeout après 600s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg master+volume failed: %s", e.stderr[-500:] if e.stderr else "")
             raise RuntimeError(f"ffmpeg master+volume échoué: {e.stderr[-200:]}") from e
