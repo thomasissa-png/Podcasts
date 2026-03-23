@@ -6,7 +6,7 @@
     "duree_cible_minutes": 13,
     "ambiance": "calme",
     "morale": "Faire confiance, c'est parfois partir sans savoir où l'on va. Les plus belles aventures commencent par un acte de foi.",
-    "personnages_presents": ["papy_babou", "antoine", "noemie", "mamie_sonia", "narrateur"],
+    "personnages_presents": ["papy_babou", "antoine", "noemie", "mamie_sonia"],
     "moments_cles": [
       "Abraham regarde les étoiles et essaie de les compter",
       "Le voyage de 2000 km dans le désert — les étoiles comme GPS",
@@ -36,8 +36,8 @@
       },
       {
         "id": "seg_001",
-        "personnage": "narrateur",
-        "texte": "Chez Papy Babou, c'est un après-midi calme. Antoine est assis sur le canapé, le regard un peu soucieux. Noémie, elle, dessine par terre avec ses crayons de couleur.",
+        "personnage": "papy_babou",
+        "texte": "Alors, chez Papy Babou, c'est un après-midi calme. Antoine est assis sur le canapé, le regard un peu soucieux. Et Noémie, elle, dessine par terre avec ses crayons de couleur.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -237,9 +237,9 @@
       },
       {
         "id": "seg_019",
-        "personnage": "narrateur",
-        "texte": "Alors Abrame a marché. Des jours, des semaines, des mois. À travers le désert brûlant, sous un soleil immense. Sa femme Saraï marchait à ses côtés, courageuse elle aussi.",
-        "ton": "neutre",
+        "personnage": "papy_babou",
+        "texte": "Alors Abrame a marché. Des jours, des semaines, des mois. À travers le désert brûlant, sous un soleil immense. Et sa femme Saraï marchait à ses côtés, courageuse elle aussi.",
+        "ton": "dramatique",
         "rythme": "lent",
         "pause_apres_ms": 1000
       },
