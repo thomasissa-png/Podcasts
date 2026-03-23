@@ -2544,28 +2544,50 @@ def api_launch_fresh(episode_id):
     if not re.match(r'^S\d{2}E\d{2}$', episode_id):
         return jsonify({"error": "Format invalide"}), 400
 
-    # Vérifier que le script existe
+    # Accepter le script dans le body OU lire depuis le filesystem
     script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
-    if not script_path.exists():
-        return jsonify({"error": f"Script introuvable: {script_path}"}), 404
+    valide_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    import shutil
 
-    # Lire le script pour extraire les métadonnées
+    body = request.get_json(silent=True) or {}
+    script_from_body = body.get("script")
+
+    if script_from_body:
+        # Script envoyé directement dans le POST — source de vérité
+        script = script_from_body
+        config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+        with open(script_path, "w", encoding="utf-8") as f:
+            _json.dump(script, f, ensure_ascii=False, indent=2)
+        with open(valide_path, "w", encoding="utf-8") as f:
+            _json.dump(script, f, ensure_ascii=False, indent=2)
+        # Upload vers Object Storage pour survivre aux redeploys
+        try:
+            import persistent_storage
+            persistent_storage.upload_script(episode_id, script_path)
+        except Exception:
+            pass
+        logger.info("launch-fresh %s : script reçu dans le body POST (source de vérité)", episode_id)
+    elif script_path.exists():
+        try:
+            with open(script_path, "r", encoding="utf-8") as f:
+                script = _json.load(f)
+        except Exception as e:
+            return jsonify({"error": f"Script illisible: {e}"}), 400
+        shutil.copy2(script_path, valide_path)
+    else:
+        return jsonify({"error": f"Script introuvable: envoyez-le dans le body ou déployez d'abord"}), 404
+
+    # Extraire les métadonnées
     try:
-        with open(script_path, "r", encoding="utf-8") as f:
-            script = _json.load(f)
         ep = script.get("episode", {})
         titre = ep.get("titre", episode_id)
-        nb_segments = len(ep.get("segments", []))
-        nb_voix = len([s for s in ep.get("segments", []) if s.get("personnage") != "sfx"])
+        segments = ep.get("segments", [])
+        nb_segments = len(segments)
+        nb_voix = len([s for s in segments if s.get("personnage") != "sfx"])
         nb_sfx = nb_segments - nb_voix
         logger.info("launch-fresh %s : %d segments (%d voix + %d SFX)", episode_id, nb_segments, nb_voix, nb_sfx)
     except Exception as e:
         return jsonify({"error": f"Script illisible: {e}"}), 400
-
-    # Copier vers _valide.json
-    valide_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
-    import shutil
-    shutil.copy2(script_path, valide_path)
 
     # Extraire saison/numéro depuis l'episode_id
     saison = int(episode_id[1:3])
