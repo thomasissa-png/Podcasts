@@ -182,10 +182,10 @@
       {
         "id": "sfx_010",
         "personnage": "sfx",
-        "texte": "low drone shifting upward in pitch with shimmering high-frequency shimmer, reverberant ambient pad building slowly over 5 seconds",
+        "texte": "fireplace crackling slowly fading, transforming into deep cosmic drone, low sub-bass rising with shimmering high-frequency overtones expanding, transition from warm indoor to vast empty space",
         "ton": "ambiance",
         "pause_apres_ms": 400,
-        "duree_sfx_secondes": 3.0,
+        "duree_sfx_secondes": 8.0,
         "mode": "insert"
       },
       {
@@ -228,6 +228,14 @@
         "ton": "inquiet",
         "rythme": "normal",
         "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_019c",
+        "personnage": "papy_babou",
+        "texte": "Et alors, dans ce silence immense, Dieu a pris une grande inspiration.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 800
       },
       {
         "id": "seg_020",
@@ -306,18 +314,34 @@
       {
         "id": "seg_027",
         "personnage": "papy_babou",
-        "texte": "Le deuxième jour, Dieu a regardé toute cette eau qui était partout, un océan infini, et il a dit : Je vais mettre de l'ordre là-dedans.",
+        "texte": "Le deuxième jour, Dieu avait un problème. Il y avait de l'eau partout, un océan infini dans tous les sens. Et il fallait mettre de l'ordre là-dedans. À votre avis, qu'est-ce qu'il a fait ?",
+        "ton": "mystérieux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_027b",
+        "personnage": "antoine",
+        "texte": "Il a fabriqué un barrage géant ?",
+        "ton": "curieux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_027c",
+        "personnage": "noemie",
+        "texte": "Il a bu toute l'eau !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_027d",
+        "personnage": "papy_babou",
+        "texte": "Pas tout à fait, mes petits loups ! Mais Noémie n'est pas loin. Dieu a fait quelque chose d'encore plus fort.",
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
-      },
-      {
-        "personnage": "noemie",
-        "texte": "Et la lumière, elle était de quelle couleur ?",
-        "ton": "curieux",
-        "rythme": "rapide",
-        "pause_apres_ms": 250,
-        "id": "seg_028"
       },
       {
         "personnage": "papy_babou",
@@ -341,7 +365,7 @@
         "personnage": "papy_babou",
         "texte": "Il a séparé les eaux en deux. Les eaux d'en bas, qui formeraient les mers, et les eaux d'en haut, qui formeraient les nuages. Et entre les deux, il a créé le ciel. Un grand ciel immense et bleu.",
         "ton": "émerveillé",
-        "rythme": "normal",
+        "rythme": "lent",
         "pause_apres_ms": 300
       },
       {
@@ -385,6 +409,22 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "seg_035b",
+        "personnage": "antoine",
+        "texte": "Noémie, on croque pas les planètes !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_035c",
+        "personnage": "noemie",
+        "texte": "Tu croques bien tes ongles, toi !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
         "id": "seg_036",
         "personnage": "papy_babou",
         "texte": "C'est une image, ma puce ! Mais c'est vrai que la Terre est aussi précieuse qu'un fruit mûr. Il faut en prendre soin.",
@@ -415,7 +455,7 @@
         "personnage": "papy_babou",
         "texte": "Le troisième jour, Dieu a dit : Que les eaux se rassemblent et que la terre ferme apparaisse ! Et c'est ce qui s'est passé. L'eau s'est retirée d'un côté pour former les mers et les océans.",
         "ton": "dramatique",
-        "rythme": "normal",
+        "rythme": "lent",
         "pause_apres_ms": 300
       },
       {
@@ -469,7 +509,7 @@
       {
         "id": "sfx_017",
         "personnage": "sfx",
-        "texte": "rich forest ambiance emerging, birdsong growing louder and more varied, wind rustling through dense leaves and branches",
+        "texte": "rich forest ambiance emerging, bird calls growing louder and more varied, wind rustling through dense leaves and branches",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 18.0,
@@ -488,7 +528,7 @@
         "personnage": "noemie",
         "texte": "Même les marguerites ? J'adore les marguerites !",
         "ton": "joyeux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 250
       },
       {
@@ -498,6 +538,86 @@
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_044b",
+        "personnage": "antoine",
+        "texte": "Papy, tu savais que la plus vieille graine qu'on a fait pousser avait deux mille ans ? C'était un dattier en Israël !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_044c",
+        "personnage": "papy_babou",
+        "texte": "Deux mille ans ! Une graine qui attendait depuis l'époque de Jésus pour germer. C'est la force de la vie que Dieu a mise dans chaque graine.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_047b",
+        "personnage": "papy_babou",
+        "texte": "Attends, Antoine. Avant de continuer, j'ai un défi pour vous deux. Je vais décrire ce que Dieu a créé, et vous devez deviner quel jour c'était. Prêts ?",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_047c",
+        "personnage": "antoine",
+        "texte": "Prêt !",
+        "ton": "excité",
+        "rythme": "rapide",
+        "pause_apres_ms": 100
+      },
+      {
+        "id": "seg_047d",
+        "personnage": "noemie",
+        "texte": "Prête !",
+        "ton": "excité",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_047e",
+        "personnage": "papy_babou",
+        "texte": "Les eaux se rassemblent et la terre ferme apparaît. Quel jour ?",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "seg_047f",
+        "personnage": "antoine",
+        "texte": "Le troisième ! On vient juste de le faire !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_047g",
+        "personnage": "papy_babou",
+        "texte": "Bravo ! Et maintenant : la lumière jaillit pour la première fois.",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "seg_047h",
+        "personnage": "noemie",
+        "texte": "Le premier ! C'est facile !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_047i",
+        "personnage": "papy_babou",
+        "texte": "Trop facile pour vous ! On continue alors.",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
       },
       {
         "id": "seg_047",
@@ -600,7 +720,7 @@
       {
         "personnage": "antoine",
         "texte": "C'est malin ! Chaque fruit a une graine dedans pour faire un nouvel arbre. Ça n'arrête jamais !",
-        "ton": "émerveillé",
+        "ton": "surpris",
         "rythme": "normal",
         "pause_apres_ms": 300,
         "id": "seg_057"
@@ -616,7 +736,7 @@
       {
         "personnage": "papy_babou",
         "texte": "C'est ça, Antoine ! Tu sais, quand je vivais en Afrique du Sud, il y avait un baobab devant notre maison. Un arbre énorme, gros comme cette pièce. Et il avait commencé par une toute petite graine.",
-        "ton": "chaleureux",
+        "ton": "nostalgique",
         "rythme": "normal",
         "pause_apres_ms": 350,
         "id": "seg_059"
@@ -640,7 +760,7 @@
       {
         "id": "seg_062",
         "personnage": "antoine",
-        "texte": "C'est trop beau comme image, Papy.",
+        "texte": "Trop stylée l'image du sucre, Papy ! On dirait un film de l'espace !",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300
@@ -797,7 +917,7 @@
       {
         "personnage": "papy_babou",
         "texte": "Certaines sont encore plus grosses, ma puce ! Mais elles sont tellement loin qu'on les voit toutes petites. C'est comme quand tu regardes un avion dans le ciel : il a l'air minuscule mais en vrai il est immense.",
-        "ton": "chaleureux",
+        "ton": "amusé",
         "rythme": "normal",
         "pause_apres_ms": 300,
         "id": "seg_075"
@@ -805,7 +925,7 @@
       {
         "personnage": "antoine",
         "texte": "Et Dieu a fait tout ça en un seul jour ? C'est dingue.",
-        "ton": "émerveillé",
+        "ton": "impressionné",
         "rythme": "normal",
         "pause_apres_ms": 300,
         "id": "seg_076"
@@ -832,7 +952,7 @@
         "personnage": "sfx",
         "texte": "warm kitchen ambiance, ceramic cups clinking softly, tea being poured, oven warmth humming gently",
         "ton": "ambiance",
-        "pause_apres_ms": 0,
+        "pause_apres_ms": 100,
         "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
@@ -840,7 +960,7 @@
         "id": "seg_078",
         "personnage": "mamie_sonia",
         "texte": "Mes petits chéris ! J'ai fait des sablés en forme d'étoile pour le goûter. Votre Papy vous raconte la Création ?",
-        "ton": "chaleureux",
+        "ton": "joyeux",
         "rythme": "normal",
         "pause_apres_ms": 250
       },
@@ -880,15 +1000,15 @@
         "id": "seg_083",
         "personnage": "mamie_sonia",
         "texte": "Quand j'étais petite au Caire, ma grand-mère me racontait que chaque animal est une lettre de l'alphabet de Dieu. Ensemble, ils racontent une histoire d'amour.",
-        "ton": "émerveillé",
+        "ton": "tendre",
         "rythme": "normal",
         "pause_apres_ms": 350
       },
       {
         "id": "seg_084",
         "personnage": "antoine",
-        "texte": "C'est joli comme idée, Mamie.",
-        "ton": "émerveillé",
+        "texte": "C'est vrai ça, Mamie ? Ta grand-mère elle disait ça pour de vrai ?",
+        "ton": "admiratif",
         "rythme": "normal",
         "pause_apres_ms": 200
       },
@@ -963,7 +1083,7 @@
       {
         "personnage": "papy_babou",
         "texte": "Imagine un safari géant, Antoine ! Mais sans les voitures et sans les clôtures. Les animaux vivaient libres, en harmonie les uns avec les autres.",
-        "ton": "chaleureux",
+        "ton": "espiègle",
         "rythme": "normal",
         "pause_apres_ms": 300,
         "id": "seg_090"
@@ -1004,7 +1124,7 @@
         "id": "seg_095",
         "personnage": "papy_babou",
         "texte": "Comme Moustache, oui ! Tu sais que Moustache descend des premiers chats créés par Dieu ?",
-        "ton": "chaleureux",
+        "ton": "amusé",
         "rythme": "normal",
         "pause_apres_ms": 250
       },
@@ -1053,7 +1173,7 @@
       {
         "id": "seg_098b",
         "personnage": "papy_babou",
-        "texte": "Et il a soufflédans ses narines un souffle de vie.",
+        "texte": "Et il a soufflé dans ses narines un souffle de vie.",
         "ton": "mystérieux",
         "rythme": "lent",
         "pause_apres_ms": 500
@@ -1177,7 +1297,7 @@
       {
         "personnage": "papy_babou",
         "texte": "Ta maîtresse a raison. Quand j'étais au Liban, on n'était pas loin de cette région. C'est une terre chargée d'histoire, mes petits loups.",
-        "ton": "chaleureux",
+        "ton": "nostalgique",
         "rythme": "normal",
         "pause_apres_ms": 300,
         "id": "seg_109"
@@ -1218,7 +1338,7 @@
         "id": "seg_114",
         "personnage": "mamie_sonia",
         "texte": "Et vous savez, mes chéris, quand Papy et moi on s'est rencontrés au Liban, j'ai su tout de suite que Dieu avait prévu cette rencontre depuis le début. Comme pour Adam et Ève.",
-        "ton": "chaleureux",
+        "ton": "nostalgique",
         "rythme": "normal",
         "pause_apres_ms": 350
       },
@@ -1233,7 +1353,7 @@
       {
         "id": "sfx_033",
         "personnage": "sfx",
-        "texte": "peaceful morning nature ambiance, gentle birdsong with varied calls, soft breeze through trees, distant stream flowing",
+        "texte": "peaceful morning nature ambiance, gentle bird calls with varied patterns, soft breeze through trees, distant stream flowing",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 15.0,
@@ -1305,6 +1425,38 @@
         "pause_apres_ms": 250
       },
       {
+        "id": "seg_120d",
+        "personnage": "papy_babou",
+        "texte": "Et le lion, Noémie ? Comment tu l'appellerais ?",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_120e",
+        "personnage": "noemie",
+        "texte": "Grosse-Crinière-Qui-Fait-Peur !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_120f",
+        "personnage": "antoine",
+        "texte": "C'est beaucoup trop long comme nom ! Personne va retenir ça !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_120g",
+        "personnage": "noemie",
+        "texte": "Ben on l'appelle juste Crinière alors !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 250
+      },
+      {
         "personnage": "papy_babou",
         "texte": "C'est drôle, Noémie ! Adam avait peut-être un peu plus d'inspiration, mais l'idée c'est que Dieu faisait confiance aux hommes. Il leur a donné la responsabilité de prendre soin de tout ce qu'il avait créé.",
         "ton": "chaleureux",
@@ -1357,7 +1509,7 @@
         "id": "seg_126",
         "personnage": "papy_babou",
         "texte": "Bravo Antoine ! C'est d'ailleurs pour ça que le dimanche est un jour de repos. Dieu a montré l'exemple : après avoir bien travaillé, on prend le temps de se poser et d'admirer ce qu'on a fait.",
-        "ton": "chaleureux",
+        "ton": "enthousiaste",
         "rythme": "normal",
         "pause_apres_ms": 300
       },
@@ -1397,7 +1549,7 @@
       {
         "id": "sfx_037b",
         "personnage": "sfx",
-        "texte": "cozy evening room ambiance, soft fireplace crackling, old clock ticking slowly, warm peaceful indoor atmosphere",
+        "texte": "soft fireplace crackling, old clock ticking slowly, warm evening room ambiance",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
@@ -1422,8 +1574,8 @@
       {
         "id": "seg_132",
         "personnage": "antoine",
-        "texte": "C'est quand même incroyable quand on y pense. Tout ce qui existe, les montagnes, les océans, les animaux, nous. Tout ça a un début.",
-        "ton": "émerveillé",
+        "texte": "C'est dingue quand on y pense. Tout tout tout, les montagnes, les océans, nous, on était rien du tout avant.",
+        "ton": "impressionné",
         "rythme": "normal",
         "pause_apres_ms": 300
       },
@@ -1454,7 +1606,7 @@
       {
         "id": "sfx_038b",
         "personnage": "sfx",
-        "texte": "evening wind gently whistling past window, warm indoor ambiance with distant owl hoot, old house creaking softly",
+        "texte": "evening wind whistling past window, distant owl hoot, old house creaking softly",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
@@ -1480,7 +1632,7 @@
         "id": "seg_138",
         "personnage": "papy_babou",
         "texte": "C'est magnifique, Noémie. Tu as retenu le plus important.",
-        "ton": "chaleureux",
+        "ton": "tendre",
         "rythme": "normal",
         "pause_apres_ms": 300
       },
@@ -1543,7 +1695,7 @@
       {
         "id": "sfx_038c",
         "personnage": "sfx",
-        "texte": "quiet evening settling sounds, gentle breeze through curtains, distant church bells ringing softly, warm indoor atmosphere",
+        "texte": "gentle breeze through curtains, distant church bells ringing softly, quiet evening settling creaks",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,

@@ -358,7 +358,7 @@
                         "personnage": "noemie",
                         "texte": "Mais Papy, c'est quoi une arche ? C'est un gros bateau pirate ?",
                         "ton": "curieux",
-                        "rythme": "rapide",
+                        "rythme": "normal",
                         "pause_apres_ms": 200
                   },
                   {
@@ -622,7 +622,7 @@
                         "personnage": "noemie",
                         "texte": "Papy avait un accent rigolo ?",
                         "ton": "curieux",
-                        "rythme": "rapide",
+                        "rythme": "normal",
                         "pause_apres_ms": 200
                   },
                   {
@@ -755,7 +755,7 @@
                         "personnage": "noemie",
                         "texte": "Papy, c'est quand le goûter ?",
                         "ton": "espiègle",
-                        "rythme": "rapide",
+                        "rythme": "normal",
                         "pause_apres_ms": 200
                   },
                   {
@@ -769,8 +769,8 @@
                   {
                         "id": "seg_065",
                         "personnage": "papy_babou",
-                        "texte": "Le gâteau de Mamie attend sagement dans la cuisine, ma puce. Il ne va pas s'envoler. Alors, quand tous les animaux furent entrés, Noé et sa famille sont montés à bord.",
-                        "ton": "chaleureux",
+                        "texte": "Le gâteau à l'orange de Mamie attend sagement dans la cuisine, ma puce. Tu sais, je suis sûr que Noé aurait adoré en avoir un dans l'arche. Cent cinquante jours sans gâteau de Mamie, ça devait être la vraie catastrophe !",
+                        "ton": "espiègle",
                         "rythme": "normal",
                         "pause_apres_ms": 300
                   },
@@ -1082,7 +1082,7 @@
                   {
                         "id": "sfx_013b",
                         "personnage": "sfx",
-                        "texte": "wooden ship interior creaking rhythmically, muffled rain on hull above, distant animal sounds echoing inside large wooden structure, hay rustling",
+                        "texte": "wooden ship interior creaking rhythmically, animals restless and shuffling on hay, horse snorting, sheep bleating softly, muffled rain on hull above",
                         "ton": "ambiance",
                         "pause_apres_ms": 200,
                         "duree_sfx_secondes": 20.0,
@@ -1091,19 +1091,10 @@
                   {
                         "id": "sfx_013c",
                         "personnage": "sfx",
-                        "texte": "wooden hull creaking rhythmically with waves, hay rustling softly, occasional distant animal sound echoing in large enclosed space, water dripping slowly",
+                        "texte": "quiet wooden hull settling with slow deep creaks, animals sleeping with soft rhythmic breathing, single water drop echoing in large space, distant wind muffled through thick wood",
                         "ton": "ambiance",
                         "pause_apres_ms": 200,
                         "duree_sfx_secondes": 25.0,
-                        "mode": "overlay"
-                  },
-                  {
-                        "id": "sfx_013d",
-                        "personnage": "sfx",
-                        "texte": "wooden hull creaking softly, hay rustling, distant muffled animal sounds inside large enclosed space, slow water dripping, calm enclosed atmosphere",
-                        "ton": "ambiance",
-                        "pause_apres_ms": 200,
-                        "duree_sfx_secondes": 20.0,
                         "mode": "overlay"
                   },
                   {
@@ -1640,7 +1631,7 @@
                   {
                         "id": "seg_118",
                         "personnage": "papy_babou",
-                        "texte": "Alors mes petits loups, maintenant c'est le petit mot de Papy. Qu'est-ce que vous avez retenu de l'histoire de Noé ?",
+                        "texte": "Alors mes petits loups, qu'est-ce que vous avez retenu de l'histoire de Noé ?",
                         "ton": "chaleureux",
                         "rythme": "normal",
                         "pause_apres_ms": 400
