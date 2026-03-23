@@ -18,6 +18,15 @@
     ],
     "segments": [
       {
+        "id": "sfx_000",
+        "personnage": "sfx",
+        "texte": "Deep resonant low-frequency drone building from silence, gentle high-pitched crystalline shimmer fading in, mysterious and inviting",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
         "id": "seg_000",
         "personnage": "papy_babou",
         "texte": "Devinez combien d'étoiles il y a dans le ciel ? Des milliards et des milliards. Et un jour, Dieu a demandé à un homme de les compter. Mais ça, je vous le raconte dans un instant.",
@@ -31,7 +40,7 @@
         "texte": "Crackling fireplace ambiance with low-frequency pad drone, subtle room tone warmth, gentle ember pops, soft analog hiss undertone",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -115,7 +124,7 @@
       {
         "id": "sfx_002",
         "personnage": "sfx",
-        "texte": "Warm Middle Eastern string drone with soft wind layer, evoking a desert landscape, gentle reverb tail",
+        "texte": "Warm Middle Eastern string drone with soft wind layer, gentle reverb tail, wide stereo spread",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -169,7 +178,7 @@
       {
         "id": "sfx_014",
         "personnage": "sfx",
-        "texte": "Soft distant thunder rumble fading into reverent stillness, gentle low-pitched resonance settling, wide stereo atmosphere",
+        "texte": "Soft distant thunder rumble with slow decay, gentle low-pitched resonance settling into near-silence, wide stereo atmosphere",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -211,6 +220,15 @@
         "ton": "mystérieux",
         "rythme": "lent",
         "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_004b",
+        "personnage": "sfx",
+        "texte": "Sustained low-frequency desert wind drone with soft sandy granular texture, distant camel groan, slow rhythmic footstep pattern in sand",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 12.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_018d",
@@ -260,19 +278,19 @@
       {
         "id": "sfx_013",
         "personnage": "sfx",
-        "texte": "Hot arid wind gusting over sandy terrain, distant dry grass rustling, sparse desert landscape with wide open stereo field",
+        "texte": "Harsh dry wind gusting with grainy sand texture, distant dry grass rustling, wide open stereo field",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
         "mode": "overlay"
       },
       {
-        "id": "sfx_015",
+        "id": "sfx_famine",
         "personnage": "sfx",
-        "texte": "Dry desolate wind howling over cracked earth, distant low rumble of empty landscape, sparse dust movement, bleak atmosphere",
+        "texte": "Low ominous sustained drone with dry crackling texture, sparse hollow wind gusts, desolate and tense atmosphere building slowly",
         "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 10.0,
         "mode": "overlay"
       },
       {
@@ -345,10 +363,10 @@
       {
         "id": "sfx_005",
         "personnage": "sfx",
-        "texte": "Soft night cricket ambiance with gentle twinkling high-frequency shimmer pads evoking starlight, wide stereo field",
+        "texte": "Soft night cricket ambiance with gentle twinkling high-frequency shimmer pads, crystalline overtones, wide stereo field",
         "ton": "ambiance",
         "pause_apres_ms": 500,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 12.0,
         "mode": "overlay"
       },
       {
@@ -371,6 +389,15 @@
         "texte": "Si je sais ! Un, deux, trois... cent ! Voilà !",
         "ton": "joyeux",
         "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_005b",
+        "personnage": "sfx",
+        "texte": "Gentle ascending chime arpeggio with wide reverb bloom, ethereal high-register shimmer, sense of vastness and wonder",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
       },
       {
         "id": "seg_027",
