@@ -243,8 +243,11 @@ Sauvegarde dans `output/scripts/[EPISODE_ID]_audit_complet.md`.
 - Apres application, TOUJOURS recalculer les stats pour verifier les ratios
 - Sauvegarder le script modifie (ecraser le fichier original)
 
-### Seuil qualite
-- **L'objectif est 9/10 minimum sur TOUTES les dimensions cles**
+### Seuil qualite — REGLE ABSOLUE
+- **CHAQUE auditeur doit donner 9/10 MINIMUM pour que l'episode passe en production**
+- Pas la moyenne — CHAQUE auditeur individuellement : Thomas >= 9, Isabelle >= 9, Marc >= 9, Claire >= 9
+- Si UN SEUL auditeur est sous 9/10 apres corrections, l'episode NE PASSE PAS en production
+- Iterer les corrections et re-audits jusqu'a ce que les 4 auditeurs soient a 9/10+
 - Les dimensions cles sont : immersion sonore, rythme, authenticite enfants, emotion, valeur educative, audience
 - Si apres corrections P0+P1 la projection reste < 9/10 sur une dimension cle, indiquer clairement "RETRAVAILLER" avec les axes a ameliorer
 - Un episode a 8.5/10 est BON mais pas EXCELLENT. L'objectif est l'excellence.

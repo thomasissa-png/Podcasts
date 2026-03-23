@@ -42,6 +42,48 @@
     },
     "segments": [
       {
+        "id": "sfx_001",
+        "personnage": "sfx",
+        "texte": "massive thunder crack very close, heavy rain intensifying rapidly, wind howling through trees, wood creaking under stress",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_001",
+        "personnage": "noemie",
+        "texte": "Papy ! Le ciel devient tout noir !",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_002",
+        "personnage": "papy_babou",
+        "texte": "Tu sais, ma puce, il y a très très longtemps, il a plu bien plus fort que ça. Tellement fort que toute la terre a disparu sous l'eau.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_003",
+        "personnage": "antoine",
+        "texte": "Toute la terre ? C'est pas possible !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "sfx_002",
+        "personnage": "sfx",
+        "texte": "magical whoosh transition, warm harp glissando dissolving storm into cozy crackling fireplace and gentle rain on windows",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "sfx_005",
         "personnage": "sfx",
         "texte": "rain pattering on windows, cozy fireplace crackling, clock ticking softly in background",
@@ -110,7 +152,7 @@
       {
         "id": "sfx_005b",
         "personnage": "sfx",
-        "texte": "cozy indoor atmosphere, soft fireplace crackling, rain tapping on windows, occasional clock chime in background",
+        "texte": "leather sofa creaking softly, warm room with gentle draft from window, cat purring quietly, rain tapping on glass pane",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
@@ -166,35 +208,18 @@
         "pause_apres_ms": 200
       },
       {
-        "id": "seg_015",
+        "id": "seg_014b",
         "personnage": "papy_babou",
-        "texte": "Mais avant de vous raconter cette pluie extraordinaire, il faut que je vous rappelle quelque chose. Vous vous souvenez de la dernière fois ?",
-        "ton": "chaleureux",
+        "texte": "Et figurez-vous que quarante jours, c'est à peu près toute la durée des grandes vacances. Imaginez s'il pleuvait sans arrêt du premier au dernier jour des vacances !",
+        "ton": "espiègle",
         "rythme": "normal",
         "pause_apres_ms": 300
       },
       {
-        "id": "seg_016",
+        "id": "seg_014c",
         "personnage": "antoine",
-        "texte": "La Création ! Quand Dieu a tout inventé en six jours !",
-        "ton": "enthousiaste",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "sfx_005d",
-        "personnage": "sfx",
-        "texte": "cozy indoor evening ambiance, soft fireplace crackling steadily, rain still audible on windows, warm comfortable room tone",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_017",
-        "personnage": "noemie",
-        "texte": "Et le septième jour il s'est reposé !",
-        "ton": "joyeux",
+        "texte": "Toutes les vacances sous la pluie ? C'est la pire chose du monde !",
+        "ton": "dramatique",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -503,6 +528,15 @@
         "pause_apres_ms": 500
       },
       {
+        "id": "sfx_008g",
+        "personnage": "sfx",
+        "texte": "very intimate quiet room ambiance, single soft fireplace ember glow crackling gently, barely audible clock, emotionally still atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_044",
         "personnage": "antoine",
         "texte": "C'est un peu comme Maxime à l'école. Il se moque de moi parce que je lève la main.",
@@ -745,7 +779,7 @@
         "personnage": "papy_babou",
         "texte": "Et alors, le ciel est devenu tout noir. Les nuages se sont rassemblés comme une armée immense. Et la pluie a commencé à tomber.",
         "ton": "dramatique",
-        "rythme": "lent",
+        "rythme": "normal",
         "pause_apres_ms": 400
       },
       {
@@ -780,6 +814,22 @@
         "ton": "dramatique",
         "rythme": "lent",
         "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_072c",
+        "personnage": "papy_babou",
+        "texte": "Tu sais Antoine, si tu empilais la tour Eiffel, la Statue de la Liberté et le plus grand immeuble du monde les uns sur les autres, l'eau du déluge les aurait tous recouverts. Complètement engloutis.",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_072d",
+        "personnage": "antoine",
+        "texte": "Même la tour Eiffel sous l'eau ? C'est le truc le plus dingue que j'ai jamais entendu !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
       },
       {
         "id": "sfx_012d",
@@ -857,10 +907,19 @@
       {
         "id": "sfx_012b",
         "personnage": "sfx",
-        "texte": "massive wave slamming against wooden hull, ship timber groaning under stress, objects sliding and crashing inside, horses neighing and sheep bleating in distress",
+        "texte": "massive wave slamming against wooden hull with deep booming impact, ship timber groaning and cracking under stress, objects sliding and crashing inside, horses neighing in distress, continuous heavy rain on deck above",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_012b2",
+        "personnage": "sfx",
+        "texte": "abrupt near-silence after storm, only slow water dripping on wood, one distant animal whimper, creaking hull settling",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 4.0,
         "mode": "insert"
       },
       {
@@ -888,12 +947,21 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "sfx_012e",
+        "personnage": "sfx",
+        "texte": "storm suddenly muffled and distant, deep low reverent sub-bass drone slowly swelling, all other sounds fading away to near silence",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert"
+      },
+      {
         "id": "seg_077e",
         "personnage": "papy_babou",
         "texte": "Il a serré ses fils dans ses bras. Et il a prié. Il a dit : Seigneur, tu m'as promis. Je te fais confiance.",
         "ton": "solennel",
         "rythme": "lent",
-        "pause_apres_ms": 400
+        "pause_apres_ms": 600
       },
       {
         "id": "sfx_012c",
@@ -977,6 +1045,30 @@
         "personnage": "noemie",
         "texte": "Ils faisaient des câlins aux animaux aussi ?",
         "ton": "curieux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_079c",
+        "personnage": "noemie",
+        "texte": "Papy, et les moutons, ils comptaient des humains pour s'endormir ?",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_079d",
+        "personnage": "antoine",
+        "texte": "C'est les humains qui comptent les moutons, Noémie !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_079e",
+        "personnage": "noemie",
+        "texte": "Ben justement, dans l'arche c'est à l'envers ! C'est les moutons les chefs !",
+        "ton": "espiègle",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -1134,7 +1226,7 @@
         "personnage": "papy_babou",
         "texte": "La première fois, la colombe est revenue bredouille. Pas de terre. Noé a attendu sept jours et il l'a renvoyée.",
         "ton": "chaleureux",
-        "rythme": "normal",
+        "rythme": "lent",
         "pause_apres_ms": 300
       },
       {
@@ -1190,7 +1282,7 @@
         "id": "seg_099",
         "personnage": "mamie_sonia",
         "texte": "Et vous savez, mes petits chéris, encore aujourd'hui la colombe avec le rameau d'olivier est le symbole de la paix dans le monde entier.",
-        "ton": "chaleureux",
+        "ton": "solennel",
         "rythme": "normal",
         "pause_apres_ms": 300
       },
@@ -1533,7 +1625,7 @@
         "id": "seg_131",
         "personnage": "mamie_sonia",
         "texte": "De rien mes petits chéris. Et si vous voyez un arc-en-ciel sur la route, faites un voeu pour Noé.",
-        "ton": "chaleureux",
+        "ton": "tendre",
         "rythme": "normal",
         "pause_apres_ms": 300
       },
