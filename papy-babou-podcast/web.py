@@ -3489,9 +3489,9 @@ def api_claude_productions():
         with database.get_conn() as conn:
             with conn.cursor(cursor_factory=database.psycopg2.extras.RealDictCursor) as cur:
                 cur.execute("""
-                    SELECT id, episode_id, titre, status, etape_courante,
+                    SELECT id, episode_id, status, etape_courante,
                            started_at, updated_at, completed_at,
-                           dry_run, stop_after
+                           dry_run, web_job_id
                     FROM productions
                     ORDER BY updated_at DESC NULLS LAST
                     LIMIT 30
@@ -3515,10 +3515,11 @@ def api_claude_episodes():
         with database.get_conn() as conn:
             with conn.cursor(cursor_factory=database.psycopg2.extras.RealDictCursor) as cur:
                 cur.execute("""
-                    SELECT episode_id, titre, saison, numero, type_episode,
-                           score_review, status, date_production
+                    SELECT episode_id, titre, type_episode,
+                           score_review, date_production,
+                           morale, ambiance, resume_court
                     FROM historique_episodes
-                    ORDER BY saison, numero
+                    ORDER BY episode_id
                 """)
                 rows = [
                     {k: _serialize_value(v) for k, v in row.items()}
