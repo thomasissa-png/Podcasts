@@ -1082,8 +1082,13 @@ def api_public_episodes():
         saisons_list = config.liste_saisons() if hasattr(config, 'liste_saisons') else []
         for num in saisons_list:
             saison_plans_cache[num] = config.charger_saison(num)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Erreur chargement saisons: %s", e)
+
+    # Debug log for plan contents
+    for num, plan in saison_plans_cache.items():
+        eps_plan = plan.get("saison", {}).get("episodes", [])
+        logger.info("api_public_episodes: saison %d — %d episodes dans le plan", num, len(eps_plan))
 
     # Build saisons_info (only saisons with episodes in historique)
     saisons_info = []
@@ -1238,6 +1243,8 @@ def api_public_episodes():
     # Pour les saisons commencees, ajouter les episodes du plan qui ne sont
     # pas encore dans l'historique (episodes "planned")
     episodes_ids_existants = set(ep["episode_id"] for ep in episodes_public)
+    logger.info("api_public_episodes: %d existants, plans_episodes=%d entries, saison_nums=%s",
+                len(episodes_ids_existants), len(plans_episodes), saison_nums_avec_episodes)
     for saison_num in sorted(saison_nums_avec_episodes):
         for key, ep_plan in plans_episodes.items():
             plan_saison, plan_numero = key
