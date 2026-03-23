@@ -354,6 +354,14 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "seg_031b",
+        "personnage": "noemie",
+        "texte": "Mais Papy, c'est quoi une arche ? C'est un gros bateau pirate ?",
+        "ton": "curieux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
         "id": "seg_032",
         "personnage": "antoine",
         "texte": "Cent trente-sept mètres ? Mais c'est plus grand qu'un terrain de foot !",
@@ -488,7 +496,7 @@
       {
         "id": "sfx_008d",
         "personnage": "sfx",
-        "texte": "very quiet indoor room ambiance, soft clock ticking, gentle fireplace embers, intimate evening atmosphere",
+        "texte": "very quiet indoor room, soft clock ticking prominently, single fireplace ember pop, intimate evening silence",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 30.0,
@@ -497,7 +505,7 @@
       {
         "id": "sfx_008e",
         "personnage": "sfx",
-        "texte": "very quiet indoor room ambiance, soft clock ticking, gentle fireplace embers crackling, intimate evening atmosphere with faint rain outside",
+        "texte": "warm indoor room with gentle rain still tapping on window glass, leather sofa creaking softly, distant kettle whistle from kitchen",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
@@ -587,7 +595,7 @@
       {
         "id": "sfx_008f",
         "personnage": "sfx",
-        "texte": "very quiet intimate room ambiance, soft fireplace embers glowing, gentle clock ticking in silence, warm still evening atmosphere",
+        "texte": "very intimate room ambiance, cat purring softly nearby, slow fireplace crackling, faint wind outside window",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 20.0,
@@ -1081,6 +1089,30 @@
         "pause_apres_ms": 250
       },
       {
+        "id": "seg_080b",
+        "personnage": "noemie",
+        "texte": "Papy, et les puces des chiens, elles comptent comme des animaux ? Parce que sinon Noé il a oublié personne ?",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_080c",
+        "personnage": "antoine",
+        "texte": "Noémie, les puces c'est des insectes, pas des animaux !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_080d",
+        "personnage": "papy_babou",
+        "texte": "En fait, Antoine, les puces sont bien des animaux. Et je suis sûr que Noé aurait préféré les oublier, celles-là !",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
         "id": "seg_081",
         "personnage": "papy_babou",
         "texte": "C'est vrai ! Dieu avait pensé à tout. L'arche était remplie de foin, de grains, de fruits pour nourrir tout ce petit monde pendant des mois.",
@@ -1268,6 +1300,22 @@
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_098b",
+        "personnage": "antoine",
+        "texte": "Papy, est-ce qu'on a retrouvé l'arche de Noé ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_098c",
+        "personnage": "papy_babou",
+        "texte": "Des explorateurs ont cherché pendant des siècles sur le mont Ararat, en Turquie. La Bible dit que c'est là que l'arche s'est posée. Personne ne l'a encore trouvée, mais des gens continuent de chercher.",
+        "ton": "mystérieux",
+        "rythme": "normal",
+        "pause_apres_ms": 350
       },
       {
         "id": "sfx_017",
@@ -1568,7 +1616,7 @@
       {
         "id": "seg_124",
         "personnage": "papy_babou",
-        "texte": "Et la prochaine fois que vous viendrez, je vous raconterai l'histoire d'un homme qui a tout quitté. Sa maison, sa famille, son pays. Juste parce que Dieu le lui a demandé.",
+        "texte": "Et la prochaine fois que vous viendrez, je vous raconterai l'histoire d'un homme qui a tout quitté. Sa maison, son pays, sa famille. Il est parti sans savoir où il allait. Et il avait soixante-quinze ans.",
         "ton": "mystérieux",
         "rythme": "normal",
         "pause_apres_ms": 400
