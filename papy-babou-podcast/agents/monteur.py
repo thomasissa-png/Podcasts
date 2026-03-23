@@ -837,8 +837,6 @@ class Monteur:
             )
         except _subprocess.TimeoutExpired as e:
             logger.error("ffmpeg concat timeout après 300s")
-            if e.process:
-                e.process.kill()
             raise RuntimeError("ffmpeg concat timeout après 300s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg concat failed: %s", e.stderr[-500:] if e.stderr else "no stderr")
@@ -861,8 +859,6 @@ class Monteur:
             )
         except _subprocess.TimeoutExpired as e:
             logger.error("ffmpeg mix timeout après 900s")
-            if e.process:
-                e.process.kill()
             raise RuntimeError("ffmpeg mix timeout après 900s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg mix failed: %s", e.stderr[-500:] if e.stderr else "no stderr")
@@ -991,8 +987,6 @@ class Monteur:
             )
         except _subprocess.TimeoutExpired as e:
             logger.error("ffmpeg master+volume timeout après 300s")
-            if e.process:
-                e.process.kill()
             raise RuntimeError("ffmpeg master+volume timeout après 300s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg master+volume failed: %s", e.stderr[-500:] if e.stderr else "")
@@ -1051,8 +1045,6 @@ class Monteur:
             )
         except _subprocess.TimeoutExpired as e:
             logger.error("ffmpeg mp3 export timeout après 600s")
-            if e.process:
-                e.process.kill()
             raise RuntimeError("ffmpeg export MP3 timeout après 600s") from e
         except _subprocess.CalledProcessError as e:
             logger.error("ffmpeg mp3 export failed: %s", e.stderr[-500:] if e.stderr else "")
