@@ -237,7 +237,24 @@
       {
         "id": "seg_023",
         "personnage": "papy_babou",
-        "texte": "Ils l'ont attrapé, ma puce. Ils lui ont arraché sa tunique de couleurs. Et ils l'ont jeté au fond d'un puits. Un trou noir, profond, dans la terre sèche.",
+        "texte": "Ils l'ont attrapé, ma puce. Ils lui ont arraché sa tunique. Tu entends ? Ce bruit de tissu qu'on déchire ?",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_003b",
+        "personnage": "sfx",
+        "texte": "Sharp fabric tearing rip with resonant mid-frequency crack, brief textile shredding texture",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_023b",
+        "personnage": "papy_babou",
+        "texte": "Et ils l'ont jeté au fond d'un puits. Écoute comme c'est profond.",
         "ton": "grave",
         "rythme": "lent",
         "pause_apres_ms": 2000
@@ -376,21 +393,28 @@
       {
         "id": "seg_034",
         "personnage": "papy_babou",
-        "texte": "C'est pas juste, ma puce. Mais même dans cette cellule sombre et froide, Joseph gardait quelque chose de précieux. Quelque chose que personne ne pouvait lui enlever.",
-        "ton": "mystérieux",
-        "pause_apres_ms": 1000
+        "texte": "C'est pas juste, tu as raison. Mais dis-moi, Antoine. Si toi, on t'enfermait dans une pièce toute noire, sans tes copains, sans ta console, sans personne. Qu'est-ce que tu garderais dans ta tête pour tenir le coup ?",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_034b",
+        "personnage": "antoine",
+        "texte": "Je penserais à maman. Et à toi, Papy. Et peut-être à mes dessins.",
+        "ton": "pensif",
+        "pause_apres_ms": 800
       },
       {
         "id": "seg_035",
-        "personnage": "antoine",
-        "texte": "Quoi ? Un couteau pour s'évader ?",
-        "ton": "enthousiaste",
+        "personnage": "noemie",
+        "texte": "Moi je penserais à mon doudou lapin !",
+        "ton": "espiègle",
         "pause_apres_ms": 600
       },
       {
         "id": "seg_036",
         "personnage": "papy_babou",
-        "texte": "Non, mon bonhomme. Sa confiance en Dieu. Et son don pour les rêves. En prison, il a rencontré deux serviteurs du Pharaon qui faisaient des rêves étranges. Joseph les a écoutés et leur a expliqué ce que leurs rêves voulaient dire. Et tout s'est réalisé exactement comme il l'avait dit.",
+        "texte": "Tu vois ! Toi c'est ta famille et tes dessins. Joseph, c'était sa confiance en Dieu et son don incroyable pour les rêves. Parce que figure-toi qu'en prison, il a rencontré deux serviteurs du Pharaon qui faisaient des cauchemars terribles. Joseph les a écoutés, il a fermé les yeux, et il leur a dit exactement ce que leurs rêves voulaient dire.",
         "ton": "mystérieux",
         "pause_apres_ms": 1000
       },
@@ -569,7 +593,7 @@
       {
         "id": "seg_053",
         "personnage": "papy_babou",
-        "texte": "Joseph a pleuré. Il a pleuré si fort que tout le palais l'a entendu. Et il a dit à ses frères : c'est moi. C'est moi, Joseph. Votre frère. Celui que vous avez vendu.",
+        "texte": "Et là, Joseph n'a plus pu se retenir. Il a pleuré. Fort. Si fort que tout le palais l'a entendu. Et d'une voix tremblante, il a dit : c'est moi. C'est moi, Joseph. Votre frère.",
         "ton": "grave",
         "rythme": "lent",
         "pause_apres_ms": 2000
@@ -698,9 +722,23 @@
       {
         "id": "seg_066",
         "personnage": "antoine",
-        "texte": "Je sais pas. Peut-être. Si Joseph a pu pardonner ses frères après tout ça, moi c'est quand même moins grave.",
-        "ton": "pensif",
-        "pause_apres_ms": 1000
+        "texte": "Bon, je vais pas le jeter dans un puits, Maxime. Mais je lui pardonne pas tout de suite ! Genre peut-être lundi. Ou mardi.",
+        "ton": "boudeur",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_066b",
+        "personnage": "noemie",
+        "texte": "Moi je dis mercredi. Comme ça t'as le temps de faire ta tête de mule !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_066c",
+        "personnage": "antoine",
+        "texte": "J'ai pas une tête de mule !",
+        "ton": "indigné",
+        "pause_apres_ms": 600
       },
       {
         "id": "seg_067",
