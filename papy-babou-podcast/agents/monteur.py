@@ -73,6 +73,11 @@ AMBIANCE_PROMPTS = {
         "arpeggios, soft duduk melody, shimmering strings, curious and wonder-filled, "
         "like discovering a secret passage in an ancient temple"
     ),
+    "mystère": (
+        "Magical mystery background music for children's storytelling, enchanting celesta "
+        "arpeggios, soft duduk melody, shimmering strings, curious and wonder-filled, "
+        "like discovering a secret passage in an ancient temple"
+    ),
     "epique": (
         "Epic orchestral adventure music for children's podcast, bold French horns, "
         "soaring violin melody, triumphant percussion, heroic choir accents, "
@@ -97,6 +102,26 @@ AMBIANCE_PROMPTS = {
         "Minimal ambient background for children's podcast, very soft warm synthesizer pads, "
         "distant music box notes, barely perceptible gentle harp, subtle and unobtrusive"
     ),
+    "énergique": (
+        "Lively adventure background music for children's podcast, driving rhythmic percussion, "
+        "bouncy bass line, bright brass stabs, energetic fiddle melody, hand claps, "
+        "exciting and fast-paced like a race through a magical forest"
+    ),
+    "chaleureux": (
+        "Warm cozy background music for children's podcast, gentle acoustic guitar fingerpicking, "
+        "soft violin melody, light accordion, warm bass, intimate and comforting, "
+        "like sitting around a campfire with family telling stories"
+    ),
+    "émerveillé": (
+        "Wonderous magical background music for children's podcast, sparkling celesta, "
+        "soaring strings, gentle harp glissandos, soft choir oohs, ethereal and awe-inspiring, "
+        "like seeing a rainbow for the first time"
+    ),
+    "mystérieux": (
+        "Mysterious enchanting background music for children's storytelling, soft duduk melody, "
+        "deep cello drone, shimmering vibraphone, curious and wonder-filled, "
+        "like finding a treasure map in the attic"
+    ),
 }
 
 # Requêtes Freesound pour les ambiances musicales (fallback si ElevenLabs échoue)
@@ -110,6 +135,10 @@ FREESOUND_MUSIC_QUERIES = {
     "humoristique": "playful comedic pizzicato xylophone bouncy funny",
     "solennel": "sacred choir organ reverent majestic gentle",
     "fond_doux": "soft ambient warm pad minimal background",
+    "énergique": "lively adventure percussion bouncy energetic children",
+    "chaleureux": "warm cozy acoustic guitar violin accordion campfire",
+    "émerveillé": "wonder magical celesta harp strings ethereal children",
+    "mystérieux": "mysterious enchanting duduk cello vibraphone curious",
     "intro_jingle": "cheerful adventure jingle intro children podcast",
     "outro_jingle": "gentle outro jingle ending peaceful warm",
     "signature_jingle": "short jingle music box bells children catchy",
@@ -228,6 +257,10 @@ AMBIANCE_ROOM_TONE = {
     "mystere": "soir",
     "mystère": "soir",
     "fond_doux": "defaut",
+    "énergique": "jour",
+    "chaleureux": "soir",
+    "émerveillé": "jour",
+    "mystérieux": "soir",
 }
 
 # EQ boost médiums — fréquences de coupure pour le filtre passe-bande (Hz)
