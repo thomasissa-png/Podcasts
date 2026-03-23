@@ -27,13 +27,13 @@
         "texte": "Crackling fireplace ambiance with low-frequency warmth, gentle ember pops, soft cozy room tone, analog warmth undertone",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 10.0,
         "mode": "overlay"
       },
       {
         "id": "seg_001",
         "personnage": "papy_babou",
-        "texte": "Oh oh oh. Qu'est-ce que c'est que cette tête, Antoine ? Tu es arrivé chez Papy avec un visage de trois kilomètres de long. Et toi, Noémie, tu as l'air de marcher sur des œufs. Qu'est-ce qui se passe, mes petits loups ?",
+        "texte": "Qu'est-ce que c'est que cette tête, Antoine ? Tu es arrivé chez Papy avec un visage de trois kilomètres de long. Et toi, Noémie, tu as l'air de marcher sur des œufs. Qu'est-ce qui se passe, mes petits loups ?",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -55,8 +55,8 @@
       {
         "id": "seg_004",
         "personnage": "antoine",
-        "texte": "J'ai PAS pleuré ! J'avais juste une poussière dans l'œil. Et de toute façon, Maxime, je lui parlerai plus JAMAIS.",
-        "ton": "inquiet",
+        "texte": "J'ai PAS pleuré ! J'avais juste une poussière dans l'oeil. Et de toute façon, Maxime, je lui parlerai plus JAMAIS.",
+        "ton": "déterminé",
         "rythme": "rapide",
         "pause_apres_ms": 800
       },
@@ -66,6 +66,15 @@
         "texte": "Mes petits loups, installez-vous bien confortablement. Papy a une histoire extraordinaire à vous raconter aujourd'hui. Une histoire de trahison bien pire que celle de Maxime. Mais aussi une histoire de pardon qui va te surprendre, mon bonhomme.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_001b",
+        "personnage": "sfx",
+        "texte": "Soft crackling fireplace with gentle low-frequency hum, distant outdoor wind behind glass, warm analog room tone, slow ticking clock",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 10.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_006",
@@ -78,7 +87,7 @@
         "id": "seg_007",
         "personnage": "papy_babou",
         "texte": "Eh bien, tu te souviens d'Abraham, la dernière fois ? Celui qui a tout quitté pour suivre la voix de Dieu ?",
-        "ton": "chaleureux",
+        "ton": "mystérieux",
         "pause_apres_ms": 600
       },
       {
@@ -127,7 +136,7 @@
       {
         "id": "sfx_002",
         "personnage": "sfx",
-        "texte": "Soft shimmering fabric rustling with warm tonal shimmer, gentle sparkle effect, bright and colorful feeling",
+        "texte": "Soft shimmering fabric rustling with warm tonal shimmer, gentle high-register sparkle chimes, layered silk texture",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -144,7 +153,7 @@
       {
         "id": "seg_015",
         "personnage": "noemie",
-        "texte": "Oh ! Moi aussi je veux un manteau arc-en-ciel ! Est-ce que le bébé Lucas il en aura un quand il naîtra ?",
+        "texte": "Moi aussi je veux un manteau arc-en-ciel ! Est-ce que le bébé Lucas il en aura un quand il naîtra ?",
         "ton": "enthousiaste",
         "pause_apres_ms": 600
       },
@@ -172,7 +181,7 @@
       {
         "id": "seg_019",
         "personnage": "antoine",
-        "texte": "Wahou ! Et il a raconté son rêve à ses frères ? C'était pas très malin, ça...",
+        "texte": "Et il a raconté son rêve à ses frères ? C'était pas très malin, ça !",
         "ton": "espiègle",
         "pause_apres_ms": 600
       },
@@ -189,7 +198,7 @@
         "texte": "Dark low-pitched string tension drone building slowly, ominous rumble, uneasy atmosphere with sparse metallic accents",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 8.0,
         "mode": "overlay"
       },
       {
@@ -203,7 +212,7 @@
       {
         "id": "seg_022",
         "personnage": "noemie",
-        "texte": "Oh non. Ils vont lui faire du mal ? Papy, dis-moi qu'ils vont pas lui faire du mal !",
+        "texte": "Ils vont lui faire du mal ? Papy, dis-moi qu'ils vont pas lui faire du mal !",
         "ton": "inquiet",
         "pause_apres_ms": 600
       },
@@ -218,7 +227,7 @@
       {
         "id": "sfx_004",
         "personnage": "sfx",
-        "texte": "Deep hollow impact reverberating in stone well, distant echoing drip, dark confined space ambiance, cold emptiness",
+        "texte": "Deep hollow impact reverberating in stone well, distant echoing drip, dark confined space ambiance with low resonant drone",
         "ton": "ambiance",
         "pause_apres_ms": 500,
         "duree_sfx_secondes": 4.0,
@@ -228,7 +237,7 @@
         "id": "seg_024",
         "personnage": "noemie",
         "texte": "C'est horrible ! C'est les pires frères du monde entier ! Moi je serais descendue le chercher, Papy !",
-        "ton": "inquiet",
+        "ton": "indignée",
         "rythme": "rapide",
         "pause_apres_ms": 800
       },
@@ -249,7 +258,7 @@
       {
         "id": "sfx_005",
         "personnage": "sfx",
-        "texte": "Distant camel caravan bells with dry desert wind, jingling coins, muffled voices, hot sandy atmosphere",
+        "texte": "Distant camel caravan bells with dry desert wind gusts, jingling metal coins, shuffling hooves on sand, sparse percussive accents",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -273,9 +282,18 @@
       {
         "id": "seg_029",
         "personnage": "noemie",
-        "texte": "Le pauvre papa... C'est trop triste, Papy.",
-        "ton": "inquiet",
+        "texte": "Le pauvre papa. C'est trop triste, Papy.",
+        "ton": "triste",
         "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_005b",
+        "personnage": "sfx",
+        "texte": "Soft sustained minor-key string pad with gentle tremolo, low cello drone, melancholic reverb wash, slow fading",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_030",
@@ -301,7 +319,7 @@
       {
         "id": "sfx_006",
         "personnage": "sfx",
-        "texte": "Heavy iron door slamming shut with metallic echo, distant dripping water, cold stone prison atmosphere, lonely silence",
+        "texte": "Heavy iron door slamming shut with deep metallic echo, distant dripping water in stone chamber, low resonant room tone",
         "ton": "ambiance",
         "pause_apres_ms": 500,
         "duree_sfx_secondes": 4.0,
@@ -345,6 +363,15 @@
         "pause_apres_ms": 600
       },
       {
+        "id": "sfx_006b",
+        "personnage": "sfx",
+        "texte": "Ethereal high-register synth pad with soft granular shimmer, slow pitch modulation, dreamy wide reverb, delicate chime accents",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 6.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_038",
         "personnage": "papy_babou",
         "texte": "Exactement. Et deux ans plus tard, c'est le Pharaon lui-même, le roi d'Égypte, qui a fait un rêve terrifiant. Il a rêvé de sept vaches grasses et belles qui sortaient du Nil. Et juste derrière, sept vaches maigres, horribles, squelettiques, qui ont dévoré les vaches grasses !",
@@ -354,7 +381,7 @@
       {
         "id": "seg_039",
         "personnage": "noemie",
-        "texte": "Beurk ! Des vaches qui mangent des vaches ? C'est dégoûtant !",
+        "texte": "Des vaches qui mangent des vaches ? C'est trop dégoûtant !",
         "ton": "espiègle",
         "pause_apres_ms": 600
       },
@@ -371,7 +398,7 @@
         "texte": "Grand Egyptian palace atmosphere with distant horn fanfare, reverberant stone hall acoustics, ceremonial low drum pulse",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 8.0,
         "mode": "overlay"
       },
       {
@@ -414,15 +441,24 @@
       {
         "id": "seg_046",
         "personnage": "antoine",
-        "texte": "Wahou ! Du fond du puits jusqu'au palais du roi ! C'est le plus grand retournement de situation de tous les temps !",
+        "texte": "Du fond du puits jusqu'au palais du roi ! C'est le plus grand retournement de situation de tous les temps !",
         "ton": "enthousiaste",
         "rythme": "rapide",
         "pause_apres_ms": 600
       },
       {
+        "id": "sfx_007b",
+        "personnage": "sfx",
+        "texte": "Ascending brass fanfare stab with percussive accent, wide reverb tail, triumphant short motif resolving upward",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
         "id": "sfx_008",
         "personnage": "sfx",
-        "texte": "Hot arid wind gusting over dry cracked earth, distant low rumble, sparse dust atmosphere, famine desolation",
+        "texte": "Sustained low-frequency wind drone with gritty sand texture, distant rumbling sub-bass, sparse hollow gusts, desolate empty reverb",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -454,7 +490,7 @@
         "id": "seg_050",
         "personnage": "noemie",
         "texte": "C'est comme dans le rêve ! Les gerbes de blé qui s'inclinaient !",
-        "ton": "enthousiaste",
+        "ton": "émerveillée",
         "pause_apres_ms": 600
       },
       {
@@ -468,8 +504,8 @@
       {
         "id": "seg_052",
         "personnage": "antoine",
-        "texte": "Et il a fait quoi ? Il s'est vengé ? Moi j'aurais... j'aurais...",
-        "ton": "curieux",
+        "texte": "Et il a fait quoi ? Il s'est vengé ? Moi j'aurais, j'aurais pas pu me retenir !",
+        "ton": "impatient",
         "pause_apres_ms": 800
       },
       {
@@ -478,7 +514,7 @@
         "texte": "Gentle emotional string swell with warm cello melody, soft reverb bloom, tender and moving atmosphere building slowly",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 8.0,
         "mode": "overlay"
       },
       {
@@ -523,8 +559,8 @@
       {
         "id": "seg_057",
         "personnage": "antoine",
-        "texte": "Il les a... pardonnés ? Après tout ce qu'ils lui ont fait ?",
-        "ton": "curieux",
+        "texte": "Il les a pardonnés ? Après tout ce qu'ils lui ont fait ?",
+        "ton": "admiratif",
         "pause_apres_ms": 1000
       },
       {
@@ -544,7 +580,7 @@
       {
         "id": "seg_060",
         "personnage": "papy_babou",
-        "texte": "Oh, ma puce. Jacob a pris Joseph dans ses bras et il a dit : maintenant je peux mourir en paix, parce que j'ai revu ton visage. C'est un des plus beaux moments de toute la Bible.",
+        "texte": "Ma puce, Jacob a pris Joseph dans ses bras et il a dit : maintenant je peux mourir en paix, parce que j'ai revu ton visage. C'est un des plus beaux moments de toute la Bible.",
         "ton": "tendre",
         "rythme": "lent",
         "pause_apres_ms": 1500
@@ -552,7 +588,7 @@
       {
         "id": "sfx_011",
         "personnage": "sfx",
-        "texte": "Crackling fireplace returning softly with warm room ambiance, gentle clock ticking, cozy interior settling back",
+        "texte": "Crackling fireplace with warm low-frequency room tone, gentle clock ticking, soft ember pops, cozy interior settling sounds",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -576,7 +612,7 @@
         "id": "seg_063",
         "personnage": "antoine",
         "texte": "Mais Joseph, c'était dur de pardonner, non ? Il avait le droit d'être en colère !",
-        "ton": "curieux",
+        "ton": "déterminé",
         "pause_apres_ms": 800
       },
       {
@@ -596,8 +632,8 @@
       {
         "id": "seg_066",
         "personnage": "antoine",
-        "texte": "Euh... je sais pas. Peut-être. Si Joseph a pu pardonner ses frères après tout ça... moi c'est quand même moins grave.",
-        "ton": "curieux",
+        "texte": "Je sais pas. Peut-être. Si Joseph a pu pardonner ses frères après tout ça, moi c'est quand même moins grave.",
+        "ton": "pensif",
         "pause_apres_ms": 1000
       },
       {
@@ -655,7 +691,7 @@
       {
         "id": "seg_073",
         "personnage": "antoine",
-        "texte": "Oh non ! Et personne les a aidés ?",
+        "texte": "Et personne les a aidés ?",
         "ton": "inquiet",
         "pause_apres_ms": 600
       },
@@ -687,7 +723,7 @@
         "texte": "Warm outro music with soft acoustic guitar melody fading out, gentle reverb, cozy and hopeful closing feel",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 8.0,
         "mode": "insert"
       }
     ]
