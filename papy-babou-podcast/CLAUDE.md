@@ -561,8 +561,8 @@ Clear visual separation between single-episode and season production workflows:
 - `_charger_room_tone()` new method — loads/generates continuous room ambiance (fireplace, clock)
 - `_appliquer_master_bus()` new static method — soft compression + limiter before LUFS normalization
 - `CROSSFADE_VOIX_MS = 200` (was 100) — smoother voice transitions
-- `DUCKING_GAIN_DB = -6`, `DUCKING_FADE_MS = 150` — ducking parameters
-- `SFX_VOLUME_PAR_TON` dict — contextual SFX volume based on previous segment's `ton` field
+- `DUCKING_GAIN_DB = -10`, `DUCKING_FADE_MS = 150` — ducking parameters (was -6, increased to keep voices clearly above SFX)
+- `SFX_VOLUME_PAR_TON` dict — contextual SFX volume: dramatique=-10, épique=-10, solennel=-12, mystère=-14, tendre=-16, calme=-18, joyeux=-12, humoristique=-12. Default=-14. (All lowered from -3/-9 range to -10/-18 range to prevent SFX drowning voices)
 - `ROOM_TONE_DB = -28` — very quiet room tone volume
 - `ROOM_TONE_PROMPTS` dict — 4 variants: defaut, soir, jour, orage
 - `AMBIANCE_ROOM_TONE` dict — maps ambiance name to room tone variant
@@ -577,7 +577,7 @@ Clear visual separation between single-episode and season production workflows:
 
 ### When modifying config.py (Session 9-10 additions)
 - `jingles_saison(numero)` reads `plan["saison"]["jingles_custom"]` from season JSON — returns dict of `{key: Path}` for existing files only
-- `musique_fond_db: -15` (was -20) — background music more present
+- `musique_fond_db: -22` (was -15) — background music well below voices, never competing
 - `STEREO_PAN`: antoine=-0.4, noemie=0.4, mamie_sonia=0.5 (was -0.3/0.3/0.2) — wider stereo image
 
 ## Deployment (Gunicorn)

@@ -127,7 +127,7 @@
         "id": "seg_010",
         "personnage": "antoine",
         "texte": "C'est la nature, Noémie. Les graines poussent avec l'eau et le soleil.",
-        "ton": "neutre",
+        "ton": "posé",
         "rythme": "normal",
         "pause_apres_ms": 250
       },
@@ -222,9 +222,17 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "seg_019b",
+        "personnage": "noemie",
+        "texte": "Dieu il était tout seul dans le noir ? Il avait pas peur ?",
+        "ton": "inquiet",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
         "id": "seg_020",
         "personnage": "papy_babou",
-        "texte": "Et Dieu a dit de sa grande voix : Que la lumière soit !",
+        "texte": "Dieu n'a jamais peur, ma puce. Et c'est justement dans ce grand noir qu'il a dit de sa grande voix : Que la lumière soit !",
         "ton": "dramatique",
         "rythme": "lent",
         "pause_apres_ms": 300
@@ -232,7 +240,7 @@
       {
         "id": "sfx_012",
         "personnage": "sfx",
-        "texte": "massive bright tonal burst rising from silence, shimmering high-frequency metallic resonance cascading outward, warm sustained low-frequency hum expanding",
+        "texte": "massive sharp tonal burst rising from silence, shimmering high-frequency metallic resonance cascading outward, warm sustained low-frequency hum expanding",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -390,7 +398,7 @@
         "texte": "ocean waves receding and draining, deep earth rumble, water flowing away revealing rocky surface",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 12.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -496,7 +504,7 @@
         "personnage": "papy_babou",
         "texte": "Mais attendez, mes petits loups. Tout ça, c'était dans le noir ! Il n'y avait toujours pas de soleil. Devinez ce qui va se passer ensuite ?",
         "ton": "mystérieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 400
       },
       {
@@ -591,7 +599,7 @@
       },
       {
         "personnage": "antoine",
-        "texte": "C'est vrai que c'est malin ! Chaque fruit contient la graine du prochain arbre. C'est comme un cycle infini.",
+        "texte": "C'est malin ! Chaque fruit a une graine dedans pour faire un nouvel arbre. Ça n'arrête jamais !",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300,
@@ -707,7 +715,7 @@
       {
         "id": "sfx_023b",
         "personnage": "sfx",
-        "texte": "warm indoor room ambiance, soft fireplace crackling gently, distant clock ticking",
+        "texte": "rich underwater ocean ambiance with distant whale calls, gentle current flowing, schools of fish swishing past",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 20.0,
@@ -757,7 +765,7 @@
         "id": "seg_072b",
         "personnage": "papy_babou",
         "texte": "Tu sais, mon grand, la Bible et la science ne racontent pas la même chose de la même façon. La Bible raconte le sens, le pourquoi. La science raconte le comment. Les deux sont importantes.",
-        "ton": "pédagogue",
+        "ton": "posé",
         "rythme": "lent",
         "pause_apres_ms": 400
       },
@@ -804,7 +812,7 @@
       },
       {
         "personnage": "papy_babou",
-        "texte": "C'est le mot juste, Antoine. Vertigineux. La Bible dit que Dieu a semé les étoiles dans le ciel comme un semeur jette des graines dans un champ. D'un grand geste généreux.",
+        "texte": "C'est le mot, Antoine. La Bible dit que Dieu a semé les étoiles dans le ciel comme un semeur jette des graines dans un champ. D'un grand geste généreux.",
         "ton": "solennel",
         "rythme": "lent",
         "pause_apres_ms": 400,
@@ -885,6 +893,15 @@
         "pause_apres_ms": 200
       },
       {
+        "id": "sfx_024c",
+        "personnage": "sfx",
+        "texte": "soft chime transition, brief whoosh with warm resonance",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 2.0,
+        "mode": "insert"
+      },
+      {
         "id": "seg_085",
         "personnage": "papy_babou",
         "texte": "Ta Mamie a toujours eu le don de trouver les mots justes. Allez, on continue ! Mes petits loups, le sixième jour, c'est le jour où tout va changer.",
@@ -920,7 +937,7 @@
       },
       {
         "personnage": "sfx",
-        "texte": "galloping horses across plains, wolves howling at sunset, deer running through forest",
+        "texte": "galloping horses across plains, wolves howling in the distance, deer running through forest",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 15.0,
@@ -977,7 +994,7 @@
       },
       {
         "personnage": "noemie",
-        "texte": "Des lampes sur la tête ? Mais c'est trop bizarre ! Ils font comment pour nager avec ça ?",
+        "texte": "Des lampes sur la tête ? C'est trop rigolo comme poisson !",
         "ton": "joyeux",
         "rythme": "rapide",
         "pause_apres_ms": 250,
@@ -1028,8 +1045,16 @@
       {
         "id": "seg_098",
         "personnage": "papy_babou",
-        "texte": "Alors Dieu a dit : Faisons l'homme à notre image. Et il a pris de la poussière du sol, il l'a modelée avec ses mains, comme un potier qui façonne un vase. Et il a soufflé dans ses narines un souffle de vie.",
+        "texte": "Alors Dieu a dit : Faisons l'homme à notre image. Et il a pris de la poussière du sol, il l'a modelée avec ses mains, comme un potier qui façonne un vase.",
         "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "seg_098b",
+        "personnage": "papy_babou",
+        "texte": "Et il a soufflédans ses narines un souffle de vie.",
+        "ton": "mystérieux",
         "rythme": "lent",
         "pause_apres_ms": 500
       },
@@ -1059,12 +1084,21 @@
         "id": "seg_100"
       },
       {
+        "id": "sfx_031b",
+        "personnage": "sfx",
+        "texte": "very soft heartbeat rhythm slowing down gently, warm resonant low hum fading",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "seg_100b",
         "personnage": "papy_babou",
         "texte": "Exactement, ma puce. Comme chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance. Comme le petit bébé de Maman qui va bientôt arriver.",
         "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
+        "rythme": "lent",
+        "pause_apres_ms": 600
       },
       {
         "id": "seg_102",
@@ -1208,7 +1242,7 @@
       {
         "id": "sfx_034",
         "personnage": "sfx",
-        "texte": "single serene bell chime ringing final note, warm tubular bell fading slowly into silence",
+        "texte": "single serene bell chime ringing final note, warm tubular bell with long gentle decay",
         "ton": "ambiance",
         "pause_apres_ms": 400,
         "duree_sfx_secondes": 3.0,
@@ -1359,6 +1393,15 @@
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 3.0,
         "mode": "insert"
+      },
+      {
+        "id": "sfx_037b",
+        "personnage": "sfx",
+        "texte": "cozy evening room ambiance, soft fireplace crackling, old clock ticking slowly, warm peaceful indoor atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_130",

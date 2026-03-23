@@ -292,7 +292,7 @@ PRODUCTION = {
     "mots_par_minute_adulte": 120,
     "intro_jingle_duree_ms": 10_000,
     "outro_jingle_duree_ms": 8_000,
-    "musique_fond_db": -15,
+    "musique_fond_db": -22,
     "lufs_cible": -16,
     "mp3_bitrate_final": "192k",
     "mp3_bitrate_preview": "128k",

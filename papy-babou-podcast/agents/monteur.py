@@ -168,7 +168,7 @@ RESPIRATION_PAR_PERSONNAGE = {
     "noemie": 0.20,             # Petite fille rapide, presque pas de pauses respiratoires
     "narrateur": 0.40,
 }
-DUCKING_GAIN_DB = -6            # Atténuation overlay pendant voix adulte (side-chain)
+DUCKING_GAIN_DB = -10           # Atténuation overlay pendant voix (side-chain ducking)
 DUCKING_ENFANT_GAIN_DB = -8     # Atténuation overlay pendant voix enfant (meilleure intelligibilité)
 DUCKING_FADE_MS = 150           # Durée du fade ducking pour tons dramatiques/épiques
 DUCKING_FADE_DOUX_MS = 250      # Durée du fade ducking pour tons doux/tendres/calmes
@@ -177,17 +177,17 @@ PERSONNAGES_ENFANTS = {"antoine", "noemie"}
 
 # Volume SFX contextuel selon le ton du segment précédent
 SFX_VOLUME_PAR_TON = {
-    "dramatique": -3,
-    "epique": -3,
-    "solennel": -4,
-    "mystere": -5,
-    "mystère": -5,
-    "tendre": -8,
-    "calme": -9,
-    "joyeux": -5,
-    "humoristique": -5,
+    "dramatique": -10,
+    "epique": -10,
+    "solennel": -12,
+    "mystere": -14,
+    "mystère": -14,
+    "tendre": -16,
+    "calme": -18,
+    "joyeux": -12,
+    "humoristique": -12,
 }
-SFX_VOLUME_DEFAUT = -6          # Volume SFX par défaut si pas de ton contextuel
+SFX_VOLUME_DEFAUT = -14         # Volume SFX par défaut — bien en dessous des voix
 
 # Room tone — fond sonore continu simulant le salon de Papy Babou
 ROOM_TONE_PROMPTS = {
