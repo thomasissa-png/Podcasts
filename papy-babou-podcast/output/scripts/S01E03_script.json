@@ -18,6 +18,14 @@
     ],
     "segments": [
       {
+        "id": "seg_000",
+        "personnage": "papy_babou",
+        "texte": "Devinez combien d'étoiles il y a dans le ciel ? Des milliards et des milliards. Et un jour, Dieu a demandé à un homme de les compter. Mais ça, je vous le raconte dans un instant.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
         "id": "sfx_001",
         "personnage": "sfx",
         "texte": "Crackling fireplace ambiance with low-frequency pad drone, subtle room tone warmth, gentle ember pops, soft analog hiss undertone",
@@ -29,7 +37,7 @@
       {
         "id": "seg_001",
         "personnage": "narrateur",
-        "texte": "Chez Papy Babou, c'est un après-midi calme. Le soleil entre doucement par la fenêtre du salon. Antoine est assis sur le canapé, le regard un peu soucieux. Noémie, elle, dessine par terre avec ses crayons de couleur.",
+        "texte": "Chez Papy Babou, c'est un après-midi calme. Antoine est assis sur le canapé, le regard un peu soucieux. Noémie, elle, dessine par terre avec ses crayons de couleur.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -161,7 +169,7 @@
       {
         "id": "sfx_014",
         "personnage": "sfx",
-        "texte": "Subtle low-frequency drone with gentle analog warmth, soft room tone ambiance, slow stereo movement, minimal texture",
+        "texte": "Soft distant thunder rumble fading into reverent stillness, gentle low-pitched resonance settling, wide stereo atmosphere",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -199,7 +207,7 @@
       {
         "id": "seg_018c",
         "personnage": "papy_babou",
-        "texte": "Merci Antoine, c'est toujours agréable à entendre. Figurez-vous que le voyage faisait presque deux mille kilomètres. Le sable brûlait sous leurs pieds. La nuit, il faisait si froid que les chameaux se serraient les uns contre les autres.",
+        "texte": "Merci Antoine, c'est toujours agréable à entendre. Figurez-vous que le voyage faisait presque deux mille kilomètres. C'est comme marcher de Paris à Barcelone, et revenir ! Le sable brûlait sous leurs pieds. La nuit, il faisait si froid que les chameaux se serraient les uns contre les autres.",
         "ton": "mystérieux",
         "rythme": "lent",
         "pause_apres_ms": 1000
@@ -252,7 +260,16 @@
       {
         "id": "sfx_013",
         "personnage": "sfx",
-        "texte": "Soft distant wind whisper with gentle low-frequency rumble, subtle dust movement texture, slow evolving stereo ambiance",
+        "texte": "Hot arid wind gusting over sandy terrain, distant dry grass rustling, sparse desert landscape with wide open stereo field",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_015",
+        "personnage": "sfx",
+        "texte": "Dry desolate wind howling over cracked earth, distant low rumble of empty landscape, sparse dust movement, bleak atmosphere",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -261,7 +278,7 @@
       {
         "id": "seg_021b",
         "personnage": "papy_babou",
-        "texte": "Mais à peine arrivé, une terrible famine a frappé le pays de Canane. Il n'y avait plus rien à manger !",
+        "texte": "Mais à peine arrivé, une terrible famine a frappé le pays de Canane. La terre était sèche, les rivières vides. Il n'y avait plus rien à manger !",
         "ton": "dramatique",
         "rythme": "rapide",
         "pause_apres_ms": 1000
@@ -275,9 +292,24 @@
         "pause_apres_ms": 600
       },
       {
-        "id": "seg_021d",
+        "id": "seg_021e",
         "personnage": "papy_babou",
-        "texte": "Et pourtant Abraame n'a pas fait demi-tour. Il a tenu bon, il a gardé confiance. Et la famine a fini par passer.",
+        "texte": "Certaines nuits, Sara pleurait en silence. Et Abraame se demandait s'il n'avait pas fait une terrible erreur en quittant sa maison.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_021f",
+        "personnage": "noemie",
+        "texte": "Il voulait rentrer chez lui ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_021g",
+        "personnage": "papy_babou",
+        "texte": "Il y a pensé, ma puce. Mais chaque matin, il se levait et faisait un pas de plus. Et la famine a fini par passer.",
         "ton": "rassurant",
         "pause_apres_ms": 1000
       },
@@ -343,7 +375,7 @@
       {
         "id": "seg_027",
         "personnage": "papy_babou",
-        "texte": "C'est pas merveilleux, ça ? Dieu a dit à Abrame : ta descendance sera aussi nombreuse que ces étoiles. Et à ce moment-là, Dieu lui a donné un nouveau nom. Abrame est devenu Abraame, et Saraï est devenue Sara.",
+        "texte": "C'est pas merveilleux, ça ? Dieu a dit à Abrame : ta descendance sera aussi nombreuse que ces étoiles. Et il lui a donné un nouveau nom. Abrame est devenu Abraame, ce qui veut dire « père d'une multitude ». Et Saraï est devenue Sara.",
         "ton": "enthousiaste",
         "rythme": "lent",
         "pause_apres_ms": 1000
@@ -380,7 +412,7 @@
       {
         "id": "sfx_011",
         "personnage": "sfx",
-        "texte": "Soft arid wind ambiance with distant low-pitched drone, subtle sand texture movement, gentle stereo panning, warm analog pad undertone",
+        "texte": "Crackling campfire with soft night breeze, distant owl hoot, fabric tent flapping gently in wind, warm nomadic camp atmosphere",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -455,7 +487,7 @@
       {
         "id": "sfx_009",
         "personnage": "sfx",
-        "texte": "Warm low-frequency pad drone with gentle breath-like modulation, slow evolving texture, subtle room tone warmth, mono-compatible stereo width",
+        "texte": "Crackling fireplace returning softly with distant clock ticking, warm room ambiance settling back, cozy interior atmosphere",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -555,7 +587,7 @@
       {
         "id": "seg_053",
         "personnage": "papy_babou",
-        "texte": "Ça a très mal tourné, mon bonhomme. Mais Dieu avait un plan. Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
+        "texte": "Ça a très mal tourné, mon bonhomme. Ses propres frères l'ont jeté au fond d'un puits. Mais Dieu avait un plan. Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
         "ton": "chaleureux",
         "pause_apres_ms": 1000
       },
