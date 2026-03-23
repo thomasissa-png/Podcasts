@@ -192,6 +192,15 @@
                         "pause_apres_ms": 200
                   },
                   {
+                        "id": "sfx_003b",
+                        "personnage": "sfx",
+                        "texte": "old leather-bound book creaking open, thick pages rustling gently, soft atmospheric hum building anticipation",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
                         "id": "seg_013",
                         "personnage": "papy_babou",
                         "texte": "Parce qu'il pleut, ma puce. Et dans cette histoire, il a plu bien plus fort que ça. Beaucoup, beaucoup plus fort. Pendant quarante jours et quarante nuits.",
@@ -719,7 +728,7 @@
                   {
                         "id": "sfx_010",
                         "personnage": "sfx",
-                        "texte": "various animal sounds layered: elephant trumpet in distance, lion roar, birds chirping, horse neighing, sheep bleating",
+                        "texte": "various animal sounds layered: donkey braying, goat bleating, rooster crowing, dog barking, cat meowing softly",
                         "ton": "ambiance",
                         "pause_apres_ms": 300,
                         "duree_sfx_secondes": 8.0,
@@ -826,7 +835,7 @@
                   {
                         "id": "sfx_012",
                         "personnage": "sfx",
-                        "texte": "rain starting light then rapidly intensifying to torrential downpour, strong wind howling, thunder rolling continuously",
+                        "texte": "rain starting gentle then rapidly intensifying to torrential downpour, strong wind howling, thunder rolling continuously",
                         "ton": "ambiance",
                         "pause_apres_ms": 300,
                         "duree_sfx_secondes": 15.0,
@@ -1237,7 +1246,7 @@
                   {
                         "id": "sfx_014",
                         "personnage": "sfx",
-                        "texte": "rain gradually fading to light drizzle, wind dying down to gentle breeze, last drops falling on wood, low atmospheric pad settling",
+                        "texte": "rain gradually fading to soft drizzle, wind dying down to gentle breeze, last drops falling on wood, low atmospheric pad settling",
                         "ton": "ambiance",
                         "pause_apres_ms": 500,
                         "duree_sfx_secondes": 8.0,
@@ -1246,7 +1255,7 @@
                   {
                         "id": "sfx_014b",
                         "personnage": "sfx",
-                        "texte": "calm open water surface, gentle lapping waves against wooden hull, light breeze, distant seabird call",
+                        "texte": "calm open water surface, gentle lapping waves against wooden hull, soft breeze, distant seabird call",
                         "ton": "ambiance",
                         "pause_apres_ms": 200,
                         "duree_sfx_secondes": 20.0,
@@ -1312,7 +1321,7 @@
                   {
                         "id": "sfx_016",
                         "personnage": "sfx",
-                        "texte": "gentle dove cooing softly, light wing flutter taking off delicately",
+                        "texte": "gentle dove cooing softly, soft wing flutter taking off delicately",
                         "ton": "ambiance",
                         "pause_apres_ms": 300,
                         "duree_sfx_secondes": 3.0,
@@ -1401,7 +1410,7 @@
                   {
                         "id": "sfx_017",
                         "personnage": "sfx",
-                        "texte": "soft wing flutter approaching from far distance, gentle bird landing on wooden railing with light tap, warm hopeful string chord swelling gently",
+                        "texte": "soft wing flutter approaching from far distance, gentle bird landing on wooden railing with quiet tap, warm hopeful string chord swelling gently",
                         "ton": "ambiance",
                         "pause_apres_ms": 300,
                         "duree_sfx_secondes": 4.0,
@@ -1648,7 +1657,7 @@
                   {
                         "id": "seg_119",
                         "personnage": "antoine",
-                        "texte": "Ben, que... que même si on se moque, il faut... continuer. Comme Noé avec son arche.",
+                        "texte": "Ben, que même si on se moque, il faut continuer. Comme Noé avec son arche.",
                         "ton": "réfléchi",
                         "rythme": "lent",
                         "pause_apres_ms": 300

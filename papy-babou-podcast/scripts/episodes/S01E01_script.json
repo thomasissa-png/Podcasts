@@ -385,6 +385,15 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "sfx_015b",
+        "personnage": "sfx",
+        "texte": "gentle indoor room ambiance, soft breeze through open window, distant garden bird calls, warm afternoon atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_033",
         "personnage": "antoine",
         "texte": "Mais Papy, le ciel c'est fait de quoi ? C'est juste de l'air ?",
@@ -716,6 +725,15 @@
         "rythme": "normal",
         "pause_apres_ms": 300,
         "id": "seg_056"
+      },
+      {
+        "id": "sfx_021b",
+        "personnage": "sfx",
+        "texte": "deep night sky ambiance, gentle cosmic hum, distant twinkling high-pitched chimes, vast open space atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
       },
       {
         "personnage": "antoine",
@@ -1369,6 +1387,15 @@
         "mode": "insert"
       },
       {
+        "id": "sfx_036b",
+        "personnage": "sfx",
+        "texte": "warm fireplace crackling softly, old clock ticking rhythmically, cozy evening room tone settling",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_116",
         "personnage": "papy_babou",
         "texte": "Et le septième jour, Dieu avait terminé son œuvre. Il a regardé tout ce qu'il avait fait : la lumière, le ciel, la mer, les plantes, le soleil, la lune, les étoiles, les poissons, les oiseaux, les animaux, l'homme et la femme.",
@@ -1550,6 +1577,15 @@
         "id": "sfx_037b",
         "personnage": "sfx",
         "texte": "soft fireplace crackling, old clock ticking slowly, warm evening room ambiance",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_037c",
+        "personnage": "sfx",
+        "texte": "quiet evening settling ambiance, gentle wind outside window, soft fireplace embers glowing, old house creaking peacefully",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
