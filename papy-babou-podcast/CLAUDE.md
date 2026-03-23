@@ -2130,3 +2130,46 @@ done
 - ALL ffmpeg timeouts bumped to 1800s (30 min) — Replit containers are slow for audio processing
 - concat=1800s, loudnorm=1800s, master bus fallback=1800s, mp3 export=1800s
 - mix=900s (unchanged — amix is streaming, doesn't need more)
+
+## Production Launch Protocol — ABSOLUTE RULE (DO NOT SKIP)
+
+### The problem this solves
+3 productions lost (90+ min of compute, real money) because:
+1. Old TTS segments restored from Object Storage instead of regenerated
+2. `produire` endpoint used instead of `continue-production` (regenerated script instead of using audited one)
+3. Soft-delete purged `_valide.json` making `continue-production` fail
+
+### Before launching ANY audio production
+
+**Pre-flight checklist (ALL items mandatory):**
+
+1. **Script is finalized**: All 4 auditors (Thomas, Isabelle, Marc, Claire) scored ≥ 9/10
+2. **Script sync verified**: `_script.json` and `_script_valide.json` are identical (run `diff`)
+3. **Purge old segments**: Delete ALL segments for this episode from Object Storage before launching. Old segments from previous productions WILL be restored and reused otherwise, producing the same audio as before.
+   ```bash
+   # Via Replit dashboard or API — purge segments/S01EXX/* from Object Storage
+   ```
+4. **Purge old productions in DB**: Mark any non-terminal productions as `failed` to prevent auto-resume of stale jobs
+5. **Use `continue-production` ONLY**: NEVER use `/api/produire` for episodes with existing scripts — it regenerates the script from scratch
+6. **Verify `_valide.json` exists on server**: If `continue-production` returns "Script validé introuvable", the file was lost. Fix by:
+   - Pushing `_script.json` via git (it's not gitignored)
+   - The server copies `_script.json` → `_valide.json` on resume (etape_idx > 0)
+   - Or use dashboard "Valider le script" button
+
+### NEVER do these
+- **NEVER** use `/api/produire` when a script already exists — it creates a NEW script
+- **NEVER** resume from checkpoint without verifying segment freshness — old segments = old audio
+- **NEVER** soft-delete an episode you want to reproduce — it archives everything including scripts
+- **NEVER** launch production without purging Object Storage segments first
+
+### The correct production flow
+```
+1. Finalize script (audits ≥ 9/10 per auditor)
+2. Verify script sync (_script.json == _valide.json)
+3. Purge old segments from Object Storage
+4. Purge stale DB productions
+5. Launch: POST /api/episode/S01EXX/continue-production {"phase": "audio"}
+6. Monitor: poll job-status every 60s
+7. Auto-chain: audio → SFX → montage (automatic)
+8. Verify: listen to montage, check duration, check segments match script
+```

@@ -264,3 +264,15 @@ Un episode a 9/10 c'est :
 7. **On apprend quelque chose** — qu'on n'oubliera pas
 
 Si ces 7 criteres sont remplis, c'est un 9/10. Sinon, on corrige jusqu'a y arriver.
+
+### Post-audit : preparation a la production — REGLE ABSOLUE
+
+Quand les 4 auditeurs sont a 9/10+ :
+1. **Synchroniser** : `cp S01EXX_script.json S01EXX_script_valide.json`
+2. **Commiter et pousser** le script finalise
+3. **NE PAS lancer la production** — c'est le producteur qui decide quand lancer
+4. **Rappeler au producteur** le protocole de lancement (CLAUDE.md "Production Launch Protocol") :
+   - Purger les anciens segments Object Storage AVANT de lancer
+   - Utiliser `continue-production` phase=audio (JAMAIS `produire`)
+   - Verifier que `_valide.json` existe sur le serveur
+5. **JAMAIS** lancer `/api/produire` sur un episode avec script existant — ca regenere le script et ignore le travail d'audit
