@@ -2980,6 +2980,17 @@ def api_produire():
     if not resume:
         return jsonify({"error": "Resume requis"}), 400
 
+    # SÉCURITÉ: bloquer si un script validé existe déjà
+    episode_id = f"S{saison:02d}E{numero:02d}"
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+    valide_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+    if script_path.exists() or valide_path.exists():
+        return jsonify({
+            "error": f"Un script existe déjà pour {episode_id}. "
+                     f"Utilisez /api/episode/{episode_id}/continue-production pour lancer l'audio, "
+                     f"ou supprimez le script existant avant de régénérer."
+        }), 409
+
     types_valides = ("standard", "ouverture", "mi-saison", "final", "bonus")
     if type_episode not in types_valides:
         type_episode = "standard"
@@ -2999,7 +3010,6 @@ def api_produire():
     if dry_run:
         cmd.append("--dry-run")
 
-    episode_id = f"S{saison:02d}E{numero:02d}"
     try:
         job_id = _start_job(cmd, timeout=_TIMEOUT_PRODUIRE, episode_id=episode_id)
     except ValueError as e:
