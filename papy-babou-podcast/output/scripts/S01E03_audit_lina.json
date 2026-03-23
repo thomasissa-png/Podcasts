@@ -1,0 +1,29 @@
+{
+  "persona": "lina_7ans",
+  "note": 8.5,
+  "verdict": "J'adore quand Papy raconte les étoiles et j'ai trop envie de savoir c'est quoi le manteau du prochain épisode !",
+  "commentaire": "Alors moi j'ai trouvé ça trop trop bien ! Au début Antoine il est triste parce qu'il veut pas déménager et moi aussi des fois j'ai peur quand ça change. Après Papy il raconte Abraham et c'est un monsieur qui doit partir de chez lui sans savoir où il va, c'est un peu comme quand on va quelque part en voiture et Papa dit c'est une surprise. Le moment des étoiles c'était TROP BEAU, j'aurais voulu être là avec Abraham pour regarder le ciel. Et après Sarah elle rigole parce qu'elle croit pas qu'elle va avoir un bébé et en fait si ! Et le bébé s'appelle Isaac et ça veut dire il rit, j'ai trouvé ça rigolo. Noémie elle est comme moi, elle pose plein de questions et elle veut aider Abraham, moi aussi j'aurais voulu lui tenir la main. Quand Mamie Sonia elle arrive avec le gâteau c'était drôle parce que Noémie elle demande le goûter en plein milieu de l'histoire ! Et à la fin quand Papy dit que le prochain épisode c'est un garçon avec un manteau et ses frères sont jaloux, j'ai trop envie de savoir la suite. C'était pas trop long, c'était juste bien.",
+  "moments_preferes": [
+    "Quand Abraham regarde les étoiles et Dieu lui dit que sa famille sera aussi nombreuse que les étoiles — c'est trop beau comme image",
+    "Quand Sarah rigole et après le bébé s'appelle Isaac qui veut dire il rit — c'est trop mignon",
+    "Quand Noémie dit qu'elle aurait tenu la main d'Abraham dans le désert — c'est exactement ce que j'aurais dit moi aussi",
+    "Quand Noémie demande le goûter en plein milieu de l'histoire et Antoine dit chut — c'était trop drôle"
+  ],
+  "alertes": [
+    "Le passage où Papy dit qu'Abraham avait 75 ans quand il est parti et que Sarah en avait 90 — ça peut troubler un enfant qui associe cet âge à la fragilité de ses propres grands-parents et se demander si c'est dangereux de partir si vieux",
+    "La phrase 'la confiance c'est marcher dans le noir' peut être un peu inquiétante pour un enfant qui a peur du noir — mais le contexte rassurant de Papy atténue bien"
+  ],
+  "mots_difficiles_non_expliques": [
+    "Mésopotamie",
+    "Moyen-Orient",
+    "caravane",
+    "acte de foi",
+    "besace",
+    "troupeaux",
+    "sceller"
+  ],
+  "ennui_detecte": [
+    "Le passage entre seg_008 et seg_010 où Papy explique que des générations ont passé après le déluge — c'est un peu abstrait et long avant qu'on arrive à Abraham, un enfant pourrait décrocher",
+    "Le mot de Papy à la fin (seg_048 et seg_049) avec 'fermez les yeux' — c'est un peu sérieux et long pour des 7 ans, surtout si on écoute dans la voiture"
+  ]
+}
