@@ -1065,28 +1065,37 @@ def api_public_episodes():
 
     Retourne uniquement les épisodes qui ont un audio disponible (produits et publiés).
     Aucune donnée sensible (rapports, checkpoints, config) n'est exposée.
+
+    Performance: loads seasons ONCE, batches all DB queries and filesystem globs
+    to avoid N+1 patterns (was calling liste_saisons() twice, charger_saison()
+    per season twice, and cover art check per episode).
     """
     try:
         historique = dashboard_data_mod.charger_historique_complet()
     except Exception:
         historique = []
 
-    # Charger uniquement les saisons qui ont des épisodes publiés (pas les plans futurs)
-    saisons_info = []
-    saison_nums_avec_episodes = set(ep.get("saison", 1) for ep in historique if ep.get("saison"))
+    # ── Load all season plans ONCE ────────────────────────────────────────────
+    # liste_saisons() triggers Object Storage restore — call it only once
+    saison_plans_cache = {}  # {numero: plan_dict}
     try:
         saisons_list = config.liste_saisons() if hasattr(config, 'liste_saisons') else []
-        for num in sorted(saisons_list):
-            if num not in saison_nums_avec_episodes:
-                continue  # Saison planifiée mais pas encore diffusée
-            plan = config.charger_saison(num)
-            saison_data = plan.get("saison", {})
-            saisons_info.append({
-                "numero": num,
-                "theme": saison_data.get("theme", ""),
-            })
+        for num in saisons_list:
+            saison_plans_cache[num] = config.charger_saison(num)
     except Exception:
         pass
+
+    # Build saisons_info (only saisons with episodes in historique)
+    saisons_info = []
+    saison_nums_avec_episodes = set(ep.get("saison", 1) for ep in historique if ep.get("saison"))
+    for num in sorted(saison_plans_cache):
+        if num not in saison_nums_avec_episodes:
+            continue  # Saison planifiée mais pas encore diffusée
+        saison_data = saison_plans_cache[num].get("saison", {})
+        saisons_info.append({
+            "numero": num,
+            "theme": saison_data.get("theme", ""),
+        })
 
     # Fallback: saisons détectées depuis l'historique mais sans plan JSON
     saisons_in_info = set(s["numero"] for s in saisons_info)
@@ -1095,19 +1104,14 @@ def api_public_episodes():
             saisons_info.append({"numero": num, "theme": ""})
     saisons_info.sort(key=lambda s: s["numero"])
 
-    # Charger les plans de saison pour enrichir les épisodes (resume, histoire_biblique)
+    # Build plans_episodes from cached plans (no second liste_saisons/charger_saison call)
     plans_episodes = {}  # {(saison, numero): episode_plan_data}
-    try:
-        saisons_list_all = config.liste_saisons() if hasattr(config, 'liste_saisons') else []
-        for num in saisons_list_all:
-            plan = config.charger_saison(num)
-            for ep_plan in plan.get("saison", {}).get("episodes", []):
-                plans_episodes[(num, ep_plan.get("numero", 0))] = ep_plan
-    except Exception:
-        pass
+    for num, plan in saison_plans_cache.items():
+        for ep_plan in plan.get("saison", {}).get("episodes", []):
+            plans_episodes[(num, ep_plan.get("numero", 0))] = ep_plan
 
-    # Pré-charger le statut de la dernière production pour chaque épisode
-    # pour ne montrer l'audio que si le montage actuel est terminé
+    # ── Batch DB queries ──────────────────────────────────────────────────────
+    # Single _db_disponible() check, then run production statuses query
     _production_statuses = {}  # episode_id -> latest status
     _AUDIO_READY_STATUSES = {
         "completed", "montage_done", "metadonnees_done", "waiting_montage",
@@ -1130,6 +1134,22 @@ def api_public_episodes():
     _audio_batch = {}
     try:
         _audio_batch = dashboard_data_mod.trouver_audio_batch(all_episode_ids)
+    except Exception:
+        pass
+
+    # ── Batch cover art lookup (single glob instead of per-episode checks) ────
+    _cover_files = {}  # episode_id -> cover_url
+    try:
+        if config.COVERS_DIR.exists():
+            for cover_file in config.COVERS_DIR.iterdir():
+                fname = cover_file.name
+                if not fname.endswith((".png", ".jpg")):
+                    continue
+                # Parse episode_id from filename pattern: S01E01_cover.png
+                if "_cover" in fname:
+                    eid = fname.split("_cover")[0]
+                    if eid and eid not in _cover_files:
+                        _cover_files[eid] = f"/audio/covers/{fname}"
     except Exception:
         pass
 
@@ -1165,13 +1185,8 @@ def api_public_episodes():
             if audio_name:
                 audio_url = f"/audio/episodes/{audio_name}"
 
-        # Chercher la cover art
-        cover_url = None
-        for ext in (".png", ".jpg"):
-            cover_path = config.COVERS_DIR / f"{episode_id}_cover{ext}"
-            if cover_path.exists():
-                cover_url = f"/audio/covers/{episode_id}_cover{ext}"
-                break
+        # Cover art from pre-loaded batch
+        cover_url = _cover_files.get(episode_id)
 
         # Calculer la durée
         duree_minutes = None
@@ -1224,7 +1239,6 @@ def api_public_episodes():
     # pas encore dans l'historique (episodes "planned")
     episodes_ids_existants = set(ep["episode_id"] for ep in episodes_public)
     for saison_num in sorted(saison_nums_avec_episodes):
-        plan = plans_episodes  # deja charge plus haut
         for key, ep_plan in plans_episodes.items():
             plan_saison, plan_numero = key
             if plan_saison != saison_num:
@@ -1233,13 +1247,8 @@ def api_public_episodes():
             if ep_id in episodes_ids_existants:
                 continue
 
-            # Verifier si une cover custom existe
-            plan_cover_url = None
-            for ext in (".png", ".jpg"):
-                cover_path = config.COVERS_DIR / f"{ep_id}_cover{ext}"
-                if cover_path.exists():
-                    plan_cover_url = f"/audio/covers/{ep_id}_cover{ext}"
-                    break
+            # Cover art from pre-loaded batch
+            plan_cover_url = _cover_files.get(ep_id)
 
             plan_status = "coming_soon" if plan_cover_url else "planned"
 
