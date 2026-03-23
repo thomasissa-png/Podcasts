@@ -1283,6 +1283,14 @@ def api_public_episodes():
     return jsonify({
         "episodes": episodes_public,
         "saisons": saisons_info,
+        "_debug": {
+            "historique_count": len(historique),
+            "saison_plans_cache_keys": list(saison_plans_cache.keys()),
+            "plans_episodes_keys": [f"S{k[0]:02d}E{k[1]:02d}" for k in plans_episodes.keys()],
+            "saison_nums_avec_episodes": list(saison_nums_avec_episodes),
+            "episodes_ids_existants": list(episodes_ids_existants),
+            "total_before_filter": len(episodes_public),
+        },
     })
 
 
