@@ -65,7 +65,7 @@
       {
         "id": "seg_005",
         "personnage": "papy_babou",
-        "texte": "Eh bien, mes trésors, ça tombe à merveille. Parce que justement, l'histoire d'aujourd'hui parle d'un homme qui a dû tout quitter. Vous vous souvenez de Noé, la dernière fois ?",
+        "texte": "Eh bien, mes trésors, ça tombe à merveille. Alors, fermez bien les yeux et ouvrez grand vos oreilles ! Parce que justement, l'histoire d'aujourd'hui parle d'un homme qui a dû tout quitter. Vous vous souvenez de Noé, la dernière fois ?",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -497,7 +497,7 @@
         "id": "seg_041",
         "personnage": "mamie_sonia",
         "texte": "Mes petits chéris, vous savez, quand Papy et moi on a déménagé ici en Provence, j'avais très peur. Je quittais tous mes amis. Mais finalement, c'est ici qu'on a trouvé notre plus beau bonheur.",
-        "ton": "rassurant",
+        "ton": "nostalgique",
         "pause_apres_ms": 1000
       },
       {
@@ -608,7 +608,7 @@
       {
         "id": "sfx_008",
         "personnage": "sfx",
-        "texte": "Warm outro music with soft acoustic guitar melody fading out, gentle reverb, cozy and hopeful closing feel",
+        "texte": "Warm outro music with soft oud melody fading out, Middle Eastern string warmth, gentle reverb, cozy and hopeful closing feel",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,

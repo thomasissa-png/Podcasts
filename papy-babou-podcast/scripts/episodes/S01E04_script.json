@@ -24,7 +24,7 @@
       {
         "id": "sfx_000",
         "personnage": "sfx",
-        "texte": "Soft mysterious fabric unfurling with gentle harmonic shimmer, brief sparkle accent fading into reverb",
+        "texte": "Sharp fabric tearing rip followed by soft shimmering sparkle, brief metallic accent fading into wide reverb",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 4.0,
@@ -72,7 +72,7 @@
       {
         "id": "seg_005",
         "personnage": "papy_babou",
-        "texte": "Mes petits loups, installez-vous bien confortablement. Papy a une histoire extraordinaire à vous raconter aujourd'hui. Une histoire de trahison bien pire que celle de Maxime. Mais aussi une histoire de pardon qui va te surprendre, mon bonhomme.",
+        "texte": "Mes petits loups, installez-vous bien confortablement. Fermez bien les yeux et ouvrez grand vos oreilles ! Papy a une histoire extraordinaire à vous raconter aujourd'hui. Une histoire de trahison bien pire que celle de Maxime. Mais aussi une histoire de pardon qui va te surprendre, mon bonhomme.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -286,7 +286,7 @@
       {
         "id": "seg_026",
         "personnage": "papy_babou",
-        "texte": "Et ce n'est pas fini, mon grand. Des marchands qui passaient par là, avec leurs chameaux chargés d'épices, ont vu le puits. Les frères leur ont vendu Joseph. Vendu ! Comme on vendrait un animal au marché. Pour vingt pièces d'argent.",
+        "texte": "Et ce n'est pas fini, mon grand. Des marchands qui passaient par là, avec leurs chameaux chargés d'épices, ont vu le puits. Les frères leur ont vendu Joseph. Vendu ! Comme on vendrait un animal au marché. Pour vingt pièces d'argent. Ça vaut à peine le prix de deux sandales à l'époque.",
         "ton": "dramatique",
         "pause_apres_ms": 1500
       },
@@ -824,7 +824,7 @@
       {
         "id": "sfx_013",
         "personnage": "sfx",
-        "texte": "Warm outro music with soft acoustic guitar melody fading out, gentle reverb, cozy and hopeful closing feel",
+        "texte": "Warm outro music with soft oud melody fading out, Middle Eastern string warmth, gentle reverb, cozy and hopeful closing feel",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 15.0,
