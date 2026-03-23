@@ -86,7 +86,7 @@
         "id": "seg_008",
         "personnage": "noemie",
         "texte": "Merci Mamie ! Avec des chamallows dedans ?",
-        "ton": "excite",
+        "ton": "excité",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -267,7 +267,7 @@
         "id": "seg_025",
         "personnage": "antoine",
         "texte": "Noé ? Comme le bateau de Noé ?",
-        "ton": "excite",
+        "ton": "excité",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -390,7 +390,7 @@
         "texte": "hammer hitting wood rhythmically, saw cutting through timber, wood planks being stacked",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -470,6 +470,15 @@
         "mode": "overlay"
       },
       {
+        "id": "sfx_008e",
+        "personnage": "sfx",
+        "texte": "very quiet indoor room ambiance, soft clock ticking, gentle fireplace embers crackling, intimate evening atmosphere with faint rain outside",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_041b",
         "personnage": "noemie",
         "texte": "Il avait pas peur, Noé, Papy ?",
@@ -542,6 +551,15 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "sfx_008f",
+        "personnage": "sfx",
+        "texte": "very quiet intimate room ambiance, soft fireplace embers glowing, gentle clock ticking in silence, warm still evening atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_049",
         "personnage": "papy_babou",
         "texte": "Tout à fait. Et c'est parce qu'il a continué que toute sa famille a été sauvée. Tu vois, mon grand, lever la main en classe, c'est un peu comme construire ton arche à toi.",
@@ -561,7 +579,7 @@
         "id": "seg_051",
         "personnage": "noemie",
         "texte": "Papy avait un accent rigolo ?",
-        "ton": "espiègle",
+        "ton": "curieux",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -603,7 +621,7 @@
         "id": "seg_054",
         "personnage": "noemie",
         "texte": "Tous les animaux ? Même les girafes ?",
-        "ton": "excite",
+        "ton": "excité",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -800,7 +818,7 @@
         "id": "seg_074c",
         "personnage": "papy_babou",
         "texte": "Dieu était triste pour eux aussi, tu sais. Il avait essayé de les prévenir par Noé. Mais ils n'avaient pas voulu écouter.",
-        "ton": "triste",
+        "ton": "solennel",
         "rythme": "lent",
         "pause_apres_ms": 350
       },
@@ -816,7 +834,7 @@
         "id": "seg_075",
         "personnage": "antoine",
         "texte": "C'est triste quand même.",
-        "ton": "triste",
+        "ton": "inquiet",
         "rythme": "normal",
         "pause_apres_ms": 250
       },
@@ -927,6 +945,15 @@
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_013d",
+        "personnage": "sfx",
+        "texte": "wooden hull creaking softly, hay rustling, distant muffled animal sounds inside large enclosed space, slow water dripping, calm enclosed atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
       {
@@ -1211,7 +1238,7 @@
         "id": "seg_105",
         "personnage": "papy_babou",
         "texte": "Bien sûr ! Imagine les oiseaux qui s'envolent dans le ciel, les chevaux qui galopent dans les prairies, les lapins qui sautent dans l'herbe toute neuve.",
-        "ton": "joyeux",
+        "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300
       },
@@ -1227,7 +1254,7 @@
         "id": "seg_105d",
         "personnage": "noemie",
         "texte": "Papy, et les escargots ? Ils mettaient trop longtemps à sortir ?",
-        "ton": "espiegle",
+        "ton": "espiègle",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -1268,7 +1295,7 @@
         "id": "seg_108",
         "personnage": "noemie",
         "texte": "Un arc-en-ciel !",
-        "ton": "excite",
+        "ton": "excité",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -1317,7 +1344,7 @@
         "id": "seg_113",
         "personnage": "noemie",
         "texte": "Papy, regarde ! Il pleut plus dehors ! Tu crois qu'il y a un arc-en-ciel ?",
-        "ton": "excite",
+        "ton": "excité",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -1358,7 +1385,7 @@
         "id": "seg_117",
         "personnage": "noemie",
         "texte": "Oui ! Le gâteau ! Le gâteau !",
-        "ton": "excite",
+        "ton": "excité",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
@@ -1427,6 +1454,15 @@
         "ton": "déterminé",
         "rythme": "normal",
         "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_021b",
+        "personnage": "sfx",
+        "texte": "warm cozy evening room, soft fireplace crackling low, peaceful atmosphere, distant clock ticking gently, comfortable indoor ambiance settling",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_124",
