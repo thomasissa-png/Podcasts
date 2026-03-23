@@ -1106,6 +1106,25 @@ def api_public_episodes():
     except Exception:
         pass
 
+    # Pré-charger le statut de la dernière production pour chaque épisode
+    # pour ne montrer l'audio que si le montage actuel est terminé
+    _production_statuses = {}  # episode_id -> latest status
+    _AUDIO_READY_STATUSES = {
+        "completed", "montage_done", "metadonnees_done", "waiting_montage",
+    }
+    if config._db_disponible():
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT DISTINCT ON (episode_id) episode_id, status "
+                    "FROM productions ORDER BY episode_id, id DESC"
+                )
+                for row in cur.fetchall():
+                    _production_statuses[row["episode_id"]] = row["status"]
+        except Exception:
+            pass
+
     # Construire la liste d'épisodes publics
     episodes_public = []
     for ep in historique:
@@ -1122,15 +1141,24 @@ def api_public_episodes():
             except (ValueError, IndexError):
                 pass
 
-        # Chercher le fichier audio
+        # Chercher le fichier audio — seulement si la dernière production
+        # a réellement terminé le montage (évite d'afficher des audio
+        # d'anciennes productions obsolètes)
         audio_url = None
-        try:
-            audio_info = dashboard_data_mod.trouver_fichier_audio(episode_id)
-            audio_name = (audio_info or {}).get("hq") or (audio_info or {}).get("preview")
-            if audio_name:
-                audio_url = f"/audio/episodes/{audio_name}"
-        except Exception:
-            pass
+        latest_status = _production_statuses.get(episode_id)
+        audio_eligible = (
+            latest_status in _AUDIO_READY_STATUSES
+            if latest_status
+            else True  # pas de production en DB → fallback historique
+        )
+        if audio_eligible:
+            try:
+                audio_info = dashboard_data_mod.trouver_fichier_audio(episode_id)
+                audio_name = (audio_info or {}).get("hq") or (audio_info or {}).get("preview")
+                if audio_name:
+                    audio_url = f"/audio/episodes/{audio_name}"
+            except Exception:
+                pass
 
         # Chercher la cover art
         cover_url = None
