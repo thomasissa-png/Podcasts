@@ -822,6 +822,16 @@ Before any script goes to audio production, run this audit:
 3. Validate script via frontend or CLI
 4. Continue to audio production (TTS + SFX + montage)
 
+### Script Sync Rule — ABSOLUTE RULE (DO NOT FORGET)
+**Every time `S01EXX_script.json` is modified** (audit corrections, manual edits, any change at all), you MUST immediately copy it to `S01EXX_script_valide.json`:
+```bash
+cp scripts/episodes/S01EXX_script.json scripts/episodes/S01EXX_script_valide.json
+```
+- The production pipeline reads `_valide.json`, NOT `_script.json`
+- Forgetting this sync means production uses the OLD version of the script
+- This rule has caused 1 full production redo (S01E01) — treat any desync as a blocking bug
+- After copying, ALWAYS verify with a grep on the modified line to confirm the sync worked
+
 ## Git Workflow
 - Branch: `claude/fix-postgres-gunicorn-SV32c`
 - Push: `git push -u origin claude/fix-postgres-gunicorn-SV32c`

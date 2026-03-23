@@ -52,8 +52,8 @@
       {
         "id": "seg_003",
         "personnage": "antoine",
-        "texte": "Papy ! Papy ! On est là !",
-        "ton": "excite",
+        "texte": "Papy Babou ! Papy Babou ! On est arrivés, on est là !",
+        "ton": "joyeux",
         "rythme": "rapide",
         "pause_apres_ms": 200
       },
