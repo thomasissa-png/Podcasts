@@ -438,7 +438,7 @@
       {
         "id": "sfx_008c",
         "personnage": "sfx",
-        "texte": "outdoor daytime ambiance with distant crowd murmuring, occasional derisive laugh, dry wind across open field, scattered tool sounds in background",
+        "texte": "outdoor daytime ambiance with distant crowd grunting and shuffling, occasional derisive laugh, dry wind across open field, scattered tool sounds in background",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
@@ -538,7 +538,7 @@
       {
         "id": "sfx_008g",
         "personnage": "sfx",
-        "texte": "very intimate quiet room ambiance, single soft fireplace ember glow crackling gently, barely audible clock, emotionally still atmosphere",
+        "texte": "very intimate quiet room ambiance, single soft fireplace ember crackling gently, barely audible clock ticking, warm still room tone",
         "ton": "ambiance",
         "pause_apres_ms": 200,
         "duree_sfx_secondes": 25.0,
@@ -1567,7 +1567,7 @@
       {
         "id": "seg_119",
         "personnage": "antoine",
-        "texte": "Que meme si on se moque de toi, faut pas arreter si on sait qu'on a raison.",
+        "texte": "Que même si on se moque de toi, faut pas arrêter si on sait qu'on a raison.",
         "ton": "déterminé",
         "rythme": "normal",
         "pause_apres_ms": 300
