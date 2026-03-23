@@ -7,8 +7,8 @@
     "duree_cible_minutes": 30,
     "ambiance": "joyeux",
     "ambiance_par_acte": [
-      "mystere",
-      "émerveillé",
+      "mystère",
+      "énergique",
       "chaleureux"
     ],
     "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
@@ -87,7 +87,7 @@
         "personnage": "noemie",
         "texte": "C'est Maman qui me les a achetées. Elle dit que les étoiles, c'est pour les rêveuses comme moi.",
         "ton": "espiègle",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 250
       },
       {
@@ -95,7 +95,7 @@
         "personnage": "antoine",
         "texte": "Dis Papy, on peut aller voir ton jardin ? Il y a des nouvelles fleurs depuis la dernière fois ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 300
       },
       {
@@ -120,7 +120,7 @@
         "personnage": "noemie",
         "texte": "Regarde Antoine, la grosse fleur rouge là-bas ! Elle est trop belle ! Papy, c'est qui qui a fait les fleurs ?",
         "ton": "émerveillé",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 400
       },
       {
@@ -136,7 +136,7 @@
         "personnage": "noemie",
         "texte": "Oui mais les graines, elles viennent d'où au début du début ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 400
       },
       {
@@ -148,20 +148,11 @@
         "pause_apres_ms": 300
       },
       {
-        "id": "sfx_009",
-        "personnage": "sfx",
-        "texte": "children settling into big armchair, cushions rustling, cat purring softly nearby",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
         "id": "seg_013",
         "personnage": "antoine",
         "texte": "C'est quoi l'histoire ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 200
       },
       {
@@ -170,14 +161,14 @@
         "texte": "C'est l'histoire du tout début. Le tout tout début. Avant les fleurs, avant les étoiles, avant même le ciel et la terre. L'histoire de la Création du monde.",
         "ton": "mystérieux",
         "rythme": "lent",
-        "pause_apres_ms": 500
+        "pause_apres_ms": 300
       },
       {
         "id": "seg_015",
         "personnage": "noemie",
         "texte": "Avant les étoiles ? Mais y avait quoi alors ?",
         "ton": "émerveillé",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 300
       },
       {
@@ -186,7 +177,7 @@
         "texte": "Rien, ma puce. Absolument rien. Et c'est justement là que tout commence.",
         "ton": "mystérieux",
         "rythme": "lent",
-        "pause_apres_ms": 600
+        "pause_apres_ms": 300
       },
       {
         "id": "sfx_010",
@@ -194,7 +185,7 @@
         "texte": "low drone shifting upward in pitch with shimmering high-frequency shimmer, reverberant ambient pad building slowly over 5 seconds",
         "ton": "ambiance",
         "pause_apres_ms": 400,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 3.0,
         "mode": "insert"
       },
       {
@@ -236,7 +227,7 @@
         "texte": "Et Dieu a dit de sa grande voix : Que la lumière soit !",
         "ton": "dramatique",
         "rythme": "lent",
-        "pause_apres_ms": 500
+        "pause_apres_ms": 300
       },
       {
         "id": "sfx_012",
@@ -268,7 +259,7 @@
         "personnage": "antoine",
         "texte": "Attends Papy, il n'y avait pas de soleil et pourtant il y avait de la lumière ? Comment c'est possible ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 300
       },
       {
@@ -284,7 +275,7 @@
         "personnage": "antoine",
         "texte": "Papy, tu savais que la lumière va tellement vite qu'elle pourrait faire sept fois le tour de la Terre en une seule seconde ?",
         "ton": "enthousiaste",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 300
       },
       {
@@ -316,7 +307,7 @@
         "personnage": "noemie",
         "texte": "Et la lumière, elle était de quelle couleur ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 250,
         "id": "seg_028"
       },
@@ -350,7 +341,7 @@
         "personnage": "noemie",
         "texte": "Comme le ciel qu'on voit par la fenêtre de Papy ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 250
       },
       {
@@ -366,7 +357,7 @@
         "personnage": "antoine",
         "texte": "Mais Papy, le ciel c'est fait de quoi ? C'est juste de l'air ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 250
       },
       {
@@ -399,8 +390,8 @@
         "texte": "ocean waves receding and draining, deep earth rumble, water flowing away revealing rocky surface",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
+        "duree_sfx_secondes": 12.0,
+        "mode": "overlay"
       },
       {
         "id": "sfx_016",
@@ -423,7 +414,7 @@
         "personnage": "antoine",
         "texte": "Papy, le ciel c'est solide alors ? Comme un plafond ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 250,
         "id": "seg_038"
       },
@@ -456,7 +447,7 @@
         "personnage": "antoine",
         "texte": "C'est comme la géographie ! Les continents et les océans !",
         "ton": "enthousiaste",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 250
       },
       {
@@ -535,15 +526,6 @@
         "mode": "overlay"
       },
       {
-        "id": "sfx_019",
-        "personnage": "sfx",
-        "texte": "single crystalline bell chime ringing, bright tubular bell with shimmering overtones and long decay",
-        "ton": "ambiance",
-        "pause_apres_ms": 400,
-        "duree_sfx_secondes": 3.0,
-        "mode": "insert"
-      },
-      {
         "id": "seg_049",
         "personnage": "papy_babou",
         "texte": "Le quatrième jour, Dieu a levé les yeux vers le grand ciel qu'il avait créé et il a dit : Il faut des lumières là-haut pour éclairer la terre.",
@@ -564,7 +546,7 @@
         "personnage": "antoine",
         "texte": "Papy, c'est vrai que le soleil est un million de fois plus gros que la terre ?",
         "ton": "curieux",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 250
       },
       {
@@ -580,7 +562,7 @@
         "personnage": "antoine",
         "texte": "La maîtresse a dit que si le Soleil était un ballon de basket, la Terre serait une tête d'épingle à trente mètres de distance !",
         "ton": "enthousiaste",
-        "rythme": "normal",
+        "rythme": "rapide",
         "pause_apres_ms": 300
       },
       {
@@ -598,15 +580,6 @@
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
-      },
-      {
-        "personnage": "sfx",
-        "texte": "gentle rain falling on soft earth, raindrops hitting leaves, wet ground ambiance with distant thunder",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert",
-        "id": "sfx_020"
       },
       {
         "personnage": "papy_babou",
@@ -654,7 +627,7 @@
         "texte": "Comme celles sur tes bottes, mais en beaucoup, beaucoup plus grand ! Quand j'étais petit à Dakar, le soir, je montais sur le toit avec mon père et on regardait le ciel. Il y avait tellement d'étoiles qu'on aurait dit du sucre renversé sur une nappe noire.",
         "ton": "chaleureux",
         "rythme": "normal",
-        "pause_apres_ms": 500
+        "pause_apres_ms": 300
       },
       {
         "id": "seg_062",
@@ -775,9 +748,17 @@
       {
         "id": "seg_072",
         "personnage": "papy_babou",
-        "texte": "Bien sûr qu'ils ont existé ! On a retrouvé leurs os partout dans le monde. Tu sais, mon grand, la Bible et la science ne racontent pas la même chose de la même façon. La Bible raconte le sens, le pourquoi. La science raconte le comment. Les deux sont importantes.",
+        "texte": "Bien sûr qu'ils ont existé ! On a retrouvé leurs os partout dans le monde.",
         "ton": "chaleureux",
-        "rythme": "normal",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_072b",
+        "personnage": "papy_babou",
+        "texte": "Tu sais, mon grand, la Bible et la science ne racontent pas la même chose de la même façon. La Bible raconte le sens, le pourquoi. La science raconte le comment. Les deux sont importantes.",
+        "ton": "pédagogue",
+        "rythme": "lent",
         "pause_apres_ms": 400
       },
       {
@@ -815,7 +796,7 @@
       },
       {
         "personnage": "antoine",
-        "texte": "Et Dieu a fait tout ça en un seul jour ? C'est vertigineux.",
+        "texte": "Et Dieu a fait tout ça en un seul jour ? C'est dingue.",
         "ton": "émerveillé",
         "rythme": "normal",
         "pause_apres_ms": 300,
@@ -1003,15 +984,6 @@
         "id": "seg_094"
       },
       {
-        "personnage": "sfx",
-        "texte": "deep ocean underwater ambiance with mysterious low-frequency hum, air bubbles rising slowly, distant whale song echo",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 5.0,
-        "mode": "insert",
-        "id": "sfx_028"
-      },
-      {
         "id": "seg_095",
         "personnage": "papy_babou",
         "texte": "Comme Moustache, oui ! Tu sais que Moustache descend des premiers chats créés par Dieu ?",
@@ -1042,7 +1014,7 @@
         "texte": "Mais Dieu n'avait pas fini. Il voulait créer quelque chose de spécial. Quelqu'un capable de penser, de parler, d'aimer, de prendre soin de toute cette Création magnifique.",
         "ton": "mystérieux",
         "rythme": "lent",
-        "pause_apres_ms": 500
+        "pause_apres_ms": 300
       },
       {
         "id": "sfx_030",
@@ -1050,7 +1022,7 @@
         "texte": "deep reverberant cathedral space ambiance, warm low-frequency tonal drone with harmonic overtones, sustained resonant pad",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 3.0,
         "mode": "insert"
       },
       {
@@ -1311,7 +1283,7 @@
         "texte": "parade of soft hoofsteps on grass, low distant animal rumbles, gentle rustling in peaceful outdoor setting",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 7.0,
+        "duree_sfx_secondes": 4.0,
         "mode": "insert",
         "id": "sfx_035"
       },
@@ -1364,15 +1336,6 @@
         "pause_apres_ms": 250
       },
       {
-        "id": "sfx_036",
-        "personnage": "sfx",
-        "texte": "child climbing onto cushioned seat, soft fabric and leather rustling, settling sounds",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 3.0,
-        "mode": "insert"
-      },
-      {
         "id": "seg_128",
         "personnage": "papy_babou",
         "texte": "Viens là, ma puce. Antoine, toi aussi, rapproche-toi. Voilà, comme ça, mes deux petits loups contre moi. C'est ça le vrai repos.",
@@ -1394,7 +1357,7 @@
         "texte": "soft whoosh transition, warm room ambiance with clock ticking softly and fireplace crackling gently",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 3.0,
         "mode": "insert"
       },
       {
@@ -1477,15 +1440,6 @@
         "ton": "chaleureux",
         "rythme": "normal",
         "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_038",
-        "personnage": "sfx",
-        "texte": "warm cozy room ambiance with soft clock ticking, gentle fireplace crackling, evening settling sounds",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
       },
       {
         "id": "seg_139",
