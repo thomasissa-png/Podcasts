@@ -2614,6 +2614,27 @@ def api_launch_fresh(episode_id):
         _json.dump(checkpoint_data, f, ensure_ascii=False, indent=2)
     logger.info("launch-fresh %s : checkpoint créé à %s", episode_id, checkpoint_path)
 
+    # Upload checkpoint vers Object Storage (survit à un redeploy entre maintenant et le subprocess)
+    try:
+        import persistent_storage
+        persistent_storage.upload_checkpoint(episode_id, checkpoint_path)
+    except Exception as e:
+        logger.warning("launch-fresh %s : upload checkpoint OS échoué: %s", episode_id, e)
+
+    # CRITICAL: Purger les vieux segments (Object Storage + local) pour forcer une génération fraîche
+    # Sans ça, restore_segments() ramène les segments d'une ancienne production = mauvais audio
+    try:
+        import persistent_storage as _ps
+        if _ps.is_available():
+            _ps.delete_prefix(f"segments/{episode_id}/")
+            logger.info("launch-fresh %s : segments Object Storage purgés", episode_id)
+    except Exception as e:
+        logger.warning("launch-fresh %s : purge segments OS échouée: %s", episode_id, e)
+    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    if segments_dir.exists():
+        shutil.rmtree(segments_dir, ignore_errors=True)
+        logger.info("launch-fresh %s : segments locaux purgés", episode_id)
+
     # Lancer audio → SFX → montage (même chaînage que continue-production)
     def _chain_sfx_then_montage():
         _restore_valide_script(episode_id)

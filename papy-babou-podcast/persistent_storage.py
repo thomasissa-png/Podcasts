@@ -203,6 +203,18 @@ def list_files(prefix: str) -> list[str]:
         return []
 
 
+def delete_prefix(prefix: str) -> int:
+    """Supprime tous les fichiers avec un préfixe donné. Retourne le nombre supprimé."""
+    keys = list_files(prefix)
+    deleted = 0
+    for key in keys:
+        if delete_file(key):
+            deleted += 1
+    if keys:
+        logger.info("delete_prefix(%s) : %d/%d fichiers supprimés", prefix, deleted, len(keys))
+    return deleted
+
+
 def is_available() -> bool:
     """Vérifie si Object Storage est disponible."""
     return _get_client() is not None
