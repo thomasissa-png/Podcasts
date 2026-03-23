@@ -155,6 +155,61 @@ def charger_rapport(episode_id: str) -> dict | None:
     return None
 
 
+def trouver_audio_batch(episode_ids: list) -> dict:
+    """Lookup audio files for multiple episodes in a single pass.
+
+    Lightweight alternative to trouver_fichier_audio() for the public API.
+    Does ONE DB query + ONE filesystem glob instead of N individual lookups.
+    Does NOT trigger Object Storage restoration (read-only, no side effects).
+
+    Returns: {episode_id: {"hq": filename_or_None, "preview": filename_or_None}}
+    """
+    if not episode_ids:
+        return {}
+
+    result = {eid: {"hq": None, "preview": None} for eid in episode_ids}
+
+    # 1. Single DB query for all episodes at once
+    if _db_disponible():
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT episode_id, type_fichier, chemin "
+                    "FROM fichiers_audio "
+                    "WHERE episode_id = ANY(%s) "
+                    "AND type_fichier IN ('episode_hq', 'episode_preview') "
+                    "ORDER BY created_at DESC",
+                    (list(episode_ids),),
+                )
+                for row in cur.fetchall():
+                    eid = row["episode_id"]
+                    if eid not in result:
+                        continue
+                    p = Path(row["chemin"])
+                    if p.exists():
+                        if row["type_fichier"] == "episode_preview" and not result[eid]["preview"]:
+                            result[eid]["preview"] = p.name
+                        elif row["type_fichier"] == "episode_hq" and not result[eid]["hq"]:
+                            result[eid]["hq"] = p.name
+        except Exception as e:
+            logger.debug("DB batch audio lookup failed: %s", e)
+
+    # 2. Filesystem fallback for episodes still missing audio
+    missing = [eid for eid in episode_ids if not result[eid]["preview"] and not result[eid]["hq"]]
+    if missing and config.OUTPUT_DIR.exists():
+        # Single glob for all mp3 files, then match to episodes
+        all_mp3 = {f.name: f for f in config.OUTPUT_DIR.glob("*.mp3")}
+        for eid in missing:
+            for suffix, key in [("_128k.mp3", "preview"), ("_192k.mp3", "hq")]:
+                for fname, fpath in all_mp3.items():
+                    if fname.startswith(eid) and fname.endswith(suffix):
+                        result[eid][key] = fname
+                        break
+
+    return result
+
+
 def trouver_fichier_audio(episode_id: str) -> dict:
     """Trouve les fichiers audio d'un épisode (preview et HQ).
 

@@ -1125,6 +1125,14 @@ def api_public_episodes():
         except Exception:
             pass
 
+    # Pré-charger les fichiers audio en batch (1 query DB + 1 glob filesystem)
+    all_episode_ids = [ep.get("episode_id", "") for ep in historique if ep.get("episode_id")]
+    _audio_batch = {}
+    try:
+        _audio_batch = dashboard_data_mod.trouver_audio_batch(all_episode_ids)
+    except Exception:
+        pass
+
     # Construire la liste d'épisodes publics
     episodes_public = []
     for ep in historique:
@@ -1152,13 +1160,10 @@ def api_public_episodes():
             else True  # pas de production en DB → fallback historique
         )
         if audio_eligible:
-            try:
-                audio_info = dashboard_data_mod.trouver_fichier_audio(episode_id)
-                audio_name = (audio_info or {}).get("hq") or (audio_info or {}).get("preview")
-                if audio_name:
-                    audio_url = f"/audio/episodes/{audio_name}"
-            except Exception:
-                pass
+            audio_info = _audio_batch.get(episode_id, {})
+            audio_name = audio_info.get("hq") or audio_info.get("preview")
+            if audio_name:
+                audio_url = f"/audio/episodes/{audio_name}"
 
         # Chercher la cover art
         cover_url = None
@@ -1192,6 +1197,14 @@ def api_public_episodes():
             resume = plan_ep.get("resume", resume)
         histoire_biblique = plan_ep.get("histoire_biblique", "")
 
+        # Determiner le statut de l'episode
+        if audio_url:
+            ep_status = "available"
+        elif cover_url:
+            ep_status = "coming_soon"
+        else:
+            ep_status = "coming_soon"
+
         episodes_public.append({
             "episode_id": episode_id,
             "saison": saison if isinstance(saison, int) else 1,
@@ -1204,12 +1217,51 @@ def api_public_episodes():
             "cover_url": cover_url,
             "duree_minutes": duree_minutes,
             "date": date_str,
+            "status": ep_status,
         })
 
-    # Filtrer: uniquement les épisodes avec couverture
-    episodes_public = [ep for ep in episodes_public if ep.get("cover_url")]
+    # Pour les saisons commencees, ajouter les episodes du plan qui ne sont
+    # pas encore dans l'historique (episodes "planned")
+    episodes_ids_existants = set(ep["episode_id"] for ep in episodes_public)
+    for saison_num in sorted(saison_nums_avec_episodes):
+        plan = plans_episodes  # deja charge plus haut
+        for key, ep_plan in plans_episodes.items():
+            plan_saison, plan_numero = key
+            if plan_saison != saison_num:
+                continue
+            ep_id = f"S{plan_saison:02d}E{plan_numero:02d}"
+            if ep_id in episodes_ids_existants:
+                continue
 
-    # Trier par saison puis numéro
+            # Verifier si une cover custom existe
+            plan_cover_url = None
+            for ext in (".png", ".jpg"):
+                cover_path = config.COVERS_DIR / f"{ep_id}_cover{ext}"
+                if cover_path.exists():
+                    plan_cover_url = f"/audio/covers/{ep_id}_cover{ext}"
+                    break
+
+            plan_status = "coming_soon" if plan_cover_url else "planned"
+
+            # Duree cible depuis le plan
+            plan_duree = ep_plan.get("duree_cible_minutes")
+
+            episodes_public.append({
+                "episode_id": ep_id,
+                "saison": plan_saison,
+                "numero": plan_numero,
+                "titre": ep_plan.get("titre", f"Episode {plan_numero}"),
+                "resume": ep_plan.get("resume", ""),
+                "histoire_biblique": ep_plan.get("histoire_biblique", ""),
+                "morale": ep_plan.get("morale", ""),
+                "audio_url": None,
+                "cover_url": plan_cover_url,
+                "duree_minutes": plan_duree,
+                "date": "",
+                "status": plan_status,
+            })
+
+    # Trier par saison puis numero
     episodes_public.sort(key=lambda e: (e["saison"], e["numero"]))
 
     return jsonify({

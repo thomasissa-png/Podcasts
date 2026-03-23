@@ -481,6 +481,16 @@
       border-radius: 999px;
       flex-shrink: 0;
     }
+    .episode-card.episode-planned,
+    .episode-card.episode-coming-soon {
+      opacity: 0.55;
+      filter: grayscale(0.4);
+    }
+    .episode-card.episode-planned:hover,
+    .episode-card.episode-coming-soon:hover {
+      opacity: 0.75;
+      filter: grayscale(0.2);
+    }
     .episode-card.is-playing {
       border-left-color: var(--accent);
       background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.08) 0%, var(--blanc) 30%);
@@ -2385,6 +2395,11 @@
       filtered.forEach(function(ep) {
         var card = document.createElement('div');
         card.className = 'episode-card';
+        if (ep.status === 'planned') {
+          card.className += ' episode-planned';
+        } else if (ep.status === 'coming_soon') {
+          card.className += ' episode-coming-soon';
+        }
         if (currentEpisodeId === ep.episode_id && isPlaying) {
           card.className += ' is-playing';
         }
@@ -2401,21 +2416,23 @@
         var hasAudio = !!ep.audio_url;
 
         // Cover with fallback to podcast cover
-        var coverSrc = ep.cover_url || '/assets/artwork/cover.svg';
+        var coverSrc = ep.cover_url || '/assets/artwork/cover_base.png';
         var coverHtml = '<img class="episode-cover" src="' + escHtml(coverSrc) + '" alt="' + escHtml('Couverture de la mission : ' + (ep.titre || '')) + '" loading="lazy">';
 
         // Listened badge or coming soon badge
         var listenedBadge = '';
         var listenedInfo = listenedData[ep.episode_id];
-        if (!hasAudio) {
+        if (ep.status === 'planned' || ep.status === 'coming_soon') {
+          listenedBadge = '<div class="episode-coming-soon-badge">&#9202; À venir</div>';
+        } else if (!hasAudio) {
           listenedBadge = '<div class="episode-coming-soon-badge">&#9202; À venir</div>';
         } else if (listenedInfo && listenedInfo.progress >= 0.9) {
           listenedBadge = '<div class="episode-listened-badge"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Écouté</div>';
         }
 
-        // Resume badge
+        // Resume badge (only for available episodes)
         var resumeBadge = '';
-        if (resumeData && resumeData.episode_id === ep.episode_id) {
+        if (ep.status === 'available' && resumeData && resumeData.episode_id === ep.episode_id) {
           resumeBadge = '<div class="resume-badge">&#9654; Reprendre</div>';
         }
 
@@ -2434,8 +2451,9 @@
           metaHtml += '<span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>' + escHtml(ep.date) + '</span>';
         }
 
+        var showPlayBtn = hasAudio && ep.status === 'available';
         card.innerHTML =
-          (hasAudio ? '<button class="episode-play" aria-label="Écouter ' + escHtml(ep.titre) + '">' + playIcon + '</button>' : '') +
+          (showPlayBtn ? '<button class="episode-play" aria-label="Écouter ' + escHtml(ep.titre) + '">' + playIcon + '</button>' : '') +
           resumeBadge +
           '<div class="episode-info">' +
             listenedBadge +
