@@ -6,3 +6,6 @@ __pycache__/
 .venv/
 venv/
 logs/production.log
+logs/*_rapport.json
+checkpoints/
+scripts/episodes/*_valide.json
