@@ -108,16 +108,13 @@ def _check_admin_auth():
         if path.startswith(prefix):
             return None
 
-    # Routes /api/claude/ : authentification par Bearer token (pas session)
-    if path.startswith("/api/claude/"):
-        if not _CLAUDE_API_SECRET:
-            return jsonify({"error": "CLAUDE_API_SECRET non configurée sur le serveur"}), 503
+    # Bearer token : authentifie TOUTES les routes /api/ (pas seulement /api/claude/)
+    if path.startswith("/api/") and _CLAUDE_API_SECRET:
         auth_header = request.headers.get("Authorization", "")
         if auth_header == f"Bearer {_CLAUDE_API_SECRET}":
-            return None  # Authentifié
-        return jsonify({"error": "Bearer token invalide"}), 401
+            return None  # Authentifié via Bearer token — accès complet
 
-    # Pages et API admin : exiger authentification
+    # Pages et API admin : exiger authentification session
     if path.startswith("/admin") or path.startswith("/api/"):
         if not session.get("admin_authenticated"):
             if path.startswith("/api/"):
@@ -3530,6 +3527,132 @@ def api_claude_episodes():
         return jsonify({"ok": True, "episodes": rows, "count": len(rows)})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/claude/upload", methods=["POST"])
+def api_claude_upload():
+    """Upload un fichier (cover art, script JSON) en base64.
+
+    Body JSON: {
+        "path": "assets/covers/S01E01_cover.png",  // chemin relatif depuis le projet
+        "content_base64": "iVBORw0KGgo...",          // contenu encodé en base64
+        "overwrite": true                              // optionnel, défaut false
+    }
+
+    Chemins autorisés: assets/covers/, scripts/episodes/, data/
+    """
+    import base64
+
+    data = request.get_json(silent=True) or {}
+    rel_path = (data.get("path") or "").strip()
+    content_b64 = data.get("content_base64", "")
+    overwrite = data.get("overwrite", False)
+
+    if not rel_path or not content_b64:
+        return jsonify({"error": "Champs 'path' et 'content_base64' requis"}), 400
+
+    # Sécurité : seuls certains répertoires sont autorisés
+    _ALLOWED_PREFIXES = ("assets/covers/", "scripts/episodes/", "data/",
+                         "checkpoints/", "logs/")
+    if not any(rel_path.startswith(p) for p in _ALLOWED_PREFIXES):
+        return jsonify({
+            "error": f"Chemin non autorisé. Préfixes autorisés: {_ALLOWED_PREFIXES}"
+        }), 403
+
+    # Protection path traversal
+    target = (_THIS_DIR / rel_path).resolve()
+    if not str(target).startswith(str(_THIS_DIR)):
+        return jsonify({"error": "Path traversal interdit"}), 403
+
+    if target.exists() and not overwrite:
+        return jsonify({
+            "error": f"Le fichier existe déjà. Utilisez overwrite=true pour remplacer.",
+            "existing_size": target.stat().st_size,
+        }), 409
+
+    try:
+        content = base64.b64decode(content_b64)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+        logger.info("Claude API upload: %s (%d bytes)", rel_path, len(content))
+        return jsonify({
+            "ok": True,
+            "path": rel_path,
+            "size": len(content),
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/claude/download/<path:rel_path>")
+def api_claude_download(rel_path):
+    """Télécharge un fichier du projet en base64.
+
+    Retourne: {"ok": true, "path": "...", "content_base64": "...", "size": 123}
+    """
+    import base64
+
+    _ALLOWED_PREFIXES = ("assets/covers/", "scripts/episodes/", "data/",
+                         "checkpoints/", "logs/", "output/")
+    if not any(rel_path.startswith(p) for p in _ALLOWED_PREFIXES):
+        return jsonify({
+            "error": f"Chemin non autorisé. Préfixes autorisés: {_ALLOWED_PREFIXES}"
+        }), 403
+
+    target = (_THIS_DIR / rel_path).resolve()
+    if not str(target).startswith(str(_THIS_DIR)):
+        return jsonify({"error": "Path traversal interdit"}), 403
+
+    if not target.exists():
+        return jsonify({"error": "Fichier introuvable"}), 404
+
+    # Limite à 10 MB
+    size = target.stat().st_size
+    if size > 10 * 1024 * 1024:
+        return jsonify({"error": f"Fichier trop volumineux ({size} bytes, max 10 MB)"}), 413
+
+    try:
+        content = target.read_bytes()
+        return jsonify({
+            "ok": True,
+            "path": rel_path,
+            "content_base64": base64.b64encode(content).decode("ascii"),
+            "size": size,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/claude/files/<path:rel_dir>")
+def api_claude_list_files(rel_dir):
+    """Liste les fichiers dans un répertoire du projet.
+
+    Retourne: {"ok": true, "files": [{"name": "...", "size": 123, "modified": "..."}]}
+    """
+    _ALLOWED_PREFIXES = ("assets/covers/", "scripts/episodes/", "data/",
+                         "checkpoints/", "logs/", "output/")
+    if not any(rel_dir.startswith(p) for p in _ALLOWED_PREFIXES):
+        return jsonify({
+            "error": f"Répertoire non autorisé. Préfixes autorisés: {_ALLOWED_PREFIXES}"
+        }), 403
+
+    target = (_THIS_DIR / rel_dir).resolve()
+    if not str(target).startswith(str(_THIS_DIR)):
+        return jsonify({"error": "Path traversal interdit"}), 403
+
+    if not target.is_dir():
+        return jsonify({"error": "Répertoire introuvable"}), 404
+
+    files = []
+    for f in sorted(target.iterdir()):
+        if f.is_file():
+            st = f.stat()
+            files.append({
+                "name": f.name,
+                "size": st.st_size,
+                "modified": datetime.fromtimestamp(st.st_mtime).isoformat(),
+            })
+    return jsonify({"ok": True, "directory": rel_dir, "files": files})
 
 
 def _serialize_value(v):
