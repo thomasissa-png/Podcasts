@@ -2015,6 +2015,13 @@ All 24 rules stored in `data/preferences_producteur.json` and auto-injected into
 
 ## Production Monitoring & Remote DB Access (Session 27)
 
+### Key URLs
+- **Public site**: `https://podcasts-toum92.replit.app/`
+- **Admin dashboard**: `https://podcasts-toum92.replit.app/dashboard` (auth required)
+- **API base**: `https://podcasts-toum92.replit.app/api/`
+- **Auth**: `Authorization: Bearer allezpsg` header on all API calls
+- **Replit project**: `https://replit.com/@toum92/podcasts`
+
 ### How to monitor production jobs remotely
 
 The web dashboard exposes authenticated API endpoints. All calls require `Authorization: Bearer allezpsg` header.
