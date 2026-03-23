@@ -37,7 +37,7 @@
       {
         "id": "seg_001",
         "personnage": "papy_babou",
-        "texte": "Alors, chez Papy Babou, c'est un après-midi calme. Antoine est assis sur le canapé, le regard un peu soucieux. Et Noémie, elle, dessine par terre avec ses crayons de couleur.",
+        "texte": "Ah, vous tombez bien ! Aujourd'hui, c'est un de ces après-midi tout doux chez moi. Ma petite Noémie est par terre avec ses crayons, en train de dessiner je ne sais quel animal imaginaire. Et Antoine... eh bien, Antoine, lui, il a sa tête des mauvais jours.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
