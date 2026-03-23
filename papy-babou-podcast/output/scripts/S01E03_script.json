@@ -44,9 +44,18 @@
         "mode": "overlay"
       },
       {
+        "id": "sfx_001b",
+        "personnage": "sfx",
+        "texte": "Crackling fireplace with gentle ember pops, soft fabric rustling, distant wall clock ticking slowly, warm analog room tone, cozy interior ambiance",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_001",
         "personnage": "papy_babou",
-        "texte": "Ah, vous tombez bien ! Aujourd'hui, c'est un de ces après-midi tout doux chez moi. Ma petite Noémie est par terre avec ses crayons, en train de dessiner je ne sais quel animal imaginaire. Et Antoine... eh bien, Antoine, lui, il a sa tête des mauvais jours.",
+        "texte": "Ah, vous tombez bien ! Aujourd'hui, c'est un de ces après-midi tout doux chez moi. Ma petite Noémie est par terre avec ses crayons, en train de dessiner je ne sais quel animal imaginaire. Et Antoine, eh bien, Antoine, lui, il a sa tête des mauvais jours.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -172,7 +181,7 @@
         "id": "seg_015",
         "personnage": "antoine",
         "texte": "Attends, attends, je comprends pas ! Il devait tout quitter sans même savoir où il allait ? Mais c'est pas possible !",
-        "ton": "curieux",
+        "ton": "surpris",
         "pause_apres_ms": 800
       },
       {
@@ -386,7 +395,7 @@
       {
         "id": "seg_026c",
         "personnage": "noemie",
-        "texte": "Si je sais ! Un, deux, trois... cent ! Voilà !",
+        "texte": "Si je sais ! Un, deux, trois, cent ! Voilà !",
         "ton": "joyeux",
         "pause_apres_ms": 600
       },
@@ -462,7 +471,7 @@
       {
         "id": "seg_034",
         "personnage": "antoine",
-        "texte": "Chut, laisse Papy finir ! Je veux savoir si elle a eu le bébé !",
+        "texte": "Arrête, laisse Papy finir ! Je veux savoir si elle a eu le bébé !",
         "ton": "enthousiaste",
         "rythme": "rapide",
         "pause_apres_ms": 600
@@ -478,7 +487,7 @@
         "id": "seg_036",
         "personnage": "papy_babou",
         "texte": "Vous voyez, mes enfants, Dieu a tenu sa promesse. Même après toutes ces années d'attente, même quand ça semblait impossible. Sara a eu un fils. Un magnifique petit garçon.",
-        "ton": "chaleureux",
+        "ton": "ému",
         "pause_apres_ms": 1500
       },
       {
@@ -521,10 +530,20 @@
         "mode": "overlay"
       },
       {
+        "id": "sfx_009b",
+        "personnage": "sfx",
+        "texte": "Gentle descending chime with soft reverb tail transitioning into warm crackling fireplace, cozy room tone settling back",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
         "id": "seg_041",
         "personnage": "mamie_sonia",
         "texte": "Mes petits chéris, vous savez, quand Papy et moi on a déménagé ici en Provence, j'avais très peur. Je quittais tous mes amis. Mais finalement, c'est ici qu'on a trouvé notre plus beau bonheur.",
         "ton": "nostalgique",
+        "rythme": "lent",
         "pause_apres_ms": 1000
       },
       {
@@ -600,6 +619,7 @@
         "personnage": "papy_babou",
         "texte": "Parce que la leçon d'Abraame, c'est celle-ci : faire confiance, c'est parfois partir sans savoir où l'on va. Et les plus belles aventures commencent par un acte de foi. Un seul petit pas suffit.",
         "ton": "solennel",
+        "rythme": "lent",
         "pause_apres_ms": 1500
       },
       {
@@ -629,7 +649,7 @@
       {
         "id": "seg_052",
         "personnage": "antoine",
-        "texte": "Wahou ! Et il a gagné à la fin ? Et ça a mal tourné à cause du manteau ?",
+        "texte": "Trop fort ! Et il a gagné à la fin ? Et ça a mal tourné à cause du manteau ?",
         "ton": "curieux",
         "pause_apres_ms": 600
       },
