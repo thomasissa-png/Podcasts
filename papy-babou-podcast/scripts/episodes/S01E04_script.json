@@ -22,12 +22,21 @@
         "pause_apres_ms": 1000
       },
       {
+        "id": "sfx_000",
+        "personnage": "sfx",
+        "texte": "Soft mysterious fabric unfurling with gentle harmonic shimmer, brief sparkle accent fading into reverb",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "sfx_001",
         "personnage": "sfx",
         "texte": "Crackling fireplace ambiance with low-frequency warmth, gentle ember pops, soft cozy room tone, analog warmth undertone",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 10.0,
+        "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
       {
@@ -73,7 +82,7 @@
         "texte": "Soft crackling fireplace with gentle low-frequency hum, distant outdoor wind behind glass, warm analog room tone, slow ticking clock",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 10.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -104,6 +113,15 @@
         "texte": "Et le bébé il s'appelait Isaac, parce que ça veut dire « il rit » !",
         "ton": "joyeux",
         "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_001c",
+        "personnage": "sfx",
+        "texte": "Gentle harp glissando with soft reverb bloom, dreamy transition sweep ascending slowly",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
       },
       {
         "id": "seg_010",
@@ -195,10 +213,10 @@
       {
         "id": "sfx_003",
         "personnage": "sfx",
-        "texte": "Dark low-pitched string tension drone building slowly, ominous rumble, uneasy atmosphere with sparse metallic accents",
+        "texte": "Low-pitched string tension drone building slowly, ominous rumble, uneasy atmosphere with sparse metallic accents",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -227,7 +245,7 @@
       {
         "id": "sfx_004",
         "personnage": "sfx",
-        "texte": "Deep hollow impact reverberating in stone well, distant echoing drip, dark confined space ambiance with low resonant drone",
+        "texte": "Deep hollow impact reverberating in stone well, distant echoing drip, enclosed narrow space ambiance with low resonant drone",
         "ton": "ambiance",
         "pause_apres_ms": 500,
         "duree_sfx_secondes": 4.0,
@@ -261,7 +279,7 @@
         "texte": "Distant camel caravan bells with dry desert wind gusts, jingling metal coins, shuffling hooves on sand, sparse percussive accents",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -300,7 +318,7 @@
         "texte": "Soft sustained minor-key string pad with gentle tremolo, low cello drone, melancholic reverb wash, slow fading",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -376,7 +394,7 @@
         "texte": "Ethereal high-register synth pad with soft granular shimmer, slow pitch modulation, dreamy wide reverb, delicate chime accents",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -406,7 +424,7 @@
         "texte": "Grand Egyptian palace atmosphere with distant horn fanfare, reverberant stone hall acoustics, ceremonial low drum pulse",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
       {
@@ -469,7 +487,7 @@
         "texte": "Sustained low-frequency wind drone with gritty sand texture, distant rumbling sub-bass, sparse hollow gusts, desolate empty reverb",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -517,12 +535,21 @@
         "pause_apres_ms": 800
       },
       {
+        "id": "sfx_008b",
+        "personnage": "sfx",
+        "texte": "Deep resonant bell toll with wide reverb tail, dramatic revelation accent fading slowly",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "sfx_009",
         "personnage": "sfx",
         "texte": "Gentle emotional string swell with warm cello melody, soft reverb bloom, tender and moving atmosphere building slowly",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
       {
@@ -594,12 +621,21 @@
         "pause_apres_ms": 1500
       },
       {
+        "id": "sfx_010b",
+        "personnage": "sfx",
+        "texte": "Warm descending chime with soft crackling fireplace fade-in, gentle room tone transition",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
         "id": "sfx_011",
         "personnage": "sfx",
         "texte": "Crackling fireplace with warm low-frequency room tone, gentle clock ticking, soft ember pops, cozy interior settling sounds",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -678,7 +714,7 @@
         "texte": "Gentle high-frequency shimmer pad with slow amplitude modulation, soft reverb wash, warm harmonic overtones, wide stereo field",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -731,7 +767,7 @@
         "texte": "Warm outro music with soft acoustic guitar melody fading out, gentle reverb, cozy and hopeful closing feel",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 8.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "insert"
       }
     ]
