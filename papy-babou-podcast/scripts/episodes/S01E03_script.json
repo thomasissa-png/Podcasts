@@ -3,10 +3,15 @@
     "titre": "Abraham et le ciel plein d'étoiles",
     "numero": 3,
     "saison": 1,
-    "duree_cible_minutes": 13,
+    "duree_cible_minutes": 25,
     "ambiance": "calme",
     "morale": "Faire confiance, c'est parfois partir sans savoir où l'on va. Les plus belles aventures commencent par un acte de foi.",
-    "personnages_presents": ["papy_babou", "antoine", "noemie", "mamie_sonia"],
+    "personnages_presents": [
+      "papy_babou",
+      "antoine",
+      "noemie",
+      "mamie_sonia"
+    ],
     "moments_cles": [
       "Abraham regarde les étoiles et essaie de les compter",
       "Le voyage de 2000 km dans le désert — les étoiles comme GPS",
@@ -20,70 +25,54 @@
       {
         "id": "sfx_000",
         "personnage": "sfx",
-        "texte": "Deep resonant low-frequency drone building from silence, gentle high-pitched crystalline shimmer fading in, mysterious and inviting",
+        "texte": "Front door opening with warm indoor ambiance, children's small footsteps running on wooden floor, cozy fireplace crackling in background",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 3.0,
+        "duree_sfx_secondes": 5.0,
         "mode": "insert"
       },
       {
         "id": "seg_000",
-        "personnage": "papy_babou",
-        "texte": "Devinez combien d'étoiles il y a dans le ciel ? Des milliards et des milliards. Et un jour, Dieu a demandé à un homme de les compter. Mais ça, je vous le raconte dans un instant.",
-        "ton": "mystérieux",
-        "rythme": "lent",
-        "pause_apres_ms": 1000
+        "personnage": "antoine",
+        "texte": "Papy ! C'est pas juste, on va déménager et je veux pas changer d'école !",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_000b",
+        "personnage": "noemie",
+        "texte": "Moi, je veux une chambre avec des étoiles au plafond dans la nouvelle maison !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 400
       },
       {
         "id": "sfx_001",
         "personnage": "sfx",
-        "texte": "Crackling fireplace ambiance with low-frequency pad drone, subtle room tone warmth, gentle ember pops, soft analog hiss undertone",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 15.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "sfx_001b",
-        "personnage": "sfx",
         "texte": "Crackling fireplace with gentle ember pops, soft fabric rustling, distant wall clock ticking slowly, warm analog room tone, cozy interior ambiance",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 18.0,
+        "duree_sfx_secondes": 20.0,
         "mode": "overlay"
       },
       {
         "id": "seg_001",
         "personnage": "papy_babou",
-        "texte": "Ah, vous tombez bien ! Aujourd'hui, c'est un de ces après-midi tout doux chez moi. Ma petite Noémie est par terre avec ses crayons, en train de dessiner je ne sais quel animal imaginaire. Et Antoine, eh bien, Antoine, lui, il a sa tête des mauvais jours.",
+        "texte": "Mes petits loups ! Venez vite par ici. Antoine, tu as l'air tout pensif. Qu'est-ce qui se passe avec ce déménagement ?",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
       {
         "id": "seg_002",
-        "personnage": "papy_babou",
-        "texte": "Mes petits loups, installez-vous bien confortablement, Papy a une histoire extraordinaire à vous raconter aujourd'hui. Mais d'abord, Antoine, tu as l'air tout pensif. Qu'est-ce qui te tracasse ?",
-        "ton": "chaleureux",
-        "pause_apres_ms": 800
-      },
-      {
-        "id": "seg_003",
         "personnage": "antoine",
-        "texte": "C'est à cause du déménagement, Papy. Maman a dit qu'on allait changer de maison pour le bébé. Mais moi, je veux pas changer d'école. Tous mes copains sont là-bas.",
+        "texte": "C'est à cause du bébé, Papy. Maman a dit qu'on allait changer de maison. Mais moi, je veux pas quitter mes copains.",
         "ton": "inquiet",
         "pause_apres_ms": 800
       },
       {
-        "id": "seg_004",
-        "personnage": "noemie",
-        "texte": "Moi, je veux une chambre avec des étoiles au plafond dans la nouvelle maison !",
-        "ton": "enthousiaste",
-        "pause_apres_ms": 600
-      },
-      {
-        "id": "seg_005",
+        "id": "seg_002b",
         "personnage": "papy_babou",
-        "texte": "Eh bien, mes trésors, ça tombe à merveille. Alors, fermez bien les yeux et ouvrez grand vos oreilles ! Parce que justement, l'histoire d'aujourd'hui parle d'un homme qui a dû tout quitter. Vous vous souvenez de Noé, la dernière fois ?",
+        "texte": "Je comprends, mon bonhomme. Mais tu sais quoi ? Ça tombe à merveille, parce que justement, l'histoire d'aujourd'hui parle d'un homme qui a dû tout quitter. Vous vous souvenez de Noé, la dernière fois ?",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -131,12 +120,33 @@
         "pause_apres_ms": 600
       },
       {
+        "id": "seg_010c",
+        "personnage": "antoine",
+        "texte": "Mésopotamie ? C'est un pays qui existe encore ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_010d",
+        "personnage": "papy_babou",
+        "texte": "La Mésopotamie, c'est ce qu'on appelle aujourd'hui l'Irak. La ville d'Our était une des plus anciennes villes du monde. Avec des maisons en briques, des temples immenses, et même des écoles !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_010e",
+        "personnage": "noemie",
+        "texte": "Des écoles ? Le pauvre Abraham, il devait faire ses devoirs aussi !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
         "id": "sfx_002",
         "personnage": "sfx",
         "texte": "Warm Middle Eastern string drone with soft wind layer, gentle reverb tail, wide stereo spread",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -210,7 +220,7 @@
       {
         "id": "seg_018",
         "personnage": "papy_babou",
-        "texte": "Bien sûr qu'il avait peur, ma puce. Abrame avait soixante-quinze ans quand il est parti. Soixante-quinze ! Avec sa femme Saraï, son neveu Lotte, ses troupeaux, ses serviteurs. Toute une caravane dans le désert.",
+        "texte": "Bien sûr qu'il avait peur, ma puce. Abrame avait soixante-quinze ans quand il est parti. Soixante-quinze ! Avec sa femme Saraï, son neveu Loth, ses troupeaux, ses serviteurs. Toute une caravane dans le désert.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -236,7 +246,7 @@
         "texte": "Sustained low-frequency desert wind drone with soft sandy granular texture, distant camel groan, slow rhythmic footstep pattern in sand",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 12.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -259,7 +269,7 @@
         "texte": "Gentle rhythmic camel bells with soft sandy footsteps, distant wind whisper, slow caravan travel ambiance",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -280,7 +290,7 @@
       {
         "id": "seg_021",
         "personnage": "papy_babou",
-        "texte": "Attendez, attendez, j'y viens ! Abrame est arrivé au pays de Canane. Et là, Dieu lui a dit : regarde autour de toi. Tout ce que tu vois, je te le donne, à toi et à ta descendance pour toujours.",
+        "texte": "Attendez, attendez, j'y viens ! Abrame est arrivé au pays de Canaan. Et là, Dieu lui a dit : regarde autour de toi. Tout ce que tu vois, je te le donne, à toi et à ta descendance pour toujours.",
         "ton": "espiègle",
         "pause_apres_ms": 1000
       },
@@ -290,7 +300,7 @@
         "texte": "Harsh dry wind gusting with grainy sand texture, distant dry grass rustling, wide open stereo field",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -299,13 +309,13 @@
         "texte": "Low ominous sustained drone with dry crackling texture, sparse hollow wind gusts, desolate and tense atmosphere building slowly",
         "ton": "ambiance",
         "pause_apres_ms": 200,
-        "duree_sfx_secondes": 10.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
         "id": "seg_021b",
         "personnage": "papy_babou",
-        "texte": "Mais à peine arrivé, une terrible famine a frappé le pays de Canane. La terre était sèche, les rivières vides. Il n'y avait plus rien à manger !",
+        "texte": "Mais à peine arrivé, une terrible famine a frappé le pays de Canaan. La terre était sèche, les rivières vides. Il n'y avait plus rien à manger !",
         "ton": "dramatique",
         "rythme": "rapide",
         "pause_apres_ms": 1000
@@ -339,6 +349,15 @@
         "texte": "Il y a pensé, ma puce. Mais chaque matin, il se levait et faisait un pas de plus. Et la famine a fini par passer.",
         "ton": "rassurant",
         "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_015",
+        "personnage": "sfx",
+        "texte": "Warm crackling fireplace with soft clock ticking, leather creaking gently, cozy evening room tone, children shifting on cushions",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_022",
@@ -375,7 +394,7 @@
         "texte": "Soft night cricket ambiance with gentle twinkling high-frequency shimmer pads, crystalline overtones, wide stereo field",
         "ton": "ambiance",
         "pause_apres_ms": 500,
-        "duree_sfx_secondes": 12.0,
+        "duree_sfx_secondes": 18.0,
         "mode": "overlay"
       },
       {
@@ -451,7 +470,7 @@
         "texte": "Crackling campfire with soft night breeze, distant owl hoot, fabric tent flapping gently in wind, warm nomadic camp atmosphere",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -464,7 +483,7 @@
       {
         "id": "seg_033",
         "personnage": "noemie",
-        "texte": "Papy, c'est quoi le goûter aujourd'hui ?",
+        "texte": "Ça sent bon ! C'est quoi le goûter, Mamie ?",
         "ton": "curieux",
         "pause_apres_ms": 600
       },
@@ -479,7 +498,7 @@
       {
         "id": "seg_035",
         "personnage": "mamie_sonia",
-        "texte": "Qui veut une part de gâteau ? Mais après l'histoire, promis !",
+        "texte": "J'ai préparé des galettes au miel et aux dattes, comme on en mangeait au temps d'Abraham ! Qui en veut une part ?",
         "ton": "tendre",
         "pause_apres_ms": 600
       },
@@ -514,6 +533,13 @@
         "pause_apres_ms": 800
       },
       {
+        "id": "seg_038b",
+        "personnage": "noemie",
+        "texte": "Et Sara, elle avait des galettes au miel pour fêter la naissance ? Parce que moi je fêterais avec les galettes de Mamie !",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
         "id": "seg_039",
         "personnage": "antoine",
         "texte": "C'est vrai, Papy ? Abraham a jamais regretté d'être parti de chez lui ?",
@@ -526,7 +552,7 @@
         "texte": "Crackling fireplace returning softly with distant clock ticking, warm room ambiance settling back, cozy interior atmosphere",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -541,7 +567,7 @@
       {
         "id": "seg_041",
         "personnage": "mamie_sonia",
-        "texte": "Mes petits chéris, vous savez, quand Papy et moi on a déménagé ici en Provence, j'avais très peur. Je quittais tous mes amis. Mais finalement, c'est ici qu'on a trouvé notre plus beau bonheur.",
+        "texte": "Mes petits chéris, vous savez, quand Papy et moi on a déménagé ici ici en Normandie, j'avais très peur. Je quittais tous mes amis. Mais finalement, c'est ici qu'on a trouvé notre plus beau bonheur.",
         "ton": "nostalgique",
         "rythme": "lent",
         "pause_apres_ms": 1000
@@ -593,6 +619,15 @@
         "mode": "insert"
       },
       {
+        "id": "sfx_016",
+        "personnage": "sfx",
+        "texte": "Warm cozy room with crackling fireplace settling low, soft evening light ambiance, distant clock ticking, gentle fabric rustling",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_048",
         "personnage": "papy_babou",
         "texte": "Et vous, mes petits loups, si Dieu vous demandait de partir très loin demain, vous prendriez quoi dans votre sac ?",
@@ -610,14 +645,14 @@
       {
         "id": "seg_048c",
         "personnage": "noemie",
-        "texte": "Mon doudou lapin ! Et des gâteaux, hein Mamie ?",
+        "texte": "Mon doudou lapin ! Et des galettes de Mamie, hein ?",
         "ton": "joyeux",
         "pause_apres_ms": 600
       },
       {
         "id": "seg_049",
         "personnage": "papy_babou",
-        "texte": "Parce que la leçon d'Abraame, c'est celle-ci : faire confiance, c'est parfois partir sans savoir où l'on va. Et les plus belles aventures commencent par un acte de foi. Un seul petit pas suffit.",
+        "texte": "Tu sais, Antoine, Abraham non plus ne savait pas ce qui l'attendait. Et pourtant, il a fait un premier pas. Puis un autre. Et c'est comme ça que les plus belles aventures commencent. Par un seul petit pas de confiance.",
         "ton": "solennel",
         "rythme": "lent",
         "pause_apres_ms": 1500
@@ -627,7 +662,8 @@
         "personnage": "noemie",
         "texte": "Raconte encore, Papy ! Qu'est devenu Isaac en grandissant ?",
         "ton": "enthousiaste",
-        "pause_apres_ms": 600
+        "pause_apres_ms": 600,
+        "rythme": "rapide"
       },
       {
         "id": "seg_051",
@@ -643,7 +679,7 @@
         "texte": "Gentle high-frequency shimmer pad with slow amplitude modulation, soft reverb wash, warm harmonic overtones, wide stereo field",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
+        "duree_sfx_secondes": 15.0,
         "mode": "overlay"
       },
       {
@@ -651,28 +687,68 @@
         "personnage": "antoine",
         "texte": "Trop fort ! Et il a gagné à la fin ? Et ça a mal tourné à cause du manteau ?",
         "ton": "curieux",
-        "pause_apres_ms": 600
+        "pause_apres_ms": 600,
+        "rythme": "rapide"
       },
       {
         "id": "seg_053",
         "personnage": "papy_babou",
-        "texte": "Ça a très mal tourné, mon bonhomme. Ses propres frères l'ont jeté au fond d'un puits. Mais Dieu avait un plan. Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
-        "ton": "chaleureux",
+        "texte": "Ça a très mal tourné, mon bonhomme. Ses propres frères l'ont jeté au fond d'un puits. Mais Dieu avait un plan.",
+        "ton": "mystérieux",
         "pause_apres_ms": 1000
       },
       {
-        "id": "seg_054",
+        "id": "seg_053b",
         "personnage": "noemie",
         "texte": "Mais ça finit bien, hein Papy ? La prochaine histoire, elle finit bien ?",
         "ton": "inquiet",
         "pause_apres_ms": 600
       },
       {
-        "id": "seg_055",
+        "id": "seg_053c",
         "personnage": "papy_babou",
-        "texte": "Avec Dieu, mes petits loups, on n'est jamais vraiment seul. Même quand le chemin est très, très long. Et ce soir, avant de dormir, regardez le ciel et comptez les étoiles. Pensez à Abraame. À la prochaine !",
-        "ton": "joyeux",
+        "texte": "Je ne te dis rien, ma puce. Il faudra attendre la prochaine fois pour le savoir.",
+        "ton": "espiègle",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_054",
+        "personnage": "papy_babou",
+        "texte": "Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace. Et ce soir, avant de dormir, regardez le ciel et comptez les étoiles. Pensez à Abraham.",
+        "ton": "chaleureux",
         "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_055",
+        "personnage": "antoine",
+        "texte": "Merci Papy ! C'était trop bien l'histoire d'Abraham. Et je crois que pour le déménagement, je vais essayer d'être courageux comme lui.",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_056",
+        "personnage": "noemie",
+        "texte": "Merci Papy ! Et merci Mamie pour les galettes au miel ! Elles étaient trop bonnes !",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_057",
+        "personnage": "mamie_sonia",
+        "texte": "Mes petits voyageurs, n'oubliez pas : même les plus longs chemins commencent par un tout petit pas. Faites de beaux rêves d'étoiles.",
+        "ton": "tendre",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_017",
+        "personnage": "sfx",
+        "texte": "Evening crickets chirping gently, car doors closing in distance, gravel footsteps fading away, soft warm evening ambiance settling",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
       },
       {
         "id": "sfx_008",
@@ -683,6 +759,12 @@
         "duree_sfx_secondes": 5.0,
         "mode": "insert"
       }
+    ],
+    "type": "standard",
+    "ambiance_par_acte": [
+      "mystère",
+      "dramatique",
+      "chaleureux"
     ]
   }
 }
