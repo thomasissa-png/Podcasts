@@ -324,7 +324,21 @@
       {
         "id": "seg_030",
         "personnage": "papy_babou",
-        "texte": "Pendant ce temps, les marchands ont emmené Joseph très loin, jusqu'en Égypte. Le pays des pyramides et du grand fleuve. Joseph a été vendu à un homme riche et puissant. Et vous savez quoi ? Même là-bas, loin de sa famille, loin de tout, Joseph n'a pas abandonné.",
+        "texte": "Pendant ce temps, les marchands ont emmené Joseph très loin, jusqu'en Égypte. Le pays des pyramides et du grand fleuve, le Nil. Un fleuve tellement immense qu'il faut une journée entière pour le traverser en barque !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_030b",
+        "personnage": "noemie",
+        "texte": "Une journée en barque ? C'est plus large que la piscine du centre sportif !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_030c",
+        "personnage": "papy_babou",
+        "texte": "Bien plus grand, ma puce ! Joseph a été vendu à un homme riche et puissant. Et même là-bas, loin de sa famille, loin de tout, Joseph n'a pas abandonné.",
         "ton": "chaleureux",
         "pause_apres_ms": 1000
       },
@@ -546,10 +560,10 @@
       {
         "id": "sfx_009",
         "personnage": "sfx",
-        "texte": "Gentle emotional string swell with warm cello melody, soft reverb bloom, tender and moving atmosphere building slowly",
+        "texte": "Solo cello melody rising from pianissimo to forte with full string orchestra joining, low drum pulse underneath, building to overwhelming warmth then releasing into gentle resolution",
         "ton": "ambiance",
         "pause_apres_ms": 300,
-        "duree_sfx_secondes": 20.0,
+        "duree_sfx_secondes": 25.0,
         "mode": "overlay"
       },
       {
@@ -601,8 +615,16 @@
       {
         "id": "seg_058",
         "personnage": "papy_babou",
-        "texte": "Oui, mon bonhomme. Il les a pardonnés. Et il a fait venir toute sa famille en Égypte. Son vieux papa Jacob, ses frères, leurs femmes, leurs enfants. Il les a tous nourris, tous protégés. Parce que le pardon, c'est pas oublier ce qu'on t'a fait. C'est choisir de ne pas laisser la colère gagner.",
+        "texte": "Oui, mon bonhomme. Il les a pardonnés. Et il a fait venir toute sa famille en Égypte. Son vieux papa Jacob, ses frères, leurs femmes, leurs enfants. Il les a tous nourris, tous protégés.",
         "ton": "rassurant",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_058b",
+        "personnage": "papy_babou",
+        "texte": "Parce que le pardon, c'est pas oublier ce qu'on t'a fait. C'est choisir de ne pas laisser la colère gagner.",
+        "ton": "solennel",
+        "rythme": "lent",
         "pause_apres_ms": 1500
       },
       {
