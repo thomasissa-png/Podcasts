@@ -684,6 +684,39 @@
                         "pause_apres_ms": 200
                   },
                   {
+                        "id": "seg_055c",
+                        "personnage": "papy_babou",
+                        "texte": "Écoutez bien, les enfants. Voilà les animaux qui arrivent. Vous reconnaissez lesquels ?",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_009d",
+                        "personnage": "sfx",
+                        "texte": "various animal sounds layered: elephant trumpet in distance, lion roar, birds chirping, horse neighing, sheep bleating",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 500,
+                        "duree_sfx_secondes": 8.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_055d",
+                        "personnage": "noemie",
+                        "texte": "Le lion ! J'ai entendu le lion !",
+                        "ton": "excité",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_055e",
+                        "personnage": "antoine",
+                        "texte": "Et l'éléphant ! Avec sa trompe !",
+                        "ton": "enthousiaste",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
                         "id": "sfx_010",
                         "personnage": "sfx",
                         "texte": "various animal sounds layered: elephant trumpet in distance, lion roar, birds chirping, horse neighing, sheep bleating",
@@ -806,6 +839,22 @@
                         "ton": "dramatique",
                         "rythme": "normal",
                         "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_070b",
+                        "personnage": "noemie",
+                        "texte": "Papy, je veux pas écouter ! Je veux pas que les gens soient sous l'eau !",
+                        "ton": "inquiet",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_070c",
+                        "personnage": "papy_babou",
+                        "texte": "Viens là, ma puce. Serre bien ton doudou. Tu es en sécurité avec Papy, d'accord ?",
+                        "ton": "rassurant",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
                   },
                   {
                         "id": "seg_071",
@@ -941,10 +990,35 @@
                   {
                         "id": "seg_077c",
                         "personnage": "papy_babou",
-                        "texte": "Figure-toi que pendant la pire nuit de la tempête, une vague gigantesque a frappé l'arche. Tout a tremblé à l'intérieur. Les animaux criaient, le bois craquait de partout.",
+                        "texte": "Fermez les yeux, tous les deux. On va dans l'arche. C'est la nuit. Vous entendez ?",
+                        "ton": "mystérieux",
+                        "rythme": "lent",
+                        "pause_apres_ms": 500
+                  },
+                  {
+                        "id": "sfx_012f",
+                        "personnage": "sfx",
+                        "texte": "massive deep wave impact on wooden hull, timber groaning under stress, objects sliding across wood floor, horses neighing in distress",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 8.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_077c2",
+                        "personnage": "noemie",
+                        "texte": "Ça bouge partout !",
+                        "ton": "inquiet",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_077c3",
+                        "personnage": "papy_babou",
+                        "texte": "Une vague énorme vient de frapper l'arche. Le bois craque de partout. Les animaux crient.",
                         "ton": "dramatique",
                         "rythme": "rapide",
-                        "pause_apres_ms": 400
+                        "pause_apres_ms": 300
                   },
                   {
                         "id": "seg_077d",
@@ -1208,7 +1282,7 @@
                         "personnage": "papy_babou",
                         "texte": "Mais l'eau était encore partout. De l'eau à perte de vue, comme un océan infini. Noé ne voyait ni terre, ni montagne, ni arbre. Rien que de l'eau.",
                         "ton": "dramatique",
-                        "rythme": "normal",
+                        "rythme": "lent",
                         "pause_apres_ms": 350
                   },
                   {
@@ -1241,7 +1315,7 @@
                         "personnage": "papy_babou",
                         "texte": "Le corbeau est parti et il n'est pas revenu. Il volait d'un côté et de l'autre sans trouver où se poser. Alors Noé a envoyé une colombe.",
                         "ton": "chaleureux",
-                        "rythme": "normal",
+                        "rythme": "lent",
                         "pause_apres_ms": 300
                   },
                   {
@@ -1256,9 +1330,25 @@
                   {
                         "id": "seg_093",
                         "personnage": "papy_babou",
-                        "texte": "La première fois, la colombe est revenue bredouille. Pas de terre. Noé a attendu sept jours et il l'a renvoyée.",
+                        "texte": "La première fois, la colombe est revenue bredouille. Pas de terre. Noé a dû être déçu, non ?",
                         "ton": "chaleureux",
                         "rythme": "lent",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_093b",
+                        "personnage": "antoine",
+                        "texte": "Moi j'aurais lâché un deuxième corbeau. Plus rapide !",
+                        "ton": "enthousiaste",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_093c",
+                        "personnage": "papy_babou",
+                        "texte": "Noé a fait mieux que ça. Il a attendu sept jours. Sept jours de patience. Et il a renvoyé la même colombe.",
+                        "ton": "mystérieux",
+                        "rythme": "normal",
                         "pause_apres_ms": 300
                   },
                   {
@@ -1567,10 +1657,18 @@
                   {
                         "id": "seg_119",
                         "personnage": "antoine",
-                        "texte": "Que même si on se moque de toi, faut pas arrêter si on sait qu'on a raison.",
-                        "ton": "déterminé",
-                        "rythme": "normal",
+                        "texte": "Ben, que... que même si on se moque, il faut... continuer. Comme Noé avec son arche.",
+                        "ton": "réfléchi",
+                        "rythme": "lent",
                         "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_119b",
+                        "personnage": "papy_babou",
+                        "texte": "C'est exactement ça, mon grand. Exactement ça.",
+                        "ton": "ému",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
                   },
                   {
                         "id": "seg_120",
