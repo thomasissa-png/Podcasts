@@ -1,0 +1,695 @@
+{
+  "episode": {
+    "titre": "Joseph et la tunique de couleurs — trahi par ses frères",
+    "numero": 4,
+    "saison": 1,
+    "duree_cible_minutes": 18,
+    "ambiance": "dramatique",
+    "morale": "Le pardon est plus fort que la rancune. Même dans les épreuves les plus dures, quelque chose de beau peut naître.",
+    "personnages_presents": ["papy_babou", "antoine", "noemie"],
+    "moments_cles": [
+      "Les frères qui déchirent la tunique — Noémie est révoltée",
+      "Joseph en prison qui garde espoir",
+      "Les retrouvailles et le pardon — Antoine a les yeux qui brillent"
+    ],
+    "segments": [
+      {
+        "id": "seg_000",
+        "personnage": "papy_babou",
+        "texte": "Un manteau. Un simple manteau de couleurs. Et pourtant, ce manteau a déclenché une histoire terrible — une trahison, un voyage au fond d'un puits, et un pardon qui a changé le monde. Mais ça, je vous le raconte dans un instant.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_001",
+        "personnage": "sfx",
+        "texte": "Crackling fireplace ambiance with low-frequency warmth, gentle ember pops, soft cozy room tone, analog warmth undertone",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 6.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_001",
+        "personnage": "papy_babou",
+        "texte": "Oh oh oh. Qu'est-ce que c'est que cette tête, Antoine ? Tu es arrivé chez Papy avec un visage de trois kilomètres de long. Et toi, Noémie, tu as l'air de marcher sur des œufs. Qu'est-ce qui se passe, mes petits loups ?",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_002",
+        "personnage": "antoine",
+        "texte": "C'est Maxime, Papy. Il a dit à tout le monde que j'avais triché au contrôle de maths. Alors que c'est même pas vrai ! Et maintenant, personne veut jouer avec moi à la récré.",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_003",
+        "personnage": "noemie",
+        "texte": "C'est vrai, Papy. Antoine il a pleuré dans la voiture. Mais il veut pas le dire.",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_004",
+        "personnage": "antoine",
+        "texte": "J'ai PAS pleuré ! J'avais juste une poussière dans l'œil. Et de toute façon, Maxime, je lui parlerai plus JAMAIS.",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_005",
+        "personnage": "papy_babou",
+        "texte": "Mes petits loups, installez-vous bien confortablement. Papy a une histoire extraordinaire à vous raconter aujourd'hui. Une histoire de trahison bien pire que celle de Maxime. Mais aussi une histoire de pardon qui va te surprendre, mon bonhomme.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_006",
+        "personnage": "antoine",
+        "texte": "Pire que Maxime ? Qu'est-ce qui peut être pire que ça ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_007",
+        "personnage": "papy_babou",
+        "texte": "Eh bien, tu te souviens d'Abraham, la dernière fois ? Celui qui a tout quitté pour suivre la voix de Dieu ?",
+        "ton": "chaleureux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_008",
+        "personnage": "antoine",
+        "texte": "Oui ! Celui qui comptait les étoiles ! Et sa femme Sara qui a ri quand Dieu a dit qu'elle aurait un bébé !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_009",
+        "personnage": "noemie",
+        "texte": "Et le bébé il s'appelait Isaac, parce que ça veut dire « il rit » !",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_010",
+        "personnage": "papy_babou",
+        "texte": "Quelle mémoire ! Figurez-vous qu'Isaac a grandi, il a eu des enfants, et ses enfants ont eu des enfants. Et parmi eux, il y avait un homme qui s'appelait Jacob. Et Jacob, lui, il a eu douze fils. Douze !",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_011",
+        "personnage": "noemie",
+        "texte": "Douze ? Comme les mois de l'année ? C'est beaucoup trop de frères !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_012",
+        "personnage": "papy_babou",
+        "texte": "C'est beaucoup, oui ! Et parmi ces douze fils, il y en avait un que Jacob aimait plus que les autres. Il s'appelait Joseph. C'était l'avant-dernier, et son papa lui a offert un cadeau extraordinaire.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_013",
+        "personnage": "antoine",
+        "texte": "C'était quoi, le cadeau ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_002",
+        "personnage": "sfx",
+        "texte": "Soft shimmering fabric rustling with warm tonal shimmer, gentle sparkle effect, bright and colorful feeling",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_014",
+        "personnage": "papy_babou",
+        "texte": "Une tunique. Mais pas n'importe quelle tunique ! Un manteau long, tissé avec des fils de toutes les couleurs. Du rouge, du bleu, du vert, de l'or. Quand Joseph la portait, on aurait dit un arc-en-ciel qui marchait dans le désert.",
+        "ton": "enthousiaste",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_015",
+        "personnage": "noemie",
+        "texte": "Oh ! Moi aussi je veux un manteau arc-en-ciel ! Est-ce que le bébé Lucas il en aura un quand il naîtra ?",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_016",
+        "personnage": "antoine",
+        "texte": "Mais Papy, si le papa a donné un cadeau juste à un seul fils, les autres ils devaient être verts de jalousie, non ?",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_017",
+        "personnage": "papy_babou",
+        "texte": "Tu as tout compris, mon bonhomme. Les onze frères étaient furieux. Chaque matin, ils voyaient Joseph enfiler cette tunique magnifique, et la colère grandissait dans leur cœur. Comme un feu qu'on ne peut plus éteindre.",
+        "ton": "grave",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_018",
+        "personnage": "papy_babou",
+        "texte": "Et pour ne rien arranger, Joseph faisait des rêves. Des rêves étranges. Une nuit, il a rêvé que lui et ses frères étaient dans un champ en train de faire des gerbes de blé. Et d'un coup, toutes les gerbes de ses frères se sont inclinées devant la sienne !",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_019",
+        "personnage": "antoine",
+        "texte": "Wahou ! Et il a raconté son rêve à ses frères ? C'était pas très malin, ça...",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_020",
+        "personnage": "papy_babou",
+        "texte": "Pas très malin, non. Joseph était un peu naïf, tu vois. Il a même raconté un deuxième rêve : le soleil, la lune et onze étoiles s'inclinaient devant lui. Ses frères ont serré les poings. Cette fois, c'en était trop.",
+        "ton": "dramatique",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_003",
+        "personnage": "sfx",
+        "texte": "Dark low-pitched string tension drone building slowly, ominous rumble, uneasy atmosphere with sparse metallic accents",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_021",
+        "personnage": "papy_babou",
+        "texte": "Un jour, Jacob a envoyé Joseph voir ses frères qui gardaient les troupeaux, loin dans les collines. Joseph est parti, tout seul, avec sa belle tunique sur le dos. Et quand ses frères l'ont vu arriver de loin...",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_022",
+        "personnage": "noemie",
+        "texte": "Oh non. Ils vont lui faire du mal ? Papy, dis-moi qu'ils vont pas lui faire du mal !",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_023",
+        "personnage": "papy_babou",
+        "texte": "Ils l'ont attrapé, ma puce. Ils lui ont arraché sa tunique de couleurs. Et ils l'ont jeté... au fond d'un puits. Un trou noir, profond, dans la terre sèche.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "sfx_004",
+        "personnage": "sfx",
+        "texte": "Deep hollow impact reverberating in stone well, distant echoing drip, dark confined space ambiance, cold emptiness",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_024",
+        "personnage": "noemie",
+        "texte": "C'est horrible ! C'est les pires frères du monde entier ! Moi je serais descendue le chercher, Papy !",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_025",
+        "personnage": "antoine",
+        "texte": "Attends, attends. Ses propres frères ? Sa propre famille ? Mais c'est mille fois pire que Maxime !",
+        "ton": "inquiet",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_026",
+        "personnage": "papy_babou",
+        "texte": "Et ce n'est pas fini, mon grand. Des marchands qui passaient par là, avec leurs chameaux chargés d'épices, ont vu le puits. Les frères leur ont vendu Joseph. Vendu ! Comme on vendrait un animal au marché. Pour vingt pièces d'argent.",
+        "ton": "grave",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_005",
+        "personnage": "sfx",
+        "texte": "Distant camel caravan bells with dry desert wind, jingling coins, muffled voices, hot sandy atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_027",
+        "personnage": "noemie",
+        "texte": "Et leur papa ? Il savait pas, Jacob ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_028",
+        "personnage": "papy_babou",
+        "texte": "Les frères ont pris la tunique de Joseph, ils l'ont trempée dans du sang de chèvre, et ils l'ont rapportée à leur père. Ils lui ont dit : on a trouvé ça. C'est pas la tunique de Joseph ? Jacob a cru que son fils avait été dévoré par une bête sauvage. Il a pleuré, pleuré, pendant des jours et des nuits.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_029",
+        "personnage": "noemie",
+        "texte": "Le pauvre papa... C'est trop triste, Papy.",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_030",
+        "personnage": "papy_babou",
+        "texte": "Pendant ce temps, les marchands ont emmené Joseph très loin, jusqu'en Égypte. Le pays des pyramides et du grand fleuve. Joseph a été vendu à un homme riche et puissant. Et vous savez quoi ? Même là-bas, loin de sa famille, loin de tout, Joseph n'a pas abandonné.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_031",
+        "personnage": "antoine",
+        "texte": "C'est vrai, Papy ? Il a pas baissé les bras ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_032",
+        "personnage": "papy_babou",
+        "texte": "Jamais. Joseph travaillait tellement bien que son maître lui a confié toute sa maison. Mais un jour, on l'a accusé à tort d'une faute qu'il n'avait pas commise. Et on l'a jeté en prison.",
+        "ton": "dramatique",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_006",
+        "personnage": "sfx",
+        "texte": "Heavy iron door slamming shut with metallic echo, distant dripping water, cold stone prison atmosphere, lonely silence",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_033",
+        "personnage": "noemie",
+        "texte": "En prison ? Mais il avait rien fait ! C'est pas juste du tout !",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_034",
+        "personnage": "papy_babou",
+        "texte": "C'est pas juste, ma puce. Mais même dans cette cellule sombre et froide, Joseph gardait quelque chose de précieux. Quelque chose que personne ne pouvait lui enlever.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_035",
+        "personnage": "antoine",
+        "texte": "Quoi ? Un couteau pour s'évader ?",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_036",
+        "personnage": "papy_babou",
+        "texte": "Non, mon bonhomme. Sa confiance en Dieu. Et son don pour les rêves. En prison, il a rencontré deux serviteurs du Pharaon qui faisaient des rêves étranges. Joseph les a écoutés et leur a expliqué ce que leurs rêves voulaient dire. Et tout s'est réalisé exactement comme il l'avait dit.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_037",
+        "personnage": "antoine",
+        "texte": "Comme un super-pouvoir ! Il pouvait lire les rêves !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_038",
+        "personnage": "papy_babou",
+        "texte": "Exactement. Et deux ans plus tard, c'est le Pharaon lui-même, le roi d'Égypte, qui a fait un rêve terrifiant. Il a rêvé de sept vaches grasses et belles qui sortaient du Nil. Et juste derrière, sept vaches maigres, horribles, squelettiques, qui ont dévoré les vaches grasses !",
+        "ton": "dramatique",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_039",
+        "personnage": "noemie",
+        "texte": "Beurk ! Des vaches qui mangent des vaches ? C'est dégoûtant !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_040",
+        "personnage": "papy_babou",
+        "texte": "Personne ne pouvait expliquer ce rêve au Pharaon. Personne ! Jusqu'à ce qu'on se souvienne de Joseph, le prisonnier qui savait lire les rêves. On l'a fait sortir de prison, on l'a lavé, habillé, et amené devant le roi.",
+        "ton": "dramatique",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_007",
+        "personnage": "sfx",
+        "texte": "Grand Egyptian palace atmosphere with distant horn fanfare, reverberant stone hall acoustics, ceremonial low drum pulse",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_041",
+        "personnage": "antoine",
+        "texte": "Et après, qu'est-ce qui s'est passé ? Il a compris le rêve ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_042",
+        "personnage": "papy_babou",
+        "texte": "Joseph a regardé le Pharaon droit dans les yeux et il a dit : les sept vaches grasses, ce sont sept années où tout ira bien. Les récoltes seront magnifiques. Mais les sept vaches maigres, ce sont sept années de famine terrible. Plus rien ne poussera.",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_043",
+        "personnage": "noemie",
+        "texte": "Papy, c'est quoi le goûter aujourd'hui ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_044",
+        "personnage": "antoine",
+        "texte": "Chut, Noémie ! Laisse Papy finir ! Je veux savoir ce que le Pharaon a fait !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_045",
+        "personnage": "papy_babou",
+        "texte": "Le Pharaon a été tellement impressionné qu'il a dit : cet homme est le plus sage de tout le royaume ! Et il a nommé Joseph gouverneur de toute l'Égypte. Du prisonnier au bras droit du roi. D'un coup !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_046",
+        "personnage": "antoine",
+        "texte": "Wahou ! Du fond du puits jusqu'au palais du roi ! C'est le plus grand retournement de situation de tous les temps !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_008",
+        "personnage": "sfx",
+        "texte": "Hot arid wind gusting over dry cracked earth, distant low rumble, sparse dust atmosphere, famine desolation",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_047",
+        "personnage": "papy_babou",
+        "texte": "Joseph a fait stocker des montagnes de blé pendant les sept bonnes années. Et quand la famine est arrivée, l'Égypte avait de quoi nourrir tout le monde. Les pays voisins, eux, mouraient de faim. Et devinez qui est venu en Égypte pour acheter du blé ?",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_048",
+        "personnage": "antoine",
+        "texte": "Non... Ses frères ?!",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_049",
+        "personnage": "papy_babou",
+        "texte": "Ses frères. Les mêmes qui l'avaient jeté dans le puits. Les mêmes qui l'avaient vendu. Ils se sont agenouillés devant le gouverneur d'Égypte pour demander du blé. Et ils ne l'ont même pas reconnu.",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "seg_050",
+        "personnage": "noemie",
+        "texte": "C'est comme dans le rêve ! Les gerbes de blé qui s'inclinaient !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_051",
+        "personnage": "papy_babou",
+        "texte": "Exactement, ma puce ! Tu as compris ! Le rêve s'était réalisé. Joseph, lui, il les a reconnus tout de suite. Son cœur battait à cent à l'heure. Ses mains tremblaient. Des années de douleur, de solitude. Tout lui est revenu d'un coup.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_052",
+        "personnage": "antoine",
+        "texte": "Et il a fait quoi ? Il s'est vengé ? Moi j'aurais... j'aurais...",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_009",
+        "personnage": "sfx",
+        "texte": "Gentle emotional string swell with warm cello melody, soft reverb bloom, tender and moving atmosphere building slowly",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_053",
+        "personnage": "papy_babou",
+        "texte": "Joseph a pleuré. Il a pleuré si fort que tout le palais l'a entendu. Et il a dit à ses frères : c'est moi. C'est moi, Joseph. Votre frère. Celui que vous avez vendu.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "seg_054",
+        "personnage": "noemie",
+        "texte": "Les frères, ils ont eu peur ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_055",
+        "personnage": "papy_babou",
+        "texte": "Ils étaient terrifiés, ma puce. Le gouverneur d'Égypte, l'homme le plus puissant après le Pharaon, c'était leur frère qu'ils avaient trahi. Ils pensaient qu'il allait les punir, les jeter en prison, ou pire.",
+        "ton": "dramatique",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_056",
+        "personnage": "papy_babou",
+        "texte": "Mais Joseph a fait quelque chose d'extraordinaire. Il les a pris dans ses bras, un par un. Et il leur a dit : ne soyez pas tristes, ne vous en voulez pas. C'est Dieu qui m'a envoyé ici avant vous, pour sauver des vies. Ce que vous aviez voulu pour le mal, Dieu l'a changé en bien.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "sfx_010",
+        "personnage": "sfx",
+        "texte": "Warm major-key orchestral pad resolving gently, soft harp arpeggios, peaceful reconciliation atmosphere, wide reverb",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_057",
+        "personnage": "antoine",
+        "texte": "Il les a... pardonnés ? Après tout ce qu'ils lui ont fait ?",
+        "ton": "curieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_058",
+        "personnage": "papy_babou",
+        "texte": "Oui, mon bonhomme. Il les a pardonnés. Et il a fait venir toute sa famille en Égypte. Son vieux papa Jacob, ses frères, leurs femmes, leurs enfants. Il les a tous nourris, tous protégés. Parce que le pardon, c'est pas oublier ce qu'on t'a fait. C'est choisir de ne pas laisser la colère gagner.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_059",
+        "personnage": "noemie",
+        "texte": "Et le papa Jacob, quand il a vu Joseph ? Il devait être tellement content !",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_060",
+        "personnage": "papy_babou",
+        "texte": "Oh, ma puce. Jacob a pris Joseph dans ses bras et il a dit : maintenant je peux mourir en paix, parce que j'ai revu ton visage. C'est un des plus beaux moments de toute la Bible.",
+        "ton": "tendre",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_011",
+        "personnage": "sfx",
+        "texte": "Crackling fireplace returning softly with warm room ambiance, gentle clock ticking, cozy interior settling back",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 6.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_061",
+        "personnage": "antoine",
+        "texte": "Papy... tu crois que Maxime, il savait que c'était méchant ce qu'il faisait ? Les frères de Joseph, ils savaient ?",
+        "ton": "curieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_062",
+        "personnage": "papy_babou",
+        "texte": "Tu sais, mon grand, la jalousie, c'est comme un petit monstre. Au début il est tout petit, et puis il grandit, il grandit, jusqu'à ce qu'on fasse des choses qu'on regrette. Les frères de Joseph ont regretté. Et Maxime, peut-être qu'il regrette aussi.",
+        "ton": "rassurant",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_063",
+        "personnage": "antoine",
+        "texte": "Mais Joseph, c'était dur de pardonner, non ? Il avait le droit d'être en colère !",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_064",
+        "personnage": "papy_babou",
+        "texte": "Bien sûr qu'il avait le droit. Et pardonner, ça ne veut pas dire que ce qu'on t'a fait c'était bien. Ça veut dire que tu choisis d'avancer, au lieu de rester prisonnier de ta colère. Parce que tu sais quoi, mon bonhomme ? La rancune, c'est comme rester au fond du puits. Le pardon, c'est en sortir.",
+        "ton": "solennel",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_065",
+        "personnage": "noemie",
+        "texte": "Antoine, tu vas pardonner Maxime alors ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_066",
+        "personnage": "antoine",
+        "texte": "Euh... je sais pas. Peut-être. Si Joseph a pu pardonner ses frères après tout ça... moi c'est quand même moins grave.",
+        "ton": "curieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_067",
+        "personnage": "papy_babou",
+        "texte": "C'est déjà un premier pas, mon grand. Comme disait ma grand-mère : le pardon, c'est un cadeau qu'on se fait à soi-même.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_068",
+        "personnage": "noemie",
+        "texte": "Dis Papy, est-ce que le bébé Lucas il aura un manteau de couleurs quand il naîtra ? Comme Joseph ?",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_069",
+        "personnage": "antoine",
+        "texte": "Et moi je serai un grand frère bien, hein Papy ? Pas comme les frères de Joseph !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_070",
+        "personnage": "papy_babou",
+        "texte": "J'en suis sûr, mon bonhomme. Tu seras le meilleur des grands frères. Et Lucas aura beaucoup de chance de t'avoir.",
+        "ton": "tendre",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_012",
+        "personnage": "sfx",
+        "texte": "Gentle high-frequency shimmer pad with slow amplitude modulation, soft reverb wash, warm harmonic overtones, wide stereo field",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_071",
+        "personnage": "noemie",
+        "texte": "Raconte encore, Papy ! Qu'est-ce qui est arrivé après, à la famille de Joseph en Égypte ?",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_072",
+        "personnage": "papy_babou",
+        "texte": "Ah, ça, c'est une autre histoire ! Figurez-vous que la famille de Joseph est restée en Égypte très, très longtemps. Des années, des siècles même. Et un jour, un nouveau Pharaon est arrivé au pouvoir. Un Pharaon qui ne connaissait pas Joseph. Et il a fait quelque chose de terrible : il a réduit la famille de Joseph en esclavage.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_073",
+        "personnage": "antoine",
+        "texte": "Oh non ! Et personne les a aidés ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_074",
+        "personnage": "papy_babou",
+        "texte": "Si ! Un petit bébé, caché dans un panier sur le fleuve, a été trouvé par une princesse. Et ce bébé a fait quelque chose d'incroyable en grandissant. Mais ça, ce sera pour la prochaine fois !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_075",
+        "personnage": "noemie",
+        "texte": "Un bébé dans un panier ? Comme un petit Moïse ? Mais ça finit bien, hein Papy ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_076",
+        "personnage": "papy_babou",
+        "texte": "Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace. Et n'oubliez pas la leçon de Joseph : le pardon, c'est plus fort que la rancune. Même dans les épreuves les plus dures, quelque chose de beau peut naître. À la prochaine !",
+        "ton": "joyeux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_013",
+        "personnage": "sfx",
+        "texte": "Warm outro music with soft acoustic guitar melody fading out, gentle reverb, cozy and hopeful closing feel",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      }
+    ]
+  }
+}
