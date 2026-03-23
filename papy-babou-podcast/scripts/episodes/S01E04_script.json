@@ -219,7 +219,7 @@
       {
         "id": "seg_023",
         "personnage": "papy_babou",
-        "texte": "Ils l'ont attrapé, ma puce. Ils lui ont arraché sa tunique de couleurs. Et ils l'ont jeté... au fond d'un puits. Un trou noir, profond, dans la terre sèche.",
+        "texte": "Ils l'ont attrapé, ma puce. Ils lui ont arraché sa tunique de couleurs. Et ils l'ont jeté au fond d'un puits. Un trou noir, profond, dans la terre sèche.",
         "ton": "grave",
         "rythme": "lent",
         "pause_apres_ms": 2000
@@ -252,7 +252,7 @@
         "id": "seg_026",
         "personnage": "papy_babou",
         "texte": "Et ce n'est pas fini, mon grand. Des marchands qui passaient par là, avec leurs chameaux chargés d'épices, ont vu le puits. Les frères leur ont vendu Joseph. Vendu ! Comme on vendrait un animal au marché. Pour vingt pièces d'argent.",
-        "ton": "grave",
+        "ton": "dramatique",
         "pause_apres_ms": 1500
       },
       {
@@ -274,8 +274,16 @@
       {
         "id": "seg_028",
         "personnage": "papy_babou",
-        "texte": "Les frères ont pris la tunique de Joseph, ils l'ont trempée dans du sang de chèvre, et ils l'ont rapportée à leur père. Ils lui ont dit : on a trouvé ça. C'est pas la tunique de Joseph ? Jacob a cru que son fils avait été dévoré par une bête sauvage. Il a pleuré, pleuré, pendant des jours et des nuits.",
+        "texte": "Les frères ont pris la tunique de Joseph, ils l'ont trempée dans du sang de chèvre, et ils l'ont rapportée à leur père. Ils lui ont dit : on a trouvé ça. C'est pas la tunique de Joseph ?",
         "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_028b",
+        "personnage": "papy_babou",
+        "texte": "Jacob a cru que son fils avait été dévoré par une bête sauvage. Il a pleuré, pleuré, pendant des jours et des nuits.",
+        "ton": "tendre",
         "rythme": "lent",
         "pause_apres_ms": 1500
       },
@@ -389,7 +397,7 @@
         "id": "seg_040",
         "personnage": "papy_babou",
         "texte": "Personne ne pouvait expliquer ce rêve au Pharaon. Personne ! Jusqu'à ce qu'on se souvienne de Joseph, le prisonnier qui savait lire les rêves. On l'a fait sortir de prison, on l'a lavé, habillé, et amené devant le roi.",
-        "ton": "dramatique",
+        "ton": "mystérieux",
         "pause_apres_ms": 1000
       },
       {
@@ -426,7 +434,7 @@
       {
         "id": "seg_044",
         "personnage": "antoine",
-        "texte": "Chut, Noémie ! Laisse Papy finir ! Je veux savoir ce que le Pharaon a fait !",
+        "texte": "Noémie ! Laisse Papy finir ! Je veux savoir ce que le Pharaon a fait !",
         "ton": "enthousiaste",
         "rythme": "rapide",
         "pause_apres_ms": 600
@@ -489,7 +497,7 @@
       {
         "id": "seg_050",
         "personnage": "noemie",
-        "texte": "C'est comme dans le rêve ! Les gerbes de blé qui s'inclinaient !",
+        "texte": "C'est comme dans le rêve ! Le blé qui se baissait devant lui !",
         "ton": "émerveillée",
         "pause_apres_ms": 600
       },
