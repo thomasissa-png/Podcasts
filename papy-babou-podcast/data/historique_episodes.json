@@ -1,37 +1,5 @@
 [
   {
-    "episode_id": "S01E01",
-    "saison": 1,
-    "numero": 1,
-    "titre": "La création du monde — quand Dieu a tout inventé",
-    "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
-    "resume_court": "Papy raconte comment Dieu a créé le monde en six jours : la lumière, le ciel, la mer, les plantes, les étoiles, les animaux, et enfin l'homme et la femme. Chaque jour apporte une nouvelle merveille. Le septième jour, Dieu se repose et contemple son œuvre.",
-    "date_production": "2026-03-20T06:46:39.946384",
-    "score_review": 9.2,
-    "personnages_presents": [
-      "antoine",
-      "mamie_sonia",
-      "noemie",
-      "papy_babou"
-    ],
-    "moments_cles": [
-      "Le cold open : la voix de Dieu dans le néant et la lumière qui jaillit",
-      "Noémie qui demande 'c'est qui qui a fait les fleurs' dans le jardin de Papy",
-      "L'anecdote de Papy sur les étoiles vues depuis le toit à Dakar",
-      "Mamie Sonia qui raconte que chaque animal est une lettre de l'alphabet de Dieu",
-      "Noémie qui compare la première respiration d'Adam à la naissance de Lucas",
-      "Le récap où Antoine récite les 6 jours dans l'ordre"
-    ],
-    "questions_ouvertes": [],
-    "evolutions_personnages": "Noémie développe son émerveillement devant la Création et commence à faire des liens avec la naissance de Lucas. Antoine montre sa curiosité scientifique et sa capacité à retenir les faits dans l'ordre.",
-    "ambiance": "joyeux",
-    "type_episode": "ouverture",
-    "retours_humains": "",
-    "ratio_biblique": 0,
-    "ratio_enfants": 0,
-    "elements_fil_rouge": ""
-  },
-  {
     "episode_id": "S01E02",
     "saison": 1,
     "numero": 2,
@@ -63,5 +31,21 @@
     "ratio_biblique": 0,
     "ratio_enfants": 0,
     "elements_fil_rouge": ""
+  },
+  {
+    "episode_id": "S01E01",
+    "titre": "La création du monde — quand Dieu a tout inventé",
+    "morale": "Le monde est un cadeau extraordinaire dont il faut prendre soin",
+    "resume_court": "Papy Babou raconte aux enfants comment Dieu a créé le monde en sept jours",
+    "date_production": "2026-03-23",
+    "score_review": 9.2,
+    "personnages_presents": [
+      "papy_babou",
+      "antoine",
+      "noemie",
+      "mamie_sonia"
+    ],
+    "type_episode": "ouverture",
+    "ambiance": "émerveillé"
   }
 ]
