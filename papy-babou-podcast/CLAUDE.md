@@ -2012,3 +2012,103 @@ All 24 rules stored in `data/preferences_producteur.json` and auto-injected into
 - **NEVER add `overflow: hidden`** on avatar containers — causes edge clipping
 - **CSS rule**: `.char-avatar img { width: 56px; height: 56px; display: block; border-radius: 12px; }` — no object-fit, no overflow
 - This rule has been violated 3+ times — treat any avatar regression as a blocking bug
+
+## Production Monitoring & Remote DB Access (Session 27)
+
+### How to monitor production jobs remotely
+
+The web dashboard exposes authenticated API endpoints. All calls require `Authorization: Bearer allezpsg` header.
+
+**Key endpoints for monitoring:**
+```bash
+# Check running jobs
+curl -s -H "Authorization: Bearer allezpsg" "https://podcasts-toum92.replit.app/api/running-jobs"
+
+# Check specific job status (returns status, stdout, stderr when complete)
+curl -s -H "Authorization: Bearer allezpsg" "https://podcasts-toum92.replit.app/api/job-status/<job_id>"
+
+# Launch production phase
+curl -s -H "Authorization: Bearer allezpsg" -H "Content-Type: application/json" \
+  -X POST "https://podcasts-toum92.replit.app/api/episode/S01EXX/continue-production" \
+  -d '{"phase": "audio|sfx|montage|publication"}'
+
+# Public episodes (no auth needed)
+curl -s "https://podcasts-toum92.replit.app/api/public/episodes"
+```
+
+**Job statuses**: `running` (in progress), `ok` (success), `error` (failed). stdout/stderr only available after completion.
+
+### How to query the production PostgreSQL database
+
+The web dashboard has a `/api/claude/query` endpoint for read-only SQL queries against the Neon PostgreSQL database:
+
+```bash
+curl -s -H "Authorization: Bearer allezpsg" -H "Content-Type: application/json" \
+  "https://podcasts-toum92.replit.app/api/claude/query" \
+  -d '{"sql": "SELECT ... FROM ..."}'
+```
+
+**Key tables and columns:**
+| Table | Key columns | Notes |
+|-------|------------|-------|
+| `productions` | `id`, `episode_id`, `etape_courante`, `status`, `rapport_json`, `checkpoint_data`, `started_at`, `updated_at` | NO `created_at` column! Use `started_at` |
+| `episodes` | `episode_id`, `titre`, `saison`, `numero`, `status` | Soft-delete via `deleted_at` |
+| `scripts` | `episode_id`, `version`, `contenu`, `score_review`, `created_at` | Has `created_at` |
+| `fichiers_audio` | `episode_id`, `type`, `chemin`, `duree_secondes`, `taille_bytes`, `created_at` | Has `created_at` |
+| `historique_episodes` | `episode_id`, `titre`, `date_production`, `score_review` | |
+| `saisons` | `numero`, `plan_json`, `created_at` | |
+
+**Common monitoring queries:**
+```sql
+-- Latest production status for an episode
+SELECT etape_courante, status, updated_at FROM productions WHERE episode_id = 'S01E01' ORDER BY id DESC LIMIT 1
+
+-- Get rapport with error details
+SELECT rapport_json::text FROM productions WHERE id = <id>
+
+-- All recent productions
+SELECT id, episode_id, etape_courante, status, updated_at FROM productions ORDER BY id DESC LIMIT 5
+
+-- Check audio files
+SELECT episode_id, type, duree_secondes, taille_bytes FROM fichiers_audio WHERE episode_id = 'S01E01'
+```
+
+### Production monitoring workflow (for Claude Code sessions)
+
+When monitoring a long-running production job:
+
+1. **Launch job** via `POST /api/episode/S01EXX/continue-production` with appropriate phase
+2. **Monitor in background** using a bash loop that polls every 60s:
+   - Check job status via `/api/job-status/<job_id>` (returns `running`, `ok`, `error`)
+   - Check DB status via `/api/claude/query` for `etape_courante` and `status`
+3. **Auto-chain**: When a job completes with `ok`, automatically launch the next phase
+4. **On error**: Read stderr from job result + `rapport_json` from DB for diagnostics
+5. **On interrupt** (Replit redeploy): Auto-resume thread picks it up — check `/api/running-jobs` for new job_id
+
+**Background monitor template:**
+```bash
+for i in $(seq 1 45); do
+  sleep 60
+  STATUS=$(curl -s -H "Authorization: Bearer allezpsg" ".../api/job-status/<job_id>" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','?'))")
+  ETAPE=$(curl -s -H "Authorization: Bearer allezpsg" -H "Content-Type: application/json" .../api/claude/query -d '{"sql": "..."}' | python3 -c "...")
+  echo "[$(date +%H:%M:%S)] Check $i — job=$STATUS db=$ETAPE"
+  if [ "$STATUS" = "ok" ] || [ "$STATUS" = "error" ]; then
+    # Handle completion
+    break
+  fi
+done
+```
+
+### Known production pitfalls
+- **Replit redeploys** happen frequently during 30+ min jobs → SIGTERM handler saves checkpoint → auto-resume thread restarts
+- **`web_job_id non persisté`** error = symptom, not root cause. Check checkpoint + rapport files for the real error
+- **`TimeoutExpired` + `e.process`**: Fixed in Session 27 — `subprocess.run()` has no `.process` attribute, removed `e.process.kill()` from all 4 handlers in monteur.py
+- **ffmpeg timeouts**: concat=600s, mix=900s, master bus=600s, mp3 export=600s — increase if episodes get longer
+- **DB column names**: `productions` table has `started_at` (NOT `created_at`). Other tables (`scripts`, `fichiers_audio`, `saisons`) DO have `created_at`
+- **Production statuses**: `started` → `script_done` → `audio_done` → `sfx_done` → `montage_done` → `metadonnees_done` → `completed`. Also: `interrupted` (SIGTERM), `failed` (crash), `waiting_script`/`waiting_montage` (stop-after)
+
+### When modifying monteur.py (Session 27 additions)
+- `subprocess.run()` + `TimeoutExpired`: NEVER access `e.process` — it doesn't exist. `subprocess.run()` already kills the child on timeout
+- Only `Popen` objects have `.process` on the exception
+- ffmpeg concat timeout: 600s (was 300s — too short for 30-min episodes with 190+ segments)
+- ffmpeg master bus timeout: 600s (was 300s)
