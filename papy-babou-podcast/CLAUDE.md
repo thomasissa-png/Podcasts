@@ -2138,22 +2138,38 @@ Two new API endpoints automate everything. No more manual purge, no more checkpo
 
 **The workflow:**
 1. Script is validated in Claude Code session (audits, corrections, pushed to git)
-2. User redeploys on Replit (git pull → script on filesystem)
-3. From Claude Code, call 2 endpoints:
+2. From Claude Code, call 2 endpoints — **ALWAYS send the script in the POST body** :
    ```bash
-   # Step 1: Kill all stale productions (prevents auto-resume of old jobs)
+   # Step 1: Kill all stale productions
    curl -X POST -H "Authorization: Bearer allezpsg" \
      "https://podcasts-toum92.replit.app/api/episode/S01EXX/kill-productions"
 
-   # Step 2: Launch fresh production (creates checkpoint, purges old segments, launches audio→SFX→montage)
-   curl -X POST -H "Authorization: Bearer allezpsg" \
-     "https://podcasts-toum92.replit.app/api/episode/S01EXX/launch-fresh"
+   # Step 2: Launch fresh with script in body (MANDATORY — never rely on server filesystem)
+   python3 -c "
+   import json, subprocess
+   with open('papy-babou-podcast/scripts/episodes/S01EXX_script.json') as f:
+       script = json.load(f)
+   body = json.dumps({'script': script})
+   result = subprocess.run(['curl', '-s', '-X', 'POST',
+       '-H', 'Authorization: Bearer allezpsg',
+       '-H', 'Content-Type: application/json',
+       'https://podcasts-toum92.replit.app/api/episode/S01EXX/launch-fresh',
+       '-d', body], capture_output=True, text=True, timeout=30)
+   print(result.stdout)
+   "
    ```
+3. **Verify seg_003** matches expected content before trusting the production
 4. Monitor until complete (~30-45 min)
 
+**CRITICAL: ALWAYS send the script in the POST body**
+- The Replit server filesystem may have a STALE version of the script
+- Relying on git pull / redeploy has caused 4 production failures
+- The script in the POST body is written to filesystem + Object Storage + DB — it becomes the source of truth
+- **NEVER** call `launch-fresh` without `{"script": ...}` in the body
+
 **What `launch-fresh` does automatically:**
-- Reads `_script.json` from filesystem (the git version)
-- Copies to `_valide.json`
+- Writes the script from POST body to `_script.json` + `_valide.json` on server
+- Uploads script to Object Storage + saves to DB
 - Purges old segments from Object Storage AND local filesystem
 - Creates a fresh checkpoint with `validation_humaine=true` and `script_content_hash`
 - Uploads checkpoint to Object Storage (survives redeploy)
@@ -2163,13 +2179,24 @@ Two new API endpoints automate everything. No more manual purge, no more checkpo
 - Marks ALL non-terminal productions as `status='failed'` in DB
 - Prevents `_auto_resume_interrupted()` from relaunching stale jobs after redeploy
 
+### Post-launch verification (MANDATORY)
+After launching, wait ~60s then verify seg_003:
+```sql
+SELECT segment_id, personnage, nb_caracteres FROM fichiers_audio
+WHERE production_id=(SELECT id FROM productions WHERE episode_id='S01EXX' ORDER BY id DESC LIMIT 1)
+AND segment_id='seg_003'
+```
+Compare `nb_caracteres` with the expected value from the local script. If it doesn't match, kill and relaunch.
+
 ### Safety guards (Session 28)
 - `/api/produire` is **blocked** when a script already exists (returns 409)
-- `launch-fresh` **never regenerates** the script — it uses what's on the filesystem
+- `launch-fresh` **never regenerates** the script — it uses the script from the POST body
 - Old segments are **automatically purged** before fresh TTS generation
 - Checkpoint includes `script_content_hash` for modification detection on resume
 
 ### NEVER do these
+- **NEVER** call `launch-fresh` without the script in the POST body — server filesystem is UNRELIABLE
 - **NEVER** use `/api/produire` when a script already exists — it's blocked but don't try
 - **NEVER** call `launch-fresh` without `kill-productions` first — old auto-resume jobs may conflict
 - **NEVER** soft-delete an episode you want to reproduce — it archives everything including scripts
+- **NEVER** trust production output without verifying seg_003 first
