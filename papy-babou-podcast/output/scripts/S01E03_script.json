@@ -320,7 +320,7 @@
       {
         "id": "seg_021f",
         "personnage": "noemie",
-        "texte": "Il voulait rentrer chez lui ?",
+        "texte": "Le pauvre Abraame. Moi j'aurais serré mon doudou lapin très très fort. Il voulait rentrer chez lui ?",
         "ton": "inquiet",
         "pause_apres_ms": 600
       },
@@ -574,6 +574,28 @@
         "mode": "insert"
       },
       {
+        "id": "seg_048",
+        "personnage": "papy_babou",
+        "texte": "Et vous, mes petits loups, si Dieu vous demandait de partir très loin demain, vous prendriez quoi dans votre sac ?",
+        "ton": "espiègle",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_048b",
+        "personnage": "antoine",
+        "texte": "Mon carnet de dessins ! Et ma lampe frontale pour voir dans le noir !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_048c",
+        "personnage": "noemie",
+        "texte": "Mon doudou lapin ! Et des gâteaux, hein Mamie ?",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
         "id": "seg_049",
         "personnage": "papy_babou",
         "texte": "Parce que la leçon d'Abraame, c'est celle-ci : faire confiance, c'est parfois partir sans savoir où l'on va. Et les plus belles aventures commencent par un acte de foi. Un seul petit pas suffit.",
@@ -628,7 +650,7 @@
       {
         "id": "seg_055",
         "personnage": "papy_babou",
-        "texte": "Avec Dieu, mes petits loups, on n'est jamais vraiment seul. Même quand le chemin est très, très long. À la prochaine !",
+        "texte": "Avec Dieu, mes petits loups, on n'est jamais vraiment seul. Même quand le chemin est très, très long. Et ce soir, avant de dormir, regardez le ciel et comptez les étoiles. Pensez à Abraame. À la prochaine !",
         "ton": "joyeux",
         "pause_apres_ms": 1000
       },
