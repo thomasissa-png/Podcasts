@@ -997,6 +997,15 @@
         "pause_apres_ms": 300
       },
       {
+        "id": "sfx_013e",
+        "personnage": "sfx",
+        "texte": "cozy indoor evening ambiance, soft fireplace crackling steadily, warm comfortable room tone, clock ticking gently in background",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
         "id": "seg_082",
         "personnage": "antoine",
         "texte": "Dis Papy, est-ce que le bébé de Maman aura peur de l'orage quand il sera né ?",
