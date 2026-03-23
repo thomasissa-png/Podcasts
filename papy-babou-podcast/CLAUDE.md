@@ -2133,43 +2133,43 @@ done
 
 ## Production Launch Protocol — ABSOLUTE RULE (DO NOT SKIP)
 
-### The problem this solves
-3 productions lost (90+ min of compute, real money) because:
-1. Old TTS segments restored from Object Storage instead of regenerated
-2. `produire` endpoint used instead of `continue-production` (regenerated script instead of using audited one)
-3. Soft-delete purged `_valide.json` making `continue-production` fail
+### The simplified flow (Session 28)
+Two new API endpoints automate everything. No more manual purge, no more checkpoint creation.
 
-### Before launching ANY audio production
-
-**Pre-flight checklist (ALL items mandatory):**
-
-1. **Script is finalized**: All 4 auditors (Thomas, Isabelle, Marc, Claire) scored ≥ 9/10
-2. **Script sync verified**: `_script.json` and `_script_valide.json` are identical (run `diff`)
-3. **Purge old segments**: Delete ALL segments for this episode from Object Storage before launching. Old segments from previous productions WILL be restored and reused otherwise, producing the same audio as before.
+**The workflow:**
+1. Script is validated in Claude Code session (audits, corrections, pushed to git)
+2. User redeploys on Replit (git pull → script on filesystem)
+3. From Claude Code, call 2 endpoints:
    ```bash
-   # Via Replit dashboard or API — purge segments/S01EXX/* from Object Storage
+   # Step 1: Kill all stale productions (prevents auto-resume of old jobs)
+   curl -X POST -H "Authorization: Bearer allezpsg" \
+     "https://podcasts-toum92.replit.app/api/episode/S01EXX/kill-productions"
+
+   # Step 2: Launch fresh production (creates checkpoint, purges old segments, launches audio→SFX→montage)
+   curl -X POST -H "Authorization: Bearer allezpsg" \
+     "https://podcasts-toum92.replit.app/api/episode/S01EXX/launch-fresh"
    ```
-4. **Purge old productions in DB**: Mark any non-terminal productions as `failed` to prevent auto-resume of stale jobs
-5. **Use `continue-production` ONLY**: NEVER use `/api/produire` for episodes with existing scripts — it regenerates the script from scratch
-6. **Verify `_valide.json` exists on server**: If `continue-production` returns "Script validé introuvable", the file was lost. Fix by:
-   - Pushing `_script.json` via git (it's not gitignored)
-   - The server copies `_script.json` → `_valide.json` on resume (etape_idx > 0)
-   - Or use dashboard "Valider le script" button
+4. Monitor until complete (~30-45 min)
+
+**What `launch-fresh` does automatically:**
+- Reads `_script.json` from filesystem (the git version)
+- Copies to `_valide.json`
+- Purges old segments from Object Storage AND local filesystem
+- Creates a fresh checkpoint with `validation_humaine=true` and `script_content_hash`
+- Uploads checkpoint to Object Storage (survives redeploy)
+- Launches audio → SFX → montage auto-chain
+
+**What `kill-productions` does:**
+- Marks ALL non-terminal productions as `status='failed'` in DB
+- Prevents `_auto_resume_interrupted()` from relaunching stale jobs after redeploy
+
+### Safety guards (Session 28)
+- `/api/produire` is **blocked** when a script already exists (returns 409)
+- `launch-fresh` **never regenerates** the script — it uses what's on the filesystem
+- Old segments are **automatically purged** before fresh TTS generation
+- Checkpoint includes `script_content_hash` for modification detection on resume
 
 ### NEVER do these
-- **NEVER** use `/api/produire` when a script already exists — it creates a NEW script
-- **NEVER** resume from checkpoint without verifying segment freshness — old segments = old audio
+- **NEVER** use `/api/produire` when a script already exists — it's blocked but don't try
+- **NEVER** call `launch-fresh` without `kill-productions` first — old auto-resume jobs may conflict
 - **NEVER** soft-delete an episode you want to reproduce — it archives everything including scripts
-- **NEVER** launch production without purging Object Storage segments first
-
-### The correct production flow
-```
-1. Finalize script (audits ≥ 9/10 per auditor)
-2. Verify script sync (_script.json == _valide.json)
-3. Purge old segments from Object Storage
-4. Purge stale DB productions
-5. Launch: POST /api/episode/S01EXX/continue-production {"phase": "audio"}
-6. Monitor: poll job-status every 60s
-7. Auto-chain: audio → SFX → montage (automatic)
-8. Verify: listen to montage, check duration, check segments match script
-```
