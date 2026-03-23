@@ -9,7 +9,7 @@
     "personnages_presents": ["papy_babou", "antoine", "noemie", "mamie_sonia", "narrateur"],
     "moments_cles": [
       "Abraham regarde les étoiles et essaie de les compter",
-      "Noémie demande si Sara était aussi vieille que Mamie",
+      "Noémie demande si Sarah était aussi vieille que Mamie",
       "La naissance d'Isaac — la joie après l'attente",
       "Mamie Sonia raconte qu'elle aussi a eu peur en déménageant",
       "Antoine fait le parallèle avec son propre déménagement"
@@ -18,7 +18,7 @@
       {
         "id": "sfx_001",
         "personnage": "sfx",
-        "texte": "Warm crackling fireplace ambiance with soft bird chirps in background, gentle and cozy atmosphere pad",
+        "texte": "Crackling fireplace ambiance with soft bird chirps in background, low-frequency pad drone, subtle room tone",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 6.0,
@@ -90,14 +90,14 @@
       {
         "id": "seg_010",
         "personnage": "papy_babou",
-        "texte": "Un peu, oui. Sauf que ce héros-là n'avait pas de cape ni de pouvoirs magiques. Il s'appelait Abrame. Il vivait dans une grande ville appelée Our, en Mésopotamie. C'est très loin d'ici, au Moyen-Orient.",
+        "texte": "Un peu, oui. Sauf que ce héros-là n'avait pas de cape ni de pouvoirs magiques. Il s'appelait Abram. Il vivait dans une grande ville appelée Our, en Mésopotamie. C'est très loin d'ici, au Moyen-Orient.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
       {
         "id": "sfx_002",
         "personnage": "sfx",
-        "texte": "Warm Middle Eastern string drone with soft wind layer, evoking a desert landscape, gentle reverb tail",
+        "texte": "Middle Eastern string drone with soft arid wind gusts, distant sand rustling, gentle reverb tail",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -106,7 +106,7 @@
       {
         "id": "seg_011",
         "personnage": "papy_babou",
-        "texte": "Abrame avait une belle maison, une famille, des troupeaux. Il ne manquait de rien. Et il avait une femme qu'il aimait beaucoup, Saraï. Ils étaient heureux là-bas. Mais il leur manquait une chose : ils n'avaient pas d'enfant.",
+        "texte": "Abram avait une belle maison, une famille, des troupeaux. Il ne manquait de rien. Et il avait une femme qu'il aimait beaucoup, Saraï. Ils étaient heureux là-bas. Mais il leur manquait une chose : ils n'avaient pas d'enfant.",
         "ton": "chaleureux",
         "pause_apres_ms": 1000
       },
@@ -120,14 +120,14 @@
       {
         "id": "seg_013",
         "personnage": "papy_babou",
-        "texte": "Oui, ma puce, c'était une grande tristesse pour eux. Mais un jour, quelque chose d'incroyable est arrivé. Et devinez quoi ? Dieu lui-même a parlé à Abrame.",
+        "texte": "Oui, ma puce, c'était une grande tristesse pour eux. Mais un jour, quelque chose d'incroyable est arrivé. Et devinez quoi ? Dieu lui-même a parlé à Abram.",
         "ton": "dramatique",
         "pause_apres_ms": 1500
       },
       {
         "id": "sfx_003",
         "personnage": "sfx",
-        "texte": "Deep resonant sub-bass swell building slowly, with ethereal high-pitched shimmer overtones, reverent and mysterious",
+        "texte": "Deep resonant sub-bass swell building slowly, with airy high-pitched shimmer overtones, wide stereo reverb",
         "ton": "ambiance",
         "pause_apres_ms": 500,
         "duree_sfx_secondes": 4.0,
@@ -136,7 +136,7 @@
       {
         "id": "seg_014",
         "personnage": "papy_babou",
-        "texte": "Dieu a dit à Abrame : quitte ton pays, quitte ta famille, quitte tout ce que tu connais. Pars vers un pays que je te montrerai. Je ferai de toi un grand peuple, et toutes les familles de la terre seront bénies grâce à toi.",
+        "texte": "Dieu a dit à Abram : quitte ton pays, quitte ta famille, quitte tout ce que tu connais. Pars vers un pays que je te montrerai. Je ferai de toi un grand peuple, et toutes les familles de la terre seront bénies grâce à toi.",
         "ton": "dramatique",
         "pause_apres_ms": 2000
       },
@@ -164,7 +164,7 @@
       {
         "id": "seg_018",
         "personnage": "papy_babou",
-        "texte": "Bien sûr qu'il avait peur, ma puce. Abrame avait soixante-quinze ans quand il est parti. Soixante-quinze ! Avec sa femme Saraï, son neveu Lotte, ses troupeaux, ses serviteurs. Toute une caravane dans le désert.",
+        "texte": "Bien sûr qu'il avait peur, ma puce. Abram avait soixante-quinze ans quand il est parti. Soixante-quinze ! Avec sa femme Saraï, son neveu Lot, ses troupeaux, ses serviteurs. Toute une caravane dans le désert.",
         "ton": "chaleureux",
         "pause_apres_ms": 800
       },
@@ -180,7 +180,7 @@
       {
         "id": "seg_019",
         "personnage": "narrateur",
-        "texte": "Alors Abrame a marché. Des jours, des semaines, des mois. À travers le désert brûlant, sous un soleil immense. Sa femme Saraï marchait à ses côtés, courageuse elle aussi.",
+        "texte": "Alors Abram a marché. Des jours, des semaines, des mois. À travers le désert brûlant, sous un soleil immense. Sa femme Saraï marchait à ses côtés, courageuse elle aussi.",
         "ton": "neutre",
         "pause_apres_ms": 1000
       },
@@ -194,7 +194,7 @@
       {
         "id": "seg_021",
         "personnage": "papy_babou",
-        "texte": "Attendez, attendez, j'y viens ! Abrame est arrivé au pays de Canane. Et là, Dieu lui a dit : regarde autour de toi. Tout ce que tu vois, je te le donne, à toi et à ta descendance pour toujours.",
+        "texte": "Attendez, attendez, j'y viens ! Abram est arrivé au pays de Canaan. Et là, Dieu lui a dit : regarde autour de toi. Tout ce que tu vois, je te le donne, à toi et à ta descendance pour toujours.",
         "ton": "enthousiaste",
         "pause_apres_ms": 1000
       },
@@ -222,14 +222,14 @@
       {
         "id": "seg_025",
         "personnage": "papy_babou",
-        "texte": "Ah, justement ! C'est là que l'histoire devient vraiment belle. Un soir, Dieu a emmené Abrame dehors, sous le ciel étoilé. Et il lui a dit : lève les yeux. Regarde les étoiles. Essaie de les compter.",
+        "texte": "Ah, justement ! C'est là que l'histoire devient vraiment belle. Un soir, Dieu a emmené Abram dehors, sous le ciel étoilé. Et il lui a dit : lève les yeux. Regarde les étoiles. Essaie de les compter.",
         "ton": "dramatique",
         "pause_apres_ms": 2000
       },
       {
         "id": "sfx_005",
         "personnage": "sfx",
-        "texte": "Soft night cricket ambiance with gentle twinkling high-frequency shimmer pads evoking starlight, wide stereo field",
+        "texte": "Soft night cricket ambiance with gentle twinkling high-frequency shimmer pads, bright sparkle texture, wide stereo field",
         "ton": "ambiance",
         "pause_apres_ms": 500,
         "duree_sfx_secondes": 6.0,
@@ -245,7 +245,7 @@
       {
         "id": "seg_027",
         "personnage": "papy_babou",
-        "texte": "C'est pas merveilleux, ça ? Dieu a dit à Abrame : ta descendance sera aussi nombreuse que ces étoiles. Et à ce moment-là, Dieu lui a donné un nouveau nom. Abrame est devenu Abraame, et Saraï est devenue Sara.",
+        "texte": "C'est pas merveilleux, ça ? Dieu a dit à Abram : ta descendance sera aussi nombreuse que ces étoiles. Et des années plus tard, pour sceller cette promesse, Dieu lui a donné un nouveau nom. Abram est devenu Abraham, et Saraï est devenue Sarah.",
         "ton": "enthousiaste",
         "pause_apres_ms": 1000
       },
@@ -259,7 +259,7 @@
       {
         "id": "seg_029",
         "personnage": "papy_babou",
-        "texte": "Exactement, Antoine. Un nouveau nom pour une nouvelle vie. Mais les années ont passé. Abraame et Sara vieillissaient, et toujours pas d'enfant. Abraame avait quatre-vingt-dix-neuf ans. Sara en avait quatre-vingt-dix.",
+        "texte": "Exactement, Antoine. Un nouveau nom pour une nouvelle vie. Mais les années ont passé. Abraham et Sarah vieillissaient, et toujours pas d'enfant. Abraham avait quatre-vingt-dix-neuf ans. Sarah en avait quatre-vingt-dix.",
         "ton": "chaleureux",
         "pause_apres_ms": 1000
       },
@@ -280,7 +280,7 @@
       {
         "id": "seg_032",
         "personnage": "papy_babou",
-        "texte": "Mamie a raison. Sara était bien plus âgée que Mamie Sonia. Et quand Dieu a annoncé qu'elle aurait un enfant, vous savez ce que Sara a fait ? Elle a ri ! Elle a ri parce qu'elle n'y croyait plus.",
+        "texte": "Mamie a raison. Sarah était bien plus âgée que Mamie Sonia. Et quand Dieu a annoncé qu'elle aurait un enfant, vous savez ce que Sarah a fait ? Elle a ri ! Elle a ri parce qu'elle n'y croyait plus.",
         "ton": "chaleureux",
         "pause_apres_ms": 1000
       },
@@ -308,14 +308,14 @@
       {
         "id": "seg_036",
         "personnage": "papy_babou",
-        "texte": "Vous voyez, mes enfants, Dieu a tenu sa promesse. Même après toutes ces années d'attente, même quand ça semblait impossible. Sara a eu un fils. Un magnifique petit garçon.",
+        "texte": "Vous voyez, mes enfants, Dieu a tenu sa promesse. Même après toutes ces années d'attente, même quand ça semblait impossible. Sarah a eu un fils. Un magnifique petit garçon.",
         "ton": "chaleureux",
         "pause_apres_ms": 1500
       },
       {
         "id": "sfx_006",
         "personnage": "sfx",
-        "texte": "Soft warm major-key harp arpeggio with gentle reverb bloom, tender and joyful newborn moment",
+        "texte": "Soft major-key harp arpeggio with gentle reverb bloom, slow tempo, legato sustain",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -324,7 +324,7 @@
       {
         "id": "seg_037",
         "personnage": "papy_babou",
-        "texte": "Et ils l'ont appelé Isaac. Et devinez ce que signifie Isaac ? Ça veut dire « il rit ». Parce que Sara avait ri quand Dieu lui avait fait cette promesse. Mais cette fois, c'était un rire de bonheur.",
+        "texte": "Et ils l'ont appelé Isaac. Et devinez ce que signifie Isaac ? Ça veut dire « il rit ». Parce que Sarah avait ri quand Dieu lui avait fait cette promesse. Mais cette fois, c'était un rire de bonheur.",
         "ton": "joyeux",
         "pause_apres_ms": 1500
       },
@@ -345,7 +345,7 @@
       {
         "id": "seg_040",
         "personnage": "papy_babou",
-        "texte": "Ah mes petits loups, c'est la plus belle question. Non, Abraame n'a jamais regretté. Parce qu'en partant, il a trouvé bien plus que ce qu'il avait laissé. Il a trouvé le sens de sa vie. Sa grande aventure.",
+        "texte": "Ah mes petits loups, c'est la plus belle question. Non, Abraham n'a jamais regretté. Parce qu'en partant, il a trouvé bien plus que ce qu'il avait laissé. Il a trouvé le sens de sa vie. Sa grande aventure.",
         "ton": "rassurant",
         "pause_apres_ms": 1000
       },
@@ -366,28 +366,28 @@
       {
         "id": "seg_043",
         "personnage": "papy_babou",
-        "texte": "Parce que la confiance, mon grand, ça ne veut pas dire ne pas avoir peur. Ça veut dire avancer malgré la peur. Abraame aussi avait peur. Mais il a fait un pas, puis un autre, puis un autre.",
+        "texte": "Parce que la confiance, mon grand, ça ne veut pas dire ne pas avoir peur. Ça veut dire avancer malgré la peur. Abraham aussi avait peur. Mais il a fait un pas, puis un autre, puis un autre.",
         "ton": "rassurant",
         "pause_apres_ms": 1500
       },
       {
         "id": "seg_044",
         "personnage": "noemie",
-        "texte": "Moi je l'aurais aidé, Abraame ! Je lui aurais tenu la main pour marcher dans le désert.",
+        "texte": "Moi je l'aurais aidé, Abraham ! Je lui aurais tenu la main pour marcher dans le désert.",
         "ton": "enthousiaste",
         "pause_apres_ms": 600
       },
       {
         "id": "seg_045",
         "personnage": "papy_babou",
-        "texte": "Et c'est exactement ce que Dieu a fait, ma puce. Il lui a tenu la main tout le long du chemin. Même quand Abraame ne le voyait pas.",
+        "texte": "Et c'est exactement ce que Dieu a fait, ma puce. Il lui a tenu la main tout le long du chemin. Même quand Abraham ne le voyait pas.",
         "ton": "rassurant",
         "pause_apres_ms": 1000
       },
       {
         "id": "seg_046",
         "personnage": "antoine",
-        "texte": "Alors peut-être que le déménagement, c'est un peu comme Abraame. On part, on a peur, mais peut-être qu'on va trouver des trucs encore mieux.",
+        "texte": "Alors peut-être que le déménagement, c'est un peu comme Abraham. On part, on a peur, mais peut-être qu'on va trouver des trucs encore mieux.",
         "ton": "rassurant",
         "pause_apres_ms": 1000
       },
@@ -401,7 +401,7 @@
       {
         "id": "sfx_007",
         "personnage": "sfx",
-        "texte": "Gentle warm orchestral pad swell resolving to a soft major chord, feeling of peace and resolution",
+        "texte": "Gentle orchestral pad swell resolving to a soft major chord, slow fade-out with reverb tail",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
@@ -417,7 +417,7 @@
       {
         "id": "seg_049",
         "personnage": "papy_babou",
-        "texte": "Parce que la leçon d'Abraame, c'est celle-ci : faire confiance, c'est parfois partir sans savoir où l'on va. Et les plus belles aventures commencent par un acte de foi. Un seul petit pas suffit.",
+        "texte": "Parce que la leçon d'Abraham, c'est celle-ci : faire confiance, c'est parfois partir sans savoir où l'on va. Et les plus belles aventures commencent par un acte de foi. Un seul petit pas suffit.",
         "ton": "rassurant",
         "pause_apres_ms": 1500
       },
@@ -438,7 +438,7 @@
       {
         "id": "seg_052",
         "personnage": "antoine",
-        "texte": "Wahou ! Et il a gagné à la fin ? Et ça a mal tourné à cause du manteau ?",
+        "texte": "Trop bien ! Et il a gagné à la fin ? Et ça a mal tourné à cause du manteau ?",
         "ton": "curieux",
         "pause_apres_ms": 600
       },
@@ -466,7 +466,7 @@
       {
         "id": "sfx_008",
         "personnage": "sfx",
-        "texte": "Warm outro music with soft acoustic guitar melody fading out, gentle reverb, cozy and hopeful closing feel",
+        "texte": "Soft acoustic guitar melody fading out, gentle fingerpicking pattern, reverb tail with slow decay",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
