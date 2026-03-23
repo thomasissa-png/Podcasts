@@ -2623,6 +2623,25 @@ def api_launch_fresh(episode_id):
         _json.dump(checkpoint_data, f, ensure_ascii=False, indent=2)
     logger.info("launch-fresh %s : checkpoint créé à %s", episode_id, checkpoint_path)
 
+    # Sauvegarder le script en DB pour visibilité dans la page validation
+    try:
+        from db_models import ScriptRepo
+        nb_mots = sum(
+            len(s.get("texte", "").split())
+            for s in segments
+            if s.get("personnage") != "sfx"
+        )
+        ScriptRepo.sauvegarder(
+            episode_id=episode_id,
+            script=script,
+            nb_mots=nb_mots,
+            is_validated=True,
+            source="launch_fresh",
+        )
+        logger.info("launch-fresh %s : script sauvegardé en DB (%d mots)", episode_id, nb_mots)
+    except Exception as e:
+        logger.warning("launch-fresh %s : sauvegarde script DB échouée: %s", episode_id, e)
+
     # Upload checkpoint vers Object Storage (survit à un redeploy entre maintenant et le subprocess)
     try:
         import persistent_storage
