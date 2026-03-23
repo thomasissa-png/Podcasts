@@ -1,1822 +1,1822 @@
 {
-  "episode": {
-    "titre": "Noé et le déluge — l'arche qui a sauvé le monde",
-    "numero": 2,
-    "saison": 1,
-    "type": "standard",
-    "duree_cible_minutes": 18,
-    "ambiance": "dramatique",
-    "ambiance_par_acte": [
-      "mystere",
-      "dramatique",
-      "joyeux"
-    ],
-    "morale": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
-    "personnages_presents": [
-      "papy_babou",
-      "antoine",
-      "noemie",
-      "mamie_sonia"
-    ],
-    "moments_cles": [
-      "L'arrivée au salon un jour de pluie — la pluie dehors amène naturellement l'histoire de Noé",
-      "Noémie qui veut savoir comment les girafes sont entrées dans l'arche",
-      "Antoine qui fait le lien entre les moqueries de Noé et celles de Maxime à l'école",
-      "La nuit de la grande vague — l'arche tremble mais tient bon grâce à la prière de Noé",
-      "Le moment où la pluie s arrête enfin — silence puis joie",
-      "La colombe qui revient avec le rameau d'olivier",
-      "L arc-en-ciel comme promesse — Noémie court à la fenêtre chercher un vrai arc-en-ciel"
-    ],
-    "evolutions_personnages": "Antoine est touché par le courage de Noé face aux moqueries. Il fait le lien avec Maxime qui se moque de lui à l'école quand il lève la main. Il comprend que le vrai courage, c'est de faire ce qui est juste même quand on se moque de vous. Il promet d être courageux comme Noé. Noémie développe son empathie pour les animaux et sa curiosité.",
-    "quiz": {
-      "facile": [
-        "Comment s'appelle le grand bateau que Noé a construit ?",
-        "Combien de jours et de nuits la pluie a-t-elle duré ?",
-        "Quel oiseau a rapporté un rameau d'olivier à Noé ?"
-      ],
-      "avance": [
-        "Pourquoi Dieu a-t-il choisi Noé parmi tous les hommes ?",
-        "Que symbolise l'arc-en-ciel dans l'histoire de Noé ?",
-        "Combien de personnes étaient dans l'arche avec Noé ?"
-      ]
-    },
-    "segments": [
-      {
-        "id": "sfx_001",
-        "personnage": "sfx",
-        "texte": "massive thunder crack very close, heavy rain intensifying rapidly, wind howling through trees, wood creaking under stress",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_001",
-        "personnage": "noemie",
-        "texte": "Papy ! Le ciel devient tout noir !",
-        "ton": "inquiet",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_002",
-        "personnage": "papy_babou",
-        "texte": "Tu sais, ma puce, il y a très très longtemps, il a plu bien plus fort que ça. Tellement fort que toute la terre a disparu sous l'eau.",
-        "ton": "mystérieux",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_003",
-        "personnage": "antoine",
-        "texte": "Toute la terre ? C'est pas possible !",
-        "ton": "enthousiaste",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "sfx_002",
-        "personnage": "sfx",
-        "texte": "magical whoosh transition, warm harp glissando dissolving storm into cozy crackling fireplace and gentle rain on windows",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_005",
-        "personnage": "sfx",
-        "texte": "rain pattering on windows, cozy fireplace crackling, clock ticking softly in background",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_004",
-        "personnage": "antoine",
-        "texte": "Il pleut tellement fort dehors. On peut même pas aller dans le jardin.",
-        "ton": "impatient",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_005",
-        "personnage": "noemie",
-        "texte": "Moi j'aime pas la pluie. Ça fait du bruit sur les fenêtres.",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_006",
-        "personnage": "papy_babou",
-        "texte": "Allons, allons, mes petits loups. La pluie, c'est pas si terrible. Venez vous installer près de la cheminée.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_007",
-        "personnage": "mamie_sonia",
-        "texte": "Mes petits chéris, j'ai préparé un chocolat chaud pour chacun. Avec de la cannelle, comme au Liban.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_008",
-        "personnage": "noemie",
-        "texte": "Merci Mamie ! Avec des chamallows dedans ?",
-        "ton": "excité",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_009",
-        "personnage": "mamie_sonia",
-        "texte": "Bien sûr ma puce, trois chamallows chacun. Et il y a un gâteau à l'orange qui refroidit dans la cuisine.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "sfx_006",
-        "personnage": "sfx",
-        "texte": "ceramic mugs clinking, liquid pouring, fabric rustling on leather sofa",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_005b",
-        "personnage": "sfx",
-        "texte": "leather sofa creaking softly, warm room with gentle draft from window, cat purring quietly, rain tapping on glass pane",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "sfx_005c",
-        "personnage": "sfx",
-        "texte": "warm cozy room with soft fireplace crackling, rain pattering on windows, comfortable indoor atmosphere, clock ticking softly",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 30.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_010",
-        "personnage": "antoine",
-        "texte": "Dis Papy, la dernière fois tu nous avais dit que les hommes avaient oublié Dieu. Et après ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_011",
-        "personnage": "papy_babou",
-        "texte": "Tu as une mémoire formidable, Antoine. Oui, je vous avais promis cette histoire. Et figurez-vous que c'est le jour parfait pour la raconter.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_012",
-        "personnage": "noemie",
-        "texte": "Pourquoi c'est le jour parfait ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_013",
-        "personnage": "papy_babou",
-        "texte": "Parce qu'il pleut, ma puce. Et dans cette histoire, il a plu bien plus fort que ça. Beaucoup, beaucoup plus fort. Pendant quarante jours et quarante nuits.",
-        "ton": "mystérieux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_014",
-        "personnage": "antoine",
-        "texte": "Quarante jours sans s'arrêter ? C'est incroyable !",
-        "ton": "enthousiaste",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_014b",
-        "personnage": "papy_babou",
-        "texte": "Et figurez-vous que quarante jours, c'est à peu près toute la durée des grandes vacances. Imaginez s'il pleuvait sans arrêt du premier au dernier jour des vacances !",
-        "ton": "espiègle",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_014c",
-        "personnage": "antoine",
-        "texte": "Toutes les vacances sous la pluie ? C'est la pire chose du monde !",
-        "ton": "dramatique",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_018",
-        "personnage": "papy_babou",
-        "texte": "Bravo, vous avez une mémoire formidable ! Dieu avait créé un monde magnifique. Les fleurs, les animaux, les étoiles, et les hommes. Mais après la Création, les hommes ont commencé à oublier toutes ces merveilles.",
-        "ton": "solennel",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_019",
-        "personnage": "noemie",
-        "texte": "Ils ont oublié les fleurs ?",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_020",
-        "personnage": "papy_babou",
-        "texte": "Ils ont oublié tout ce que Dieu avait fait pour eux. Ils sont devenus méchants, égoïstes. Ils se battaient entre eux, ils ne s'occupaient plus de la terre ni des animaux.",
-        "ton": "triste",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_021",
-        "personnage": "antoine",
-        "texte": "Et Dieu, il a fait quoi ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_022",
-        "personnage": "papy_babou",
-        "texte": "Dieu était très triste, mes petits loups. Tellement triste qu'il a regretté d'avoir créé les hommes. Vous imaginez ? Triste au point de regretter.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "seg_023",
-        "personnage": "noemie",
-        "texte": "Le pauvre, quand même.",
-        "ton": "triste",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_024",
-        "personnage": "papy_babou",
-        "texte": "Mais il y avait un homme, un seul, qui n'avait pas oublié. Un homme bon, juste, courageux. Il s'appelait Noé.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_007",
-        "personnage": "sfx",
-        "texte": "warm sustained pad chord slowly rising in volume, gentle resonant tone with soft shimmer",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_025",
-        "personnage": "antoine",
-        "texte": "Noé ? Comme le bateau de Noé ?",
-        "ton": "excité",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_026",
-        "personnage": "papy_babou",
-        "texte": "Exactement, mon grand ! L'arche de Noé. Dieu a regardé Noé et il a vu un homme qui prenait soin de sa famille, qui respectait les animaux, qui remerciait Dieu chaque jour.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_027",
-        "personnage": "papy_babou",
-        "texte": "Alors Dieu a parlé à Noé. Il lui a dit : Noé, les hommes sont devenus trop méchants. Je vais envoyer un grand déluge pour tout nettoyer. Mais toi, je vais te sauver.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_028",
-        "personnage": "noemie",
-        "texte": "C'est quoi un déluge, Papy ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_029",
-        "personnage": "papy_babou",
-        "texte": "Un déluge, ma puce, c'est une pluie gigantesque. Tellement de pluie que toute la terre est recouverte d'eau. Comme si la mer montait partout, partout, partout.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_007c",
-        "personnage": "sfx",
-        "texte": "warm indoor room ambiance continuing, soft fireplace crackling, rain still pattering on windows in background, comfortable evening atmosphere",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_030",
-        "personnage": "antoine",
-        "texte": "Et comment Noé allait se sauver ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_031",
-        "personnage": "papy_babou",
-        "texte": "Dieu lui a donné des instructions très précises. Il lui a dit : Construis un immense bateau. On l'appelle une arche. Elle doit faire cent trente-sept mètres de long.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_031b",
-        "personnage": "noemie",
-        "texte": "Mais Papy, c'est quoi une arche ? C'est un gros bateau pirate ?",
-        "ton": "curieux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_032",
-        "personnage": "antoine",
-        "texte": "Cent trente-sept mètres ? Mais c'est plus grand qu'un terrain de foot !",
-        "ton": "enthousiaste",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_033",
-        "personnage": "papy_babou",
-        "texte": "Tout à fait ! Imagine un bateau plus long qu'un terrain de football. Avec trois étages. Et Dieu a dit à Noé de le construire en bois de cyprès, un bois très solide.",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_033b",
-        "personnage": "papy_babou",
-        "texte": "Et figurez-vous que des scientifiques ont calculé que l'arche aurait pu transporter autant de choses que cinq cents wagons de train. Cinq cents !",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_033c",
-        "personnage": "antoine",
-        "texte": "Cinq cents wagons ? Mais c'est le plus gros bateau du monde !",
-        "ton": "enthousiaste",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_034",
-        "personnage": "mamie_sonia",
-        "texte": "Tu sais Antoine, le cyprès, c'est un arbre magnifique. Au Liban, il y a les fameux cèdres. Des arbres tellement grands et forts que les rois venaient de loin pour les utiliser.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_035",
-        "personnage": "antoine",
-        "texte": "Trop cool ! Mais Papy, Noé il savait construire un bateau ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_036",
-        "personnage": "papy_babou",
-        "texte": "Pas du tout ! Noé n'était pas un constructeur de bateaux. Mais il a fait confiance à Dieu, et il s'est mis au travail. Jour après jour, planche après planche.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_008",
-        "personnage": "sfx",
-        "texte": "hammer hitting wood rhythmically, saw cutting through timber, wood planks being stacked",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 18.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "sfx_007b",
-        "personnage": "sfx",
-        "texte": "outdoor construction site ambiance, distant wind blowing through scaffolding, occasional bird call, earth and gravel crunching underfoot, dry rustling leaves in breeze",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "sfx_008c",
-        "personnage": "sfx",
-        "texte": "outdoor daytime ambiance with distant crowd grunting and shuffling, occasional derisive laugh, dry wind across open field, scattered tool sounds in background",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_037",
-        "personnage": "papy_babou",
-        "texte": "Et devinez quoi ? Quand les voisins de Noé ont vu ce qu'il faisait, ils se sont moqués de lui. Ils le montraient du doigt et riaient.",
-        "ton": "dramatique",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_038",
-        "personnage": "noemie",
-        "texte": "C'est pas gentil de se moquer !",
-        "ton": "indigné",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_039",
-        "personnage": "papy_babou",
-        "texte": "Non, ce n'est pas gentil. Ils disaient : Regarde le vieux fou qui construit un bateau en plein milieu de la terre ! Il n'y a même pas de mer ici !",
-        "ton": "espiègle",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "sfx_008b",
-        "personnage": "sfx",
-        "texte": "crowd jeering and clapping mockingly, derisive slow clapping fading away, dismissive snorting sounds",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_040",
-        "personnage": "antoine",
-        "texte": "Et Noé, il a arrêté ?",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_041",
-        "personnage": "papy_babou",
-        "texte": "Jamais. Noé a continué. Chaque matin, il se levait et il construisait son arche. Les gens riaient, et lui, il clouait des planches. Ils se moquaient, et lui, il avançait.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_008d",
-        "personnage": "sfx",
-        "texte": "very quiet indoor room, soft clock ticking prominently, single fireplace ember pop, intimate evening silence",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 30.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "sfx_008e",
-        "personnage": "sfx",
-        "texte": "warm indoor room with gentle rain still tapping on window glass, leather sofa creaking softly, distant kettle whistle from kitchen",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_041b",
-        "personnage": "noemie",
-        "texte": "Il avait pas peur, Noé, Papy ?",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_042",
-        "personnage": "antoine",
-        "texte": "Comme un super-héros. Il avait pas peur de ce que les autres pensaient.",
-        "ton": "admiratif",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_043",
-        "personnage": "papy_babou",
-        "texte": "Tu sais, Antoine, le vrai courage, ce n'est pas de ne jamais avoir peur. C'est de faire ce qui est juste même quand tout le monde se moque de toi.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "sfx_008g",
-        "personnage": "sfx",
-        "texte": "very intimate quiet room ambiance, single soft fireplace ember crackling gently, barely audible clock ticking, warm still room tone",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_044",
-        "personnage": "antoine",
-        "texte": "C'est un peu comme Maxime à l'école. Il se moque de moi parce que je lève la main.",
-        "ton": "triste",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_044b",
-        "personnage": "antoine",
-        "texte": "Il dit que c'est pas cool de répondre aux questions.",
-        "ton": "triste",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_045",
-        "personnage": "papy_babou",
-        "texte": "Et toi, qu'est-ce que tu fais quand Maxime se moque ?",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_046",
-        "personnage": "antoine",
-        "texte": "Des fois j'arrête de lever la main. Pour pas qu'on se moque.",
-        "ton": "triste",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_047",
-        "personnage": "papy_babou",
-        "texte": "Et est-ce que Noé a arrêté de construire son arche parce qu'on se moquait de lui ?",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_048",
-        "personnage": "antoine",
-        "texte": "Non. Il a continué.",
-        "ton": "déterminé",
-        "rythme": "lent",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_008f",
-        "personnage": "sfx",
-        "texte": "very intimate room ambiance, cat purring softly nearby, slow fireplace crackling, faint wind outside window",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_049",
-        "personnage": "papy_babou",
-        "texte": "Tout à fait. Et c'est parce qu'il a continué que toute sa famille a été sauvée. Tu vois, mon grand, lever la main en classe, c'est un peu comme construire ton arche à toi.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_050",
-        "personnage": "mamie_sonia",
-        "texte": "Votre Papy a raison, même s'il exagère parfois un tout petit peu. Et tu sais, quand Papy était petit au Liban, les autres enfants se moquaient de son accent sénégalais. Mais il n'a jamais arrêté de parler.",
-        "ton": "espiègle",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_051",
-        "personnage": "noemie",
-        "texte": "Papy avait un accent rigolo ?",
-        "ton": "curieux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_052",
-        "personnage": "papy_babou",
-        "texte": "Pas rigolo, mademoiselle. Un accent magnifique ! Mais revenons à notre ami Noé. Après des mois et des mois de travail, l'arche était enfin terminée.",
-        "ton": "espiègle",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_009",
-        "personnage": "sfx",
-        "texte": "final hammer strike on wood with satisfying echo, tools being set down, deep wooden creak of large structure",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_009b",
-        "personnage": "sfx",
-        "texte": "warm outdoor afternoon ambiance, gentle breeze, distant birds chirping, soft earth footsteps approaching",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 18.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_053",
-        "personnage": "papy_babou",
-        "texte": "Et là, mes petits loups, c'est le moment le plus extraordinaire. Dieu a dit à Noé : Maintenant, fais entrer dans l'arche un couple de chaque animal. Un mâle et une femelle.",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_054",
-        "personnage": "noemie",
-        "texte": "Tous les animaux ? Même les girafes ?",
-        "ton": "excité",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_055",
-        "personnage": "papy_babou",
-        "texte": "Même les girafes ! Avec leur grand cou, elles ont dû baisser la tête pour passer sous la porte.",
-        "ton": "espiègle",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_055b",
-        "personnage": "noemie",
-        "texte": "C'est trop drôle les girafes !",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "sfx_010",
-        "personnage": "sfx",
-        "texte": "various animal sounds layered: elephant trumpet in distance, lion roar, birds chirping, horse neighing, sheep bleating",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 8.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_009c",
-        "personnage": "sfx",
-        "texte": "warm outdoor ambiance with various distant animal sounds, soft earth footsteps, gentle breeze through dry grass",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_059",
-        "personnage": "papy_babou",
-        "texte": "C'est Dieu qui les a guidés. Les animaux sont venus d'eux-mêmes, deux par deux, comme une grande procession silencieuse.",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_062",
-        "personnage": "mamie_sonia",
-        "texte": "Imagine un peu le spectacle, Noémie. Des centaines d'animaux qui marchent ensemble, en silence, vers ce grand bateau. C'était sûrement magnifique.",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_063",
-        "personnage": "noemie",
-        "texte": "Papy, c'est quand le goûter ?",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_064",
-        "personnage": "antoine",
-        "texte": "Noémie, laisse Papy finir ! Les animaux viennent d'entrer dans l'arche !",
-        "ton": "impatient",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_065",
-        "personnage": "papy_babou",
-        "texte": "Le gâteau de Mamie attend sagement dans la cuisine, ma puce. Il ne va pas s'envoler. Alors, quand tous les animaux furent entrés, Noé et sa famille sont montés à bord.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_066",
-        "personnage": "papy_babou",
-        "texte": "Sa femme, ses trois fils et leurs épouses. Huit personnes en tout. Et Dieu a fermé la porte de l'arche lui-même.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "sfx_011",
-        "personnage": "sfx",
-        "texte": "massive heavy wooden door slowly closing with deep creak, loud final thud echoing, iron latch locking with metallic clang",
-        "ton": "ambiance",
-        "pause_apres_ms": 400,
-        "duree_sfx_secondes": 5.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_067",
-        "personnage": "noemie",
-        "texte": "Ça fait un peu peur quand la porte se ferme.",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_068",
-        "personnage": "papy_babou",
-        "texte": "N'aie pas peur, ma puce. Derrière cette porte, Noé et sa famille étaient en sécurité. Dieu les protégeait.",
-        "ton": "rassurant",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_068b",
-        "personnage": "noemie",
-        "texte": "Comme nous avec Papy, on est en sécurité !",
-        "ton": "joyeux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_069",
-        "personnage": "papy_babou",
-        "texte": "Et alors, le ciel est devenu tout noir. Les nuages se sont rassemblés comme une armée immense. Et la pluie a commencé à tomber.",
-        "ton": "dramatique",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_012",
-        "personnage": "sfx",
-        "texte": "rain starting light then rapidly intensifying to torrential downpour, strong wind howling, thunder rolling continuously",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 15.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_070",
-        "personnage": "papy_babou",
-        "texte": "D'abord doucement, quelques gouttes. Puis de plus en plus fort. Et bientôt, c'était comme si le ciel entier se déversait sur la terre.",
-        "ton": "dramatique",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_071",
-        "personnage": "antoine",
-        "texte": "Et l'eau, elle montait haut ?",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_072",
-        "personnage": "papy_babou",
-        "texte": "L'eau montait, montait. Elle a recouvert les maisons, puis les arbres, puis les collines, puis même les plus hautes montagnes. La Bible dit que l'eau dépassait les sommets de sept mètres.",
-        "ton": "dramatique",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_072c",
-        "personnage": "papy_babou",
-        "texte": "Tu sais Antoine, si tu empilais la tour Eiffel, la Statue de la Liberté et le plus grand immeuble du monde les uns sur les autres, l'eau du déluge les aurait tous recouverts. Complètement engloutis.",
-        "ton": "dramatique",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_072d",
-        "personnage": "antoine",
-        "texte": "Même la tour Eiffel sous l'eau ? C'est le truc le plus dingue que j'ai jamais entendu !",
-        "ton": "enthousiaste",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "sfx_012d",
-        "personnage": "sfx",
-        "texte": "steady rain continuing on wooden hull, muffled thunder in far distance, water dripping inside, somber atmospheric pad",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_072b",
-        "personnage": "noemie",
-        "texte": "Même les montagnes ? Mais alors il y avait de l'eau partout partout ?",
-        "ton": "inquiet",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_073",
-        "personnage": "noemie",
-        "texte": "Et les méchants, Papy ? Ceux qui riaient ?",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_074",
-        "personnage": "papy_babou",
-        "texte": "Ils ont compris trop tard que Noé avait raison. Ils n'avaient pas écouté. Ils n'avaient pas voulu croire.",
-        "ton": "triste",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_074c",
-        "personnage": "papy_babou",
-        "texte": "Dieu était triste pour eux aussi, tu sais. Il avait essayé de les prévenir par Noé. Mais ils n'avaient pas voulu écouter.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_074b",
-        "personnage": "antoine",
-        "texte": "Ils auraient dû écouter Noé.",
-        "ton": "triste",
-        "rythme": "lent",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_075",
-        "personnage": "antoine",
-        "texte": "C'est triste quand même.",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_076",
-        "personnage": "papy_babou",
-        "texte": "Oui, c'est triste, mon grand. Mais c'est aussi une leçon. Il faut savoir écouter quand quelqu'un essaie de nous prévenir, même si on ne comprend pas tout de suite.",
-        "ton": "solennel",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_077",
-        "personnage": "papy_babou",
-        "texte": "La pluie a duré quarante jours et quarante nuits. Puis l'eau est restée encore longtemps, cent cinquante jours en tout. Et pendant tout ce temps, l'arche flottait sur les eaux, portée par les vagues.",
-        "ton": "dramatique",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_012b",
-        "personnage": "sfx",
-        "texte": "massive wave slamming against wooden hull with deep booming impact, ship timber groaning and cracking under stress, objects sliding and crashing inside, horses neighing in distress, continuous heavy rain on deck above",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "sfx_012b2",
-        "personnage": "sfx",
-        "texte": "abrupt near-silence after storm, only slow water dripping on wood, one distant animal whimper, creaking hull settling",
-        "ton": "ambiance",
-        "pause_apres_ms": 500,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_077b",
-        "personnage": "antoine",
-        "texte": "Papy, et si l'arche avait une fuite ? Et si l'eau entrait ?",
-        "ton": "inquiet",
-        "rythme": "rapide",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_077c",
-        "personnage": "papy_babou",
-        "texte": "Figure-toi que pendant la pire nuit de la tempête, une vague gigantesque a frappé l'arche. Tout a tremblé à l'intérieur. Les animaux criaient, le bois craquait de partout.",
-        "ton": "dramatique",
-        "rythme": "rapide",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_077d",
-        "personnage": "noemie",
-        "texte": "Et Noé, il a fait quoi ?",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "sfx_012e",
-        "personnage": "sfx",
-        "texte": "storm suddenly muffled and distant, deep low reverent sub-bass drone slowly swelling, all other sounds fading away to near silence",
-        "ton": "ambiance",
-        "pause_apres_ms": 400,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_077e",
-        "personnage": "papy_babou",
-        "texte": "Il a serré ses fils dans ses bras. Et il a prié. Il a dit : Seigneur, tu m'as promis. Je te fais confiance.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 600
-      },
-      {
-        "id": "sfx_012c",
-        "personnage": "sfx",
-        "texte": "storm gradually calming, wood settling with deep creak, waves becoming rhythmic and steady, distant thunder fading",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_077f",
-        "personnage": "papy_babou",
-        "texte": "Et l'arche a tenu bon. Le bois de cyprès n'a pas cédé. Pas une seule goutte d'eau n'est entrée.",
-        "ton": "rassurant",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_077g",
-        "personnage": "antoine",
-        "texte": "Parce que c'est Dieu qui lui avait dit comment la construire !",
-        "ton": "enthousiaste",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "sfx_013",
-        "personnage": "sfx",
-        "texte": "large wooden ship creaking and swaying in heavy waves, water splashing against hull, wind howling around structure",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_013b",
-        "personnage": "sfx",
-        "texte": "wooden ship interior creaking rhythmically, muffled rain on hull above, distant animal sounds echoing inside large wooden structure, hay rustling",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "sfx_013c",
-        "personnage": "sfx",
-        "texte": "wooden hull creaking rhythmically with waves, hay rustling softly, occasional distant animal sound echoing in large enclosed space, water dripping slowly",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "sfx_013d",
-        "personnage": "sfx",
-        "texte": "wooden hull creaking softly, hay rustling, distant muffled animal sounds inside large enclosed space, slow water dripping, calm enclosed atmosphere",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_078",
-        "personnage": "noemie",
-        "texte": "Et dans l'arche, les animaux ils faisaient quoi ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_079",
-        "personnage": "papy_babou",
-        "texte": "Noé et sa famille s'occupaient d'eux. Ils les nourrissaient, les soignaient. Imagine le travail ! Des centaines d'animaux à nourrir chaque jour.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_079b",
-        "personnage": "noemie",
-        "texte": "Ils faisaient des câlins aux animaux aussi ?",
-        "ton": "curieux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_079c",
-        "personnage": "noemie",
-        "texte": "Papy, et les moutons, ils comptaient des humains pour s'endormir ?",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_079d",
-        "personnage": "antoine",
-        "texte": "C'est les humains qui comptent les moutons, Noémie !",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_079e",
-        "personnage": "noemie",
-        "texte": "Ben justement, dans l'arche c'est à l'envers ! C'est les moutons les chefs !",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_080",
-        "personnage": "antoine",
-        "texte": "Papy, tu savais qu'un éléphant mange cent cinquante kilos de nourriture par jour ? Noé devait avoir beaucoup de réserves !",
-        "ton": "enthousiaste",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_080b",
-        "personnage": "noemie",
-        "texte": "Papy, et les puces des chiens, elles comptent comme des animaux ? Parce que sinon Noé il a oublié personne ?",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_080c",
-        "personnage": "antoine",
-        "texte": "Noémie, les puces c'est des insectes, pas des animaux !",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_080d",
-        "personnage": "papy_babou",
-        "texte": "En fait, Antoine, les puces sont bien des animaux. Et je suis sûr que Noé aurait préféré les oublier, celles-là !",
-        "ton": "espiègle",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_081",
-        "personnage": "papy_babou",
-        "texte": "C'est vrai ! Dieu avait pensé à tout. L'arche était remplie de foin, de grains, de fruits pour nourrir tout ce petit monde pendant des mois.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_013e",
-        "personnage": "sfx",
-        "texte": "cozy indoor evening ambiance, soft fireplace crackling steadily, warm comfortable room tone, clock ticking gently in background",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_082",
-        "personnage": "antoine",
-        "texte": "Dis Papy, est-ce que le bébé de Maman aura peur de l'orage quand il sera né ?",
-        "ton": "inquiet",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_083",
-        "personnage": "papy_babou",
-        "texte": "Peut-être un petit peu au début, mon grand. Mais tu sais quoi ? Un grand frère, c'est là pour protéger. Comme Noé protégeait tous les animaux dans son arche.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_084",
-        "personnage": "antoine",
-        "texte": "Alors je serai son arche à moi tout seul !",
-        "ton": "déterminé",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_085",
-        "personnage": "noemie",
-        "texte": "Et moi je serai quoi ?",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_086",
-        "personnage": "papy_babou",
-        "texte": "Toi, tu seras la colombe, ma puce. Parce que dans l'histoire, c'est justement une colombe qui va tout changer.",
-        "ton": "mystérieux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_014",
-        "personnage": "sfx",
-        "texte": "rain gradually fading to light drizzle, wind dying down to gentle breeze, last drops falling on wood, low atmospheric pad settling",
-        "ton": "ambiance",
-        "pause_apres_ms": 500,
-        "duree_sfx_secondes": 8.0,
-        "mode": "insert"
-      },
-      {
-        "id": "sfx_014b",
-        "personnage": "sfx",
-        "texte": "calm open water surface, gentle lapping waves against wooden hull, light breeze, distant seabird call",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_087",
-        "personnage": "papy_babou",
-        "texte": "Et puis un jour, après quarante jours et quarante nuits, la pluie s'est arrêtée.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "seg_088",
-        "personnage": "noemie",
-        "texte": "Enfin ! C'est fini la pluie !",
-        "ton": "soulagé",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_089",
-        "personnage": "papy_babou",
-        "texte": "Mais l'eau était encore partout. De l'eau à perte de vue, comme un océan infini. Noé ne voyait ni terre, ni montagne, ni arbre. Rien que de l'eau.",
-        "ton": "dramatique",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "seg_090",
-        "personnage": "papy_babou",
-        "texte": "Alors Noé a eu une idée. Il a ouvert une fenêtre de l'arche et il a envoyé un corbeau pour voir s'il y avait de la terre quelque part.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_015",
-        "personnage": "sfx",
-        "texte": "crow cawing loudly, wing flapping taking flight, fading into distance",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_091",
-        "personnage": "antoine",
-        "texte": "Et il a trouvé de la terre, le corbeau ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_092",
-        "personnage": "papy_babou",
-        "texte": "Le corbeau est parti et il n'est pas revenu. Il volait d'un côté et de l'autre sans trouver où se poser. Alors Noé a envoyé une colombe.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_016",
-        "personnage": "sfx",
-        "texte": "gentle dove cooing softly, light wing flutter taking off delicately",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 3.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_093",
-        "personnage": "papy_babou",
-        "texte": "La première fois, la colombe est revenue bredouille. Pas de terre. Noé a attendu sept jours et il l'a renvoyée.",
-        "ton": "chaleureux",
-        "rythme": "lent",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_094",
-        "personnage": "noemie",
-        "texte": "Et la deuxième fois ?",
-        "ton": "curieux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_095",
-        "personnage": "papy_babou",
-        "texte": "La deuxième fois, la colombe est revenue le soir avec quelque chose dans son bec. Devinez quoi.",
-        "ton": "mystérieux",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_096",
-        "personnage": "noemie",
-        "texte": "Un gâteau ?",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_097",
-        "personnage": "antoine",
-        "texte": "Mais non, Noémie ! Une feuille ? Un bout de bois ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_098",
-        "personnage": "papy_babou",
-        "texte": "Un rameau d'olivier ! Une petite branche toute fraîche avec des feuilles vertes. Ça voulait dire que quelque part, un arbre avait la tête hors de l'eau. La terre commençait à réapparaître !",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_098b",
-        "personnage": "antoine",
-        "texte": "Papy, est-ce qu'on a retrouvé l'arche de Noé ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_098c",
-        "personnage": "papy_babou",
-        "texte": "Des explorateurs ont cherché pendant des siècles sur le mont Ararat, en Turquie. La Bible dit que c'est là que l'arche s'est posée. Personne ne l'a encore trouvée, mais des gens continuent de chercher.",
-        "ton": "mystérieux",
-        "rythme": "normal",
-        "pause_apres_ms": 350
-      },
-      {
-        "id": "sfx_017",
-        "personnage": "sfx",
-        "texte": "soft wing flutter approaching from far distance, gentle bird landing on wooden railing with light tap, warm hopeful string chord swelling gently",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_099",
-        "personnage": "mamie_sonia",
-        "texte": "Et vous savez, mes petits chéris, encore aujourd'hui la colombe avec le rameau d'olivier est le symbole de la paix dans le monde entier.",
-        "ton": "solennel",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_100",
-        "personnage": "papy_babou",
-        "texte": "Noé a attendu encore sept jours et il a envoyé la colombe une troisième fois. Et cette fois, elle n'est pas revenue.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_101",
-        "personnage": "noemie",
-        "texte": "Non ! Elle s'est perdue ?",
-        "ton": "inquiet",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_102",
-        "personnage": "papy_babou",
-        "texte": "Non, ma puce ! Si la colombe n'est pas revenue, c'est qu'elle avait trouvé un endroit sec où vivre. La terre était de retour !",
-        "ton": "joyeux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_103",
-        "personnage": "papy_babou",
-        "texte": "Alors Dieu a dit à Noé : Sors de l'arche, toi, ta famille, et tous les animaux. Allez, vivez, et remplissez la terre à nouveau !",
-        "ton": "solennel",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_018",
-        "personnage": "sfx",
-        "texte": "massive wooden door creaking open, birds chirping joyfully, animals calling and moving, footsteps on wet earth",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_104",
-        "personnage": "noemie",
-        "texte": "Les animaux devaient être tellement contents de sortir !",
-        "ton": "joyeux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_105",
-        "personnage": "papy_babou",
-        "texte": "Bien sûr ! Imagine les oiseaux qui s'envolent dans le ciel, les chevaux qui galopent dans les prairies, les lapins qui sautent dans l'herbe toute neuve.",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_105b",
-        "personnage": "noemie",
-        "texte": "Et les papillons ! Ils volent partout !",
-        "ton": "joyeux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_105d",
-        "personnage": "noemie",
-        "texte": "Papy, et les escargots ? Ils mettaient trop longtemps à sortir ?",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_105c",
-        "personnage": "papy_babou",
-        "texte": "Noé a respiré l'air frais pour la première fois depuis des mois. Et il a senti l'herbe mouillée sous ses pieds. La terre était neuve, propre, comme un cadeau tout juste déballé.",
-        "ton": "émerveillé",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_106",
-        "personnage": "antoine",
-        "texte": "Et les girafes qui lèvent la tête et voient le ciel bleu !",
-        "ton": "joyeux",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_107",
-        "personnage": "papy_babou",
-        "texte": "Et là, Noé a levé les yeux vers le ciel. Et il a vu la plus belle chose qu'il ait jamais vue.",
-        "ton": "émerveillé",
-        "rythme": "lent",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "sfx_019",
-        "personnage": "sfx",
-        "texte": "shimmering chimes cascading upward, warm resonant bell tones ascending gently, sparkling high-frequency arpeggios with soft reverb tail",
-        "ton": "ambiance",
-        "pause_apres_ms": 400,
-        "duree_sfx_secondes": 6.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_108",
-        "personnage": "noemie",
-        "texte": "Un arc-en-ciel !",
-        "ton": "excité",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_109",
-        "personnage": "papy_babou",
-        "texte": "Exactement, ma puce ! Un immense arc-en-ciel qui traversait tout le ciel d'un bout à l'autre. Rouge, orange, jaune, vert, bleu, violet. Magnifique.",
-        "ton": "émerveillé",
-        "rythme": "lent",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_110",
-        "personnage": "papy_babou",
-        "texte": "Et Dieu a dit à Noé : Cet arc-en-ciel est ma promesse. Plus jamais je n'enverrai un déluge pour détruire la terre. Chaque fois que tu verras un arc-en-ciel, souviens-toi de cette promesse.",
-        "ton": "solennel",
-        "rythme": "lent",
-        "pause_apres_ms": 500
-      },
-      {
-        "id": "seg_111",
-        "personnage": "noemie",
-        "texte": "C'est vrai, Papy ? Les arcs-en-ciel c'est des promesses ?",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_112",
-        "personnage": "papy_babou",
-        "texte": "C'est exactement ça. Et la prochaine fois que tu en verras un, tu pourras penser à Noé.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_019b",
-        "personnage": "sfx",
-        "texte": "magical whoosh transition with warm harp glissando, settling into cozy indoor ambiance with soft crackling fire",
-        "ton": "ambiance",
-        "pause_apres_ms": 400,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_113",
-        "personnage": "noemie",
-        "texte": "Papy, regarde ! Il pleut plus dehors ! Tu crois qu'il y a un arc-en-ciel ?",
-        "ton": "excité",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "sfx_020",
-        "personnage": "sfx",
-        "texte": "small quick footsteps on wooden floor, fabric curtain swooshing aside, birds chirping outside after rain",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_114",
-        "personnage": "antoine",
-        "texte": "Papy, tu savais que l'arc-en-ciel c'est la lumière du soleil qui se sépare en passant dans les gouttes de pluie ? On l'a appris en classe.",
-        "ton": "enthousiaste",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_115",
-        "personnage": "papy_babou",
-        "texte": "C'est tout à fait vrai, mon grand. La lumière blanche contient toutes les couleurs. Et les gouttes de pluie les séparent comme un prisme magique. C'est pas merveilleux, ça ?",
-        "ton": "émerveillé",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_116",
-        "personnage": "mamie_sonia",
-        "texte": "Mon chéri, c'est l'heure du gâteau à l'orange. On peut écouter la fin en mangeant, non ?",
-        "ton": "espiègle",
-        "rythme": "normal",
-        "pause_apres_ms": 250
-      },
-      {
-        "id": "seg_117",
-        "personnage": "noemie",
-        "texte": "Oui ! Le gâteau ! Le gâteau !",
-        "ton": "excité",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "sfx_021",
-        "personnage": "sfx",
-        "texte": "plates clinking, cake being sliced, utensils tapping on ceramic",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 4.0,
-        "mode": "insert"
-      },
-      {
-        "id": "seg_118",
-        "personnage": "papy_babou",
-        "texte": "Alors mes petits loups, maintenant c'est le petit mot de Papy. Qu'est-ce que vous avez retenu de l'histoire de Noé ?",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "sfx_020c",
-        "personnage": "sfx",
-        "texte": "warm cozy room ambiance, soft fireplace crackling gently, peaceful evening atmosphere with distant clock",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 25.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_119",
-        "personnage": "antoine",
-        "texte": "Que même si on se moque de toi, faut pas arrêter si on sait qu'on a raison.",
-        "ton": "déterminé",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_120",
-        "personnage": "noemie",
-        "texte": "Et que les arcs-en-ciel c'est des promesses !",
-        "ton": "joyeux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_121",
-        "personnage": "papy_babou",
-        "texte": "Formidable. Et moi j'ajouterai une chose. Noé a eu le courage de faire confiance à Dieu, même quand personne ne le comprenait. Et vous savez quoi ? Le courage, c'est contagieux.",
-        "ton": "solennel",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_122",
-        "personnage": "papy_babou",
-        "texte": "Antoine, la prochaine fois que Maxime se moque, lève quand même la main. Et tu verras, peut-être que d'autres enfants oseront la lever aussi, grâce à toi.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_123",
-        "personnage": "antoine",
-        "texte": "Promis, Papy. Je serai courageux comme Noé.",
-        "ton": "déterminé",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_021b",
-        "personnage": "sfx",
-        "texte": "warm cozy evening room, soft fireplace crackling low, peaceful atmosphere, distant clock ticking gently, comfortable indoor ambiance settling",
-        "ton": "ambiance",
-        "pause_apres_ms": 200,
-        "duree_sfx_secondes": 20.0,
-        "mode": "overlay"
-      },
-      {
-        "id": "seg_124",
-        "personnage": "papy_babou",
-        "texte": "Et la prochaine fois que vous viendrez, je vous raconterai l'histoire d'un homme qui a tout quitté. Sa maison, son pays, sa famille. Il est parti sans savoir où il allait. Et il avait soixante-quinze ans.",
-        "ton": "mystérieux",
-        "rythme": "normal",
-        "pause_apres_ms": 400
-      },
-      {
-        "id": "seg_125",
-        "personnage": "antoine",
-        "texte": "Tout quitté ? Pourquoi ?",
-        "ton": "curieux",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_126",
-        "personnage": "papy_babou",
-        "texte": "Ça, mes petits loups, ce sera pour la prochaine fois.",
-        "ton": "espiègle",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_127",
-        "personnage": "noemie",
-        "texte": "Mais Papy, tu promets pour la prochaine fois ?",
-        "ton": "espiègle",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_128",
-        "personnage": "papy_babou",
-        "texte": "Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
-        "ton": "chaleureux",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "seg_129",
-        "personnage": "antoine",
-        "texte": "Merci Papy ! C'était trop bien l'histoire de Noé !",
-        "ton": "joyeux",
-        "rythme": "normal",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_130",
-        "personnage": "noemie",
-        "texte": "Merci Papy Babou ! Et merci Mamie pour le gâteau à l'orange !",
-        "ton": "joyeux",
-        "rythme": "rapide",
-        "pause_apres_ms": 200
-      },
-      {
-        "id": "seg_131",
-        "personnage": "mamie_sonia",
-        "texte": "De rien mes petits chéris. Et si vous voyez un arc-en-ciel sur la route, faites un voeu pour Noé.",
-        "ton": "tendre",
-        "rythme": "normal",
-        "pause_apres_ms": 300
-      },
-      {
-        "id": "sfx_022",
-        "personnage": "sfx",
-        "texte": "small footsteps on gravel fading away, car doors closing, engine starting and slowly driving off, evening birds chirping after rain",
-        "ton": "ambiance",
-        "pause_apres_ms": 300,
-        "duree_sfx_secondes": 5.0,
-        "mode": "insert"
-      }
-    ]
-  },
-  "validation_directeur": {
-    "directeur": {
-      "note_globale": 8.4,
-      "verdict": "feu_vert",
-      "synthese": "Un excellent deuxième épisode qui installe parfaitement les rituels du podcast et exploite le thème de Noé avec intelligence. Le parallèle Antoine/Maxime est le point fort émotionnel — c'est exactement le type de moment qui crée de la fidélisation chez les 8-10 ans. L'arrivée de Mamie Sonia est naturelle et bien dosée. Le cold open dramatique puis la bascule vers le salon cosy créent un contraste sonore immédiat qui capte l'attention.",
-      "axes": {
-        "immersion_sonore": {
-          "note": 7.5,
-          "commentaire": "22 SFX au total — bon volume. Le cold open tempête est immersif (sfx_001 à 003). La transition magique vers le salon (sfx_004) fonctionne. Bons moments ponctuels : construction arche (sfx_008), porte qui se ferme (sfx_011), procession animaux (sfx_010). POINTS FAIBLES : seulement 3 overlays sur 22 SFX — le ratio est déséquilibré. Il manque un overlay d'ambiance pendant la scène des moqueries (seg_037-052, 17 segments sans SFX = le plus grand trou sonore du script). L'ambiance_par_acte [dramatique, tendu, joyeux] manque de nuance — \"tendu\" et \"dramatique\" sont trop proches, \"mystérieux\" aurait mieux fonctionné pour l'acte 1 (construction + moqueries). Il manque un SFX de transition entre le récit biblique et le retour au salon pour le \"petit mot de Papy\"."
-        },
-        "rythme_accroche": {
-          "note": 8.5,
-          "commentaire": "Le cold open est excellent — 3 segments de narration dramatique pure avec SFX de tempête, puis transition magique vers le salon. L'auditeur est happé en 30 secondes. Le lien avec E01 (\"Vous vous souvenez de la dernière fois ?\") est naturel et rapide. Le running gag Noémie/goûter est bien placé (seg_063 au milieu de la procession des animaux). Le rythme est soutenu tout au long avec de bons mini-cliffhangers (\"Devinez quoi\" pour le rameau d'olivier). La séquence colombe en 3 envois crée un suspense progressif efficace. Seul léger temps mort : la section dans l'arche pendant le déluge (seg_077-081) pourrait être plus dynamique."
-        },
-        "emotion_personnages": {
-          "note": 9.0,
-          "commentaire": "Le moment Antoine/Maxime (seg_044-049) est le coeur émotionnel de l'épisode — brillamment amené par le parallèle avec Noé. La réponse de Papy (\"lever la main en classe, c'est construire ton arche\") est mémorable et quotable. Mamie Sonia a 8 répliques bien distribuées : chocolat chaud libanais, cèdres du Liban, anecdote de l'accent de Papy, symbole de la colombe — chaque intervention enrichit sans surcharger. Noémie est parfaite en chipie (\"Un gâteau ?\", \"Papy avait un accent rigolo ?\") et en peureuse (porte qui se ferme). La dynamique frère-soeur (\"Chut Noémie !\") est naturelle. Le fil rouge bébé (\"je serai son arche\") est touchant sans être forcé."
-        },
-        "valeur_educative": {
-          "note": 8.5,
-          "commentaire": "Récit biblique fidèle et complet : corruption de l'humanité, choix de Noé, dimensions de l'arche, animaux deux par deux, 40 jours, corbeau puis colombe, rameau d'olivier, arc-en-ciel comme alliance. Fun facts bien calibrés : arche vs terrain de foot (parle aux enfants), éléphant = 150 kg/jour, prisme et arc-en-ciel, colombe = symbole de paix. Morale doublement portée : courage face aux moqueries + persévérance. Le lien avec la vraie vie d'Antoine la rend concrète et applicable. Quiz bien construit avec niveaux facile/avancé. Petit bémol : on ne mentionne pas que l'eau est restée 150 jours (seulement les 40 jours de pluie) — détail biblique mineur mais que Sophie (parent catho) pourrait noter."
-        },
-        "compatibilite_voix_ia": {
-          "note": 9.0,
-          "commentaire": "Aucune onomatopée dans les textes parlés. Tous les segments respectent les limites de mots (max 60 adultes, max 40 enfants vérifiés). Nombres en toutes lettres (quarante, cent trente-sept, sept, huit). Pas d'ellipses. Bonne variété de tons : dramatique, mystérieux, chaleureux, solennel, espiègle, émerveillé, triste, rassurant, déterminé. Les rythmes alternent bien entre lent/normal/rapide. Les pauses sont bien calibrées (200-500ms). Les segments courts de Noémie (5-10 mots) passeront très bien en voix IA enfant."
-        },
-        "qualite_sfx": {
-          "note": 7.5,
-          "commentaire": "Descriptions en anglais, spécifiques et reproductibles. Bons exemples : \"massive heavy wooden door slowly closing with deep creak, loud final thud echoing, iron latch locking with metallic clang\" (sfx_011), \"hammer hitting wood rhythmically, saw cutting through timber\" (sfx_008). Les durées sont cohérentes (3-10s). Cependant : ratio overlay/insert déséquilibré (3/19 — il faudrait plus d'overlays d'ambiance). Le trou de 17 segments sans SFX (seg_037-060) est trop long. sfx_016 et sfx_017 sont trop similaires (\"gentle dove cooing\" deux fois — manque de variété). Il manque un overlay d'ambiance dans l'arche pendant le déluge (craquements du bois, animaux au loin).",
-          "sfx_problematiques": [
-            {
-              "id": "sfx_017",
-              "probleme": "Trop similaire à sfx_016 (\"gentle dove cooing\" x2)",
-              "suggestion": "soft wing flutter approaching, delicate bird landing on wooden railing, warm hopeful string chord swelling"
+      "episode": {
+            "titre": "Noé et le déluge — l'arche qui a sauvé le monde",
+            "numero": 2,
+            "saison": 1,
+            "type": "standard",
+            "duree_cible_minutes": 18,
+            "ambiance": "dramatique",
+            "ambiance_par_acte": [
+                  "mystere",
+                  "dramatique",
+                  "joyeux"
+            ],
+            "morale": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
+            "personnages_presents": [
+                  "papy_babou",
+                  "antoine",
+                  "noemie",
+                  "mamie_sonia"
+            ],
+            "moments_cles": [
+                  "L'arrivée au salon un jour de pluie — la pluie dehors amène naturellement l'histoire de Noé",
+                  "Noémie qui veut savoir comment les girafes sont entrées dans l'arche",
+                  "Antoine qui fait le lien entre les moqueries de Noé et celles de Maxime à l'école",
+                  "La nuit de la grande vague — l'arche tremble mais tient bon grâce à la prière de Noé",
+                  "Le moment où la pluie s arrête enfin — silence puis joie",
+                  "La colombe qui revient avec le rameau d'olivier",
+                  "L arc-en-ciel comme promesse — Noémie court à la fenêtre chercher un vrai arc-en-ciel"
+            ],
+            "evolutions_personnages": "Antoine est touché par le courage de Noé face aux moqueries. Il fait le lien avec Maxime qui se moque de lui à l'école quand il lève la main. Il comprend que le vrai courage, c'est de faire ce qui est juste même quand on se moque de vous. Il promet d être courageux comme Noé. Noémie développe son empathie pour les animaux et sa curiosité.",
+            "quiz": {
+                  "facile": [
+                        "Comment s'appelle le grand bateau que Noé a construit ?",
+                        "Combien de jours et de nuits la pluie a-t-elle duré ?",
+                        "Quel oiseau a rapporté un rameau d'olivier à Noé ?"
+                  ],
+                  "avance": [
+                        "Pourquoi Dieu a-t-il choisi Noé parmi tous les hommes ?",
+                        "Que symbolise l'arc-en-ciel dans l'histoire de Noé ?",
+                        "Combien de personnes étaient dans l'arche avec Noé ?"
+                  ]
             },
-            {
-              "id": "zone seg_037-060",
-              "probleme": "17 segments consécutifs sans SFX — trou sonore pendant les moqueries et la procession des animaux",
-              "suggestion": "Ajouter un overlay d'ambiance extérieure avec crowd murmuring et un insert de crowd laughing mockingly pendant les moqueries (seg_039)"
+            "segments": [
+                  {
+                        "id": "sfx_001",
+                        "personnage": "sfx",
+                        "texte": "massive thunder crack very close, heavy rain intensifying rapidly, wind howling through trees, wood creaking under stress",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 6.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_001",
+                        "personnage": "noemie",
+                        "texte": "Papy ! Le ciel devient tout noir !",
+                        "ton": "inquiet",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_002",
+                        "personnage": "papy_babou",
+                        "texte": "Tu sais, ma puce, il y a très très longtemps, il a plu bien plus fort que ça. Tellement fort que toute la terre a disparu sous l'eau.",
+                        "ton": "mystérieux",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_003",
+                        "personnage": "antoine",
+                        "texte": "Toute la terre ? C'est pas possible !",
+                        "ton": "enthousiaste",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "sfx_002",
+                        "personnage": "sfx",
+                        "texte": "magical whoosh transition, warm harp glissando dissolving storm into cozy crackling fireplace and gentle rain on windows",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "sfx_005",
+                        "personnage": "sfx",
+                        "texte": "rain pattering on windows, cozy fireplace crackling, clock ticking softly in background",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_004",
+                        "personnage": "antoine",
+                        "texte": "Il pleut tellement fort dehors. On peut même pas aller dans le jardin.",
+                        "ton": "impatient",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_005",
+                        "personnage": "noemie",
+                        "texte": "Moi j'aime pas la pluie. Ça fait du bruit sur les fenêtres.",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_006",
+                        "personnage": "papy_babou",
+                        "texte": "Allons, allons, mes petits loups. La pluie, c'est pas si terrible. Venez vous installer près de la cheminée.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_007",
+                        "personnage": "mamie_sonia",
+                        "texte": "Mes petits chéris, j'ai préparé un chocolat chaud pour chacun. Avec de la cannelle, comme au Liban.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_008",
+                        "personnage": "noemie",
+                        "texte": "Merci Mamie ! Avec des chamallows dedans ?",
+                        "ton": "excité",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_009",
+                        "personnage": "mamie_sonia",
+                        "texte": "Bien sûr ma puce, trois chamallows chacun. Et il y a un gâteau à l'orange qui refroidit dans la cuisine.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "sfx_006",
+                        "personnage": "sfx",
+                        "texte": "ceramic mugs clinking, liquid pouring, fabric rustling on leather sofa",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "sfx_005b",
+                        "personnage": "sfx",
+                        "texte": "leather sofa creaking softly, warm room with gentle draft from window, cat purring quietly, rain tapping on glass pane",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 25.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "sfx_005c",
+                        "personnage": "sfx",
+                        "texte": "warm cozy room with soft fireplace crackling, rain pattering on windows, comfortable indoor atmosphere, clock ticking softly",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 30.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_010",
+                        "personnage": "antoine",
+                        "texte": "Dis Papy, la dernière fois tu nous avais dit que les hommes avaient oublié Dieu. Et après ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_011",
+                        "personnage": "papy_babou",
+                        "texte": "Tu as une mémoire formidable, Antoine. Oui, je vous avais promis cette histoire. Et figurez-vous que c'est le jour parfait pour la raconter.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_012",
+                        "personnage": "noemie",
+                        "texte": "Pourquoi c'est le jour parfait ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_013",
+                        "personnage": "papy_babou",
+                        "texte": "Parce qu'il pleut, ma puce. Et dans cette histoire, il a plu bien plus fort que ça. Beaucoup, beaucoup plus fort. Pendant quarante jours et quarante nuits.",
+                        "ton": "mystérieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_014",
+                        "personnage": "antoine",
+                        "texte": "Quarante jours sans s'arrêter ? C'est incroyable !",
+                        "ton": "enthousiaste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_014b",
+                        "personnage": "papy_babou",
+                        "texte": "Et figurez-vous que quarante jours, c'est à peu près toute la durée des grandes vacances. Imaginez s'il pleuvait sans arrêt du premier au dernier jour des vacances !",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_014c",
+                        "personnage": "antoine",
+                        "texte": "Toutes les vacances sous la pluie ? C'est la pire chose du monde !",
+                        "ton": "dramatique",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_018",
+                        "personnage": "papy_babou",
+                        "texte": "Bravo, vous avez une mémoire formidable ! Dieu avait créé un monde magnifique. Les fleurs, les animaux, les étoiles, et les hommes. Mais après la Création, les hommes ont commencé à oublier toutes ces merveilles.",
+                        "ton": "solennel",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_019",
+                        "personnage": "noemie",
+                        "texte": "Ils ont oublié les fleurs ?",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_020",
+                        "personnage": "papy_babou",
+                        "texte": "Ils ont oublié tout ce que Dieu avait fait pour eux. Ils sont devenus méchants, égoïstes. Ils se battaient entre eux, ils ne s'occupaient plus de la terre ni des animaux.",
+                        "ton": "triste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_021",
+                        "personnage": "antoine",
+                        "texte": "Et Dieu, il a fait quoi ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_022",
+                        "personnage": "papy_babou",
+                        "texte": "Dieu était très triste, mes petits loups. Tellement triste qu'il a regretté d'avoir créé les hommes. Vous imaginez ? Triste au point de regretter.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 500
+                  },
+                  {
+                        "id": "seg_023",
+                        "personnage": "noemie",
+                        "texte": "Le pauvre, quand même.",
+                        "ton": "triste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_024",
+                        "personnage": "papy_babou",
+                        "texte": "Mais il y avait un homme, un seul, qui n'avait pas oublié. Un homme bon, juste, courageux. Il s'appelait Noé.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "sfx_007",
+                        "personnage": "sfx",
+                        "texte": "warm sustained pad chord slowly rising in volume, gentle resonant tone with soft shimmer",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_025",
+                        "personnage": "antoine",
+                        "texte": "Noé ? Comme le bateau de Noé ?",
+                        "ton": "excité",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_026",
+                        "personnage": "papy_babou",
+                        "texte": "Exactement, mon grand ! L'arche de Noé. Dieu a regardé Noé et il a vu un homme qui prenait soin de sa famille, qui respectait les animaux, qui remerciait Dieu chaque jour.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_027",
+                        "personnage": "papy_babou",
+                        "texte": "Alors Dieu a parlé à Noé. Il lui a dit : Noé, les hommes sont devenus trop méchants. Je vais envoyer un grand déluge pour tout nettoyer. Mais toi, je vais te sauver.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_028",
+                        "personnage": "noemie",
+                        "texte": "C'est quoi un déluge, Papy ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_029",
+                        "personnage": "papy_babou",
+                        "texte": "Un déluge, ma puce, c'est une pluie gigantesque. Tellement de pluie que toute la terre est recouverte d'eau. Comme si la mer montait partout, partout, partout.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_007c",
+                        "personnage": "sfx",
+                        "texte": "warm indoor room ambiance continuing, soft fireplace crackling, rain still pattering on windows in background, comfortable evening atmosphere",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 25.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_030",
+                        "personnage": "antoine",
+                        "texte": "Et comment Noé allait se sauver ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_031",
+                        "personnage": "papy_babou",
+                        "texte": "Dieu lui a donné des instructions très précises. Il lui a dit : Construis un immense bateau. On l'appelle une arche. Elle doit faire cent trente-sept mètres de long.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_031b",
+                        "personnage": "noemie",
+                        "texte": "Mais Papy, c'est quoi une arche ? C'est un gros bateau pirate ?",
+                        "ton": "curieux",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_032",
+                        "personnage": "antoine",
+                        "texte": "Cent trente-sept mètres ? Mais c'est plus grand qu'un terrain de foot !",
+                        "ton": "enthousiaste",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_033",
+                        "personnage": "papy_babou",
+                        "texte": "Tout à fait ! Imagine un bateau plus long qu'un terrain de football. Avec trois étages. Et Dieu a dit à Noé de le construire en bois de cyprès, un bois très solide.",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_033b",
+                        "personnage": "papy_babou",
+                        "texte": "Et figurez-vous que des scientifiques ont calculé que l'arche aurait pu transporter autant de choses que cinq cents wagons de train. Cinq cents !",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_033c",
+                        "personnage": "antoine",
+                        "texte": "Cinq cents wagons ? Mais c'est le plus gros bateau du monde !",
+                        "ton": "enthousiaste",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_034",
+                        "personnage": "mamie_sonia",
+                        "texte": "Tu sais Antoine, le cyprès, c'est un arbre magnifique. Au Liban, il y a les fameux cèdres. Des arbres tellement grands et forts que les rois venaient de loin pour les utiliser.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_035",
+                        "personnage": "antoine",
+                        "texte": "Trop cool ! Mais Papy, Noé il savait construire un bateau ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_036",
+                        "personnage": "papy_babou",
+                        "texte": "Pas du tout ! Noé n'était pas un constructeur de bateaux. Mais il a fait confiance à Dieu, et il s'est mis au travail. Jour après jour, planche après planche.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_008",
+                        "personnage": "sfx",
+                        "texte": "hammer hitting wood rhythmically, saw cutting through timber, wood planks being stacked",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 18.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "sfx_007b",
+                        "personnage": "sfx",
+                        "texte": "outdoor construction site ambiance, distant wind blowing through scaffolding, occasional bird call, earth and gravel crunching underfoot, dry rustling leaves in breeze",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 25.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "sfx_008c",
+                        "personnage": "sfx",
+                        "texte": "outdoor daytime ambiance with distant crowd grunting and shuffling, occasional derisive laugh, dry wind across open field, scattered tool sounds in background",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 25.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_037",
+                        "personnage": "papy_babou",
+                        "texte": "Et devinez quoi ? Quand les voisins de Noé ont vu ce qu'il faisait, ils se sont moqués de lui. Ils le montraient du doigt et riaient.",
+                        "ton": "dramatique",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_038",
+                        "personnage": "noemie",
+                        "texte": "C'est pas gentil de se moquer !",
+                        "ton": "indigné",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_039",
+                        "personnage": "papy_babou",
+                        "texte": "Non, ce n'est pas gentil. Ils disaient : Regarde le vieux fou qui construit un bateau en plein milieu de la terre ! Il n'y a même pas de mer ici !",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "sfx_008b",
+                        "personnage": "sfx",
+                        "texte": "crowd jeering and clapping mockingly, derisive slow clapping fading away, dismissive snorting sounds",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_040",
+                        "personnage": "antoine",
+                        "texte": "Et Noé, il a arrêté ?",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_041",
+                        "personnage": "papy_babou",
+                        "texte": "Jamais. Noé a continué. Chaque matin, il se levait et il construisait son arche. Les gens riaient, et lui, il clouait des planches. Ils se moquaient, et lui, il avançait.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "sfx_008d",
+                        "personnage": "sfx",
+                        "texte": "very quiet indoor room, soft clock ticking prominently, single fireplace ember pop, intimate evening silence",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 30.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "sfx_008e",
+                        "personnage": "sfx",
+                        "texte": "warm indoor room with gentle rain still tapping on window glass, leather sofa creaking softly, distant kettle whistle from kitchen",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 25.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_041b",
+                        "personnage": "noemie",
+                        "texte": "Il avait pas peur, Noé, Papy ?",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_042",
+                        "personnage": "antoine",
+                        "texte": "Comme un super-héros. Il avait pas peur de ce que les autres pensaient.",
+                        "ton": "admiratif",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_043",
+                        "personnage": "papy_babou",
+                        "texte": "Tu sais, Antoine, le vrai courage, ce n'est pas de ne jamais avoir peur. C'est de faire ce qui est juste même quand tout le monde se moque de toi.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 500
+                  },
+                  {
+                        "id": "sfx_008g",
+                        "personnage": "sfx",
+                        "texte": "very intimate quiet room ambiance, single soft fireplace ember crackling gently, barely audible clock ticking, warm still room tone",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 25.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_044",
+                        "personnage": "antoine",
+                        "texte": "C'est un peu comme Maxime à l'école. Il se moque de moi parce que je lève la main.",
+                        "ton": "triste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_044b",
+                        "personnage": "antoine",
+                        "texte": "Il dit que c'est pas cool de répondre aux questions.",
+                        "ton": "triste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_045",
+                        "personnage": "papy_babou",
+                        "texte": "Et toi, qu'est-ce que tu fais quand Maxime se moque ?",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_046",
+                        "personnage": "antoine",
+                        "texte": "Des fois j'arrête de lever la main. Pour pas qu'on se moque.",
+                        "ton": "triste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_047",
+                        "personnage": "papy_babou",
+                        "texte": "Et est-ce que Noé a arrêté de construire son arche parce qu'on se moquait de lui ?",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_048",
+                        "personnage": "antoine",
+                        "texte": "Non. Il a continué.",
+                        "ton": "déterminé",
+                        "rythme": "lent",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_008f",
+                        "personnage": "sfx",
+                        "texte": "very intimate room ambiance, cat purring softly nearby, slow fireplace crackling, faint wind outside window",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_049",
+                        "personnage": "papy_babou",
+                        "texte": "Tout à fait. Et c'est parce qu'il a continué que toute sa famille a été sauvée. Tu vois, mon grand, lever la main en classe, c'est un peu comme construire ton arche à toi.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_050",
+                        "personnage": "mamie_sonia",
+                        "texte": "Votre Papy a raison, même s'il exagère parfois un tout petit peu. Et tu sais, quand Papy était petit au Liban, les autres enfants se moquaient de son accent sénégalais. Mais il n'a jamais arrêté de parler.",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_051",
+                        "personnage": "noemie",
+                        "texte": "Papy avait un accent rigolo ?",
+                        "ton": "curieux",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_052",
+                        "personnage": "papy_babou",
+                        "texte": "Pas rigolo, mademoiselle. Un accent magnifique ! Mais revenons à notre ami Noé. Après des mois et des mois de travail, l'arche était enfin terminée.",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "sfx_009",
+                        "personnage": "sfx",
+                        "texte": "final hammer strike on wood with satisfying echo, tools being set down, deep wooden creak of large structure",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "sfx_009b",
+                        "personnage": "sfx",
+                        "texte": "warm outdoor afternoon ambiance, gentle breeze, distant birds chirping, soft earth footsteps approaching",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 18.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_053",
+                        "personnage": "papy_babou",
+                        "texte": "Et là, mes petits loups, c'est le moment le plus extraordinaire. Dieu a dit à Noé : Maintenant, fais entrer dans l'arche un couple de chaque animal. Un mâle et une femelle.",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_054",
+                        "personnage": "noemie",
+                        "texte": "Tous les animaux ? Même les girafes ?",
+                        "ton": "excité",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_055",
+                        "personnage": "papy_babou",
+                        "texte": "Même les girafes ! Avec leur grand cou, elles ont dû baisser la tête pour passer sous la porte.",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_055b",
+                        "personnage": "noemie",
+                        "texte": "C'est trop drôle les girafes !",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "sfx_010",
+                        "personnage": "sfx",
+                        "texte": "various animal sounds layered: elephant trumpet in distance, lion roar, birds chirping, horse neighing, sheep bleating",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 8.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "sfx_009c",
+                        "personnage": "sfx",
+                        "texte": "warm outdoor ambiance with various distant animal sounds, soft earth footsteps, gentle breeze through dry grass",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_059",
+                        "personnage": "papy_babou",
+                        "texte": "C'est Dieu qui les a guidés. Les animaux sont venus d'eux-mêmes, deux par deux, comme une grande procession silencieuse.",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_062",
+                        "personnage": "mamie_sonia",
+                        "texte": "Imagine un peu le spectacle, Noémie. Des centaines d'animaux qui marchent ensemble, en silence, vers ce grand bateau. C'était sûrement magnifique.",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_063",
+                        "personnage": "noemie",
+                        "texte": "Papy, c'est quand le goûter ?",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_064",
+                        "personnage": "antoine",
+                        "texte": "Noémie, laisse Papy finir ! Les animaux viennent d'entrer dans l'arche !",
+                        "ton": "impatient",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_065",
+                        "personnage": "papy_babou",
+                        "texte": "Le gâteau de Mamie attend sagement dans la cuisine, ma puce. Il ne va pas s'envoler. Alors, quand tous les animaux furent entrés, Noé et sa famille sont montés à bord.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_066",
+                        "personnage": "papy_babou",
+                        "texte": "Sa femme, ses trois fils et leurs épouses. Huit personnes en tout. Et Dieu a fermé la porte de l'arche lui-même.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 500
+                  },
+                  {
+                        "id": "sfx_011",
+                        "personnage": "sfx",
+                        "texte": "massive heavy wooden door slowly closing with deep creak, loud final thud echoing, iron latch locking with metallic clang",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 400,
+                        "duree_sfx_secondes": 5.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_067",
+                        "personnage": "noemie",
+                        "texte": "Ça fait un peu peur quand la porte se ferme.",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_068",
+                        "personnage": "papy_babou",
+                        "texte": "N'aie pas peur, ma puce. Derrière cette porte, Noé et sa famille étaient en sécurité. Dieu les protégeait.",
+                        "ton": "rassurant",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_068b",
+                        "personnage": "noemie",
+                        "texte": "Comme nous avec Papy, on est en sécurité !",
+                        "ton": "joyeux",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_069",
+                        "personnage": "papy_babou",
+                        "texte": "Et alors, le ciel est devenu tout noir. Les nuages se sont rassemblés comme une armée immense. Et la pluie a commencé à tomber.",
+                        "ton": "dramatique",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "sfx_012",
+                        "personnage": "sfx",
+                        "texte": "rain starting light then rapidly intensifying to torrential downpour, strong wind howling, thunder rolling continuously",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 15.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_070",
+                        "personnage": "papy_babou",
+                        "texte": "D'abord doucement, quelques gouttes. Puis de plus en plus fort. Et bientôt, c'était comme si le ciel entier se déversait sur la terre.",
+                        "ton": "dramatique",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_071",
+                        "personnage": "antoine",
+                        "texte": "Et l'eau, elle montait haut ?",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_072",
+                        "personnage": "papy_babou",
+                        "texte": "L'eau montait, montait. Elle a recouvert les maisons, puis les arbres, puis les collines, puis même les plus hautes montagnes. La Bible dit que l'eau dépassait les sommets de sept mètres.",
+                        "ton": "dramatique",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_072c",
+                        "personnage": "papy_babou",
+                        "texte": "Tu sais Antoine, si tu empilais la tour Eiffel, la Statue de la Liberté et le plus grand immeuble du monde les uns sur les autres, l'eau du déluge les aurait tous recouverts. Complètement engloutis.",
+                        "ton": "dramatique",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_072d",
+                        "personnage": "antoine",
+                        "texte": "Même la tour Eiffel sous l'eau ? C'est le truc le plus dingue que j'ai jamais entendu !",
+                        "ton": "enthousiaste",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "sfx_012d",
+                        "personnage": "sfx",
+                        "texte": "steady rain continuing on wooden hull, muffled thunder in far distance, water dripping inside, somber atmospheric pad",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_072b",
+                        "personnage": "noemie",
+                        "texte": "Même les montagnes ? Mais alors il y avait de l'eau partout partout ?",
+                        "ton": "inquiet",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_073",
+                        "personnage": "noemie",
+                        "texte": "Et les méchants, Papy ? Ceux qui riaient ?",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_074",
+                        "personnage": "papy_babou",
+                        "texte": "Ils ont compris trop tard que Noé avait raison. Ils n'avaient pas écouté. Ils n'avaient pas voulu croire.",
+                        "ton": "triste",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_074c",
+                        "personnage": "papy_babou",
+                        "texte": "Dieu était triste pour eux aussi, tu sais. Il avait essayé de les prévenir par Noé. Mais ils n'avaient pas voulu écouter.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_074b",
+                        "personnage": "antoine",
+                        "texte": "Ils auraient dû écouter Noé.",
+                        "ton": "triste",
+                        "rythme": "lent",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_075",
+                        "personnage": "antoine",
+                        "texte": "C'est triste quand même.",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_076",
+                        "personnage": "papy_babou",
+                        "texte": "Oui, c'est triste, mon grand. Mais c'est aussi une leçon. Il faut savoir écouter quand quelqu'un essaie de nous prévenir, même si on ne comprend pas tout de suite.",
+                        "ton": "solennel",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_077",
+                        "personnage": "papy_babou",
+                        "texte": "La pluie a duré quarante jours et quarante nuits. Puis l'eau est restée encore longtemps, cent cinquante jours en tout. Et pendant tout ce temps, l'arche flottait sur les eaux, portée par les vagues.",
+                        "ton": "dramatique",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_012b",
+                        "personnage": "sfx",
+                        "texte": "massive wave slamming against wooden hull with deep booming impact, ship timber groaning and cracking under stress, objects sliding and crashing inside, horses neighing in distress, continuous heavy rain on deck above",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "sfx_012b2",
+                        "personnage": "sfx",
+                        "texte": "abrupt near-silence after storm, only slow water dripping on wood, one distant animal whimper, creaking hull settling",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 500,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_077b",
+                        "personnage": "antoine",
+                        "texte": "Papy, et si l'arche avait une fuite ? Et si l'eau entrait ?",
+                        "ton": "inquiet",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_077c",
+                        "personnage": "papy_babou",
+                        "texte": "Figure-toi que pendant la pire nuit de la tempête, une vague gigantesque a frappé l'arche. Tout a tremblé à l'intérieur. Les animaux criaient, le bois craquait de partout.",
+                        "ton": "dramatique",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_077d",
+                        "personnage": "noemie",
+                        "texte": "Et Noé, il a fait quoi ?",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "sfx_012e",
+                        "personnage": "sfx",
+                        "texte": "storm suddenly muffled and distant, deep low reverent sub-bass drone slowly swelling, all other sounds fading away to near silence",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 400,
+                        "duree_sfx_secondes": 6.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_077e",
+                        "personnage": "papy_babou",
+                        "texte": "Il a serré ses fils dans ses bras. Et il a prié. Il a dit : Seigneur, tu m'as promis. Je te fais confiance.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 600
+                  },
+                  {
+                        "id": "sfx_012c",
+                        "personnage": "sfx",
+                        "texte": "storm gradually calming, wood settling with deep creak, waves becoming rhythmic and steady, distant thunder fading",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 5.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_077f",
+                        "personnage": "papy_babou",
+                        "texte": "Et l'arche a tenu bon. Le bois de cyprès n'a pas cédé. Pas une seule goutte d'eau n'est entrée.",
+                        "ton": "rassurant",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_077g",
+                        "personnage": "antoine",
+                        "texte": "Parce que c'est Dieu qui lui avait dit comment la construire !",
+                        "ton": "enthousiaste",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "sfx_013",
+                        "personnage": "sfx",
+                        "texte": "large wooden ship creaking and swaying in heavy waves, water splashing against hull, wind howling around structure",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 6.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "sfx_013b",
+                        "personnage": "sfx",
+                        "texte": "wooden ship interior creaking rhythmically, muffled rain on hull above, distant animal sounds echoing inside large wooden structure, hay rustling",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "sfx_013c",
+                        "personnage": "sfx",
+                        "texte": "wooden hull creaking rhythmically with waves, hay rustling softly, occasional distant animal sound echoing in large enclosed space, water dripping slowly",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 25.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "sfx_013d",
+                        "personnage": "sfx",
+                        "texte": "wooden hull creaking softly, hay rustling, distant muffled animal sounds inside large enclosed space, slow water dripping, calm enclosed atmosphere",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_078",
+                        "personnage": "noemie",
+                        "texte": "Et dans l'arche, les animaux ils faisaient quoi ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_079",
+                        "personnage": "papy_babou",
+                        "texte": "Noé et sa famille s'occupaient d'eux. Ils les nourrissaient, les soignaient. Imagine le travail ! Des centaines d'animaux à nourrir chaque jour.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_079b",
+                        "personnage": "noemie",
+                        "texte": "Ils faisaient des câlins aux animaux aussi ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_079c",
+                        "personnage": "noemie",
+                        "texte": "Papy, et les moutons, ils comptaient des humains pour s'endormir ?",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_079d",
+                        "personnage": "antoine",
+                        "texte": "C'est les humains qui comptent les moutons, Noémie !",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_079e",
+                        "personnage": "noemie",
+                        "texte": "Ben justement, dans l'arche c'est à l'envers ! C'est les moutons les chefs !",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_080",
+                        "personnage": "antoine",
+                        "texte": "Papy, tu savais qu'un éléphant mange cent cinquante kilos de nourriture par jour ? Noé devait avoir beaucoup de réserves !",
+                        "ton": "enthousiaste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_080b",
+                        "personnage": "noemie",
+                        "texte": "Papy, et les puces des chiens, elles comptent comme des animaux ? Parce que sinon Noé il a oublié personne ?",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_080c",
+                        "personnage": "antoine",
+                        "texte": "Noémie, les puces c'est des insectes, pas des animaux !",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_080d",
+                        "personnage": "papy_babou",
+                        "texte": "En fait, Antoine, les puces sont bien des animaux. Et je suis sûr que Noé aurait préféré les oublier, celles-là !",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_081",
+                        "personnage": "papy_babou",
+                        "texte": "C'est vrai ! Dieu avait pensé à tout. L'arche était remplie de foin, de grains, de fruits pour nourrir tout ce petit monde pendant des mois.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_013e",
+                        "personnage": "sfx",
+                        "texte": "cozy indoor evening ambiance, soft fireplace crackling steadily, warm comfortable room tone, clock ticking gently in background",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_082",
+                        "personnage": "antoine",
+                        "texte": "Dis Papy, est-ce que le bébé de Maman aura peur de l'orage quand il sera né ?",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_083",
+                        "personnage": "papy_babou",
+                        "texte": "Peut-être un petit peu au début, mon grand. Mais tu sais quoi ? Un grand frère, c'est là pour protéger. Comme Noé protégeait tous les animaux dans son arche.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_084",
+                        "personnage": "antoine",
+                        "texte": "Alors je serai son arche à moi tout seul !",
+                        "ton": "déterminé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_085",
+                        "personnage": "noemie",
+                        "texte": "Et moi je serai quoi ?",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_086",
+                        "personnage": "papy_babou",
+                        "texte": "Toi, tu seras la colombe, ma puce. Parce que dans l'histoire, c'est justement une colombe qui va tout changer.",
+                        "ton": "mystérieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "sfx_014",
+                        "personnage": "sfx",
+                        "texte": "rain gradually fading to light drizzle, wind dying down to gentle breeze, last drops falling on wood, low atmospheric pad settling",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 500,
+                        "duree_sfx_secondes": 8.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "sfx_014b",
+                        "personnage": "sfx",
+                        "texte": "calm open water surface, gentle lapping waves against wooden hull, light breeze, distant seabird call",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_087",
+                        "personnage": "papy_babou",
+                        "texte": "Et puis un jour, après quarante jours et quarante nuits, la pluie s'est arrêtée.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 500
+                  },
+                  {
+                        "id": "seg_088",
+                        "personnage": "noemie",
+                        "texte": "Enfin ! C'est fini la pluie !",
+                        "ton": "soulagé",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_089",
+                        "personnage": "papy_babou",
+                        "texte": "Mais l'eau était encore partout. De l'eau à perte de vue, comme un océan infini. Noé ne voyait ni terre, ni montagne, ni arbre. Rien que de l'eau.",
+                        "ton": "dramatique",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "seg_090",
+                        "personnage": "papy_babou",
+                        "texte": "Alors Noé a eu une idée. Il a ouvert une fenêtre de l'arche et il a envoyé un corbeau pour voir s'il y avait de la terre quelque part.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_015",
+                        "personnage": "sfx",
+                        "texte": "crow cawing loudly, wing flapping taking flight, fading into distance",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_091",
+                        "personnage": "antoine",
+                        "texte": "Et il a trouvé de la terre, le corbeau ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_092",
+                        "personnage": "papy_babou",
+                        "texte": "Le corbeau est parti et il n'est pas revenu. Il volait d'un côté et de l'autre sans trouver où se poser. Alors Noé a envoyé une colombe.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_016",
+                        "personnage": "sfx",
+                        "texte": "gentle dove cooing softly, light wing flutter taking off delicately",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 3.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_093",
+                        "personnage": "papy_babou",
+                        "texte": "La première fois, la colombe est revenue bredouille. Pas de terre. Noé a attendu sept jours et il l'a renvoyée.",
+                        "ton": "chaleureux",
+                        "rythme": "lent",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_094",
+                        "personnage": "noemie",
+                        "texte": "Et la deuxième fois ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_095",
+                        "personnage": "papy_babou",
+                        "texte": "La deuxième fois, la colombe est revenue le soir avec quelque chose dans son bec. Devinez quoi.",
+                        "ton": "mystérieux",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_096",
+                        "personnage": "noemie",
+                        "texte": "Un gâteau ?",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_097",
+                        "personnage": "antoine",
+                        "texte": "Mais non, Noémie ! Une feuille ? Un bout de bois ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_098",
+                        "personnage": "papy_babou",
+                        "texte": "Un rameau d'olivier ! Une petite branche toute fraîche avec des feuilles vertes. Ça voulait dire que quelque part, un arbre avait la tête hors de l'eau. La terre commençait à réapparaître !",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_098b",
+                        "personnage": "antoine",
+                        "texte": "Papy, est-ce qu'on a retrouvé l'arche de Noé ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_098c",
+                        "personnage": "papy_babou",
+                        "texte": "Des explorateurs ont cherché pendant des siècles sur le mont Ararat, en Turquie. La Bible dit que c'est là que l'arche s'est posée. Personne ne l'a encore trouvée, mais des gens continuent de chercher.",
+                        "ton": "mystérieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 350
+                  },
+                  {
+                        "id": "sfx_017",
+                        "personnage": "sfx",
+                        "texte": "soft wing flutter approaching from far distance, gentle bird landing on wooden railing with light tap, warm hopeful string chord swelling gently",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_099",
+                        "personnage": "mamie_sonia",
+                        "texte": "Et vous savez, mes petits chéris, encore aujourd'hui la colombe avec le rameau d'olivier est le symbole de la paix dans le monde entier.",
+                        "ton": "solennel",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_100",
+                        "personnage": "papy_babou",
+                        "texte": "Noé a attendu encore sept jours et il a envoyé la colombe une troisième fois. Et cette fois, elle n'est pas revenue.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_101",
+                        "personnage": "noemie",
+                        "texte": "Non ! Elle s'est perdue ?",
+                        "ton": "inquiet",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_102",
+                        "personnage": "papy_babou",
+                        "texte": "Non, ma puce ! Si la colombe n'est pas revenue, c'est qu'elle avait trouvé un endroit sec où vivre. La terre était de retour !",
+                        "ton": "joyeux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_103",
+                        "personnage": "papy_babou",
+                        "texte": "Alors Dieu a dit à Noé : Sors de l'arche, toi, ta famille, et tous les animaux. Allez, vivez, et remplissez la terre à nouveau !",
+                        "ton": "solennel",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "sfx_018",
+                        "personnage": "sfx",
+                        "texte": "massive wooden door creaking open, birds chirping joyfully, animals calling and moving, footsteps on wet earth",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 6.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_104",
+                        "personnage": "noemie",
+                        "texte": "Les animaux devaient être tellement contents de sortir !",
+                        "ton": "joyeux",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_105",
+                        "personnage": "papy_babou",
+                        "texte": "Bien sûr ! Imagine les oiseaux qui s'envolent dans le ciel, les chevaux qui galopent dans les prairies, les lapins qui sautent dans l'herbe toute neuve.",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_105b",
+                        "personnage": "noemie",
+                        "texte": "Et les papillons ! Ils volent partout !",
+                        "ton": "joyeux",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_105d",
+                        "personnage": "noemie",
+                        "texte": "Papy, et les escargots ? Ils mettaient trop longtemps à sortir ?",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_105c",
+                        "personnage": "papy_babou",
+                        "texte": "Noé a respiré l'air frais pour la première fois depuis des mois. Et il a senti l'herbe mouillée sous ses pieds. La terre était neuve, propre, comme un cadeau tout juste déballé.",
+                        "ton": "émerveillé",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_106",
+                        "personnage": "antoine",
+                        "texte": "Et les girafes qui lèvent la tête et voient le ciel bleu !",
+                        "ton": "joyeux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_107",
+                        "personnage": "papy_babou",
+                        "texte": "Et là, Noé a levé les yeux vers le ciel. Et il a vu la plus belle chose qu'il ait jamais vue.",
+                        "ton": "émerveillé",
+                        "rythme": "lent",
+                        "pause_apres_ms": 500
+                  },
+                  {
+                        "id": "sfx_019",
+                        "personnage": "sfx",
+                        "texte": "shimmering chimes cascading upward, warm resonant bell tones ascending gently, sparkling high-frequency arpeggios with soft reverb tail",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 400,
+                        "duree_sfx_secondes": 6.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_108",
+                        "personnage": "noemie",
+                        "texte": "Un arc-en-ciel !",
+                        "ton": "excité",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_109",
+                        "personnage": "papy_babou",
+                        "texte": "Exactement, ma puce ! Un immense arc-en-ciel qui traversait tout le ciel d'un bout à l'autre. Rouge, orange, jaune, vert, bleu, violet. Magnifique.",
+                        "ton": "émerveillé",
+                        "rythme": "lent",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_110",
+                        "personnage": "papy_babou",
+                        "texte": "Et Dieu a dit à Noé : Cet arc-en-ciel est ma promesse. Plus jamais je n'enverrai un déluge pour détruire la terre. Chaque fois que tu verras un arc-en-ciel, souviens-toi de cette promesse.",
+                        "ton": "solennel",
+                        "rythme": "lent",
+                        "pause_apres_ms": 500
+                  },
+                  {
+                        "id": "seg_111",
+                        "personnage": "noemie",
+                        "texte": "C'est vrai, Papy ? Les arcs-en-ciel c'est des promesses ?",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_112",
+                        "personnage": "papy_babou",
+                        "texte": "C'est exactement ça. Et la prochaine fois que tu en verras un, tu pourras penser à Noé.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_019b",
+                        "personnage": "sfx",
+                        "texte": "magical whoosh transition with warm harp glissando, settling into cozy indoor ambiance with soft crackling fire",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 400,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_113",
+                        "personnage": "noemie",
+                        "texte": "Papy, regarde ! Il pleut plus dehors ! Tu crois qu'il y a un arc-en-ciel ?",
+                        "ton": "excité",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "sfx_020",
+                        "personnage": "sfx",
+                        "texte": "small quick footsteps on wooden floor, fabric curtain swooshing aside, birds chirping outside after rain",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_114",
+                        "personnage": "antoine",
+                        "texte": "Papy, tu savais que l'arc-en-ciel c'est la lumière du soleil qui se sépare en passant dans les gouttes de pluie ? On l'a appris en classe.",
+                        "ton": "enthousiaste",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_115",
+                        "personnage": "papy_babou",
+                        "texte": "C'est tout à fait vrai, mon grand. La lumière blanche contient toutes les couleurs. Et les gouttes de pluie les séparent comme un prisme magique. C'est pas merveilleux, ça ?",
+                        "ton": "émerveillé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_116",
+                        "personnage": "mamie_sonia",
+                        "texte": "Mon chéri, c'est l'heure du gâteau à l'orange. On peut écouter la fin en mangeant, non ?",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 250
+                  },
+                  {
+                        "id": "seg_117",
+                        "personnage": "noemie",
+                        "texte": "Oui ! Le gâteau ! Le gâteau !",
+                        "ton": "excité",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "sfx_021",
+                        "personnage": "sfx",
+                        "texte": "plates clinking, cake being sliced, utensils tapping on ceramic",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 4.0,
+                        "mode": "insert"
+                  },
+                  {
+                        "id": "seg_118",
+                        "personnage": "papy_babou",
+                        "texte": "Alors mes petits loups, maintenant c'est le petit mot de Papy. Qu'est-ce que vous avez retenu de l'histoire de Noé ?",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "sfx_020c",
+                        "personnage": "sfx",
+                        "texte": "warm cozy room ambiance, soft fireplace crackling gently, peaceful evening atmosphere with distant clock",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 25.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_119",
+                        "personnage": "antoine",
+                        "texte": "Que même si on se moque de toi, faut pas arrêter si on sait qu'on a raison.",
+                        "ton": "déterminé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_120",
+                        "personnage": "noemie",
+                        "texte": "Et que les arcs-en-ciel c'est des promesses !",
+                        "ton": "joyeux",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_121",
+                        "personnage": "papy_babou",
+                        "texte": "Formidable. Et moi j'ajouterai une chose. Noé a eu le courage de faire confiance à Dieu, même quand personne ne le comprenait. Et vous savez quoi ? Le courage, c'est contagieux.",
+                        "ton": "solennel",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_122",
+                        "personnage": "papy_babou",
+                        "texte": "Antoine, la prochaine fois que Maxime se moque, lève quand même la main. Et tu verras, peut-être que d'autres enfants oseront la lever aussi, grâce à toi.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_123",
+                        "personnage": "antoine",
+                        "texte": "Promis, Papy. Je serai courageux comme Noé.",
+                        "ton": "déterminé",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_021b",
+                        "personnage": "sfx",
+                        "texte": "warm cozy evening room, soft fireplace crackling low, peaceful atmosphere, distant clock ticking gently, comfortable indoor ambiance settling",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 200,
+                        "duree_sfx_secondes": 20.0,
+                        "mode": "overlay"
+                  },
+                  {
+                        "id": "seg_124",
+                        "personnage": "papy_babou",
+                        "texte": "Et la prochaine fois que vous viendrez, je vous raconterai l'histoire d'un homme qui a tout quitté. Sa maison, son pays, sa famille. Il est parti sans savoir où il allait. Et il avait soixante-quinze ans.",
+                        "ton": "mystérieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 400
+                  },
+                  {
+                        "id": "seg_125",
+                        "personnage": "antoine",
+                        "texte": "Tout quitté ? Pourquoi ?",
+                        "ton": "curieux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_126",
+                        "personnage": "papy_babou",
+                        "texte": "Ça, mes petits loups, ce sera pour la prochaine fois.",
+                        "ton": "espiègle",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_127",
+                        "personnage": "noemie",
+                        "texte": "Mais Papy, tu promets pour la prochaine fois ?",
+                        "ton": "espiègle",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_128",
+                        "personnage": "papy_babou",
+                        "texte": "Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
+                        "ton": "chaleureux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "seg_129",
+                        "personnage": "antoine",
+                        "texte": "Merci Papy ! C'était trop bien l'histoire de Noé !",
+                        "ton": "joyeux",
+                        "rythme": "normal",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_130",
+                        "personnage": "noemie",
+                        "texte": "Merci Papy Babou ! Et merci Mamie pour le gâteau à l'orange !",
+                        "ton": "joyeux",
+                        "rythme": "rapide",
+                        "pause_apres_ms": 200
+                  },
+                  {
+                        "id": "seg_131",
+                        "personnage": "mamie_sonia",
+                        "texte": "De rien mes petits chéris. Et si vous voyez un arc-en-ciel sur la route, faites un voeu pour Noé.",
+                        "ton": "tendre",
+                        "rythme": "normal",
+                        "pause_apres_ms": 300
+                  },
+                  {
+                        "id": "sfx_022",
+                        "personnage": "sfx",
+                        "texte": "small footsteps on gravel fading away, car doors closing, engine starting and slowly driving off, evening birds chirping after rain",
+                        "ton": "ambiance",
+                        "pause_apres_ms": 300,
+                        "duree_sfx_secondes": 5.0,
+                        "mode": "insert"
+                  }
+            ]
+      },
+      "validation_directeur": {
+            "directeur": {
+                  "note_globale": 8.4,
+                  "verdict": "feu_vert",
+                  "synthese": "Un excellent deuxième épisode qui installe parfaitement les rituels du podcast et exploite le thème de Noé avec intelligence. Le parallèle Antoine/Maxime est le point fort émotionnel — c'est exactement le type de moment qui crée de la fidélisation chez les 8-10 ans. L'arrivée de Mamie Sonia est naturelle et bien dosée. Le cold open dramatique puis la bascule vers le salon cosy créent un contraste sonore immédiat qui capte l'attention.",
+                  "axes": {
+                        "immersion_sonore": {
+                              "note": 7.5,
+                              "commentaire": "22 SFX au total — bon volume. Le cold open tempête est immersif (sfx_001 à 003). La transition magique vers le salon (sfx_004) fonctionne. Bons moments ponctuels : construction arche (sfx_008), porte qui se ferme (sfx_011), procession animaux (sfx_010). POINTS FAIBLES : seulement 3 overlays sur 22 SFX — le ratio est déséquilibré. Il manque un overlay d'ambiance pendant la scène des moqueries (seg_037-052, 17 segments sans SFX = le plus grand trou sonore du script). L'ambiance_par_acte [dramatique, tendu, joyeux] manque de nuance — \"tendu\" et \"dramatique\" sont trop proches, \"mystérieux\" aurait mieux fonctionné pour l'acte 1 (construction + moqueries). Il manque un SFX de transition entre le récit biblique et le retour au salon pour le \"petit mot de Papy\"."
+                        },
+                        "rythme_accroche": {
+                              "note": 8.5,
+                              "commentaire": "Le cold open est excellent — 3 segments de narration dramatique pure avec SFX de tempête, puis transition magique vers le salon. L'auditeur est happé en 30 secondes. Le lien avec E01 (\"Vous vous souvenez de la dernière fois ?\") est naturel et rapide. Le running gag Noémie/goûter est bien placé (seg_063 au milieu de la procession des animaux). Le rythme est soutenu tout au long avec de bons mini-cliffhangers (\"Devinez quoi\" pour le rameau d'olivier). La séquence colombe en 3 envois crée un suspense progressif efficace. Seul léger temps mort : la section dans l'arche pendant le déluge (seg_077-081) pourrait être plus dynamique."
+                        },
+                        "emotion_personnages": {
+                              "note": 9.0,
+                              "commentaire": "Le moment Antoine/Maxime (seg_044-049) est le coeur émotionnel de l'épisode — brillamment amené par le parallèle avec Noé. La réponse de Papy (\"lever la main en classe, c'est construire ton arche\") est mémorable et quotable. Mamie Sonia a 8 répliques bien distribuées : chocolat chaud libanais, cèdres du Liban, anecdote de l'accent de Papy, symbole de la colombe — chaque intervention enrichit sans surcharger. Noémie est parfaite en chipie (\"Un gâteau ?\", \"Papy avait un accent rigolo ?\") et en peureuse (porte qui se ferme). La dynamique frère-soeur (\"Chut Noémie !\") est naturelle. Le fil rouge bébé (\"je serai son arche\") est touchant sans être forcé."
+                        },
+                        "valeur_educative": {
+                              "note": 8.5,
+                              "commentaire": "Récit biblique fidèle et complet : corruption de l'humanité, choix de Noé, dimensions de l'arche, animaux deux par deux, 40 jours, corbeau puis colombe, rameau d'olivier, arc-en-ciel comme alliance. Fun facts bien calibrés : arche vs terrain de foot (parle aux enfants), éléphant = 150 kg/jour, prisme et arc-en-ciel, colombe = symbole de paix. Morale doublement portée : courage face aux moqueries + persévérance. Le lien avec la vraie vie d'Antoine la rend concrète et applicable. Quiz bien construit avec niveaux facile/avancé. Petit bémol : on ne mentionne pas que l'eau est restée 150 jours (seulement les 40 jours de pluie) — détail biblique mineur mais que Sophie (parent catho) pourrait noter."
+                        },
+                        "compatibilite_voix_ia": {
+                              "note": 9.0,
+                              "commentaire": "Aucune onomatopée dans les textes parlés. Tous les segments respectent les limites de mots (max 60 adultes, max 40 enfants vérifiés). Nombres en toutes lettres (quarante, cent trente-sept, sept, huit). Pas d'ellipses. Bonne variété de tons : dramatique, mystérieux, chaleureux, solennel, espiègle, émerveillé, triste, rassurant, déterminé. Les rythmes alternent bien entre lent/normal/rapide. Les pauses sont bien calibrées (200-500ms). Les segments courts de Noémie (5-10 mots) passeront très bien en voix IA enfant."
+                        },
+                        "qualite_sfx": {
+                              "note": 7.5,
+                              "commentaire": "Descriptions en anglais, spécifiques et reproductibles. Bons exemples : \"massive heavy wooden door slowly closing with deep creak, loud final thud echoing, iron latch locking with metallic clang\" (sfx_011), \"hammer hitting wood rhythmically, saw cutting through timber\" (sfx_008). Les durées sont cohérentes (3-10s). Cependant : ratio overlay/insert déséquilibré (3/19 — il faudrait plus d'overlays d'ambiance). Le trou de 17 segments sans SFX (seg_037-060) est trop long. sfx_016 et sfx_017 sont trop similaires (\"gentle dove cooing\" deux fois — manque de variété). Il manque un overlay d'ambiance dans l'arche pendant le déluge (craquements du bois, animaux au loin).",
+                              "sfx_problematiques": [
+                                    {
+                                          "id": "sfx_017",
+                                          "probleme": "Trop similaire à sfx_016 (\"gentle dove cooing\" x2)",
+                                          "suggestion": "soft wing flutter approaching, delicate bird landing on wooden railing, warm hopeful string chord swelling"
+                                    },
+                                    {
+                                          "id": "zone seg_037-060",
+                                          "probleme": "17 segments consécutifs sans SFX — trou sonore pendant les moqueries et la procession des animaux",
+                                          "suggestion": "Ajouter un overlay d'ambiance extérieure avec crowd murmuring et un insert de crowd laughing mockingly pendant les moqueries (seg_039)"
+                                    },
+                                    {
+                                          "id": "zone seg_077-086",
+                                          "probleme": "Manque un overlay d'ambiance dans l'arche pendant le déluge",
+                                          "suggestion": "Ajouter un overlay : wooden ship creaking rhythmically, muffled rain on hull, distant animal sounds inside large wooden structure (15s)"
+                                    }
+                              ]
+                        }
+                  },
+                  "recommandations": [
+                        {
+                              "priorite": "important",
+                              "texte": "Combler le trou sonore entre seg_037 et seg_060 (moqueries + procession animaux) — ajouter au moins 2 SFX : un overlay d'ambiance extérieure et un insert de rires moqueurs."
+                        },
+                        {
+                              "priorite": "important",
+                              "texte": "Ajouter un overlay d'ambiance dans l'arche pendant le déluge (seg_077-086) — craquements du bois, pluie étouffée sur la coque, animaux au loin. C'est LE moment immersif de l'épisode."
+                        },
+                        {
+                              "priorite": "important",
+                              "texte": "Revoir ambiance_par_acte : remplacer [\"dramatique\", \"tendu\", \"joyeux\"] par [\"mystere\", \"dramatique\", \"joyeux\"] pour plus de contraste entre les actes."
+                        },
+                        {
+                              "priorite": "suggestion",
+                              "texte": "Ajouter un SFX de transition sonore entre le récit biblique (arc-en-ciel) et le retour au salon de Papy pour le \"petit mot de Papy\" — type warm harp transition."
+                        },
+                        {
+                              "priorite": "suggestion",
+                              "texte": "Varier sfx_017 par rapport à sfx_016 — la colombe revient mais le moment est différent (espoir vs départ), le SFX doit refléter cette évolution émotionnelle."
+                        },
+                        {
+                              "priorite": "suggestion",
+                              "texte": "Mentionner brièvement que l'eau est restée 150 jours au total (pas seulement 40 jours de pluie) — détail biblique que les parents cathos connaissent."
+                        }
+                  ],
+                  "points_forts": [
+                        "Le parallèle Antoine/Maxime est un moment de pure émotion qui ancre la morale dans le quotidien — c'est ce qui distingue ce podcast des \"cours de caté audio\"",
+                        "La blague de Noémie \"Un gâteau ?\" quand la colombe revient avec le rameau — parfait pour le running gag et le rythme comique",
+                        "Mamie Sonia est intégrée de façon naturelle et enrichissante (Liban, symbole de paix) sans voler le show à Papy",
+                        "Le cold open dramatique est très efficace et crée un contraste fort avec le salon cosy — excellent hook",
+                        "La séquence colombe en 3 envois crée un mini-suspense narratif très engageant pour les enfants",
+                        "Le fil rouge bébé (\"je serai son arche\") est touchant et avance l'arc de la saison sans forcer"
+                  ]
             },
-            {
-              "id": "zone seg_077-086",
-              "probleme": "Manque un overlay d'ambiance dans l'arche pendant le déluge",
-              "suggestion": "Ajouter un overlay : wooden ship creaking rhythmically, muffled rain on hull, distant animal sounds inside large wooden structure (15s)"
-            }
-          ]
-        }
-      },
-      "recommandations": [
-        {
-          "priorite": "important",
-          "texte": "Combler le trou sonore entre seg_037 et seg_060 (moqueries + procession animaux) — ajouter au moins 2 SFX : un overlay d'ambiance extérieure et un insert de rires moqueurs."
-        },
-        {
-          "priorite": "important",
-          "texte": "Ajouter un overlay d'ambiance dans l'arche pendant le déluge (seg_077-086) — craquements du bois, pluie étouffée sur la coque, animaux au loin. C'est LE moment immersif de l'épisode."
-        },
-        {
-          "priorite": "important",
-          "texte": "Revoir ambiance_par_acte : remplacer [\"dramatique\", \"tendu\", \"joyeux\"] par [\"mystere\", \"dramatique\", \"joyeux\"] pour plus de contraste entre les actes."
-        },
-        {
-          "priorite": "suggestion",
-          "texte": "Ajouter un SFX de transition sonore entre le récit biblique (arc-en-ciel) et le retour au salon de Papy pour le \"petit mot de Papy\" — type warm harp transition."
-        },
-        {
-          "priorite": "suggestion",
-          "texte": "Varier sfx_017 par rapport à sfx_016 — la colombe revient mais le moment est différent (espoir vs départ), le SFX doit refléter cette évolution émotionnelle."
-        },
-        {
-          "priorite": "suggestion",
-          "texte": "Mentionner brièvement que l'eau est restée 150 jours au total (pas seulement 40 jours de pluie) — détail biblique que les parents cathos connaissent."
-        }
-      ],
-      "points_forts": [
-        "Le parallèle Antoine/Maxime est un moment de pure émotion qui ancre la morale dans le quotidien — c'est ce qui distingue ce podcast des \"cours de caté audio\"",
-        "La blague de Noémie \"Un gâteau ?\" quand la colombe revient avec le rameau — parfait pour le running gag et le rythme comique",
-        "Mamie Sonia est intégrée de façon naturelle et enrichissante (Liban, symbole de paix) sans voler le show à Papy",
-        "Le cold open dramatique est très efficace et crée un contraste fort avec le salon cosy — excellent hook",
-        "La séquence colombe en 3 envois crée un mini-suspense narratif très engageant pour les enfants",
-        "Le fil rouge bébé (\"je serai son arche\") est touchant et avance l'arc de la saison sans forcer"
-      ]
-    },
-    "personas": {
-      "lina_7ans": {
-        "reaction": "J'ai adoré les animaux qui rentrent dans l'arche ! Surtout les girafes qui baissent la tête, c'est trop drôle. Et quand Noémie dit \"un gâteau\" j'ai trop rigolé. Par contre quand la porte se ferme et que la pluie arrive, j'ai eu un peu peur. Mais Papy dit qu'ils sont en sécurité alors ça va. Et l'arc-en-ciel à la fin c'est trop beau ! Moi aussi je vais chercher un arc-en-ciel par la fenêtre.",
-        "accrocherait": true,
-        "moments_preferes": [
-          "Les girafes qui baissent la tête pour entrer dans l'arche",
-          "Noémie qui répond \"Un gâteau ?\" pour le bec de la colombe",
-          "L'arc-en-ciel comme promesse de Dieu",
-          "Le chocolat chaud de Mamie avec des chamallows"
-        ],
-        "points_decrochage": [
-          "La section sur les moqueries de Noé (seg_037-049) est un peu longue sans action ni SFX pour une 7 ans — elle pourrait décrocher pendant le dialogue Antoine/Maxime qu'elle ne vit pas directement"
-        ],
-        "note": 8.0
-      },
-      "noah_10ans": {
-        "reaction": "L'histoire de Noé c'est un classique mais j'ai bien aimé les détails. Genre l'arche plus grande qu'un terrain de foot et les éléphants qui mangent 150 kilos par jour, ça c'est des trucs que mes potes savent pas. Et le passage sur le courage de Noé face aux moqueries, ça m'a fait réfléchir parce que moi aussi des fois on se moque quand tu fais un truc bien. Le cold open avec la tempête était trop bien, on se serait cru dans un film.",
-        "accrocherait": true,
-        "moments_preferes": [
-          "Le cold open dramatique avec la tempête et l'arche",
-          "Les dimensions de l'arche (137m = plus qu'un terrain de foot)",
-          "Le fun fact éléphant 150kg/jour",
-          "Le parallèle moqueries de Noé / moqueries à l'école"
-        ],
-        "points_decrochage": [
-          "Les questions de Noémie sur les girafes et éléphants sont un peu \"bébé\" pour un 10 ans — il tolérera parce que c'est court, mais n'accrochera pas sur ces passages"
-        ],
-        "note": 8.0
-      },
-      "sophie_parent": {
-        "reaction": "Je suis impressionnée par la qualité de cet épisode. Le récit biblique est fidèle et complet, avec tous les éléments clés : la corruption de l'humanité, l'appel de Dieu à Noé, les dimensions de l'arche, les animaux deux par deux, les 40 jours, le corbeau, la colombe et le rameau d'olivier, l'arc-en-ciel comme alliance. Le moment où Antoine parle de Maxime m'a touchée — c'est exactement le type de pont entre la Bible et la vie quotidienne que je cherche pour mes enfants. Mamie Sonia apporte une touche culturelle bienvenue. Je recommanderais sans hésiter.",
-        "recommanderait": true,
-        "points_positifs": [
-          "Fidélité biblique excellente — tous les éléments clés sont présents",
-          "Le parallèle Noé/Maxime rend la morale concrète et applicable",
-          "Mamie Sonia enrichit culturellement sans être intrusive",
-          "Le ton est juste — transmission de valeurs sans moralisation pesante",
-          "Le quiz à deux niveaux permet de vérifier la compréhension"
-        ],
-        "reserves": [
-          "Les 150 jours d'eau après les 40 jours de pluie ne sont pas mentionnés — un détail biblique mineur mais que je connais (Genèse 7:24)",
-          "La question sur le sort des gens moqueurs (seg_073-074) est traitée rapidement — un parent pourrait vouloir plus de nuance sur le jugement de Dieu"
-        ],
-        "note": 8.5
+            "personas": {
+                  "lina_7ans": {
+                        "reaction": "J'ai adoré les animaux qui rentrent dans l'arche ! Surtout les girafes qui baissent la tête, c'est trop drôle. Et quand Noémie dit \"un gâteau\" j'ai trop rigolé. Par contre quand la porte se ferme et que la pluie arrive, j'ai eu un peu peur. Mais Papy dit qu'ils sont en sécurité alors ça va. Et l'arc-en-ciel à la fin c'est trop beau ! Moi aussi je vais chercher un arc-en-ciel par la fenêtre.",
+                        "accrocherait": true,
+                        "moments_preferes": [
+                              "Les girafes qui baissent la tête pour entrer dans l'arche",
+                              "Noémie qui répond \"Un gâteau ?\" pour le bec de la colombe",
+                              "L'arc-en-ciel comme promesse de Dieu",
+                              "Le chocolat chaud de Mamie avec des chamallows"
+                        ],
+                        "points_decrochage": [
+                              "La section sur les moqueries de Noé (seg_037-049) est un peu longue sans action ni SFX pour une 7 ans — elle pourrait décrocher pendant le dialogue Antoine/Maxime qu'elle ne vit pas directement"
+                        ],
+                        "note": 8.0
+                  },
+                  "noah_10ans": {
+                        "reaction": "L'histoire de Noé c'est un classique mais j'ai bien aimé les détails. Genre l'arche plus grande qu'un terrain de foot et les éléphants qui mangent 150 kilos par jour, ça c'est des trucs que mes potes savent pas. Et le passage sur le courage de Noé face aux moqueries, ça m'a fait réfléchir parce que moi aussi des fois on se moque quand tu fais un truc bien. Le cold open avec la tempête était trop bien, on se serait cru dans un film.",
+                        "accrocherait": true,
+                        "moments_preferes": [
+                              "Le cold open dramatique avec la tempête et l'arche",
+                              "Les dimensions de l'arche (137m = plus qu'un terrain de foot)",
+                              "Le fun fact éléphant 150kg/jour",
+                              "Le parallèle moqueries de Noé / moqueries à l'école"
+                        ],
+                        "points_decrochage": [
+                              "Les questions de Noémie sur les girafes et éléphants sont un peu \"bébé\" pour un 10 ans — il tolérera parce que c'est court, mais n'accrochera pas sur ces passages"
+                        ],
+                        "note": 8.0
+                  },
+                  "sophie_parent": {
+                        "reaction": "Je suis impressionnée par la qualité de cet épisode. Le récit biblique est fidèle et complet, avec tous les éléments clés : la corruption de l'humanité, l'appel de Dieu à Noé, les dimensions de l'arche, les animaux deux par deux, les 40 jours, le corbeau, la colombe et le rameau d'olivier, l'arc-en-ciel comme alliance. Le moment où Antoine parle de Maxime m'a touchée — c'est exactement le type de pont entre la Bible et la vie quotidienne que je cherche pour mes enfants. Mamie Sonia apporte une touche culturelle bienvenue. Je recommanderais sans hésiter.",
+                        "recommanderait": true,
+                        "points_positifs": [
+                              "Fidélité biblique excellente — tous les éléments clés sont présents",
+                              "Le parallèle Noé/Maxime rend la morale concrète et applicable",
+                              "Mamie Sonia enrichit culturellement sans être intrusive",
+                              "Le ton est juste — transmission de valeurs sans moralisation pesante",
+                              "Le quiz à deux niveaux permet de vérifier la compréhension"
+                        ],
+                        "reserves": [
+                              "Les 150 jours d'eau après les 40 jours de pluie ne sont pas mentionnés — un détail biblique mineur mais que je connais (Genèse 7:24)",
+                              "La question sur le sort des gens moqueurs (seg_073-074) est traitée rapidement — un parent pourrait vouloir plus de nuance sur le jugement de Dieu"
+                        ],
+                        "note": 8.5
+                  }
+            },
+            "note_audience": 8.2
       }
-    },
-    "note_audience": 8.2
-  }
 }
