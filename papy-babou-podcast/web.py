@@ -1085,14 +1085,22 @@ def api_public_episodes():
     except Exception as e:
         logger.warning("Erreur chargement saisons: %s", e)
 
-    # Debug log for plan contents
-    for num, plan in saison_plans_cache.items():
-        eps_plan = plan.get("saison", {}).get("episodes", [])
-        logger.info("api_public_episodes: saison %d — %d episodes dans le plan", num, len(eps_plan))
-
     # Build saisons_info (only saisons with episodes in historique)
+    # Extract saison from episode_id (S01E01 → 1) when field is missing (DB rows)
+    def _extract_saison(ep):
+        s = ep.get("saison")
+        if s:
+            return int(s)
+        eid = ep.get("episode_id", "")
+        if eid and len(eid) >= 3 and eid[0] == "S":
+            try:
+                return int(eid[1:3])
+            except ValueError:
+                pass
+        return 1
+
     saisons_info = []
-    saison_nums_avec_episodes = set(ep.get("saison", 1) for ep in historique if ep.get("saison"))
+    saison_nums_avec_episodes = set(_extract_saison(ep) for ep in historique)
     for num in sorted(saison_plans_cache):
         if num not in saison_nums_avec_episodes:
             continue  # Saison planifiée mais pas encore diffusée
@@ -1243,8 +1251,6 @@ def api_public_episodes():
     # Pour les saisons commencees, ajouter les episodes du plan qui ne sont
     # pas encore dans l'historique (episodes "planned")
     episodes_ids_existants = set(ep["episode_id"] for ep in episodes_public)
-    logger.info("api_public_episodes: %d existants, plans_episodes=%d entries, saison_nums=%s",
-                len(episodes_ids_existants), len(plans_episodes), saison_nums_avec_episodes)
     for saison_num in sorted(saison_nums_avec_episodes):
         for key, ep_plan in plans_episodes.items():
             plan_saison, plan_numero = key
@@ -1283,14 +1289,6 @@ def api_public_episodes():
     return jsonify({
         "episodes": episodes_public,
         "saisons": saisons_info,
-        "_debug": {
-            "historique_count": len(historique),
-            "saison_plans_cache_keys": list(saison_plans_cache.keys()),
-            "plans_episodes_keys": [f"S{k[0]:02d}E{k[1]:02d}" for k in plans_episodes.keys()],
-            "saison_nums_avec_episodes": list(saison_nums_avec_episodes),
-            "episodes_ids_existants": list(episodes_ids_existants),
-            "total_before_filter": len(episodes_public),
-        },
     })
 
 
