@@ -92,11 +92,27 @@
         "pause_apres_ms": 600
       },
       {
+        "id": "seg_007b",
+        "personnage": "papy_babou",
+        "texte": "Je suis sûr qu'ils ont appris à se supporter, comme vous deux dans la voiture ! Mais revenons à notre histoire.",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
         "id": "seg_008",
         "personnage": "papy_babou",
         "texte": "Figurez-vous que, après le déluge, la terre s'est repeuplée. Des familles, puis des villages, puis des villes entières. Des générations et des générations ont passé. Et un jour, Dieu a choisi un homme pour commencer une grande, grande histoire.",
         "ton": "dramatique",
         "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_001b",
+        "personnage": "sfx",
+        "texte": "Low warm sub-bass pad with gentle reverb swell, ancient atmosphere, soft distant wind layer, mysterious and reverent tone",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
       },
       {
         "id": "seg_009",
@@ -201,7 +217,7 @@
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 4.0,
-        "mode": "overlay"
+        "mode": "insert"
       },
       {
         "id": "seg_016",
@@ -327,6 +343,13 @@
         "ton": "inquiet",
         "rythme": "rapide",
         "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_021d",
+        "personnage": "papy_babou",
+        "texte": "Je sais, ça semble injuste. Mais tu sais quoi ? Les famines, à cette époque, ça arrivait souvent. La terre de Canaan dépendait de la pluie, et parfois la pluie ne venait pas pendant des mois entiers.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
       },
       {
         "id": "seg_021e",
@@ -533,6 +556,14 @@
         "pause_apres_ms": 800
       },
       {
+        "id": "seg_038c",
+        "personnage": "papy_babou",
+        "texte": "C'est vrai, ma puce. Chaque bébé qui naît, c'est une promesse qui se réalise. Pour Sara, pour maman, pour toutes les familles du monde.",
+        "ton": "ému",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
         "id": "seg_038b",
         "personnage": "noemie",
         "texte": "Et Sara, elle avait des galettes au miel pour fêter la naissance ? Parce que moi je fêterais avec les galettes de Mamie !",
@@ -567,7 +598,7 @@
       {
         "id": "seg_041",
         "personnage": "mamie_sonia",
-        "texte": "Mes petits chéris, vous savez, quand Papy et moi on a déménagé ici ici en Normandie, j'avais très peur. Je quittais tous mes amis. Mais finalement, c'est ici qu'on a trouvé notre plus beau bonheur.",
+        "texte": "Mes petits chéris, vous savez, quand Papy et moi on a déménagé ici en Normandie, j'avais très peur. Je quittais tous mes amis. Mais finalement, c'est ici qu'on a trouvé notre plus beau bonheur.",
         "ton": "nostalgique",
         "rythme": "lent",
         "pause_apres_ms": 1000
@@ -607,6 +638,14 @@
         "personnage": "antoine",
         "texte": "Alors en fait, le déménagement, c'est pareil que Abraame ? On a peur mais après c'est bien ?",
         "ton": "curieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_047",
+        "personnage": "papy_babou",
+        "texte": "Tu as tout compris, mon bonhomme. Ton nouveau quartier, ta nouvelle école, tes futurs copains, tout ça ce sont des étoiles que tu ne vois pas encore. Mais elles sont déjà là, qui t'attendent.",
+        "ton": "chaleureux",
+        "rythme": "lent",
         "pause_apres_ms": 1000
       },
       {
