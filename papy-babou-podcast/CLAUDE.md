@@ -372,6 +372,51 @@ Clear visual separation between single-episode and season production workflows:
 - `_mettre_a_jour_rss()` delegates to `_ecrire_rss()` under lock
 - `_upload_buzzsprout()` has retry loop — mock `time.sleep` in tests
 
+## Audit Episode System (Session 7)
+
+### Agents d'audit qualité pré-production
+5 agents spécialisés dans `.claude/agents/` pour l'audit qualité des scripts d'épisode. Source originale : branche `claude/episode-2-script-QbSiY`.
+
+Si les agents ne sont pas sur la branche courante, les récupérer avec :
+```bash
+git fetch origin claude/episode-2-script-QbSiY && git checkout origin/claude/episode-2-script-QbSiY -- papy-babou-podcast/.claude/agents/audit-episode.md papy-babou-podcast/.claude/agents/audit-sfx.md papy-babou-podcast/.claude/agents/audit-voix.md papy-babou-podcast/.claude/agents/audit-marc.md papy-babou-podcast/.claude/agents/audit-claire.md
+```
+
+**IMPORTANT** : Ces agents sont dans `papy-babou-podcast/.claude/agents/`, pas à la racine du repo. Pour que Claude Code les détecte comme `subagent_type`, il faut lancer Claude depuis `papy-babou-podcast/` (i.e. `cd papy-babou-podcast && claude`).
+
+### Orchestrateur : `audit-episode`
+Coordonne 4 audits spécialisés en 4 phases :
+
+| Phase | Agents | Mode |
+|-------|--------|------|
+| 1. Techniques | `@audit-sfx` (Thomas Lavigne) + `@audit-voix` (Isabelle Fontaine) | PARALLÈLE |
+| 2. Créatifs | `@audit-marc` (Marc Delacroix) + `@audit-claire` (Claire Moreau) | PARALLÈLE |
+| 3. Consolidation | Orchestrateur | Tableau croisé, convergences, plan d'action P0-P3 |
+| 4. Corrections | Orchestrateur | Application P0+P1 automatiques, P2/P3 pour décision humaine |
+
+### Les 4 auditeurs
+
+| Agent | Fichier | Rôle | Axes | Personas | Cible |
+|-------|---------|------|------|----------|-------|
+| **Thomas Lavigne** | `audit-sfx.md` | Sound designer | 10 règles conformité + B1-B5 créatif (couverture, densité, transitions, émotion, prompts) | — | 9/10 |
+| **Isabelle Fontaine** | `audit-voix.md` | Directrice vocale | 6 règles TTS + B1-B5 créatif (tons, rythme, naturalité enfants, arc émotionnel, dynamique) | — | 9/10 |
+| **Marc Delacroix** | `audit-marc.md` | Directeur créatif #1 France | 5 axes (immersion, rythme, émotion, éducatif, production IA) | Lina 7ans (30%), Noah 10ans (30%), Sophie parent catho (40%) | 9/10 |
+| **Claire Moreau** | `audit-claire.md` | Concurrente directe (podcast Tina) | 6 axes (accroche, pacing, authenticité, immersion, éducatif, viralité) | Timéo 9ans accro YouTube (50%), Camille parent non-pratiquante (50%) | 9/10 |
+
+### Seuil qualité
+- **9/10 minimum** sur TOUTES les dimensions clés
+- Un épisode à 9/10 = "l'enfant dit 'remets l'épisode', le parent recommande à ses amis"
+- Les 7 critères du 9/10 : réécoute, raconte l'histoire, parent recommande, son transporte, voix vivantes, 3 émotions minimum, on apprend quelque chose
+
+### Fichiers de sortie
+- Rapports individuels : `output/scripts/[EPISODE_ID]_audit_sfx.md`, `_audit_voix.md`, `_audit_marc.md`, `_audit_claire.md`
+- Rapport consolidé : `output/scripts/[EPISODE_ID]_audit_complet.md`
+
+### Verdicts
+- **`feu_vert`** : moyenne >= 9.0 ET audience >= 8.5 ET 0 axe < 8.0
+- **`ajustements_mineurs`** : moyenne >= 8.0 ET audience >= 7.5 ET 0 axe < 7.0
+- **`retravailler`** : moyenne < 8.0 OU un axe < 7.0 OU audience < 7.5
+
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`
 - Push: `git push -u origin claude/podcast-production-system-YkngW`
