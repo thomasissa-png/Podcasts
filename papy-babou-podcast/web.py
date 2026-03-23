@@ -2608,6 +2608,15 @@ def api_launch_fresh(episode_id):
         },
     }
 
+    # Ajouter le hash du script pour la détection de modifications
+    try:
+        from utils import compute_script_hash
+        script_hash = compute_script_hash(script)
+        checkpoint_data["data"]["script_content_hash"] = script_hash
+        checkpoint_data["data"]["rapport"]["script_content_hash"] = script_hash
+    except Exception as e:
+        logger.debug("launch-fresh %s : hash échoué: %s", episode_id, e)
+
     checkpoint_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
     config.CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
     with open(checkpoint_path, "w", encoding="utf-8") as f:
