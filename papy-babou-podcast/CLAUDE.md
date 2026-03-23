@@ -2110,12 +2110,13 @@ done
 - **Replit redeploys** happen frequently during 30+ min jobs → SIGTERM handler saves checkpoint → auto-resume thread restarts
 - **`web_job_id non persisté`** error = symptom, not root cause. Check checkpoint + rapport files for the real error
 - **`TimeoutExpired` + `e.process`**: Fixed in Session 27 — `subprocess.run()` has no `.process` attribute, removed `e.process.kill()` from all 4 handlers in monteur.py
-- **ffmpeg timeouts**: concat=600s, mix=900s, master bus=600s, mp3 export=600s — increase if episodes get longer
+- **ffmpeg timeouts**: concat=1800s, mix=900s, master bus (loudnorm+fallback)=1800s, mp3 export=1800s — Replit containers are slow, 30-min episodes need generous timeouts
 - **DB column names**: `productions` table has `started_at` (NOT `created_at`). Other tables (`scripts`, `fichiers_audio`, `saisons`) DO have `created_at`
 - **Production statuses**: `started` → `script_done` → `audio_done` → `sfx_done` → `montage_done` → `metadonnees_done` → `completed`. Also: `interrupted` (SIGTERM), `failed` (crash), `waiting_script`/`waiting_montage` (stop-after)
 
 ### When modifying monteur.py (Session 27 additions)
 - `subprocess.run()` + `TimeoutExpired`: NEVER access `e.process` — it doesn't exist. `subprocess.run()` already kills the child on timeout
 - Only `Popen` objects have `.process` on the exception
-- ffmpeg concat timeout: 600s (was 300s — too short for 30-min episodes with 190+ segments)
-- ffmpeg master bus timeout: 600s (was 300s)
+- ALL ffmpeg timeouts bumped to 1800s (30 min) — Replit containers are slow for audio processing
+- concat=1800s, loudnorm=1800s, master bus fallback=1800s, mp3 export=1800s
+- mix=900s (unchanged — amix is streaming, doesn't need more)
