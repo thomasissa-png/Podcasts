@@ -4987,6 +4987,7 @@ def api_v2_list_montages(episode_id):
             stale = [m for m in montages if m.get("status") == "processing"]
             if stale:
                 # Update the stale row in DB with V1 data
+                _v1_update_ok = False
                 try:
                     _update_montage_from_v1(stale[0]["id"], v1_montage)
                     # Refresh from DB — preserve V1 audio URLs for serving
@@ -4996,8 +4997,13 @@ def api_v2_list_montages(episode_id):
                         if m.get("id") == stale[0]["id"]:
                             m["_v1_audio_url_hq"] = v1_montage.get("_v1_audio_url_hq")
                             m["_v1_audio_url_preview"] = v1_montage.get("_v1_audio_url_preview")
+                    _v1_update_ok = True
                 except Exception as e:
                     logger.warning("Impossible de mettre à jour montage V2 depuis V1: %s", e)
+                # If DB update failed, replace the stale row with virtual V1 montage
+                if not _v1_update_ok:
+                    montages = [m for m in montages if m.get("status") != "processing"]
+                    montages.append(v1_montage)
             else:
                 # No V2 row at all — inject virtual montage from V1
                 montages.append(v1_montage)

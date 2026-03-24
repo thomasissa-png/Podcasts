@@ -348,21 +348,26 @@
           mt.forEach(m => {
             const isPublished = m.is_published;
             const isCompleted = m.status === 'completed';
+            const isProcessing = m.status === 'processing';
+            const isV1 = m.id === 'v1';
             const mismatchWarning = m.script_mismatch
               ? `<div style="background:var(--dore-light,#FFD234);color:#333;padding:0.5rem 0.75rem;border-radius:8px;font-size:0.85rem;width:100%;margin-bottom:0.5rem;">&#9888; L'audio a ete produit avec une version anterieure du script. Relancez le montage pour mettre a jour.</div>`
               : '';
-            montageSection += `<div class="montage-card${isPublished ? ' published' : ''}" data-mid="${m.id}">
+            const statusBadge = isPublished ? 'vert' : isCompleted ? 'bleu' : m.status === 'error' ? 'rouge' : isProcessing ? 'orange' : 'gris';
+            const statusLabel = isV1 ? 'pipeline v1' : m.status;
+            montageSection += `<div class="montage-card${isPublished ? ' published' : isCompleted ? ' selected' : ''}" data-mid="${m.id}">
               ${mismatchWarning}
               <div style="display:flex;align-items:center;gap:1rem;flex:1;flex-wrap:wrap;">
-                ${m.audio_url_hq ? `<audio controls preload="none" src="${m.audio_url_hq}" style="height:40px;"></audio>` : '<span class="badge badge-gris">Pas d\'audio</span>'}
-                <span>${formatDuration(m.duree_secondes)}</span>
-                <span>${formatSize(m.taille_bytes)}</span>
-                <span>${badgeHtml(m.status, isPublished ? 'vert' : isCompleted ? 'bleu' : m.status === 'error' ? 'rouge' : 'orange')}</span>
+                ${m.audio_url_hq ? `<audio controls preload="none" src="${m.audio_url_hq}" style="height:40px;"></audio>` : isProcessing ? '<span class="badge badge-orange"><span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> En cours...</span>' : '<span class="badge badge-gris">Pas d\'audio</span>'}
+                ${m.duree_secondes ? `<span>${formatDuration(m.duree_secondes)}</span>` : ''}
+                ${m.taille_bytes ? `<span>${formatSize(m.taille_bytes)}</span>` : ''}
+                <span>${badgeHtml(statusLabel, statusBadge)}</span>
                 ${m.download_url ? `<a href="${m.download_url}" class="btn btn-outline btn-sm" download>Telecharger</a>` : ''}
-                ${!isPublished && isCompleted ? `<button class="btn btn-success btn-sm btn-publish-montage" data-mid="${m.id}">Publier</button>` : ''}
+                ${m.audio_url_hq && !m.download_url ? `<a href="${m.audio_url_hq}" class="btn btn-outline btn-sm" download>Telecharger</a>` : ''}
+                ${!isPublished && isCompleted && !isV1 ? `<button class="btn btn-success btn-sm btn-publish-montage" data-mid="${m.id}">Publier</button>` : ''}
                 ${isPublished ? `<button class="btn btn-outline btn-sm btn-depublish-montage" data-mid="${m.id}" style="color:var(--corail);border-color:var(--corail);">Depublier</button>` : ''}
               </div>
-              ${isPublished ? '<span class="m-check">&#10004;</span>' : ''}
+              ${isPublished ? '<span class="m-check">&#10004;</span>' : isCompleted ? '<span class="m-check" style="color:var(--bleu);">&#9654;</span>' : ''}
             </div>`;
           });
         }

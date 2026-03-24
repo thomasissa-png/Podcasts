@@ -1175,3 +1175,86 @@ class TestApiV2Depublish:
 
         resp = client.post("/api/v2/montage/999/depublish", headers=_auth_headers())
         assert resp.status_code == 404
+
+
+class TestV1MontageFallback:
+    """Tests pour le fallback V1 quand _update_montage_from_v1 echoue."""
+
+    @pytest.fixture
+    def client(self):
+        """Cree un client Flask avec les mocks necessaires."""
+        import web
+        web.app.config["TESTING"] = True
+        mock_montage_repo = MagicMock()
+        with patch.object(web, "_DB_AVAILABLE", True), \
+             patch.object(web, "MontageRepo", mock_montage_repo), \
+             patch.object(web, "_CLAUDE_API_SECRET", "test-secret"):
+            c = web.app.test_client()
+            c._mock_montage_repo = mock_montage_repo
+            yield c
+
+    def test_v1_fallback_injects_virtual_montage_when_db_update_fails(self, client):
+        """Quand un montage V2 est stale (processing) et que le V1 update echoue,
+        le montage V1 virtuel doit quand meme etre retourne."""
+        # Setup: V2 row stale
+        client._mock_montage_repo.lister.return_value = [
+            {"id": 1, "episode_id": "S01E01", "status": "processing",
+             "duree_secondes": None, "taille_bytes": None, "is_published": False,
+             "audio_path_hq": None, "audio_path_preview": None,
+             "audio_os_key_hq": None, "audio_os_key_preview": None,
+             "chapitres_json": [], "created_at": datetime.now(timezone.utc),
+             "error_message": None, "nb_segments": None, "script_content_hash": None}
+        ]
+        # V1 rapport has complete montage data
+        v1_montage = {
+            "id": "v1", "episode_id": "S01E01", "status": "completed",
+            "is_published": False, "duree_secondes": 1317.0, "taille_bytes": 30000000,
+            "nb_segments": None, "chapitres_json": [{"title": "Ch1", "startTime": 10}],
+            "audio_path_hq": None, "audio_path_preview": None,
+            "audio_os_key_hq": "audio/S01E01_192k.mp3", "audio_os_key_preview": None,
+            "created_at": "2026-01-01", "error_message": None,
+            "_v1_audio_url_hq": "/audio/episodes/S01E01_192k.mp3",
+            "_v1_audio_url_preview": "/audio/episodes/S01E01_128k.mp3",
+        }
+        with patch("web._find_v1_montage", return_value=v1_montage), \
+             patch("web._update_montage_from_v1", side_effect=Exception("DB connection lost")):
+            resp = client.get("/api/v2/episode/S01E01/montages", headers=_auth_headers())
+            data = resp.get_json()
+            # Should have the V1 virtual montage, not the stale processing one
+            assert len(data) == 1
+            assert data[0]["id"] == "v1"
+            assert data[0]["status"] == "completed"
+            assert data[0]["duree_secondes"] == 1317.0
+            assert data[0]["audio_url_hq"] == "/audio/episodes/S01E01_192k.mp3"
+
+    def test_v1_fallback_updates_db_when_successful(self, client):
+        """Quand le V1 update reussit, le montage DB est mis a jour."""
+        stale_row = {
+            "id": 1, "episode_id": "S01E01", "status": "processing",
+            "duree_secondes": None, "taille_bytes": None, "is_published": False,
+            "audio_path_hq": None, "audio_path_preview": None,
+            "audio_os_key_hq": None, "audio_os_key_preview": None,
+            "chapitres_json": [], "created_at": datetime.now(timezone.utc),
+            "error_message": None, "nb_segments": None, "script_content_hash": None}
+        updated_row = dict(stale_row, status="completed", duree_secondes=1317.0,
+                          taille_bytes=30000000, audio_os_key_hq="audio/S01E01_192k.mp3")
+        # First call returns stale, second call (after update) returns updated
+        client._mock_montage_repo.lister.side_effect = [[stale_row], [updated_row]]
+
+        v1_montage = {
+            "id": "v1", "episode_id": "S01E01", "status": "completed",
+            "is_published": False, "duree_secondes": 1317.0, "taille_bytes": 30000000,
+            "audio_os_key_hq": "audio/S01E01_192k.mp3",
+            "_v1_audio_url_hq": "/audio/episodes/S01E01_192k.mp3",
+            "_v1_audio_url_preview": "/audio/episodes/S01E01_128k.mp3",
+        }
+        with patch("web._find_v1_montage", return_value=v1_montage), \
+             patch("web._update_montage_from_v1") as mock_update:
+            resp = client.get("/api/v2/episode/S01E01/montages", headers=_auth_headers())
+            data = resp.get_json()
+            # DB was updated
+            mock_update.assert_called_once_with(1, v1_montage)
+            # Should show the updated DB row (not virtual)
+            assert len(data) == 1
+            assert data[0]["id"] == 1
+            assert data[0]["status"] == "completed"
