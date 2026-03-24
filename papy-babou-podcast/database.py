@@ -511,6 +511,16 @@ BEGIN
     END IF;
 END $$;
 
+-- Migration : ajouter script_content_hash à montages si absent
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'montages'
+                   AND column_name = 'script_content_hash') THEN
+        ALTER TABLE montages ADD COLUMN script_content_hash VARCHAR(16);
+    END IF;
+END $$;
+
 -- Migration : ajouter published_montage_id et script_validated_at à episodes
 DO $$
 BEGIN

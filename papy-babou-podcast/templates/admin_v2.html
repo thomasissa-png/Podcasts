@@ -301,7 +301,11 @@
           montageSection += '<div class="empty-state">Aucun montage.</div>';
         } else {
           mt.forEach(m => {
-            montageSection += `<div class="montage-item">
+            const mismatchWarning = m.script_mismatch
+              ? `<div style="background:var(--dore-light,#FFD234);color:#333;padding:0.5rem 0.75rem;border-radius:8px;font-size:0.85rem;width:100%;margin-bottom:0.5rem;">&#9888; L'audio a ete produit avec une version anterieure du script. Relancez le montage pour mettre a jour.</div>`
+              : '';
+            montageSection += `<div class="montage-item" style="flex-wrap:wrap;">
+              ${mismatchWarning}
               ${m.audio_url_hq ? `<audio controls preload="none" src="${m.audio_url_hq}" style="height:40px;"></audio>` : '<span class="badge badge-gris">Pas d\'audio</span>'}
               <span>${formatDuration(m.duree_secondes)}</span>
               <span>${formatSize(m.taille_bytes)}</span>

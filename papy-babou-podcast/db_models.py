@@ -1273,13 +1273,25 @@ class MontageRepo:
     """
 
     @staticmethod
-    def creer(episode_id: str) -> int:
+    def creer(episode_id: str, script_content_hash: str | None = None) -> int:
         """Crée une nouvelle ligne montage en statut 'processing'.
 
         Returns:
             ID du montage créé.
         """
         with get_cursor() as cur:
+            if script_content_hash:
+                try:
+                    cur.execute(
+                        """INSERT INTO montages (episode_id, status, script_content_hash)
+                           VALUES (%s, 'processing', %s)
+                           RETURNING id""",
+                        (episode_id, script_content_hash),
+                    )
+                    return cur.fetchone()["id"]
+                except Exception:
+                    # Column may not exist yet — fallback without hash
+                    pass
             cur.execute(
                 """INSERT INTO montages (episode_id, status)
                    VALUES (%s, 'processing')
@@ -1299,9 +1311,42 @@ class MontageRepo:
         chapitres_json: list | None = None,
         audio_os_key_hq: str | None = None,
         audio_os_key_preview: str | None = None,
+        script_content_hash: str | None = None,
     ) -> None:
         """Met à jour un montage après assemblage réussi."""
         with get_cursor() as cur:
+            # Try with script_content_hash first (column may not exist yet)
+            if script_content_hash:
+                try:
+                    cur.execute(
+                        """UPDATE montages SET
+                           status = 'completed',
+                           audio_path_hq = %s,
+                           audio_path_preview = %s,
+                           duree_secondes = %s,
+                           taille_bytes = %s,
+                           nb_segments = %s,
+                           chapitres_json = %s,
+                           audio_os_key_hq = %s,
+                           audio_os_key_preview = %s,
+                           script_content_hash = %s
+                           WHERE id = %s""",
+                        (
+                            audio_path_hq,
+                            audio_path_preview,
+                            duree_secondes,
+                            taille_bytes,
+                            nb_segments,
+                            json.dumps(chapitres_json or [], ensure_ascii=False),
+                            audio_os_key_hq,
+                            audio_os_key_preview,
+                            script_content_hash,
+                            montage_id,
+                        ),
+                    )
+                    return
+                except Exception:
+                    pass  # Column may not exist — fallback below
             cur.execute(
                 """UPDATE montages SET
                    status = 'completed',

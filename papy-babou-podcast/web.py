@@ -4809,8 +4809,21 @@ def api_v2_montage(episode_id):
             "error": f"Segments non prêts: {progress['pending']} pending, {progress['generating']} en cours",
         }), 400
 
+    # Compute script hash for coherence tracking
+    _montage_script_hash = None
+    try:
+        from utils import compute_script_hash
+        script_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+        if not script_path.exists():
+            script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+        if script_path.exists():
+            _script = json.loads(script_path.read_text(encoding="utf-8"))
+            _montage_script_hash = compute_script_hash(_script)
+    except Exception:
+        pass
+
     # Créer la ligne montage
-    montage_id = MontageRepo.creer(episode_id)
+    montage_id = MontageRepo.creer(episode_id, script_content_hash=_montage_script_hash)
 
     def _job():
         return _job_montage(episode_id, montage_id)
@@ -4836,6 +4849,14 @@ def _job_montage(episode_id, montage_id):
     segments_dir = config.OUTPUT_DIR / "segments" / episode_id
     sortie_dir = config.OUTPUT_DIR / "audio" / "episodes"
     sortie_dir.mkdir(parents=True, exist_ok=True)
+
+    # Compute script hash for coherence tracking
+    _script_hash = None
+    try:
+        from utils import compute_script_hash
+        _script_hash = compute_script_hash(script)
+    except Exception:
+        pass
 
     try:
         monteur = Monteur()
@@ -4874,6 +4895,7 @@ def _job_montage(episode_id, montage_id):
             chapitres_json=chapitres,
             audio_os_key_hq=os_key_hq,
             audio_os_key_preview=os_key_preview,
+            script_content_hash=_script_hash,
         )
 
         return {"montage_id": montage_id, "duree_secondes": duree, "taille_bytes": taille}
@@ -4910,7 +4932,40 @@ def api_v2_list_montages(episode_id):
                 # No V2 row at all — inject virtual montage from V1
                 montages.append(v1_montage)
 
+    # ── Compute current script hash for mismatch detection ──
+    _current_script_hash = None
+    try:
+        from utils import compute_script_hash
+        # Try DB first (latest version)
+        try:
+            from db_models import ScriptRepo
+            db_script = ScriptRepo.charger_valide(episode_id)
+            if not db_script:
+                db_script = ScriptRepo.charger_derniere_version(episode_id)
+            if db_script:
+                _current_script_hash = compute_script_hash(db_script)
+        except Exception:
+            pass
+        # Fallback to filesystem
+        if not _current_script_hash:
+            for suffix in ("_script_valide.json", "_script.json"):
+                _sp = config.SCRIPTS_DIR / f"{episode_id}{suffix}"
+                if _sp.exists():
+                    _s = json.loads(_sp.read_text(encoding="utf-8"))
+                    _current_script_hash = compute_script_hash(_s)
+                    break
+    except Exception:
+        pass
+
     for m in montages:
+        # ── Script/audio coherence fields ──
+        _prod_hash = m.get("script_content_hash")
+        m["script_hash_production"] = _prod_hash
+        m["script_hash_current"] = _current_script_hash
+        m["script_mismatch"] = bool(
+            _prod_hash and _current_script_hash and _prod_hash != _current_script_hash
+        )
+
         if m.get("audio_path_hq") and Path(m["audio_path_hq"]).exists():
             m["audio_url_hq"] = f"/api/v2/montage/{m['id']}/audio?quality=hq"
             m["audio_url_preview"] = f"/api/v2/montage/{m['id']}/audio?quality=preview"
