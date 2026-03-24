@@ -492,6 +492,7 @@ CREATE TABLE IF NOT EXISTS montages (
     duree_secondes  FLOAT,
     taille_bytes    BIGINT,
     nb_segments     INTEGER,
+    chapitres_json  JSONB DEFAULT '[]',
     status          VARCHAR(20) DEFAULT 'pending',
     is_published    BOOLEAN DEFAULT FALSE,
     error_message   TEXT,
@@ -499,6 +500,31 @@ CREATE TABLE IF NOT EXISTS montages (
 );
 CREATE INDEX IF NOT EXISTS idx_montage_episode ON montages(episode_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_montage_published ON montages(episode_id) WHERE is_published = TRUE;
+
+-- Migration : ajouter chapitres_json à montages si absent
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'montages'
+                   AND column_name = 'chapitres_json') THEN
+        ALTER TABLE montages ADD COLUMN chapitres_json JSONB DEFAULT '[]';
+    END IF;
+END $$;
+
+-- Migration : ajouter published_montage_id et script_validated_at à episodes
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'episodes'
+                   AND column_name = 'published_montage_id') THEN
+        ALTER TABLE episodes ADD COLUMN published_montage_id INT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'episodes'
+                   AND column_name = 'script_validated_at') THEN
+        ALTER TABLE episodes ADD COLUMN script_validated_at TIMESTAMPTZ;
+    END IF;
+END $$;
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- Table: audit_log — Journal d'audit (JAMAIS supprimé, append-only)

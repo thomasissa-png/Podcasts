@@ -1011,3 +1011,410 @@ class PreferencesRepo:
                 "UPDATE preferences_producteur SET is_active = FALSE WHERE id = %s",
                 (regle_id,),
             )
+
+
+# ── Segments Audio (Back-office V2) ──────────────────────────────────────────
+
+
+class SegmentAudioRepo:
+    """Gestion des segments audio individuels pour le back-office V2.
+
+    Chaque segment du script (voix ou SFX) a une ligne correspondante dans
+    `segments_audio`. Permet le suivi granulaire de la génération TTS/SFX,
+    l'édition de texte, la regénération individuelle et la validation.
+    """
+
+    @staticmethod
+    def creer_depuis_script(episode_id: str, script: dict) -> int:
+        """Crée les lignes segments_audio à partir d'un script JSON.
+
+        Supprime d'abord les anciennes lignes pour cet épisode (reset complet),
+        puis insère une ligne par segment du script.
+
+        Args:
+            episode_id: Identifiant de l'épisode (ex: "S01E01").
+            script: Script JSON validé.
+
+        Returns:
+            Nombre de segments créés.
+        """
+        segments = script.get("episode", {}).get("segments", [])
+        if not segments:
+            return 0
+
+        with get_cursor() as cur:
+            # Reset complet : supprimer les anciennes lignes
+            cur.execute(
+                "DELETE FROM segments_audio WHERE episode_id = %s",
+                (episode_id,),
+            )
+
+            rows = []
+            for seg in segments:
+                personnage = seg.get("personnage", "")
+                is_sfx = personnage == "sfx"
+                rows.append({
+                    "episode_id": episode_id,
+                    "segment_id": seg.get("id", ""),
+                    "segment_type": "sfx" if is_sfx else "voix",
+                    "personnage": personnage,
+                    "texte": seg.get("texte", ""),
+                    "texte_original": seg.get("texte", ""),
+                    "ton": seg.get("ton", ""),
+                    "rythme": seg.get("rythme", "normal"),
+                    "sfx_prompt": seg.get("texte", "") if is_sfx else None,
+                    "nb_caracteres": len(seg.get("texte", "")),
+                    "status": "pending",
+                    "version": 1,
+                })
+
+            if rows:
+                psycopg2.extras.execute_batch(
+                    cur,
+                    """INSERT INTO segments_audio
+                       (episode_id, segment_id, segment_type, personnage,
+                        texte, texte_original, ton, rythme, sfx_prompt,
+                        nb_caracteres, status, version)
+                       VALUES (%(episode_id)s, %(segment_id)s, %(segment_type)s,
+                               %(personnage)s, %(texte)s, %(texte_original)s,
+                               %(ton)s, %(rythme)s, %(sfx_prompt)s,
+                               %(nb_caracteres)s, %(status)s, %(version)s)""",
+                    rows,
+                )
+
+        logger.info(
+            "Segments audio créés pour %s : %d segments (%d voix, %d SFX)",
+            episode_id,
+            len(rows),
+            sum(1 for r in rows if r["segment_type"] == "voix"),
+            sum(1 for r in rows if r["segment_type"] == "sfx"),
+        )
+        return len(rows)
+
+    @staticmethod
+    def lister(
+        episode_id: str,
+        segment_type: str | None = None,
+        status: str | None = None,
+    ) -> list[dict]:
+        """Liste les segments audio d'un épisode avec filtres optionnels.
+
+        Args:
+            episode_id: Identifiant de l'épisode.
+            segment_type: Filtrer par type ("voix", "sfx", ou None pour tous).
+            status: Filtrer par statut (ex: "pending,error") ou None pour tous.
+
+        Returns:
+            Liste de segments triés par segment_id.
+        """
+        conditions = ["episode_id = %s"]
+        params: list = [episode_id]
+
+        if segment_type and segment_type != "all":
+            conditions.append("segment_type = %s")
+            params.append(segment_type)
+
+        if status:
+            statuses = [s.strip() for s in status.split(",")]
+            placeholders = ", ".join(["%s"] * len(statuses))
+            conditions.append(f"status IN ({placeholders})")
+            params.extend(statuses)
+
+        where = " AND ".join(conditions)
+
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                f"SELECT * FROM segments_audio WHERE {where} "
+                "ORDER BY segment_id",
+                params,
+            )
+            return [dict(row) for row in cur.fetchall()]
+
+    @staticmethod
+    def charger(episode_id: str, segment_id: str) -> dict | None:
+        """Charge un segment audio spécifique (version la plus récente).
+
+        Returns:
+            Dictionnaire du segment ou None si non trouvé.
+        """
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                "SELECT * FROM segments_audio "
+                "WHERE episode_id = %s AND segment_id = %s "
+                "ORDER BY version DESC LIMIT 1",
+                (episode_id, segment_id),
+            )
+            row = cur.fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def maj_status(
+        episode_id: str,
+        segment_id: str,
+        status: str,
+        audio_path: str | None = None,
+        audio_os_key: str | None = None,
+        duree_ms: int | None = None,
+        nb_caracteres: int | None = None,
+        error_message: str | None = None,
+    ) -> None:
+        """Met à jour le statut et les métadonnées audio d'un segment.
+
+        Args:
+            episode_id: Identifiant de l'épisode.
+            segment_id: Identifiant du segment.
+            status: Nouveau statut (pending, generating, generated, validated, error).
+            audio_path: Chemin du fichier audio MP3 généré.
+            audio_os_key: Clé Object Storage.
+            duree_ms: Durée en millisecondes.
+            nb_caracteres: Nombre de caractères du texte.
+            error_message: Message d'erreur (si status=error).
+        """
+        updates = ["status = %s"]
+        params: list = [status]
+
+        if audio_path is not None:
+            updates.append("audio_path = %s")
+            params.append(audio_path)
+        if audio_os_key is not None:
+            updates.append("audio_os_key = %s")
+            params.append(audio_os_key)
+        if duree_ms is not None:
+            updates.append("duree_ms = %s")
+            params.append(duree_ms)
+        if nb_caracteres is not None:
+            updates.append("nb_caracteres = %s")
+            params.append(nb_caracteres)
+        if error_message is not None:
+            updates.append("error_message = %s")
+            params.append(error_message)
+
+        params.extend([episode_id, segment_id])
+
+        with get_cursor() as cur:
+            cur.execute(
+                f"UPDATE segments_audio SET {', '.join(updates)} "
+                "WHERE episode_id = %s AND segment_id = %s "
+                "AND version = (SELECT MAX(version) FROM segments_audio "
+                "WHERE episode_id = %s AND segment_id = %s)",
+                params + [episode_id, segment_id],
+            )
+
+    @staticmethod
+    def maj_texte(episode_id: str, segment_id: str, texte: str) -> None:
+        """Met à jour le texte d'un segment et le passe en pending.
+
+        Incrémente la version pour traçabilité.
+        """
+        with get_cursor() as cur:
+            cur.execute(
+                "UPDATE segments_audio SET texte = %s, status = 'pending', "
+                "version = version + 1, nb_caracteres = %s "
+                "WHERE episode_id = %s AND segment_id = %s "
+                "AND version = (SELECT MAX(version) FROM segments_audio "
+                "WHERE episode_id = %s AND segment_id = %s)",
+                (texte, len(texte), episode_id, segment_id,
+                 episode_id, segment_id),
+            )
+
+    @staticmethod
+    def progression(episode_id: str) -> dict:
+        """Retourne la progression de génération audio pour un épisode.
+
+        Returns:
+            Dict avec total, pending, generating, generated, validated, errors, percent.
+        """
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                "SELECT status, COUNT(*) as cnt FROM segments_audio "
+                "WHERE episode_id = %s GROUP BY status",
+                (episode_id,),
+            )
+            rows = cur.fetchall()
+
+        counts = {row["status"]: row["cnt"] for row in rows}
+        total = sum(counts.values())
+        done = counts.get("generated", 0) + counts.get("validated", 0)
+        percent = round(done / total * 100) if total > 0 else 0
+
+        return {
+            "total": total,
+            "pending": counts.get("pending", 0),
+            "generating": counts.get("generating", 0),
+            "generated": counts.get("generated", 0),
+            "validated": counts.get("validated", 0),
+            "errors": counts.get("error", 0),
+            "percent": percent,
+        }
+
+    @staticmethod
+    def valider_tous(episode_id: str) -> int:
+        """Valide tous les segments générés d'un épisode.
+
+        Returns:
+            Nombre de segments validés.
+        """
+        with get_cursor() as cur:
+            cur.execute(
+                "UPDATE segments_audio SET status = 'validated' "
+                "WHERE episode_id = %s AND status = 'generated' ",
+                (episode_id,),
+            )
+            return cur.rowcount
+
+
+# ── Montages (Back-office V2) ────────────────────────────────────────────────
+
+
+class MontageRepo:
+    """Gestion des montages audio assemblés pour le back-office V2.
+
+    N montages par épisode, un seul publié à la fois (contrainte unique partielle).
+    """
+
+    @staticmethod
+    def creer(episode_id: str) -> int:
+        """Crée une nouvelle ligne montage en statut 'processing'.
+
+        Returns:
+            ID du montage créé.
+        """
+        with get_cursor() as cur:
+            cur.execute(
+                """INSERT INTO montages (episode_id, status)
+                   VALUES (%s, 'processing')
+                   RETURNING id""",
+                (episode_id,),
+            )
+            return cur.fetchone()["id"]
+
+    @staticmethod
+    def terminer(
+        montage_id: int,
+        audio_path_hq: str,
+        audio_path_preview: str,
+        duree_secondes: float,
+        taille_bytes: int,
+        nb_segments: int,
+        chapitres_json: list | None = None,
+        audio_os_key_hq: str | None = None,
+        audio_os_key_preview: str | None = None,
+    ) -> None:
+        """Met à jour un montage après assemblage réussi."""
+        with get_cursor() as cur:
+            cur.execute(
+                """UPDATE montages SET
+                   status = 'completed',
+                   audio_path_hq = %s,
+                   audio_path_preview = %s,
+                   duree_secondes = %s,
+                   taille_bytes = %s,
+                   nb_segments = %s,
+                   chapitres_json = %s,
+                   audio_os_key_hq = %s,
+                   audio_os_key_preview = %s
+                   WHERE id = %s""",
+                (
+                    audio_path_hq,
+                    audio_path_preview,
+                    duree_secondes,
+                    taille_bytes,
+                    nb_segments,
+                    json.dumps(chapitres_json or [], ensure_ascii=False),
+                    audio_os_key_hq,
+                    audio_os_key_preview,
+                    montage_id,
+                ),
+            )
+
+    @staticmethod
+    def echouer(montage_id: int, error_message: str) -> None:
+        """Marque un montage comme échoué."""
+        with get_cursor() as cur:
+            cur.execute(
+                "UPDATE montages SET status = 'error', error_message = %s WHERE id = %s",
+                (error_message, montage_id),
+            )
+
+    @staticmethod
+    def lister(episode_id: str) -> list[dict]:
+        """Liste tous les montages d'un épisode (plus récent en premier)."""
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                "SELECT * FROM montages WHERE episode_id = %s ORDER BY created_at DESC",
+                (episode_id,),
+            )
+            return [dict(row) for row in cur.fetchall()]
+
+    @staticmethod
+    def charger(montage_id: int) -> dict | None:
+        """Charge un montage par son ID."""
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                "SELECT * FROM montages WHERE id = %s",
+                (montage_id,),
+            )
+            row = cur.fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def publier(montage_id: int) -> None:
+        """Publie un montage (un seul publié par épisode).
+
+        Dépublie d'abord tous les montages de cet épisode, puis publie celui-ci.
+        Met également à jour `episodes.published_montage_id`.
+        """
+        with get_cursor() as cur:
+            # Récupérer l'episode_id
+            cur.execute(
+                "SELECT episode_id FROM montages WHERE id = %s",
+                (montage_id,),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise ValueError(f"Montage {montage_id} non trouvé")
+            episode_id = row["episode_id"]
+
+            # Dépublier tous les montages de cet épisode
+            cur.execute(
+                "UPDATE montages SET is_published = FALSE WHERE episode_id = %s",
+                (episode_id,),
+            )
+
+            # Publier le montage sélectionné
+            cur.execute(
+                "UPDATE montages SET is_published = TRUE WHERE id = %s",
+                (montage_id,),
+            )
+
+            # Mettre à jour episodes.published_montage_id
+            cur.execute(
+                "UPDATE episodes SET published_montage_id = %s WHERE episode_id = %s",
+                (montage_id, episode_id),
+            )
+
+        logger.info("Montage %d publié pour %s", montage_id, episode_id)
+
+    @staticmethod
+    def depublier(montage_id: int) -> None:
+        """Dépublie un montage."""
+        with get_cursor() as cur:
+            cur.execute(
+                "SELECT episode_id FROM montages WHERE id = %s",
+                (montage_id,),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise ValueError(f"Montage {montage_id} non trouvé")
+            episode_id = row["episode_id"]
+
+            cur.execute(
+                "UPDATE montages SET is_published = FALSE WHERE id = %s",
+                (montage_id,),
+            )
+            cur.execute(
+                "UPDATE episodes SET published_montage_id = NULL WHERE episode_id = %s",
+                (episode_id,),
+            )
+
+        logger.info("Montage %d dépublié pour %s", montage_id, episode_id)
