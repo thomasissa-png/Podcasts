@@ -4603,6 +4603,43 @@ def api_v2_validate_all_segments(episode_id):
     return jsonify({"ok": True, "count": count})
 
 
+@app.route("/api/v2/episode/<episode_id>/segments/bulk-action", methods=["POST"])
+def api_v2_segments_bulk_action(episode_id):
+    """Actions groupées sur une sélection de segments: validate ou regenerate."""
+    if not _DB_AVAILABLE or not SegmentAudioRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    data = request.get_json(silent=True) or {}
+    action = data.get("action")
+    segment_ids = data.get("segment_ids", [])
+
+    if action not in ("validate", "regenerate"):
+        return jsonify({"error": "Action invalide (validate ou regenerate)"}), 400
+    if not segment_ids or not isinstance(segment_ids, list):
+        return jsonify({"error": "segment_ids requis (liste non vide)"}), 400
+
+    if action == "validate":
+        count = 0
+        for sid in segment_ids:
+            try:
+                SegmentAudioRepo.maj_status(episode_id, sid, "validated")
+                count += 1
+            except Exception as e:
+                logger.warning("Bulk validate %s/%s échoué: %s", episode_id, sid, e)
+        return jsonify({"ok": True, "count": count})
+
+    # action == "regenerate"
+    def _job():
+        return _job_regenerate_errors(episode_id, segment_ids)
+
+    try:
+        job_id = _start_fn_job(_job, episode_id=f"{episode_id}_bulk_regen")
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+
+    return jsonify({"job_id": job_id, "count": len(segment_ids)})
+
+
 @app.route("/api/v2/episode/<episode_id>/segments/regenerate-errors", methods=["POST"])
 def api_v2_regenerate_errors(episode_id):
     """Régénère tous les segments en erreur pour un épisode (job async)."""

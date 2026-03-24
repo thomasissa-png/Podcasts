@@ -155,6 +155,7 @@
     window.addEventListener('load', route);
     function route() {
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (window._segKeyHandler) { document.removeEventListener('keydown', window._segKeyHandler); window._segKeyHandler = null; }
       const h = location.hash.slice(1) || '/';
       if (h === '/') return renderHub();
       const m1 = h.match(/^\/episode\/(\w+)\/segments$/);
@@ -271,6 +272,10 @@
             </div>
             ${sc.validated ? badgeHtml('Script valide', 'vert') : `<button class="btn btn-primary" id="btn-validate-script">Valider le script</button>`}
             <a href="#/episode/${eid}/segments" class="btn btn-outline" style="margin-left:0.5rem;">Voir les segments</a>
+            <details class="script-inline" style="margin-top:1rem;" id="script-details">
+              <summary style="cursor:pointer;font-weight:600;font-size:0.9rem;color:var(--bleu);user-select:none;">Voir le script complet</summary>
+              <div id="script-inline-content" style="margin-top:0.5rem;max-height:500px;overflow-y:auto;border:1px solid var(--gris-clair);border-radius:8px;padding:0.25rem 0;"><div class="empty-state" style="padding:1rem;"><span class="spinner"></span> Chargement...</div></div>
+            </details>
           </div>`;
         }
 
@@ -320,6 +325,36 @@
         `;
 
         // ── Event listeners ──
+        // ── Inline script view (P2-2) ──
+        const scriptDetails = $('#script-details');
+        if (scriptDetails) {
+          let scriptLoaded = false;
+          scriptDetails.addEventListener('toggle', async () => {
+            if (!scriptDetails.open || scriptLoaded) return;
+            scriptLoaded = true;
+            try {
+              const segs = await api(`/api/v2/episode/${eid}/segments`);
+              let html = '';
+              segs.forEach(s => {
+                if (s.segment_type === 'sfx') {
+                  html += `<div class="seg-mini seg-sfx"><span style="flex-shrink:0;">&#128266;</span><span>${esc(s.texte)}</span></div>`;
+                } else {
+                  const color = personnageColor(s.personnage);
+                  const initials = personnageInitial(s.personnage);
+                  html += `<div class="seg-mini">
+                    <div class="segment-personnage" style="background:${color};width:24px;height:24px;font-size:0.55rem;flex-shrink:0;">${initials}</div>
+                    <span style="flex:1;">${esc(s.texte)}</span>
+                    ${s.ton ? `<span class="badge badge-gris" style="font-size:0.65rem;">${esc(s.ton)}</span>` : ''}
+                  </div>`;
+                }
+              });
+              $('#script-inline-content').innerHTML = html || '<div class="empty-state">Aucun segment.</div>';
+            } catch (e) {
+              $('#script-inline-content').innerHTML = `<div class="empty-state" style="color:var(--corail);">Erreur : ${esc(e.message)}</div>`;
+            }
+          });
+        }
+
         const btnValScript = $('#btn-validate-script');
         if (btnValScript) {
           btnValScript.addEventListener('click', async () => {
@@ -532,20 +567,43 @@
               el.innerHTML = '';
               el.appendChild(ta);
               ta.focus();
-              ta.addEventListener('keydown', async (ev) => {
-                if (ev.key === 'Enter' && !ev.shiftKey) {
-                  ev.preventDefault();
-                  const newText = ta.value.trim();
-                  if (!newText || newText === seg.texte) { el.textContent = seg.texte; return; }
+              function showDiff(newText) {
+                const existing = el.querySelector('.diff-panel');
+                if (existing) existing.remove();
+                const dp = document.createElement('div');
+                dp.className = 'diff-panel';
+                dp.innerHTML = `<div style="font-size:0.75rem;color:var(--gris);margin-bottom:4px;font-weight:600;">Avant / Apres</div>
+                  <span class="diff-before">${esc(seg.texte)}</span>
+                  <span class="diff-after">${esc(newText)}</span>
+                  <div class="diff-actions">
+                    <button class="btn btn-success btn-sm diff-confirm">Confirmer</button>
+                    <button class="btn btn-outline btn-sm diff-cancel">Annuler</button>
+                  </div>`;
+                el.appendChild(dp);
+                dp.querySelector('.diff-confirm').addEventListener('click', async () => {
+                  dp.querySelector('.diff-confirm').disabled = true;
                   try {
                     await api(`/api/v2/segment/${eid}/${sid}/edit`, { method: 'POST', body: { texte: newText } });
                     seg.texte = newText;
                     seg.status = 'pending';
+                    el.innerHTML = '';
                     el.textContent = newText;
                     toast('Segment modifie');
-                  } catch (e) { toast(e.message, false); el.textContent = seg.texte; }
+                  } catch (e) { toast(e.message, false); el.innerHTML = ''; el.textContent = seg.texte; }
+                });
+                dp.querySelector('.diff-cancel').addEventListener('click', () => {
+                  el.innerHTML = '';
+                  el.textContent = seg.texte;
+                });
+              }
+              ta.addEventListener('keydown', async (ev) => {
+                if ((ev.key === 'Enter' && !ev.shiftKey) || (ev.key === 'Enter' && ev.ctrlKey)) {
+                  ev.preventDefault();
+                  const newText = ta.value.trim();
+                  if (!newText || newText === seg.texte) { el.innerHTML = ''; el.textContent = seg.texte; return; }
+                  showDiff(newText);
                 }
-                if (ev.key === 'Escape') { el.textContent = seg.texte; }
+                if (ev.key === 'Escape') { el.innerHTML = ''; el.textContent = seg.texte; }
               });
             });
           });
@@ -605,6 +663,109 @@
         }
 
         attachSegEvents();
+
+        // ── Search ──
+        const segSearch = $('#seg-search');
+        if (segSearch) {
+          segSearch.addEventListener('input', () => {
+            searchTerm = segSearch.value.trim();
+            $('#seg-list').innerHTML = renderList();
+            attachSegEvents();
+            updateBulkBar();
+          });
+        }
+
+        // ── Select All ──
+        const segSelectAll = $('#seg-select-all');
+        if (segSelectAll) {
+          segSelectAll.addEventListener('change', () => {
+            const filtered = getFiltered();
+            if (segSelectAll.checked) {
+              filtered.forEach(s => selectedIds.add(s.segment_id));
+            } else {
+              filtered.forEach(s => selectedIds.delete(s.segment_id));
+            }
+            document.querySelectorAll('.seg-cb').forEach(cb => {
+              cb.checked = selectedIds.has(cb.dataset.sid);
+            });
+            updateBulkBar();
+          });
+        }
+
+        // ── Checkbox change (delegated) ──
+        document.getElementById('seg-list').addEventListener('change', (ev) => {
+          if (ev.target.classList.contains('seg-cb')) {
+            const sid = ev.target.dataset.sid;
+            if (ev.target.checked) selectedIds.add(sid);
+            else selectedIds.delete(sid);
+            updateBulkBar();
+          }
+        });
+
+        // ── Bulk bar ──
+        function updateBulkBar() {
+          const bar = $('#bulk-bar');
+          const n = selectedIds.size;
+          if (n > 0) {
+            bar.style.display = 'flex';
+            $('#bulk-count').textContent = n + ' selectionne' + (n > 1 ? 's' : '');
+          } else {
+            bar.style.display = 'none';
+          }
+        }
+
+        $('#bulk-validate')?.addEventListener('click', async () => {
+          const ids = Array.from(selectedIds);
+          if (!ids.length) return;
+          const btn = $('#bulk-validate');
+          btn.disabled = true;
+          try {
+            const { count } = await api(`/api/v2/episode/${eid}/segments/bulk-action`, { method: 'POST', body: { action: 'validate', segment_ids: ids } });
+            toast(`${count} segments valides`);
+            selectedIds.clear();
+            renderSegments(eid);
+          } catch (e) { toast(e.message, false); btn.disabled = false; }
+        });
+
+        $('#bulk-regenerate')?.addEventListener('click', async () => {
+          const ids = Array.from(selectedIds);
+          if (!ids.length) return;
+          const btn = $('#bulk-regenerate');
+          btn.disabled = true;
+          try {
+            const { job_id, count } = await api(`/api/v2/episode/${eid}/segments/bulk-action`, { method: 'POST', body: { action: 'regenerate', segment_ids: ids } });
+            toast(`Regeneration de ${count} segments lancee`);
+            pollJob(job_id, () => { toast('Regeneration terminee'); renderSegments(eid); });
+          } catch (e) { toast(e.message, false); btn.disabled = false; }
+        });
+
+        $('#bulk-deselect')?.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          selectedIds.clear();
+          document.querySelectorAll('.seg-cb').forEach(cb => cb.checked = false);
+          if (segSelectAll) segSelectAll.checked = false;
+          updateBulkBar();
+        });
+
+        // ── Keyboard shortcuts (P2-5) ──
+        function _segKeyHandler(ev) {
+          const tag = ev.target.tagName;
+          const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+          if (ev.key === '/' && !isInput) {
+            ev.preventDefault();
+            const si = document.getElementById('seg-search');
+            if (si) si.focus();
+          }
+          if (ev.key === 'a' && !isInput) {
+            ev.preventDefault();
+            const sa = document.getElementById('seg-select-all');
+            if (sa) { sa.checked = !sa.checked; sa.dispatchEvent(new Event('change')); }
+          }
+        }
+        document.addEventListener('keydown', _segKeyHandler);
+        // Clean up on route change (store ref for removal)
+        if (window._segKeyHandler) document.removeEventListener('keydown', window._segKeyHandler);
+        window._segKeyHandler = _segKeyHandler;
 
         // Regenerate all errors
         const btnRegenErrors = $('#btn-regen-errors');
