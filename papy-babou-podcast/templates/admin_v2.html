@@ -322,7 +322,28 @@
             $('#audio-job-status').innerHTML = ' <span class="spinner"></span> Generation en cours...';
             try {
               const { job_id } = await api(`/api/v2/episode/${eid}/generate-audio`, { method: 'POST' });
+              // P1-2 : Progress polling temps réel
+              let progressTimer = setInterval(async () => {
+                try {
+                  const prog = await api(`/api/v2/episode/${eid}/audio-progress`);
+                  const pBar = document.querySelector('#audio-progress-live');
+                  if (pBar) {
+                    pBar.querySelector('.progress-fill').style.width = prog.percent + '%';
+                    pBar.querySelector('.progress-pct').textContent = prog.percent + '%';
+                    pBar.querySelector('.progress-detail').textContent = `${prog.generated || 0}/${prog.total || 0} generes${prog.errors ? `, ${prog.errors} erreurs` : ''}`;
+                  }
+                  if (prog.percent >= 100) { clearInterval(progressTimer); progressTimer = null; }
+                } catch (e) { /* ignore progress poll errors */ }
+              }, 3000);
+              $('#audio-job-status').innerHTML = `
+                <div id="audio-progress-live" style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">
+                  <span class="spinner"></span>
+                  <div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:${pct}%"></div></div>
+                  <span class="progress-pct" style="font-weight:700;font-size:0.9rem;">${pct}%</span>
+                  <span class="progress-detail" style="font-size:0.8rem;color:var(--gris);">0/${pr.total || 0} generes</span>
+                </div>`;
               pollJob(job_id, (result) => {
+                if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
                 $('#audio-job-status').innerHTML = result.status === 'ok'
                   ? ' <span class="badge badge-vert">Termine</span>'
                   : ` <span class="badge badge-rouge">Erreur</span>`;
@@ -398,8 +419,12 @@
                 <div class="segment-texte" id="txt-${s.segment_id}">${esc(s.texte)}</div>
                 <div class="segment-meta">
                   <span>${esc(s.segment_id)}</span>
-                  ${s.ton ? `<span>${esc(s.ton)}</span>` : ''}
-                  ${s.rythme ? `<span>${esc(s.rythme)}</span>` : ''}
+                  ${s.segment_type !== 'sfx' ? `<select class="sel-ton" data-sid="${s.segment_id}" style="font-size:0.75rem;border:1px solid var(--gris-clair);border-radius:4px;padding:1px 4px;background:var(--blanc);">
+                    ${['','narratif','joyeux','mystérieux','dramatique','tendre','solennel','humoristique','curieux','émerveillé','inquiet','rassurant','complice','triste','épique','malicieux','calme'].map(t => `<option value="${t}"${s.ton === t ? ' selected' : ''}>${t || '—'}</option>`).join('')}
+                  </select>` : (s.ton ? `<span>${esc(s.ton)}</span>` : '')}
+                  ${s.segment_type !== 'sfx' ? `<select class="sel-rythme" data-sid="${s.segment_id}" style="font-size:0.75rem;border:1px solid var(--gris-clair);border-radius:4px;padding:1px 4px;background:var(--blanc);">
+                    ${['','lent','normal','rapide'].map(r => `<option value="${r}"${s.rythme === r ? ' selected' : ''}>${r || '—'}</option>`).join('')}
+                  </select>` : (s.rythme ? `<span>${esc(s.rythme)}</span>` : '')}
                   ${s.duree_ms ? `<span>${(s.duree_ms / 1000).toFixed(1)}s</span>` : ''}
                 </div>
               </div>
@@ -430,6 +455,7 @@
             <button class="btn btn-sm ${filter === 'voix' ? 'btn-primary' : 'btn-outline'}" data-f="voix">Voix (${voixCount})</button>
             <button class="btn btn-sm ${filter === 'sfx' ? 'btn-primary' : 'btn-outline'}" data-f="sfx">SFX (${sfxCount})</button>
             ${errCount > 0 ? `<button class="btn btn-sm ${filter === 'errors' ? 'btn-danger' : 'btn-outline'}" data-f="errors">Erreurs (${errCount})</button>` : ''}
+            ${errCount > 0 ? `<button class="btn btn-sm btn-danger" id="btn-regen-errors">Regenerer les erreurs (${errCount})</button>` : ''}
           </div>
           <div class="card" style="padding:0.5rem;" id="seg-list">${renderList()}</div>
           <div class="sticky-bottom">
@@ -492,6 +518,30 @@
             });
           });
 
+          // Ton/rythme change
+          document.querySelectorAll('.sel-ton').forEach(sel => {
+            sel.addEventListener('change', async () => {
+              const sid = sel.dataset.sid;
+              try {
+                await api(`/api/v2/segment/${eid}/${sid}/edit`, { method: 'POST', body: { ton: sel.value } });
+                const seg = segments.find(s => s.segment_id === sid);
+                if (seg) seg.ton = sel.value;
+                toast('Ton mis a jour');
+              } catch (e) { toast(e.message, false); }
+            });
+          });
+          document.querySelectorAll('.sel-rythme').forEach(sel => {
+            sel.addEventListener('change', async () => {
+              const sid = sel.dataset.sid;
+              try {
+                await api(`/api/v2/segment/${eid}/${sid}/edit`, { method: 'POST', body: { rythme: sel.value } });
+                const seg = segments.find(s => s.segment_id === sid);
+                if (seg) seg.rythme = sel.value;
+                toast('Rythme mis a jour');
+              } catch (e) { toast(e.message, false); }
+            });
+          });
+
           // Validate single
           document.querySelectorAll('.btn-val-seg').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -510,6 +560,31 @@
         }
 
         attachSegEvents();
+
+        // Regenerate all errors
+        const btnRegenErrors = $('#btn-regen-errors');
+        if (btnRegenErrors) {
+          btnRegenErrors.addEventListener('click', async () => {
+            btnRegenErrors.disabled = true;
+            btnRegenErrors.innerHTML = '<span class="spinner"></span> Regeneration...';
+            try {
+              const { job_id, count } = await api(`/api/v2/episode/${eid}/segments/regenerate-errors`, { method: 'POST' });
+              toast(`Regeneration de ${count} segments lancee`);
+              pollJob(job_id, (result) => {
+                if (result.status === 'ok') {
+                  toast(`${result.regenerated} segments regeneres`);
+                } else {
+                  toast('Erreur lors de la regeneration', false);
+                }
+                renderSegments(eid);
+              });
+            } catch (e) {
+              toast(e.message, false);
+              btnRegenErrors.disabled = false;
+              btnRegenErrors.textContent = `Regenerer les erreurs (${errCount})`;
+            }
+          });
+        }
 
         // Validate all
         $('#btn-validate-all').addEventListener('click', async () => {

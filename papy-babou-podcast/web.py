@@ -4246,7 +4246,8 @@ def api_v2_generate_audio(episode_id):
 
 
 def _job_generate_audio(episode_id, script_path):
-    """Job async : génère les segments TTS + SFX."""
+    """Job async : génère les segments TTS + SFX en parallèle (4 workers)."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     from agents.producteur_audio import ProducteurAudio
     from agents.sfx_provider import SfxProvider
 
@@ -4263,10 +4264,10 @@ def _job_generate_audio(episode_id, script_path):
     generated = 0
     errors = 0
 
+    # Filtrer les segments déjà générés
+    to_generate = []
     for seg in segments:
         seg_id = seg.get("id", "")
-        personnage = seg.get("personnage", "")
-        is_sfx = personnage == "sfx"
 
         # Vérifier si déjà généré en DB
         if _DB_AVAILABLE and SegmentAudioRepo:
@@ -4290,6 +4291,13 @@ def _job_generate_audio(episode_id, script_path):
                     except Exception as e_os:
                         logger.warning("Restore OS segment %s échoué: %s", seg_id, e_os)
 
+        to_generate.append(seg)
+
+    def _generate_one(seg):
+        """Génère un seul segment. Thread-safe grâce au rate limiter interne."""
+        seg_id = seg.get("id", "")
+        personnage = seg.get("personnage", "")
+        is_sfx = personnage == "sfx"
         chemin = segments_dir / f"{seg_id}.mp3"
 
         # Marquer comme generating
@@ -4299,53 +4307,62 @@ def _job_generate_audio(episode_id, script_path):
             except Exception:
                 pass
 
+        if is_sfx:
+            sfx_provider.generer_segment(seg.get("texte", ""), chemin)
+        else:
+            producteur.generer_segment(seg, chemin)
+
+        # Mesurer durée
+        duree_ms = 0
         try:
-            if is_sfx:
-                sfx_provider.generer_segment(seg.get("texte", ""), chemin)
-            else:
-                producteur.generer_segment(seg, chemin)
+            from pydub import AudioSegment as AS
+            audio = AS.from_mp3(str(chemin))
+            duree_ms = len(audio)
+        except Exception:
+            pass
 
-            # Mesurer durée
-            duree_ms = 0
-            try:
-                from pydub import AudioSegment as AS
-                audio = AS.from_mp3(str(chemin))
-                duree_ms = len(audio)
-            except Exception:
-                pass
-
-            # Mettre à jour en DB
-            if _DB_AVAILABLE and SegmentAudioRepo:
-                os_key = None
-                if ps and ps.is_available():
-                    try:
-                        os_key = f"segments/{episode_id}/{seg_id}.mp3"
-                        ps.upload_file(str(chemin), os_key)
-                    except Exception:
-                        os_key = None
-
-                SegmentAudioRepo.maj_status(
-                    episode_id, seg_id, "generated",
-                    audio_path=str(chemin),
-                    audio_os_key=os_key,
-                    duree_ms=duree_ms,
-                    nb_caracteres=len(seg.get("texte", "")),
-                )
-
-            generated += 1
-            logger.info("Segment %s/%s généré (%dms)", episode_id, seg_id, duree_ms)
-
-        except Exception as e:
-            errors += 1
-            logger.warning("Erreur segment %s/%s: %s", episode_id, seg_id, e)
-            if _DB_AVAILABLE and SegmentAudioRepo:
+        # Mettre à jour en DB
+        if _DB_AVAILABLE and SegmentAudioRepo:
+            os_key = None
+            if ps and ps.is_available():
                 try:
-                    SegmentAudioRepo.maj_status(
-                        episode_id, seg_id, "error",
-                        error_message=str(e)[:500],
-                    )
+                    os_key = f"segments/{episode_id}/{seg_id}.mp3"
+                    ps.upload_file(str(chemin), os_key)
                 except Exception:
-                    pass
+                    os_key = None
+
+            SegmentAudioRepo.maj_status(
+                episode_id, seg_id, "generated",
+                audio_path=str(chemin),
+                audio_os_key=os_key,
+                duree_ms=duree_ms,
+                nb_caracteres=len(seg.get("texte", "")),
+            )
+
+        return seg_id, duree_ms
+
+    # Génération parallèle : 4 workers (rate limiter ElevenLabs 3/s géré en interne)
+    max_workers = min(4, max(1, len(to_generate)))
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {pool.submit(_generate_one, seg): seg for seg in to_generate}
+        for future in as_completed(futures):
+            seg = futures[future]
+            seg_id = seg.get("id", "")
+            try:
+                result_seg_id, duree_ms = future.result()
+                generated += 1
+                logger.info("Segment %s/%s généré (%dms)", episode_id, result_seg_id, duree_ms)
+            except Exception as e:
+                errors += 1
+                logger.warning("Erreur segment %s/%s: %s", episode_id, seg_id, e)
+                if _DB_AVAILABLE and SegmentAudioRepo:
+                    try:
+                        SegmentAudioRepo.maj_status(
+                            episode_id, seg_id, "error",
+                            error_message=str(e)[:500],
+                        )
+                    except Exception:
+                        pass
 
     return {"generated": generated, "errors": errors, "total": len(segments)}
 
@@ -4406,17 +4423,45 @@ def api_v2_segment_audio(episode_id, segment_id):
 
 @app.route("/api/v2/segment/<episode_id>/<segment_id>/edit", methods=["POST"])
 def api_v2_segment_edit(episode_id, segment_id):
-    """Édite le texte d'un segment. Met à jour le script JSON source."""
+    """Édite le texte, ton et/ou rythme d'un segment. Met à jour DB + script JSON."""
     data = request.get_json(silent=True) or {}
     texte = data.get("texte")
-    if not texte:
-        return jsonify({"error": "Champ 'texte' requis"}), 400
+    ton = data.get("ton")
+    rythme = data.get("rythme")
 
-    # Mettre à jour en DB
-    if _DB_AVAILABLE and SegmentAudioRepo:
+    if not texte and ton is None and rythme is None:
+        return jsonify({"error": "Au moins un champ requis (texte, ton, rythme)"}), 400
+
+    # Mettre à jour le texte en DB (remet en pending)
+    if texte and _DB_AVAILABLE and SegmentAudioRepo:
         SegmentAudioRepo.maj_texte(episode_id, segment_id, texte)
 
-    # Mettre à jour le script JSON
+    # Mettre à jour ton/rythme en DB (colonnes dédiées)
+    if (ton is not None or rythme is not None) and _DB_AVAILABLE and SegmentAudioRepo:
+        try:
+            from database import get_cursor
+            updates = []
+            params = []
+            if ton is not None:
+                updates.append("ton = %s")
+                params.append(ton)
+            if rythme is not None:
+                updates.append("rythme = %s")
+                params.append(rythme)
+            if updates:
+                params.extend([episode_id, segment_id, episode_id, segment_id])
+                with get_cursor() as cur:
+                    cur.execute(
+                        f"UPDATE segments_audio SET {', '.join(updates)} "
+                        "WHERE episode_id = %s AND segment_id = %s "
+                        "AND version = (SELECT MAX(version) FROM segments_audio "
+                        "WHERE episode_id = %s AND segment_id = %s)",
+                        params,
+                    )
+        except Exception as e:
+            logger.warning("Mise à jour ton/rythme DB échouée: %s", e)
+
+    # Mettre à jour le script JSON (texte + ton + rythme)
     for suffix in ("_script.json", "_script_valide.json"):
         script_path = config.SCRIPTS_DIR / f"{episode_id}{suffix}"
         if script_path.exists():
@@ -4424,7 +4469,12 @@ def api_v2_segment_edit(episode_id, segment_id):
                 script = json.loads(script_path.read_text(encoding="utf-8"))
                 for seg in script.get("episode", {}).get("segments", []):
                     if seg.get("id") == segment_id:
-                        seg["texte"] = texte
+                        if texte:
+                            seg["texte"] = texte
+                        if ton is not None:
+                            seg["ton"] = ton
+                        if rythme is not None:
+                            seg["rythme"] = rythme
                         break
                 script_path.write_text(
                     json.dumps(script, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -4551,6 +4601,43 @@ def api_v2_validate_all_segments(episode_id):
         return jsonify({"error": "DB non disponible"}), 503
     count = SegmentAudioRepo.valider_tous(episode_id)
     return jsonify({"ok": True, "count": count})
+
+
+@app.route("/api/v2/episode/<episode_id>/segments/regenerate-errors", methods=["POST"])
+def api_v2_regenerate_errors(episode_id):
+    """Régénère tous les segments en erreur pour un épisode (job async)."""
+    if not _DB_AVAILABLE or not SegmentAudioRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    error_segments = SegmentAudioRepo.lister(episode_id, status="error")
+    if not error_segments:
+        return jsonify({"error": "Aucun segment en erreur"}), 404
+
+    error_ids = [s["segment_id"] for s in error_segments]
+
+    def _job():
+        return _job_regenerate_errors(episode_id, error_ids)
+
+    try:
+        job_id = _start_fn_job(_job, episode_id=f"{episode_id}_regen_errors")
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+
+    return jsonify({"job_id": job_id, "count": len(error_ids)})
+
+
+def _job_regenerate_errors(episode_id, segment_ids):
+    """Régénère une liste de segments en erreur."""
+    regenerated = 0
+    still_errors = 0
+    for seg_id in segment_ids:
+        try:
+            _job_regenerate_segment(episode_id, seg_id)
+            regenerated += 1
+        except Exception as e:
+            still_errors += 1
+            logger.warning("Retry segment %s/%s échoué: %s", episode_id, seg_id, e)
+    return {"regenerated": regenerated, "still_errors": still_errors, "total": len(segment_ids)}
 
 
 # ── V2 : Montage ─────────────────────────────────────────────────────────────
@@ -4749,30 +4836,81 @@ def api_v2_publish(montage_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    # Mettre à jour historique
-    try:
+    # Charger le script pour RSS + historique
+    script = None
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+    if not script_path.exists():
         script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
-        if script_path.exists():
+    if script_path.exists():
+        try:
             script = json.loads(script_path.read_text(encoding="utf-8"))
-            ep = script.get("episode", {})
-            entry = {
+        except Exception as e:
+            logger.warning("Lecture script échouée pour publication: %s", e)
+
+    ep = script.get("episode", {}) if script else {}
+
+    # P1-3 : Mettre à jour le flux RSS
+    dst = config.OUTPUT_DIR / "audio" / "episodes" / f"{episode_id}_192k.mp3"
+    if dst.exists():
+        try:
+            from agents.publisher import Publisher
+            publisher = Publisher()
+            # Construire les meta minimales pour le RSS
+            saison_num = int(episode_id[1:3]) if len(episode_id) >= 6 else 1
+            numero_ep = int(episode_id[4:6]) if len(episode_id) >= 6 else 1
+            rss_meta = {
+                "titre": ep.get("titre", episode_id),
+                "description_courte": ep.get("resume", ep.get("titre", "")),
+                "description_longue": ep.get("resume", ""),
+                "saison": saison_num,
+                "numero": numero_ep,
                 "episode_id": episode_id,
-                "titre": ep.get("titre", ""),
-                "date_production": datetime.utcnow().isoformat(),
                 "type_episode": ep.get("type", "standard"),
+                "morale": ep.get("morale", ""),
             }
-            # UPSERT dans historique_episodes JSON
-            hist_path = config.HISTORIQUE_DIR / "historique_episodes.json"
-            if hist_path.exists():
-                historique = json.loads(hist_path.read_text(encoding="utf-8"))
-            else:
-                historique = []
-            # Supprimer l'ancien si existant
-            historique = [h for h in historique if h.get("episode_id") != episode_id]
-            historique.append(entry)
-            hist_path.write_text(json.dumps(historique, ensure_ascii=False, indent=2), encoding="utf-8")
+            taille = dst.stat().st_size
+            publisher._mettre_a_jour_rss(
+                rss_meta, str(dst), taille,
+                pubdate_offset_seconds=numero_ep * 3600,
+            )
+            logger.info("RSS mis à jour pour %s", episode_id)
+        except ImportError:
+            logger.warning("Module publisher non disponible — RSS non mis à jour")
+        except Exception as e:
+            logger.warning("Mise à jour RSS échouée: %s", e)
+
+    # P1-4 : Créer un rapport V1 compatible + appeler ajouter_historique
+    try:
+        rapport_v1 = {
+            "episode_id": episode_id,
+            "titre": ep.get("titre", episode_id),
+            "dry_run": False,
+            "debut": datetime.utcnow().isoformat(),
+            "etapes": {
+                "script": {"status": "ok", "validation_humaine": True},
+                "montage": {"status": "ok", "validation_humaine": True},
+                "publication": {"status": "ok"},
+            },
+            "decisions_humaines": [],
+        }
+        # Sauvegarder le rapport V1
+        rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        config.LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        rapport_path.write_text(
+            json.dumps(rapport_v1, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        # Appeler ajouter_historique pour visibilité dashboard V1 + site public
+        if script:
+            try:
+                from main import ajouter_historique
+                ajouter_historique(rapport_v1, script)
+                logger.info("Historique V1 mis à jour pour %s", episode_id)
+            except ImportError:
+                logger.warning("Import main.ajouter_historique échoué — historique non mis à jour")
+            except Exception as e_hist:
+                logger.warning("ajouter_historique échoué: %s", e_hist)
     except Exception as e:
-        logger.warning("Mise à jour historique échouée: %s", e)
+        logger.warning("Création rapport V1 échouée: %s", e)
 
     return jsonify({"ok": True, "episode_id": episode_id, "montage_id": montage_id})
 
