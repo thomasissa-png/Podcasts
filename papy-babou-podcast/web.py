@@ -217,7 +217,7 @@ def serve_episode_audio(filename):
     """Sert les fichiers audio des épisodes produits (MP3).
 
     Cherche d'abord sur le filesystem local, puis restaure depuis
-    Replit Object Storage si le fichier est absent (après re-deploy).
+    Replit Object Storage si le fichier est absent ou stale (après re-deploy).
     """
     # Security: only allow .mp3 files, no path traversal
     if ".." in filename or "/" in filename or "\\" in filename:
@@ -226,17 +226,45 @@ def serve_episode_audio(filename):
         return jsonify({"error": "Format non supporté"}), 400
     episodes_dir = config.OUTPUT_DIR
     audio_path = episodes_dir / filename
-    if not audio_path.exists():
+
+    # Check if local file is stale by comparing size with DB
+    _needs_restore = not audio_path.exists()
+    if audio_path.exists() and _DB_AVAILABLE:
+        try:
+            from database import get_cursor
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT taille_bytes FROM fichiers_audio "
+                    "WHERE chemin LIKE %s AND type_fichier = 'episode_hq' "
+                    "ORDER BY id DESC LIMIT 1",
+                    (f"%{filename}",),
+                )
+                row = cur.fetchone()
+                if row:
+                    db_size = row[0] if isinstance(row, (list, tuple)) else row.get("taille_bytes", 0)
+                    local_size = audio_path.stat().st_size
+                    if db_size and local_size and abs(db_size - local_size) > 1024 * 100:
+                        # >100KB difference = stale file, force re-download
+                        logger.warning(
+                            "Audio stale détecté: %s local=%d DB=%d — re-download",
+                            filename, local_size, db_size,
+                        )
+                        _needs_restore = True
+        except Exception as e:
+            logger.debug("Stale check failed for %s: %s", filename, e)
+
+    if _needs_restore:
         # Tenter de restaurer depuis Object Storage
         try:
             import persistent_storage
             storage_key = f"{persistent_storage.PREFIX_AUDIO}{filename}"
             if persistent_storage.download_file(storage_key, audio_path):
                 logger.info("Audio restauré depuis Object Storage : %s", filename)
-            else:
+            elif not audio_path.exists():
                 return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
         except Exception:
-            return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
+            if not audio_path.exists():
+                return jsonify({"error": f"Fichier audio introuvable : {filename}"}), 404
     response = send_from_directory(str(episodes_dir), filename, mimetype="audio/mpeg")
     # Empêcher le cache navigateur de servir un ancien fichier après regénération
     response.headers["Cache-Control"] = "no-cache, must-revalidate"
