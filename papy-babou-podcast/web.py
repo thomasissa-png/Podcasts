@@ -2732,7 +2732,7 @@ def api_launch_fresh(episode_id):
         logger.warning("launch-fresh %s : purge OS échouée: %s", episode_id, e)
 
     # Purger les fichiers locaux aussi
-    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    segments_dir = config.SEGMENTS_DIR / episode_id
     if segments_dir.exists():
         shutil.rmtree(segments_dir, ignore_errors=True)
     # Purger les anciens MP3 locaux (config.OUTPUT_DIR = output/episodes/)
@@ -4418,9 +4418,9 @@ def _job_generate_audio(episode_id, script_path):
 
     # Dossier de sortie — namespaced par production_run_id si disponible
     if _prod_run_id:
-        segments_dir = config.OUTPUT_DIR / "segments" / episode_id / _prod_run_id
+        segments_dir = config.SEGMENTS_DIR / episode_id / _prod_run_id
     else:
-        segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+        segments_dir = config.SEGMENTS_DIR / episode_id
     segments_dir.mkdir(parents=True, exist_ok=True)
 
     producteur = ProducteurAudio()
@@ -4499,7 +4499,7 @@ def _job_generate_audio(episode_id, script_path):
                         os_key = f"segments/{episode_id}/{_prod_run_id}/{seg_id}.mp3"
                     else:
                         os_key = f"segments/{episode_id}/{seg_id}.mp3"
-                    ps.upload_file(str(chemin), os_key)
+                    ps.upload_file(os_key, str(chemin))
                 except Exception:
                     os_key = None
 
@@ -4647,7 +4647,7 @@ def api_v2_segment_audio(episode_id, segment_id):
                 return send_from_directory(str(p.parent), p.name, mimetype="audio/mpeg")
 
     # Fallback filesystem
-    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    segments_dir = config.SEGMENTS_DIR / episode_id
     path = segments_dir / f"{segment_id}.mp3"
     if path.exists():
         return send_from_directory(str(segments_dir), f"{segment_id}.mp3", mimetype="audio/mpeg")
@@ -4795,9 +4795,9 @@ def _job_regenerate_segment(episode_id, segment_id):
             pass
 
     if _prod_run_id:
-        segments_dir = config.OUTPUT_DIR / "segments" / episode_id / _prod_run_id
+        segments_dir = config.SEGMENTS_DIR / episode_id / _prod_run_id
     else:
-        segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+        segments_dir = config.SEGMENTS_DIR / episode_id
     segments_dir.mkdir(parents=True, exist_ok=True)
     chemin = segments_dir / f"{segment_id}.mp3"
 
@@ -4992,9 +4992,9 @@ def _job_montage(episode_id, montage_id):
             pass
 
     if _prod_run_id:
-        segments_dir = config.OUTPUT_DIR / "segments" / episode_id / _prod_run_id
+        segments_dir = config.SEGMENTS_DIR / episode_id / _prod_run_id
     else:
-        segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+        segments_dir = config.SEGMENTS_DIR / episode_id
     sortie_dir = config.OUTPUT_DIR
     sortie_dir.mkdir(parents=True, exist_ok=True)
 
@@ -5025,10 +5025,10 @@ def _job_montage(episode_id, montage_id):
             try:
                 if chemin_hq:
                     os_key_hq = f"audio/{episode_id}/{Path(chemin_hq).name}"
-                    ps.upload_file(chemin_hq, os_key_hq)
+                    ps.upload_file(os_key_hq, chemin_hq)
                 if chemin_preview:
                     os_key_preview = f"audio/{episode_id}/{Path(chemin_preview).name}"
-                    ps.upload_file(chemin_preview, os_key_preview)
+                    ps.upload_file(os_key_preview, chemin_preview)
             except Exception as e:
                 logger.warning("Upload montage OS échoué: %s", e)
 
