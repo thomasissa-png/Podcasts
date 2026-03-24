@@ -116,22 +116,35 @@ class ProducteurAudio:
         self.caracteres_utilises: dict[str, int] = {}
         self._compteur_lock = threading.Lock()
 
-    def produire_episode(self, script: dict, dossier_sortie: Path | None = None) -> list[Path]:
+    def produire_episode(
+        self,
+        script: dict,
+        dossier_sortie: Path | None = None,
+        dossier_episode: Path | None = None,
+    ) -> list[Path]:
         """Produit tous les segments audio d'un épisode.
 
         Utilise un ThreadPoolExecutor pour paralléliser les appels TTS.
 
         Args:
             script: Script JSON validé.
-            dossier_sortie: Dossier de sortie (défaut : config.SEGMENTS_DIR).
+            dossier_sortie: Dossier racine de sortie (défaut : config.SEGMENTS_DIR).
+                Si dossier_episode n'est pas fourni, le dossier final sera
+                dossier_sortie / episode_id.
+            dossier_episode: Dossier de sortie complet (ex: segments/S01E01/prod_xxx).
+                Quand fourni, utilisé directement (ignore dossier_sortie).
 
         Returns:
             Liste des chemins vers les fichiers audio générés.
         """
-        dossier = dossier_sortie or config.SEGMENTS_DIR
         episode = script["episode"]
         episode_id = f"S{episode['saison']:02d}E{episode['numero']:02d}"
-        dossier_episode = dossier / episode_id
+        if dossier_episode is not None:
+            # Caller provides the full directory (e.g. with production_run_id)
+            pass
+        else:
+            dossier = dossier_sortie or config.SEGMENTS_DIR
+            dossier_episode = dossier / episode_id
         dossier_episode.mkdir(parents=True, exist_ok=True)
 
         segments_voix = [

@@ -63,18 +63,27 @@ class SfxProvider:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.stats: dict[str, str] = {}  # segment_id → source utilisée
 
-    def produire_sfx(self, script: dict) -> list[Path]:
+    def produire_sfx(
+        self,
+        script: dict,
+        dossier_sortie: Path | None = None,
+    ) -> list[Path]:
         """Produit tous les fichiers SFX pour les segments 'sfx' du script.
 
         Args:
             script: Script JSON validé.
+            dossier_sortie: Dossier de sortie complet (ex: segments/S01E01/prod_xxx).
+                Quand fourni, utilisé directement au lieu de config.SEGMENTS_DIR / episode_id.
 
         Returns:
             Liste des chemins vers les fichiers SFX générés.
         """
         episode = script["episode"]
         episode_id = f"S{episode['saison']:02d}E{episode['numero']:02d}"
-        dossier = config.SEGMENTS_DIR / episode_id
+        if dossier_sortie is not None:
+            dossier = dossier_sortie
+        else:
+            dossier = config.SEGMENTS_DIR / episode_id
         dossier.mkdir(parents=True, exist_ok=True)
 
         fichiers = []
