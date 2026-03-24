@@ -68,7 +68,7 @@ echo -e "${BLUE}→ Récupération des dernières versions...${NC}"
 # Clone avec fallback pour repos privés
 if git clone --filter=blob:none --sparse --quiet "$REPO_URL" "$TEMP_DIR/repo" 2>/dev/null; then
   cd "$TEMP_DIR/repo"
-  git sparse-checkout set .claude/agents
+  git sparse-checkout set .claude/agents .claude/settings.json CLAUDE.md
 else
   if git clone --quiet "$REPO_URL" "$TEMP_DIR/repo" 2>/dev/null; then
     cd "$TEMP_DIR/repo"
@@ -128,13 +128,43 @@ for remote_agent in "$TEMP_DIR/repo/.claude/agents"/*.md; do
   fi
 done
 
+# ─── Mise à jour de settings.json ─────────────────
+if [ -f "$TEMP_DIR/repo/.claude/settings.json" ]; then
+  cp "$TEMP_DIR/repo/.claude/settings.json" "$OLDPWD/.claude/settings.json"
+  echo -e "  ${GREEN}✓ .claude/settings.json mis à jour${NC}"
+fi
+
+# ─── Mise à jour de CLAUDE.md (fusion avec marqueurs) ─
+if [ -f "$TEMP_DIR/repo/CLAUDE.md" ]; then
+  local_claude="$OLDPWD/CLAUDE.md"
+  source_claude="$TEMP_DIR/repo/CLAUDE.md"
+
+  if [ ! -f "$local_claude" ]; then
+    cp "$source_claude" "$local_claude"
+    echo -e "  ${GREEN}✓ CLAUDE.md installé${NC}"
+  elif grep -q "GRADIENT-AGENTS-START" "$local_claude"; then
+    # Remplacement de la section Gradient entre les marqueurs
+    gradient_content=$(sed -n '/<!-- GRADIENT-AGENTS-START -->/,/<!-- GRADIENT-AGENTS-END -->/p' "$source_claude")
+    tmp_merged="$TEMP_DIR/claude_md_merged"
+    sed '/<!-- GRADIENT-AGENTS-START -->/,/<!-- GRADIENT-AGENTS-END -->/d' "$local_claude" > "$tmp_merged"
+    echo "$gradient_content" | cat - "$tmp_merged" > "$local_claude"
+    echo -e "  ${GREEN}✓ CLAUDE.md mis à jour (section Gradient remplacée, contenu custom préservé)${NC}"
+  else
+    echo -e "  ${YELLOW}⚠ CLAUDE.md sans marqueurs Gradient — ajout en fin de fichier${NC}"
+    echo "" >> "$local_claude"
+    cat "$source_claude" >> "$local_claude"
+    echo -e "  ${GREEN}✓ CLAUDE.md fusionné${NC}"
+  fi
+fi
+
 echo ""
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BOLD}  Résumé :${NC}"
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "  ${GREEN}${updated}${NC} mis à jour"
+echo -e "  ${GREEN}${updated}${NC} agents mis à jour"
 echo -e "  ${GREEN}${new_agents}${NC} nouveaux agents"
 echo -e "  ${BLUE}${skipped}${NC} déjà à jour"
+echo -e "  ${GREEN}✓${NC} settings.json + CLAUDE.md synchronisés"
 echo ""
 echo -e "${YELLOW}Note : project-context.md n'est jamais écrasé.${NC}"
 echo -e "${YELLOW}Rollback : bash update.sh --rollback${NC}"
