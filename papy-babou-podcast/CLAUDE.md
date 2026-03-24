@@ -2170,7 +2170,8 @@ Two new API endpoints automate everything. No more manual purge, no more checkpo
 **What `launch-fresh` does automatically:**
 - Writes the script from POST body to `_script.json` + `_valide.json` on server
 - Uploads script to Object Storage + saves to DB
-- Purges old segments from Object Storage AND local filesystem
+- **Purges ALL Object Storage for this episode** (7 prefixes: segments/, audio/, montage_wav/, rapports/, checkpoints/, metadonnees/, chapters/) — prevents old files from being restored on redeploy
+- **Purges local audio/segment files** for this episode
 - Creates a fresh checkpoint with `validation_humaine=true` and `script_content_hash`
 - Uploads checkpoint to Object Storage (survives redeploy)
 - Launches audio → SFX → montage auto-chain
