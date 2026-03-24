@@ -1,48 +1,76 @@
-# Project Context — Gradient Agents Framework
+# Project Context — Les Histoires de Papy Babou
 
 ## Identite
-- **Nom du projet** : Gradient Agents
-- **Secteur** : Framework multi-agents IA pour pilotage de projets digitaux (dev tools / productivity)
-- **Stade** : Production
-- **Type** : Open-source framework (pas un SaaS direct)
+- **Nom du projet** : Les Histoires de Papy Babou
+- **Secteur** : Podcast pour enfants de 5 a 10 ans — histoires bibliques racontees en famille, format audio immersif avec personnages recurrents
+- **Stade** : Beta (S01E01 script valide 9.2/10, S01E02 script valide 9.0/10, pipeline de production audio fonctionnel, site web public en ligne)
+- **Type** : Podcast seriel (10 episodes/saison, arcs narratifs, personnages recurrents, rituels)
 
 ## Cible
-- **Persona principal** : Thomas, 32 ans, developpeur indie / entrepreneur technique, lance des side projects seul, utilise Claude Code quotidiennement, frustre par le manque de structure quand il delegue a l'IA
-- **Probleme principal** : Coordonner 19 agents IA specialises sans perdre la coherence entre les livrables, et fournir des prompts prets a l'emploi de qualite professionnelle
-- **Alternative actuelle** : Prompts ad hoc, pas de framework, chaque projet repart de zero
+- **Persona principal** : Sophie, 45 ans, parent catholique pratiquante, 3 enfants (6, 9, 12 ans). Cherche un podcast qui transmette la foi de maniere joyeuse sans moralisation. Compare la qualite audio avec Les Odyssees (France Inter). Frustration : les supports catechetiques existants sont ennuyeux pour ses enfants, les livres audio bibliques sont monotones, et il n'existe aucun podcast francais d'histoires bibliques en format narratif immersif. Poids dans les decisions : 40% (c'est elle qui decide d'installer le podcast, de l'ecouter en famille, et de le recommander).
+- **Persona secondaire 1** : Lina, 7 ans (fille, CE1). Attention 15-20 min. Adore Noemie (identification). Sensible a la peur — les passages trop sombres la bloquent. Veut des histoires avec de l'humour, des animaux, et du merveilleux. Poids : 30%.
+- **Persona secondaire 2** : Noah, 10 ans (garcon, CM2). Trouve les trucs "pour bebes" ennuyeux. Veut de l'action, des faits scientifiques, de la credibilite. Compare avec Les Odyssees et Quelle Histoire. Si c'est "trop bebe", il decroche en 3 minutes. Poids : 30%.
+- **Probleme principal** : Il n'existe aucun podcast francais pour enfants qui raconte les histoires de la Bible en format narratif immersif (personnages, SFX, musique). Les parents catholiques doivent choisir entre : livres audio monotones, catechisme formel ennuyeux pour les enfants, ou podcasts laiques de qualite (Les Odyssees) qui ne couvrent pas la Bible.
+- **Alternative actuelle** : Livres audio bibliques (Audible, CD paroissiaux), catechisme en paroisse, podcasts generalistes (Les Odyssees, Quelle Histoire — pas bibliques), videos YouTube (ecrans, pas audio)
 
 ## Positionnement
-- **Promesse unique** : Une equipe complete de 19 agents IA coordonnes qui pilotent un projet digital de la strategie au deploiement
-- **Ton de marque** : Expert et direct, sans jargon inutile, oriente action
-- **3 mots** : Coordination, Expertise, Autonomie
-- **Concurrent principal** : Cursor rules / custom instructions generiques — notre difference : orchestration multi-agents avec dependances et phases
+- **Promesse unique** : Le seul podcast ou vos enfants ne sont pas spectateurs — ils participent a l'aventure biblique avec Papy Babou, en posant des questions, en resolvant des enigmes, et en decouvrant des fun facts scientifiques. Un moment familial divertissant pour se cultiver et decouvrir les grandes histoires de la Bible, sans etre un cours de catechisme.
+- **Ton de marque** : Bienveillant et chaleureux, adapte aux enfants. Expert sur le fond biblique mais jamais moralisateur. Emerveillement et humour plutot que lecons. "On guide sans jargon, on rassure sans simplifier."
+- **3 mots** : Bienveillant, Aventures, Experience audio
+- **Concurrent principal** : Podcast "Les aventures de Tina" (histoires pour enfants, pas biblique), Podcast "Les voyages d'Amelia" (histoires pour enfants, pas biblique), Les Odyssees (France Inter — histoires historiques, pas biblique, reference qualite audio). Notre difference : seul podcast narratif immersif sur les histoires bibliques en francais, avec format interactif (questions des enfants, fun facts, running gags).
 
 ## Objectifs
-- **Objectif principal a 6 mois** : Framework de reference pour la coordination multi-agents sur Claude Code, 500+ utilisateurs GitHub
-- **KPI North Star** : Nombre de projets lances avec le framework par semaine
+- **Objectif principal a 6 mois** : 3000 ecoutes par mois, saison 1 complete (10 episodes produits et publies), presence sur Apple Podcasts + Spotify + site web
+- **KPI North Star** : Nombre d'ecoutes mensuelles (3000/mois = seuil de visibilite pour les annonceurs podcast)
 
 ## Stack technique
-- **Frontend** : HTML/CSS/JS vanilla (index.html dashboard)
-- **Backend** : N/A (framework de prompts, pas d'API)
-- **Base de donnees** : N/A
-- **Hebergement** : GitHub Pages
-- **IA utilisee** : Claude Opus 4 + Claude Sonnet 4 (agents)
+- **Frontend** : Templates HTML/CSS/JS (Jinja2) servis par Flask — `public.html` (site public), `dashboard.html` (admin), `admin_login.html`
+- **Backend** : Python 3 + Flask + Gunicorn (gthread, 1 worker x 8 threads, timeout 3900s). Pipeline de production complet : 10 agents Python specialises (scripteur, reviewer, directeur_podcast, producteur_audio, sfx_provider, monteur, metadonnees, publisher, cover_art, planificateur). 5 agents d'audit (audit-sfx, audit-voix, audit-marc, audit-claire, audit-episode). Systeme de checkpoints atomiques, SIGTERM survival, auto-resume apres redeploy.
+- **Base de donnees** : PostgreSQL (Neon, scale-to-zero) comme stockage primaire + JSON files comme fallback + Replit Object Storage pour persistence apres redeploy. 9 prefixes Object Storage (audio/, scripts/, rapports/, saisons/, checkpoints/, segments/, metadonnees/, chapters/, covers/).
+- **Hebergement** : Replit (https://podcasts-toum92.replit.app/)
+- **IA utilisee** : Claude API (Anthropic) pour generation de scripts, review, metadonnees, planification de saison, direction creative. ElevenLabs pour TTS (voix par personnage, 17 tons dynamiques) + generation SFX. OpenAI DALL-E 3 pour cover art. Freesound pour SFX fallback. Systeme de preferences producteur (24 regles) injectees automatiquement dans les prompts.
+- **Tests** : 577+ tests pytest (regression, qualite creative, integration)
+- **Audio** : ffmpeg pour montage, LUFS normalization, master bus (EQ + compression + true peak limiter), room tone, crossfade 200ms, micro-respirations, ducking SFX, stereo panning par personnage
 
 ## Modele economique
-- **Type** : Open-source
-- **Pays** : International (francophone en priorite)
-- **Donnees sensibles** : Non
+- **Type** : Podcast gratuit — monetisation par publicites sur les plateformes de podcast (Apple Podcasts, Spotify), sponsoring potentiel de marques familiales/chretiennes
+- **Pays** : France
+- **Donnees sensibles** : Non (pas de comptes utilisateurs, pas de donnees enfants collectees — uniquement newsletter email optionnelle)
 
 ## Budget & Contraintes
-- **Budget infra mensuel** : 0 (GitHub Pages)
-- **Budget acquisition mensuel** : 0
-- **Timeline** : En production
-- **Contraintes specifiques** : Les 59 prompts doivent etre auto-suffisants (fonctionner sans editer de fichiers manuellement)
+- **Budget infra mensuel** : Pas de limite stricte, optimisation intelligente. Couts principaux : API Claude (~$2-5/episode script), ElevenLabs (~$5-10/episode TTS+SFX), Replit hosting, Neon PostgreSQL (free tier), OpenAI DALL-E 3 (~$0.04/cover si pas de cover custom)
+- **Budget acquisition mensuel** : A definir (actuellement 0 — aucun reseau social, aucune base email)
+- **Timeline** : Le plus tot possible — S01E01 et S01E02 scripts valides, prets pour production audio
+- **Contraintes specifiques** : Production audio longue (~30-45 min par episode sur Replit, sujet aux redeploys SIGTERM). Episodes imposes pour les 3 premieres saisons (10 histoires bibliques par saison, pas de generation libre). Regle absolue : 1 sujet biblique complet par episode, jamais de multi-part.
+
+## Presence existante
+- **Reseaux sociaux** : Aucun
+- **Site web existant** : https://podcasts-toum92.replit.app/ — site public fonctionnel avec lecteur audio, page episodes, FAQ, newsletter. Admin dashboard pour production et monitoring.
+- **Base email** : Aucune (formulaire newsletter present mais pas de subscribers)
+- **Plateformes podcast** : Non encore distribue (RSS genere mais pas soumis a Apple/Spotify)
+
+## Contenu existant
+- **Saison 1** : Plan valide (10 episodes imposes), S01E01 script 9.2/10, S01E02 script 9.0/10
+- **Saison 2** : Plan defini (La vie de Jesus, 10 episodes imposes)
+- **Saison 3** : Plan defini (Apotres et grands saints, 10 episodes imposes)
+- **Bible personnages** : 4 personnages principaux documentes (Papy Babou, Antoine 8 ans, Noemie 5 ans, Mamie Sonia) avec relations, tics de langage, backstories
+- **Preferences producteur** : 24 regles obligatoires pour la qualite des scripts
+- **Design** : Identite visuelle complete (palette CSS, avatars, cover podcast, favicon, OG image)
 
 ## Notes libres
-Mission actuelle : audit exhaustif des 59 prompts de la bibliotheque par les 18 agents du framework. Chaque agent evalue selon sa perspective propre.
+Projet personnel porte par un parent chretien. Pas de budget marketing pour l'instant — la priorite est de produire les 10 episodes de la saison 1 avec une qualite audio irreprochable, puis de distribuer sur les plateformes (Apple Podcasts, Spotify, Google Podcasts). L'acquisition viendra apres la production. Le site web est deja en ligne et fonctionnel.
+
+Le pipeline de production est extremement sophistique (28 sessions de developpement, 577+ tests) mais la production audio elle-meme n'a pas encore demarre — les 2 premiers scripts sont valides et attendent la production TTS/SFX/montage.
+
+Niveau technique de l'utilisateur : technique (gere le code, les API, le deploiement). Communication en mode technique acceptee.
 
 ## Historique des interventions agents
 | Agent | Date | Fichiers | Decisions cles | Pourquoi |
 |---|---|---|---|---|
-| orchestrator | 2026-03-22 | docs/reviews/audit-59-prompts.md, docs/orchestration-plan.md | Audit complet des 59 prompts par 18 perspectives d'agents. Note globale 6.2/10. Top 5 : #1 Definir mon projet, #19 Landing page, #10 Valider la demande, #39 Plan de lancement, #14 Scope MVP. Bottom 5 : #49 Monitoring, #28 Modeles IA, #54 Creer agent, #55 Migration stack, #57 Post-mortem. 8 recommandations transversales, 18 prompts manquants identifies. | Audit demande par l'utilisateur pour evaluer la qualite de la bibliotheque avant amelioration. Methode : evaluation croisee multi-perspectives plutot qu'audit sequentiel pour capturer les lacunes transversales. |
+| orchestrator | 2026-03-22 | docs/reviews/audit-59-prompts.md, docs/orchestration-plan.md | Audit des 59 prompts Gradient Agents (contexte framework, pas podcast) | Installation du framework Gradient Agents |
+| @design + @ux + @copywriter | 2026-03-22 | templates/public.html | 22 fixes UX/design/copy sur le site public (score 7.5/10) | Audit 3-agents du site public |
+
+## Performance des agents
+| Agent | Date | Critere 1 (Pertinence) | Critere 2 (Completude) | Critere 3 (Coherence) | Critere 4 (Actionnable) | Critere 5 (Format) | Moyenne |
+|---|---|---|---|---|---|---|---|
+| (pas encore de donnees pour ce projet) | | | | | | | |
