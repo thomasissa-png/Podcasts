@@ -805,25 +805,32 @@ class TestApiV2Publish:
         assert resp.status_code == 400
 
 
-# ── B13. GET /admin/v2 ───────────────────────────────────────────────────────
+# ── B13. GET /admin (V2 is now the default) ──────────────────────────────────
 
 
 class TestAdminV2Page:
-    """Verifie que la page admin V2 est servie."""
+    """Verifie que la page admin V2 est servie sur /admin."""
 
-    def test_admin_v2_sans_auth_redirige(self, client):
+    def test_admin_sans_auth_redirige(self, client):
         """Sans authentification, redirige vers login."""
-        resp = client.get("/admin/v2")
-        # Soit 302 (redirect), soit 200 si Bearer est accepte
+        resp = client.get("/admin")
         assert resp.status_code in (200, 302, 401)
 
-    def test_admin_v2_avec_session_auth(self, client):
-        """Avec session admin, retourne 200."""
+    def test_admin_avec_session_auth(self, client):
+        """Avec session admin, /admin retourne V2 (200)."""
+        with client.session_transaction() as sess:
+            sess["admin_authenticated"] = True
+
+        resp = client.get("/admin")
+        assert resp.status_code == 200
+
+    def test_admin_v2_redirige_vers_admin(self, client):
+        """/admin/v2 redirige vers /admin."""
         with client.session_transaction() as sess:
             sess["admin_authenticated"] = True
 
         resp = client.get("/admin/v2")
-        assert resp.status_code == 200
+        assert resp.status_code == 302
 
 
 # ── B14. GET /api/v2/episode/<eid>/audio-progress ────────────────────────────

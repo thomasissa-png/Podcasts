@@ -1041,7 +1041,14 @@ def public_index():
 @app.route("/admin")
 @_admin_required
 def admin_dashboard():
-    """Dashboard admin — Production et configuration (protégé par mot de passe)."""
+    """Dashboard admin V2 — SPA (protégé par mot de passe)."""
+    return render_template("admin_v2.html")
+
+
+@app.route("/admin/v1")
+@_admin_required
+def admin_dashboard_v1():
+    """Dashboard admin V1 legacy (protégé par mot de passe)."""
     try:
         saison = request.args.get("saison", 0, type=int)
         data = get_dashboard_data(saison)
@@ -5009,8 +5016,9 @@ def api_v2_saisons_episodes():
 @app.route("/admin/v2")
 @app.route("/admin/v2/")
 @_admin_required
-def admin_v2():
-    return render_template("admin_v2.html")
+def admin_v2_redirect():
+    """Redirect /admin/v2 to /admin (V2 is now the default)."""
+    return redirect(url_for("admin_dashboard"))
 
 
 # ── Lancement ────────────────────────────────────────────────────────────────
