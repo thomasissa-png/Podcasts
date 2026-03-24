@@ -2671,19 +2671,39 @@ def api_launch_fresh(episode_id):
     except Exception as e:
         logger.warning("launch-fresh %s : upload checkpoint OS échoué: %s", episode_id, e)
 
-    # CRITICAL: Purger les vieux segments (Object Storage + local) pour forcer une génération fraîche
-    # Sans ça, restore_segments() ramène les segments d'une ancienne production = mauvais audio
+    # CRITICAL: Purger TOUT l'Object Storage pour cet épisode
+    # Sans ça, un redeploy restaure les ANCIENS fichiers audio/segments/wav par-dessus les nouveaux
+    # C'est la cause de 6 échecs consécutifs où le mauvais audio était servi
     try:
         import persistent_storage as _ps
         if _ps.is_available():
-            _ps.delete_prefix(f"segments/{episode_id}/")
-            logger.info("launch-fresh %s : segments Object Storage purgés", episode_id)
+            for prefix in [
+                f"segments/{episode_id}/",
+                f"audio/{episode_id}",          # audio/S01E01_*.mp3
+                f"montage_wav/{episode_id}",     # WAV intermédiaires
+                f"rapports/{episode_id}",        # anciens rapports
+                f"checkpoints/{episode_id}",     # anciens checkpoints
+                f"metadonnees/{episode_id}",     # anciennes métadonnées
+                f"chapters/{episode_id}",        # anciens chapitres
+            ]:
+                _ps.delete_prefix(prefix)
+            logger.info("launch-fresh %s : Object Storage intégralement purgé (7 préfixes)", episode_id)
     except Exception as e:
-        logger.warning("launch-fresh %s : purge segments OS échouée: %s", episode_id, e)
+        logger.warning("launch-fresh %s : purge OS échouée: %s", episode_id, e)
+
+    # Purger les fichiers locaux aussi
     segments_dir = config.OUTPUT_DIR / "segments" / episode_id
     if segments_dir.exists():
         shutil.rmtree(segments_dir, ignore_errors=True)
-        logger.info("launch-fresh %s : segments locaux purgés", episode_id)
+    # Purger les anciens MP3 locaux
+    episodes_dir = config.OUTPUT_DIR / "episodes"
+    if episodes_dir.exists():
+        slug = episode_id.lower()
+        for f in episodes_dir.glob(f"{episode_id}*"):
+            f.unlink(missing_ok=True)
+        for f in episodes_dir.glob(f"{slug}*"):
+            f.unlink(missing_ok=True)
+    logger.info("launch-fresh %s : fichiers locaux purgés", episode_id)
 
     # Lancer audio → SFX → montage (même chaînage que continue-production)
     def _chain_sfx_then_montage():
