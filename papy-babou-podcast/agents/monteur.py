@@ -991,10 +991,10 @@ class Monteur:
                 ["ffmpeg", "-y", "-i", str(input_wav),
                  "-af", "volumedetect",
                  "-f", "null", "-"],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, timeout=1800,
             )
         except _subprocess.TimeoutExpired:
-            raise RuntimeError("ffmpeg volumedetect timeout après 120s")
+            raise RuntimeError("ffmpeg volumedetect timeout après 1800s")
 
         mean_volume = Monteur._parse_volumedetect(result.stderr)
         if mean_volume is not None:
