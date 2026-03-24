@@ -4041,6 +4041,783 @@ def _serialize_value(v):
     return str(v)
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ── BACK-OFFICE V2 — Routes API granulaires ─────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Import V2 repos
+try:
+    from db_models import SegmentAudioRepo, MontageRepo
+except ImportError:
+    SegmentAudioRepo = None
+    MontageRepo = None
+
+try:
+    import persistent_storage as ps
+except ImportError:
+    ps = None
+
+
+def _start_fn_job(fn, episode_id=None):
+    """Lance une fonction Python en background thread (pattern V2 — pas de subprocess).
+
+    Returns:
+        job_id (str)
+
+    Raises:
+        ValueError si un job tourne déjà pour cet épisode.
+    """
+    job_id = uuid.uuid4().hex[:12]
+    with _jobs_lock:
+        _gc_expired_jobs()
+        if episode_id:
+            for ej in _jobs.values():
+                if ej.get("episode_id") == episode_id and ej["status"] == "running":
+                    raise ValueError(f"Un job est déjà en cours pour {episode_id}")
+        _jobs[job_id] = {
+            "status": "running", "result": None,
+            "created_at": time.monotonic(), "episode_id": episode_id,
+        }
+
+    def _worker():
+        try:
+            result = fn()
+            with _jobs_lock:
+                _jobs[job_id] = {
+                    "status": "done",
+                    "result": {"status": "ok", **(result or {})},
+                    "created_at": time.monotonic(),
+                }
+        except Exception as e:
+            logger.exception("Job V2 %s échoué: %s", job_id, e)
+            with _jobs_lock:
+                _jobs[job_id] = {
+                    "status": "done",
+                    "result": {"status": "error", "error": str(e)},
+                    "created_at": time.monotonic(),
+                }
+
+    threading.Thread(target=_worker, daemon=True).start()
+    return job_id
+
+
+# ── V2 : Scripts ─────────────────────────────────────────────────────────────
+
+
+@app.route("/api/v2/episode/<episode_id>/push-script", methods=["POST"])
+def api_v2_push_script(episode_id):
+    """Push un script JSON depuis Claude Code. Crée les segments_audio."""
+    data = request.get_json(silent=True) or {}
+    script = data.get("script")
+    if not script:
+        return jsonify({"error": "Champ 'script' requis"}), 400
+
+    segments = script.get("episode", {}).get("segments", [])
+    if not segments:
+        return jsonify({"error": "Script sans segments"}), 400
+
+    # Sauvegarder le script sur le filesystem
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+    valide_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+    config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+    for p in (script_path, valide_path):
+        p.write_text(json.dumps(script, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Upload Object Storage
+    if ps and ps.is_available():
+        try:
+            ps.upload_script(episode_id, script_path)
+        except Exception as e:
+            logger.warning("Upload script OS échoué: %s", e)
+
+    # Sauvegarder en DB
+    if _DB_AVAILABLE:
+        try:
+            from db_models import ScriptRepo
+            ScriptRepo.sauvegarder(episode_id, script)
+        except Exception as e:
+            logger.warning("Sauvegarde script DB échouée: %s", e)
+
+    # Créer les segments_audio
+    nb_created = 0
+    if _DB_AVAILABLE and SegmentAudioRepo:
+        try:
+            nb_created = SegmentAudioRepo.creer_depuis_script(episode_id, script)
+        except Exception as e:
+            logger.warning("Création segments_audio échouée: %s", e)
+
+    # Stats
+    voix = [s for s in segments if s.get("personnage") != "sfx"]
+    sfx = [s for s in segments if s.get("personnage") == "sfx"]
+    nb_mots = sum(len(s.get("texte", "").split()) for s in voix)
+
+    return jsonify({
+        "ok": True,
+        "episode_id": episode_id,
+        "nb_segments": len(segments),
+        "nb_voix": len(voix),
+        "nb_sfx": len(sfx),
+        "nb_mots": nb_mots,
+        "segments_db": nb_created,
+    })
+
+
+@app.route("/api/v2/episode/<episode_id>/script")
+def api_v2_get_script(episode_id):
+    """Retourne le script avec stats."""
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+    if not script_path.exists():
+        return jsonify({"error": "Script non trouvé"}), 404
+
+    script = json.loads(script_path.read_text(encoding="utf-8"))
+    segments = script.get("episode", {}).get("segments", [])
+    voix = [s for s in segments if s.get("personnage") != "sfx"]
+    sfx = [s for s in segments if s.get("personnage") == "sfx"]
+
+    # Ratios personnages
+    ratios = {}
+    for s in voix:
+        p = s.get("personnage", "inconnu")
+        ratios[p] = ratios.get(p, 0) + 1
+    total_voix = len(voix)
+    ratios_pct = {p: round(c / total_voix * 100, 1) for p, c in ratios.items()} if total_voix else {}
+
+    # Vérifier si validé
+    validated = False
+    if _DB_AVAILABLE and SegmentAudioRepo:
+        try:
+            segs = SegmentAudioRepo.lister(episode_id)
+            validated = len(segs) > 0
+        except Exception:
+            pass
+
+    return jsonify({
+        "script": script,
+        "stats": {
+            "nb_segments": len(segments),
+            "nb_voix": total_voix,
+            "nb_sfx": len(sfx),
+            "nb_mots": sum(len(s.get("texte", "").split()) for s in voix),
+            "ratios": ratios_pct,
+        },
+        "validated": validated,
+    })
+
+
+@app.route("/api/v2/episode/<episode_id>/validate-script", methods=["POST"])
+def api_v2_validate_script(episode_id):
+    """Valide le script (prérequis pour lancer la génération audio)."""
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+    if not script_path.exists():
+        return jsonify({"error": "Script non trouvé"}), 404
+
+    # S'assurer que les segments existent en DB
+    if _DB_AVAILABLE and SegmentAudioRepo:
+        segs = SegmentAudioRepo.lister(episode_id)
+        if not segs:
+            # Créer les segments si pas encore fait
+            script = json.loads(script_path.read_text(encoding="utf-8"))
+            SegmentAudioRepo.creer_depuis_script(episode_id, script)
+
+    return jsonify({"ok": True, "validated_at": datetime.utcnow().isoformat()})
+
+
+# ── V2 : Audio — Génération ──────────────────────────────────────────────────
+
+
+@app.route("/api/v2/episode/<episode_id>/generate-audio", methods=["POST"])
+def api_v2_generate_audio(episode_id):
+    """Lance la génération TTS/SFX de tous les segments pending (job async)."""
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+    if not script_path.exists():
+        script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+    if not script_path.exists():
+        return jsonify({"error": "Script non trouvé"}), 404
+
+    def _job():
+        return _job_generate_audio(episode_id, script_path)
+
+    try:
+        job_id = _start_fn_job(_job, episode_id=episode_id)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+
+    return jsonify({"job_id": job_id, "episode_id": episode_id})
+
+
+def _job_generate_audio(episode_id, script_path):
+    """Job async : génère les segments TTS + SFX."""
+    from agents.producteur_audio import ProducteurAudio
+    from agents.sfx_provider import SfxProvider
+
+    script = json.loads(script_path.read_text(encoding="utf-8"))
+    segments = script.get("episode", {}).get("segments", [])
+
+    # Dossier de sortie
+    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    segments_dir.mkdir(parents=True, exist_ok=True)
+
+    producteur = ProducteurAudio()
+    sfx_provider = SfxProvider()
+
+    generated = 0
+    errors = 0
+
+    for seg in segments:
+        seg_id = seg.get("id", "")
+        personnage = seg.get("personnage", "")
+        is_sfx = personnage == "sfx"
+
+        # Vérifier si déjà généré en DB
+        if _DB_AVAILABLE and SegmentAudioRepo:
+            db_seg = SegmentAudioRepo.charger(episode_id, seg_id)
+            if db_seg and db_seg["status"] in ("generated", "validated"):
+                # Vérifier que le fichier existe
+                if db_seg.get("audio_path") and Path(db_seg["audio_path"]).exists():
+                    generated += 1
+                    continue
+
+        chemin = segments_dir / f"{seg_id}.mp3"
+
+        # Marquer comme generating
+        if _DB_AVAILABLE and SegmentAudioRepo:
+            try:
+                SegmentAudioRepo.maj_status(episode_id, seg_id, "generating")
+            except Exception:
+                pass
+
+        try:
+            if is_sfx:
+                sfx_provider.generer(seg.get("texte", ""), chemin)
+            else:
+                producteur._generer_segment(seg, chemin)
+
+            # Mesurer durée
+            duree_ms = 0
+            try:
+                from pydub import AudioSegment as AS
+                audio = AS.from_mp3(str(chemin))
+                duree_ms = len(audio)
+            except Exception:
+                pass
+
+            # Mettre à jour en DB
+            if _DB_AVAILABLE and SegmentAudioRepo:
+                os_key = None
+                if ps and ps.is_available():
+                    try:
+                        os_key = f"segments/{episode_id}/{seg_id}.mp3"
+                        ps.upload_file(str(chemin), os_key)
+                    except Exception:
+                        os_key = None
+
+                SegmentAudioRepo.maj_status(
+                    episode_id, seg_id, "generated",
+                    audio_path=str(chemin),
+                    audio_os_key=os_key,
+                    duree_ms=duree_ms,
+                    nb_caracteres=len(seg.get("texte", "")),
+                )
+
+            generated += 1
+            logger.info("Segment %s/%s généré (%dms)", episode_id, seg_id, duree_ms)
+
+        except Exception as e:
+            errors += 1
+            logger.warning("Erreur segment %s/%s: %s", episode_id, seg_id, e)
+            if _DB_AVAILABLE and SegmentAudioRepo:
+                try:
+                    SegmentAudioRepo.maj_status(
+                        episode_id, seg_id, "error",
+                        error_message=str(e)[:500],
+                    )
+                except Exception:
+                    pass
+
+    return {"generated": generated, "errors": errors, "total": len(segments)}
+
+
+@app.route("/api/v2/episode/<episode_id>/segments")
+def api_v2_segments(episode_id):
+    """Liste les segments audio avec leur statut."""
+    if not _DB_AVAILABLE or not SegmentAudioRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    seg_type = request.args.get("type")
+    status = request.args.get("status")
+    segments = SegmentAudioRepo.lister(episode_id, segment_type=seg_type, status=status)
+
+    # Ajouter audio_url
+    for s in segments:
+        if s.get("audio_path") and Path(s["audio_path"]).exists():
+            s["audio_url"] = f"/api/v2/segment/{episode_id}/{s['segment_id']}/audio"
+        else:
+            s["audio_url"] = None
+        # Nettoyer les champs datetime pour JSON
+        for k in ("created_at", "updated_at"):
+            if s.get(k):
+                s[k] = s[k].isoformat() if hasattr(s[k], "isoformat") else str(s[k])
+
+    return jsonify(segments)
+
+
+@app.route("/api/v2/episode/<episode_id>/audio-progress")
+def api_v2_audio_progress(episode_id):
+    """Progression de la génération audio."""
+    if not _DB_AVAILABLE or not SegmentAudioRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+    return jsonify(SegmentAudioRepo.progression(episode_id))
+
+
+# ── V2 : Segment individuel ──────────────────────────────────────────────────
+
+
+@app.route("/api/v2/segment/<episode_id>/<segment_id>/audio")
+def api_v2_segment_audio(episode_id, segment_id):
+    """Sert le fichier MP3 d'un segment."""
+    if _DB_AVAILABLE and SegmentAudioRepo:
+        seg = SegmentAudioRepo.charger(episode_id, segment_id)
+        if seg and seg.get("audio_path"):
+            p = Path(seg["audio_path"])
+            if p.exists():
+                return send_from_directory(str(p.parent), p.name, mimetype="audio/mpeg")
+
+    # Fallback filesystem
+    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    path = segments_dir / f"{segment_id}.mp3"
+    if path.exists():
+        return send_from_directory(str(segments_dir), f"{segment_id}.mp3", mimetype="audio/mpeg")
+
+    return jsonify({"error": "Audio non trouvé"}), 404
+
+
+@app.route("/api/v2/segment/<episode_id>/<segment_id>/edit", methods=["POST"])
+def api_v2_segment_edit(episode_id, segment_id):
+    """Édite le texte d'un segment. Met à jour le script JSON source."""
+    data = request.get_json(silent=True) or {}
+    texte = data.get("texte")
+    if not texte:
+        return jsonify({"error": "Champ 'texte' requis"}), 400
+
+    # Mettre à jour en DB
+    if _DB_AVAILABLE and SegmentAudioRepo:
+        SegmentAudioRepo.maj_texte(episode_id, segment_id, texte)
+
+    # Mettre à jour le script JSON
+    for suffix in ("_script.json", "_script_valide.json"):
+        script_path = config.SCRIPTS_DIR / f"{episode_id}{suffix}"
+        if script_path.exists():
+            try:
+                script = json.loads(script_path.read_text(encoding="utf-8"))
+                for seg in script.get("episode", {}).get("segments", []):
+                    if seg.get("id") == segment_id:
+                        seg["texte"] = texte
+                        break
+                script_path.write_text(
+                    json.dumps(script, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+            except Exception as e:
+                logger.warning("Mise à jour script %s échouée: %s", suffix, e)
+
+    return jsonify({"ok": True, "segment_id": segment_id})
+
+
+@app.route("/api/v2/segment/<episode_id>/<segment_id>/regenerate", methods=["POST"])
+def api_v2_segment_regenerate(episode_id, segment_id):
+    """Regénère un segment (optionnellement avec nouveau texte)."""
+    data = request.get_json(silent=True) or {}
+    new_texte = data.get("texte")
+
+    # Si nouveau texte, éditer d'abord
+    if new_texte:
+        if _DB_AVAILABLE and SegmentAudioRepo:
+            SegmentAudioRepo.maj_texte(episode_id, segment_id, new_texte)
+        # Sync script JSON
+        for suffix in ("_script.json", "_script_valide.json"):
+            script_path = config.SCRIPTS_DIR / f"{episode_id}{suffix}"
+            if script_path.exists():
+                try:
+                    script = json.loads(script_path.read_text(encoding="utf-8"))
+                    for seg in script.get("episode", {}).get("segments", []):
+                        if seg.get("id") == segment_id:
+                            seg["texte"] = new_texte
+                            break
+                    script_path.write_text(
+                        json.dumps(script, ensure_ascii=False, indent=2), encoding="utf-8"
+                    )
+                except Exception as e:
+                    logger.warning("Sync script échouée: %s", e)
+
+    def _job():
+        return _job_regenerate_segment(episode_id, segment_id)
+
+    try:
+        job_id = _start_fn_job(_job, episode_id=f"{episode_id}_regen_{segment_id}")
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+
+    return jsonify({"job_id": job_id})
+
+
+def _job_regenerate_segment(episode_id, segment_id):
+    """Regénère un seul segment TTS/SFX."""
+    from agents.producteur_audio import ProducteurAudio
+    from agents.sfx_provider import SfxProvider
+
+    # Charger le segment depuis le script
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+    if not script_path.exists():
+        script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+
+    script = json.loads(script_path.read_text(encoding="utf-8"))
+    seg = None
+    for s in script.get("episode", {}).get("segments", []):
+        if s.get("id") == segment_id:
+            seg = s
+            break
+
+    if not seg:
+        raise ValueError(f"Segment {segment_id} non trouvé dans le script")
+
+    # Utiliser le texte DB si disponible (peut être plus récent)
+    if _DB_AVAILABLE and SegmentAudioRepo:
+        db_seg = SegmentAudioRepo.charger(episode_id, segment_id)
+        if db_seg and db_seg.get("texte"):
+            seg["texte"] = db_seg["texte"]
+        SegmentAudioRepo.maj_status(episode_id, segment_id, "generating")
+
+    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    segments_dir.mkdir(parents=True, exist_ok=True)
+    chemin = segments_dir / f"{segment_id}.mp3"
+
+    is_sfx = seg.get("personnage") == "sfx"
+
+    try:
+        if is_sfx:
+            SfxProvider().generer(seg.get("texte", ""), chemin)
+        else:
+            ProducteurAudio()._generer_segment(seg, chemin)
+
+        duree_ms = 0
+        try:
+            from pydub import AudioSegment as AS
+            duree_ms = len(AS.from_mp3(str(chemin)))
+        except Exception:
+            pass
+
+        if _DB_AVAILABLE and SegmentAudioRepo:
+            SegmentAudioRepo.maj_status(
+                episode_id, segment_id, "generated",
+                audio_path=str(chemin), duree_ms=duree_ms,
+                nb_caracteres=len(seg.get("texte", "")),
+            )
+
+        return {"segment_id": segment_id, "duree_ms": duree_ms}
+
+    except Exception as e:
+        if _DB_AVAILABLE and SegmentAudioRepo:
+            SegmentAudioRepo.maj_status(
+                episode_id, segment_id, "error", error_message=str(e)[:500],
+            )
+        raise
+
+
+@app.route("/api/v2/segment/<episode_id>/<segment_id>/validate", methods=["POST"])
+def api_v2_segment_validate(episode_id, segment_id):
+    """Valide un segment audio."""
+    if not _DB_AVAILABLE or not SegmentAudioRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+    SegmentAudioRepo.maj_status(episode_id, segment_id, "validated")
+    return jsonify({"ok": True})
+
+
+@app.route("/api/v2/episode/<episode_id>/validate-all-segments", methods=["POST"])
+def api_v2_validate_all_segments(episode_id):
+    """Valide tous les segments générés d'un épisode."""
+    if not _DB_AVAILABLE or not SegmentAudioRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+    count = SegmentAudioRepo.valider_tous(episode_id)
+    return jsonify({"ok": True, "count": count})
+
+
+# ── V2 : Montage ─────────────────────────────────────────────────────────────
+
+
+@app.route("/api/v2/episode/<episode_id>/montage", methods=["POST"])
+def api_v2_montage(episode_id):
+    """Lance le montage des segments validés (job async ~20-30 min)."""
+    if not _DB_AVAILABLE or not MontageRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    # Vérifier que les segments voix sont prêts
+    progress = SegmentAudioRepo.progression(episode_id)
+    voix_ready = progress["generated"] + progress["validated"]
+    if progress["pending"] > 0 or progress["generating"] > 0:
+        return jsonify({
+            "error": f"Segments non prêts: {progress['pending']} pending, {progress['generating']} en cours",
+        }), 400
+
+    # Créer la ligne montage
+    montage_id = MontageRepo.creer(episode_id)
+
+    def _job():
+        return _job_montage(episode_id, montage_id)
+
+    try:
+        job_id = _start_fn_job(_job, episode_id=episode_id)
+    except ValueError as e:
+        MontageRepo.echouer(montage_id, str(e))
+        return jsonify({"error": str(e)}), 409
+
+    return jsonify({"job_id": job_id, "montage_id": montage_id})
+
+
+def _job_montage(episode_id, montage_id):
+    """Job async : lance Monteur.assembler()."""
+    from agents.monteur import Monteur
+
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+    if not script_path.exists():
+        script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+
+    script = json.loads(script_path.read_text(encoding="utf-8"))
+    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    sortie_dir = config.OUTPUT_DIR / "audio" / "episodes"
+    sortie_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        monteur = Monteur()
+        resultat = monteur.assembler(script, dossier_segments=segments_dir, dossier_sortie=sortie_dir)
+
+        chemin_hq = resultat.get("chemin_hq", "")
+        chemin_preview = resultat.get("chemin_preview", "")
+        duree = resultat.get("duree_secondes", 0)
+        taille = 0
+        if chemin_hq and Path(chemin_hq).exists():
+            taille = Path(chemin_hq).stat().st_size
+        chapitres = resultat.get("chapitres", [])
+
+        # Upload Object Storage
+        os_key_hq = None
+        os_key_preview = None
+        if ps and ps.is_available():
+            try:
+                if chemin_hq:
+                    os_key_hq = f"audio/{episode_id}/{Path(chemin_hq).name}"
+                    ps.upload_file(chemin_hq, os_key_hq)
+                if chemin_preview:
+                    os_key_preview = f"audio/{episode_id}/{Path(chemin_preview).name}"
+                    ps.upload_file(chemin_preview, os_key_preview)
+            except Exception as e:
+                logger.warning("Upload montage OS échoué: %s", e)
+
+        # Mettre à jour en DB
+        MontageRepo.terminer(
+            montage_id,
+            audio_path_hq=chemin_hq,
+            audio_path_preview=chemin_preview,
+            duree_secondes=duree,
+            taille_bytes=taille,
+            nb_segments=len(script.get("episode", {}).get("segments", [])),
+            chapitres_json=chapitres,
+            audio_os_key_hq=os_key_hq,
+            audio_os_key_preview=os_key_preview,
+        )
+
+        return {"montage_id": montage_id, "duree_secondes": duree, "taille_bytes": taille}
+
+    except Exception as e:
+        MontageRepo.echouer(montage_id, str(e)[:500])
+        raise
+
+
+@app.route("/api/v2/episode/<episode_id>/montages")
+def api_v2_list_montages(episode_id):
+    """Liste les montages d'un épisode."""
+    if not _DB_AVAILABLE or not MontageRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    montages = MontageRepo.lister(episode_id)
+    for m in montages:
+        if m.get("audio_path_hq") and Path(m["audio_path_hq"]).exists():
+            m["audio_url_hq"] = f"/api/v2/montage/{m['id']}/audio?quality=hq"
+            m["audio_url_preview"] = f"/api/v2/montage/{m['id']}/audio?quality=preview"
+            m["download_url"] = f"/api/v2/montage/{m['id']}/download"
+        else:
+            m["audio_url_hq"] = None
+            m["audio_url_preview"] = None
+            m["download_url"] = None
+        if m.get("created_at"):
+            m["created_at"] = m["created_at"].isoformat() if hasattr(m["created_at"], "isoformat") else str(m["created_at"])
+        if m.get("chapitres_json"):
+            m["chapitres_json"] = m["chapitres_json"] if isinstance(m["chapitres_json"], list) else []
+
+    return jsonify(montages)
+
+
+@app.route("/api/v2/montage/<int:montage_id>/audio")
+def api_v2_montage_audio(montage_id):
+    """Sert le fichier audio d'un montage."""
+    if not _DB_AVAILABLE or not MontageRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    montage = MontageRepo.charger(montage_id)
+    if not montage:
+        return jsonify({"error": "Montage non trouvé"}), 404
+
+    quality = request.args.get("quality", "preview")
+    key = "audio_path_hq" if quality == "hq" else "audio_path_preview"
+    path = montage.get(key) or montage.get("audio_path_hq")
+
+    if not path or not Path(path).exists():
+        return jsonify({"error": "Fichier audio non trouvé"}), 404
+
+    p = Path(path)
+    return send_from_directory(str(p.parent), p.name, mimetype="audio/mpeg")
+
+
+@app.route("/api/v2/montage/<int:montage_id>/download")
+def api_v2_montage_download(montage_id):
+    """Télécharge le montage en qualité HD."""
+    if not _DB_AVAILABLE or not MontageRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    montage = MontageRepo.charger(montage_id)
+    if not montage:
+        return jsonify({"error": "Montage non trouvé"}), 404
+
+    path = montage.get("audio_path_hq")
+    if not path or not Path(path).exists():
+        return jsonify({"error": "Fichier HD non trouvé"}), 404
+
+    p = Path(path)
+    return send_from_directory(
+        str(p.parent), p.name,
+        mimetype="audio/mpeg",
+        as_attachment=True,
+        download_name=f"{montage['episode_id']}_montage_{montage_id}_hq.mp3",
+    )
+
+
+# ── V2 : Publication ─────────────────────────────────────────────────────────
+
+
+@app.route("/api/v2/montage/<int:montage_id>/publish", methods=["POST"])
+def api_v2_publish(montage_id):
+    """Publie un montage (le rend écoutable sur le front public)."""
+    if not _DB_AVAILABLE or not MontageRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    montage = MontageRepo.charger(montage_id)
+    if not montage:
+        return jsonify({"error": "Montage non trouvé"}), 404
+    if montage["status"] != "completed":
+        return jsonify({"error": f"Montage en statut '{montage['status']}', pas 'completed'"}), 400
+
+    episode_id = montage["episode_id"]
+
+    # Copier l'audio vers le chemin attendu par le front public
+    if montage.get("audio_path_hq") and Path(montage["audio_path_hq"]).exists():
+        public_dir = config.OUTPUT_DIR / "audio" / "episodes"
+        public_dir.mkdir(parents=True, exist_ok=True)
+        src = Path(montage["audio_path_hq"])
+        dst = public_dir / f"{episode_id}_192k.mp3"
+        import shutil
+        shutil.copy2(str(src), str(dst))
+
+        # Copier aussi le preview
+        if montage.get("audio_path_preview") and Path(montage["audio_path_preview"]).exists():
+            dst_preview = public_dir / f"{episode_id}_preview.mp3"
+            shutil.copy2(str(montage["audio_path_preview"]), str(dst_preview))
+
+    # Publier en DB
+    try:
+        MontageRepo.publier(montage_id)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Mettre à jour historique
+    try:
+        script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+        if script_path.exists():
+            script = json.loads(script_path.read_text(encoding="utf-8"))
+            ep = script.get("episode", {})
+            entry = {
+                "episode_id": episode_id,
+                "titre": ep.get("titre", ""),
+                "date_production": datetime.utcnow().isoformat(),
+                "type_episode": ep.get("type", "standard"),
+            }
+            # UPSERT dans historique_episodes JSON
+            hist_path = config.HISTORIQUE_DIR / "historique_episodes.json"
+            if hist_path.exists():
+                historique = json.loads(hist_path.read_text(encoding="utf-8"))
+            else:
+                historique = []
+            # Supprimer l'ancien si existant
+            historique = [h for h in historique if h.get("episode_id") != episode_id]
+            historique.append(entry)
+            hist_path.write_text(json.dumps(historique, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as e:
+        logger.warning("Mise à jour historique échouée: %s", e)
+
+    return jsonify({"ok": True, "episode_id": episode_id, "montage_id": montage_id})
+
+
+# ── V2 : Vue saisons ─────────────────────────────────────────────────────────
+
+
+@app.route("/api/v2/saisons/episodes")
+def api_v2_saisons_episodes():
+    """Vue consolidée des 30 épisodes (3 saisons) avec statut."""
+    result = []
+
+    for saison_num in range(1, 4):
+        plan = config.charger_saison(saison_num)
+        if not plan:
+            continue
+
+        episodes = plan.get("saison", {}).get("episodes", [])
+        for ep in episodes:
+            eid = f"S{saison_num:02d}E{ep.get('numero', 0):02d}"
+
+            # Script exists?
+            has_script = (config.SCRIPTS_DIR / f"{eid}_script.json").exists()
+
+            # Audio progress
+            audio_progress = None
+            if _DB_AVAILABLE and SegmentAudioRepo:
+                try:
+                    audio_progress = SegmentAudioRepo.progression(eid)
+                except Exception:
+                    pass
+
+            # Montages
+            montage_count = 0
+            is_published = False
+            if _DB_AVAILABLE and MontageRepo:
+                try:
+                    montages = MontageRepo.lister(eid)
+                    montage_count = len(montages)
+                    is_published = any(m.get("is_published") for m in montages)
+                except Exception:
+                    pass
+
+            result.append({
+                "episode_id": eid,
+                "saison": saison_num,
+                "numero": ep.get("numero", 0),
+                "titre": ep.get("titre", ""),
+                "type": ep.get("type", "standard"),
+                "has_script": has_script,
+                "audio_progress": audio_progress,
+                "montage_count": montage_count,
+                "is_published": is_published,
+            })
+
+    return jsonify(result)
+
+
 # ── Lancement ────────────────────────────────────────────────────────────────
 
 
