@@ -453,6 +453,54 @@ CREATE TABLE IF NOT EXISTS publications (
 CREATE INDEX IF NOT EXISTS idx_publications_episode_id ON publications(episode_id);
 
 -- ══════════════════════════════════════════════════════════════════════════════
+-- Table: segments_audio — Segments audio individuels pour le back-office V2
+-- ══════════════════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS segments_audio (
+    id              SERIAL PRIMARY KEY,
+    episode_id      VARCHAR(10) NOT NULL,
+    segment_id      VARCHAR(20) NOT NULL,
+    segment_type    VARCHAR(10) DEFAULT 'voix',
+    personnage      VARCHAR(50),
+    texte           TEXT,
+    texte_original  TEXT,
+    ton             VARCHAR(30),
+    rythme          VARCHAR(10),
+    sfx_prompt      TEXT,
+    audio_path      TEXT,
+    audio_os_key    TEXT,
+    duree_ms        INTEGER,
+    nb_caracteres   INTEGER,
+    status          VARCHAR(20) DEFAULT 'pending',
+    version         INTEGER DEFAULT 1,
+    error_message   TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_seg_audio_uniq ON segments_audio(episode_id, segment_id, version);
+CREATE INDEX IF NOT EXISTS idx_seg_audio_episode ON segments_audio(episode_id, status);
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- Table: montages — Montages audio assemblés pour le back-office V2
+-- ══════════════════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS montages (
+    id              SERIAL PRIMARY KEY,
+    episode_id      VARCHAR(10) NOT NULL,
+    audio_path_hq   TEXT,
+    audio_path_preview TEXT,
+    audio_os_key_hq TEXT,
+    audio_os_key_preview TEXT,
+    duree_secondes  FLOAT,
+    taille_bytes    BIGINT,
+    nb_segments     INTEGER,
+    status          VARCHAR(20) DEFAULT 'pending',
+    is_published    BOOLEAN DEFAULT FALSE,
+    error_message   TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_montage_episode ON montages(episode_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_montage_published ON montages(episode_id) WHERE is_published = TRUE;
+
+-- ══════════════════════════════════════════════════════════════════════════════
 -- Table: audit_log — Journal d'audit (JAMAIS supprimé, append-only)
 -- ══════════════════════════════════════════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS audit_log (
@@ -510,7 +558,8 @@ BEGIN
         SELECT unnest(ARRAY[
             'saisons', 'episodes', 'scripts', 'reviews', 'productions',
             'metadonnees', 'fichiers_audio', 'historique_episodes',
-            'personnages', 'couts_api', 'publications'
+            'personnages', 'couts_api', 'publications',
+            'segments_audio', 'montages'
         ])
     LOOP
         EXECUTE format(
@@ -541,7 +590,8 @@ DECLARE
 BEGIN
     FOR tbl IN
         SELECT unnest(ARRAY[
-            'saisons', 'episodes', 'productions', 'personnages'
+            'saisons', 'episodes', 'productions', 'personnages',
+            'segments_audio'
         ])
     LOOP
         EXECUTE format(
@@ -585,7 +635,7 @@ _TABLES_CONNUES = (
     "saisons", "episodes", "scripts", "reviews", "productions",
     "metadonnees", "fichiers_audio", "historique_episodes",
     "personnages", "couts_api", "publications", "audit_log",
-    "preferences_producteur",
+    "preferences_producteur", "segments_audio", "montages",
 )
 
 

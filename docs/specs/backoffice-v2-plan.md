@@ -1,351 +1,423 @@
-# Back-Office V2 — Specs complètes
+# Back-Office V2 — Plan complet de redesign
 
-## 1. Résumé
+## 1. Resume executif
 
-Le back-office actuel est un monolithe CLI-wrapper qui lance des subprocess `main.py` opaques. Le V2 le remplace par un workflow granulaire : push script → validation → génération audio segment par segment → écoute/regénération individuelle → montage → publication.
+**Probleme** : Le back-office actuel est un monolithe (dashboard.html ~3000 lignes, web.py ~4000 lignes) construit sur 28 sessions. Il lance des subprocess `main.py` opaques sans visibilite segment par segment. L'edition de texte ne modifie pas le script source. Pas de gestion multi-montages.
+
+**Solution** : 6 ecrans dedies, une table `segments_audio` pour le suivi granulaire, une table `montages` pour les versions. Le script JSON reste la source de verite. Chaque segment est editable/regenerable individuellement. Le montage produit une ligne en DB, le client choisit lequel publier.
 
 **Stack** : Flask + Jinja2 + vanilla JS + PostgreSQL (Neon) + Object Storage. Pas de framework frontend.
 
 ---
 
-## 2. Décisions client (FINALES)
+## 2. Modele de donnees
 
-| # | Question | Réponse |
-|---|----------|---------|
-| Q1 | SFX validation individuelle ? | Non — générés automatiquement en batch |
-| Q2 | Édition texte sync script JSON ? | Oui — le script JSON source est modifié |
-| Q3 | Association montage/épisode | Contraint à l'épisode d'origine. N montages par épisode, 1 seul publié |
-| Q4 | Routes Claude API | Garder `/api/claude/query` pour monitoring |
-| Q5 | Publication = RSS/Buzzsprout ? | Non — juste rendre écoutable sur le site |
-| Q6 | Purge | Garder |
-
----
-
-## 3. Modèle de données
-
-### Nouvelle table : `segments_audio`
+### 2.1 Nouvelle table : `segments_audio`
 
 ```sql
-CREATE TABLE segments_audio (
-    id SERIAL PRIMARY KEY,
-    episode_id VARCHAR(10) NOT NULL,
-    segment_id VARCHAR(20) NOT NULL,          -- "seg_003"
-    segment_type VARCHAR(10) DEFAULT 'voix',  -- "voix" | "sfx"
-    personnage VARCHAR(50),
-    texte TEXT,                                -- texte TTS actuel (éditable)
-    texte_original TEXT,                       -- texte du script initial (immutable)
-    ton VARCHAR(30),
-    rythme VARCHAR(10),
-    sfx_prompt TEXT,                           -- pour les SFX uniquement
-    audio_path TEXT,                           -- chemin fichier MP3
-    audio_os_key TEXT,                         -- clé Object Storage
-    duree_ms INTEGER,
-    nb_caracteres INTEGER,
-    status VARCHAR(20) DEFAULT 'pending',      -- pending | generating | generated | validated | error
-    version INTEGER DEFAULT 1,
-    error_message TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS segments_audio (
+    id              SERIAL PRIMARY KEY,
+    episode_id      VARCHAR(10) NOT NULL,
+    segment_id      VARCHAR(20) NOT NULL,          -- "seg_003"
+    segment_type    VARCHAR(10) DEFAULT 'voix',    -- "voix" | "sfx"
+    personnage      VARCHAR(50),
+    texte           TEXT,                           -- texte TTS actuel (editable)
+    texte_original  TEXT,                           -- texte du script initial (immutable)
+    ton             VARCHAR(30),
+    rythme          VARCHAR(10),
+    sfx_prompt      TEXT,                           -- pour les SFX uniquement
+    audio_path      TEXT,                           -- chemin fichier MP3 local
+    audio_os_key    TEXT,                           -- cle Object Storage
+    duree_ms        INTEGER DEFAULT 0,
+    nb_caracteres   INTEGER DEFAULT 0,
+    status          VARCHAR(20) DEFAULT 'pending',
+        -- pending | generating | generated | validated | error
+    version         INTEGER DEFAULT 1,
+    error_message   TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE UNIQUE INDEX idx_seg_audio_uniq ON segments_audio(episode_id, segment_id, version);
-CREATE INDEX idx_seg_audio_episode ON segments_audio(episode_id, status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_seg_audio_uniq
+    ON segments_audio(episode_id, segment_id, version);
+CREATE INDEX IF NOT EXISTS idx_seg_audio_episode
+    ON segments_audio(episode_id, status);
 ```
 
-### Nouvelle table : `montages`
+**Regles** :
+- 1 ligne par segment du script (voix + SFX)
+- `texte` = valeur courante (mutable). `texte_original` = valeur a la creation (immutable)
+- Quand `texte` est edite, `version` s'incremente et `status` passe a `pending`
+- Les SFX ont `segment_type='sfx'`, `sfx_prompt` rempli, `personnage='sfx'`
+
+### 2.2 Nouvelle table : `montages`
 
 ```sql
-CREATE TABLE montages (
-    id SERIAL PRIMARY KEY,
-    episode_id VARCHAR(10) NOT NULL,
-    audio_path_hq TEXT,                       -- chemin MP3 192k
-    audio_path_preview TEXT,                  -- chemin MP3 64k
-    audio_os_key_hq TEXT,                     -- Object Storage key HQ
+CREATE TABLE IF NOT EXISTS montages (
+    id              SERIAL PRIMARY KEY,
+    episode_id      VARCHAR(10) NOT NULL,
+    audio_path_hq   TEXT,                          -- chemin MP3 192k
+    audio_path_preview TEXT,                       -- chemin MP3 128k
+    audio_os_key_hq TEXT,
     audio_os_key_preview TEXT,
-    duree_secondes FLOAT,
-    taille_bytes BIGINT,
-    nb_segments INTEGER,
-    status VARCHAR(20) DEFAULT 'pending',     -- pending | processing | completed | error
-    is_published BOOLEAN DEFAULT FALSE,       -- 1 seul par episode_id
-    error_message TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    duree_secondes  FLOAT DEFAULT 0,
+    taille_bytes    BIGINT DEFAULT 0,
+    nb_segments     INTEGER DEFAULT 0,
+    chapitres_json  JSONB DEFAULT '[]',
+    status          VARCHAR(20) DEFAULT 'pending',
+        -- pending | processing | completed | error
+    is_published    BOOLEAN DEFAULT FALSE,
+    error_message   TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_montage_episode ON montages(episode_id);
--- Contrainte : max 1 published par episode
-CREATE UNIQUE INDEX idx_montage_published ON montages(episode_id) WHERE is_published = TRUE;
+CREATE INDEX IF NOT EXISTS idx_montage_episode ON montages(episode_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_montage_published
+    ON montages(episode_id) WHERE is_published = TRUE;
 ```
 
-### Tables existantes — pas de modification structurelle
+**Regles** :
+- N montages par episode, 1 seul `is_published=TRUE` a la fois (contrainte unique partielle)
+- Le montage est lance quand tous les segments voix sont `validated` ou `generated`
+- `chapitres_json` = snapshot des chapitres generes par `Monteur`
 
-Les tables `scripts`, `productions`, `fichiers_audio`, `episodes`, `saisons`, `historique_episodes` restent telles quelles. Le V2 écrit dans `segments_audio` et `montages` au lieu de passer par le pipeline monolithique.
+### 2.3 Tables existantes — modifications
+
+| Table | Modification | SQL |
+|-------|-------------|-----|
+| `episodes` | Ajouter colonne | `ALTER TABLE episodes ADD COLUMN IF NOT EXISTS published_montage_id INT REFERENCES montages(id)` |
+| `episodes` | Ajouter colonne | `ALTER TABLE episodes ADD COLUMN IF NOT EXISTS script_validated_at TIMESTAMPTZ` |
+
+### 2.4 Tables conservees sans modification
+
+`saisons`, `scripts`, `reviews`, `productions`, `metadonnees`, `fichiers_audio`, `historique_episodes`, `preferences_producteur`, `personnages`, `couts_api`, `publications`, `audit_log`.
 
 ---
 
-## 4. Routes API
+## 3. Routes API
 
-### 4.1 Scripts
+Toutes les routes V2 sont sous le prefixe `/api/v2/`. Auth : `Authorization: Bearer <token>`.
 
-| Méthode | Route | Description | Body | Response |
+### 3.1 Scripts
+
+| Methode | Route | Description | Body | Response |
 |---------|-------|-------------|------|----------|
-| `POST` | `/api/v2/episode/{id}/push-script` | Upload script JSON | `{script: {...}}` | `{ok, nb_segments, nb_sfx, nb_mots}` |
-| `GET` | `/api/v2/episode/{id}/script` | Lire script avec stats | — | `{script, stats, status}` |
-| `POST` | `/api/v2/episode/{id}/validate-script` | Valider le script | — | `{ok}` |
+| `POST` | `/api/v2/episode/{eid}/push-script` | Push script JSON | `{script: {...}}` | `{ok, nb_segments, nb_sfx, nb_mots}` |
+| `GET` | `/api/v2/episode/{eid}/script` | Lire script + stats | — | `{script, stats, validated}` |
+| `POST` | `/api/v2/episode/{eid}/validate-script` | Valider le script | — | `{ok, validated_at}` |
 
-**Push script** :
-1. Sauvegarde dans `scripts/episodes/{id}_script.json` + `_valide.json`
+**`push-script` details** :
+1. Sauve dans `scripts/episodes/{eid}_script.json` + `_valide.json`
 2. Upload Object Storage (`scripts/`)
-3. Sauvegarde en DB (`ScriptRepo`)
-4. Crée les lignes `segments_audio` (status=pending) pour tous les segments
-5. Retourne les stats (nb segments voix, SFX, mots, ratios personnages)
+3. Sauve en DB (`ScriptRepo.sauvegarder`, `is_validated=True`)
+4. DELETE les anciennes lignes `segments_audio` pour cet episode (reset complet)
+5. INSERT une ligne `segments_audio` par segment (status=pending, texte=texte du script)
+6. Retourne stats : nb segments voix, SFX, mots, ratios personnages
 
-### 4.2 Audio — Génération
+### 3.2 Audio — Generation
 
-| Méthode | Route | Description | Body | Response |
+| Methode | Route | Description | Body | Response |
 |---------|-------|-------------|------|----------|
-| `POST` | `/api/v2/episode/{id}/generate-audio` | Lance TTS de tous les segments | — | `{job_id}` |
-| `GET` | `/api/v2/episode/{id}/segments` | Liste segments + statut audio | `?type=voix\|sfx\|all` | `[{segment_id, personnage, texte, status, audio_url, duree_ms}]` |
-| `GET` | `/api/v2/episode/{id}/audio-progress` | Progression génération | — | `{total, generated, validated, errors, percent}` |
-| `GET` | `/api/v2/segment/{episode_id}/{segment_id}/audio` | Servir fichier audio segment | — | MP3 file |
-| `POST` | `/api/v2/segment/{episode_id}/{segment_id}/regenerate` | Regénérer 1 segment | `{texte?: string}` | `{job_id}` |
-| `POST` | `/api/v2/segment/{episode_id}/{segment_id}/validate` | Valider 1 segment | — | `{ok}` |
-| `POST` | `/api/v2/episode/{id}/validate-all-segments` | Valider tous les segments d'un coup | — | `{ok, count}` |
+| `POST` | `/api/v2/episode/{eid}/generate-audio` | Lance TTS pour tous les segments pending | — | `{job_id}` |
+| `GET` | `/api/v2/episode/{eid}/segments` | Liste segments + statut | `?type=voix\|sfx\|all&status=pending,error` | `[{segment_id, personnage, texte, status, audio_url, duree_ms, ton, rythme}]` |
+| `GET` | `/api/v2/episode/{eid}/audio-progress` | Progression generation | — | `{total, pending, generating, generated, validated, errors, percent}` |
 
-**generate-audio** (job async) :
-1. Vérifie script validé
-2. Pour chaque segment voix : appelle `ProducteurAudio._generer_segment()`, met à jour `segments_audio` (status, audio_path, duree_ms)
-3. Pour chaque SFX : appelle `SfxProvider.generer()`, met à jour `segments_audio`
-4. Front-end poll `/audio-progress` pour la barre de progression
+**`generate-audio` job** :
+1. Verifie script valide
+2. Pour chaque segment voix `status IN (pending, error)` :
+   - `status = generating`
+   - Appelle `ProducteurAudio._generer_segment(segment_dict, chemin)`
+   - Si succes : `status = generated`, met a jour `audio_path`, `duree_ms`, `nb_caracteres`
+   - Si erreur : `status = error`, `error_message = str(e)`
+3. Pour chaque SFX `status IN (pending, error)` :
+   - Appelle `SfxProvider.generer(sfx_prompt, chemin)`
+   - Meme pattern de mise a jour
+4. Skip les segments deja `generated` ou `validated` (reprise apres interruption)
 
-**regenerate** (job async ou sync selon durée) :
-1. Si `texte` fourni : met à jour `segments_audio.texte` ET le script JSON source
-2. Incrémente `version`
-3. Appelle `_generer_segment()` avec le nouveau texte
-4. Met à jour `audio_path`, `duree_ms`, reset `status=generated`
+### 3.3 Audio — Segment individuel
 
-### 4.3 Montage
-
-| Méthode | Route | Description | Body | Response |
+| Methode | Route | Description | Body | Response |
 |---------|-------|-------------|------|----------|
-| `POST` | `/api/v2/episode/{id}/montage` | Lancer le montage | — | `{job_id}` |
-| `GET` | `/api/v2/episode/{id}/montages` | Liste des montages | — | `[{id, duree, taille, status, is_published, created_at}]` |
-| `GET` | `/api/v2/montage/{montage_id}/audio` | Servir audio montage | `?quality=hq\|preview` | MP3 file |
-| `GET` | `/api/v2/montage/{montage_id}/download` | Télécharger HD | — | MP3 file (Content-Disposition: attachment) |
+| `GET` | `/api/v2/segment/{eid}/{seg_id}/audio` | Stream MP3 du segment | — | `audio/mpeg` |
+| `POST` | `/api/v2/segment/{eid}/{seg_id}/edit` | Editer le texte | `{texte: "..."}` | `{ok, segment_id}` |
+| `POST` | `/api/v2/segment/{eid}/{seg_id}/regenerate` | Regenerer le TTS | `{texte?: "..."}` | `{job_id}` |
+| `POST` | `/api/v2/segment/{eid}/{seg_id}/validate` | Valider le segment | — | `{ok}` |
+| `POST` | `/api/v2/episode/{eid}/validate-all-segments` | Valider tous d'un coup | — | `{ok, count}` |
 
-**montage** (job async ~20-30 min) :
-1. Vérifie que tous segments voix sont `validated` ou `generated`
-2. Appelle `Monteur.assembler(script, dossier_segments, dossier_sortie)`
-3. Crée ligne dans `montages` avec paths, durée, taille
-4. Upload Object Storage (`audio/`)
+**`edit` details** :
+1. Met a jour `segments_audio.texte`
+2. Charge le script JSON via `ScriptRepo.charger_valide(eid)`
+3. Trouve le segment par `segment_id` dans `script.episode.segments`
+4. Remplace le texte
+5. Sauve le script modifie : fichier local + `_valide.json` + DB (`ScriptRepo.sauvegarder`) + Object Storage
+6. Passe le segment en `status=pending` (necessite regeneration)
 
-### 4.4 Publication
+**`regenerate` details** :
+1. Si `texte` fourni dans le body : execute la logique `edit` d'abord
+2. Incremente `version` dans `segments_audio`
+3. `status = generating`
+4. Appelle `ProducteurAudio._generer_segment()`
+5. Met a jour `audio_path`, `duree_ms`, `status = generated`
 
-| Méthode | Route | Description | Body | Response |
+### 3.4 SFX
+
+| Methode | Route | Description | Body | Response |
 |---------|-------|-------------|------|----------|
-| `POST` | `/api/v2/montage/{montage_id}/publish` | Publier ce montage | — | `{ok}` |
-| `GET` | `/api/v2/saisons/episodes` | Vue 30 épisodes (3 saisons) | — | `[{episode_id, titre, saison, numero, status, has_script, has_audio, is_published, montage_count}]` |
+| `GET` | `/api/v2/episode/{eid}/sfx` | Liste SFX generes | — | `[{segment_id, sfx_prompt, status, audio_url}]` |
 
-**publish** :
-1. Dé-publie tout autre montage du même épisode (`is_published=FALSE`)
-2. Met `is_published=TRUE` sur le montage choisi
-3. Copie l'audio vers le chemin attendu par le front public (`output/audio/episodes/{id}_*.mp3`)
-4. Met à jour `fichiers_audio` pour que `/api/public/episodes` le voit
-5. Met à jour `historique_episodes` si besoin
+Pas de validation individuelle SFX. Generes automatiquement par `generate-audio`.
 
-### 4.5 Admin / Monitoring (conservées)
+### 3.5 Montage
+
+| Methode | Route | Description | Body | Response |
+|---------|-------|-------------|------|----------|
+| `POST` | `/api/v2/episode/{eid}/montage` | Lancer un montage | — | `{job_id, montage_id}` |
+| `GET` | `/api/v2/episode/{eid}/montages` | Liste montages | — | `[{id, status, duree, taille, is_published, audio_url, created_at}]` |
+| `GET` | `/api/v2/montage/{mid}/audio` | Stream montage | `?quality=hq\|preview` | `audio/mpeg` |
+| `GET` | `/api/v2/montage/{mid}/download` | Telecharger HD | — | `audio/mpeg` (attachment) |
+
+**`montage` job (~20-30 min)** :
+1. Verifie que tous segments voix ont `status IN (validated, generated)`
+2. Cree une ligne `montages` (status=processing)
+3. Appelle `Monteur.assembler(script, dossier_segments, dossier_sortie)`
+4. Met a jour `montages` : paths, duree, taille, `status=completed`
+5. Upload Object Storage (`audio/`)
+6. Si erreur : `status=error`, `error_message`
+
+### 3.6 Publication
+
+| Methode | Route | Description | Body | Response |
+|---------|-------|-------------|------|----------|
+| `POST` | `/api/v2/montage/{mid}/publish` | Publier ce montage | — | `{ok}` |
+| `POST` | `/api/v2/montage/{mid}/unpublish` | Depublier | — | `{ok}` |
+
+**`publish` details** :
+1. `UPDATE montages SET is_published=FALSE WHERE episode_id=X`
+2. `UPDATE montages SET is_published=TRUE WHERE id=mid`
+3. `UPDATE episodes SET published_montage_id=mid`
+4. Copie audio HQ vers `output/audio/episodes/{eid}_*.mp3` (chemin attendu par le front public)
+5. Met a jour `historique_episodes` si absent
+6. L'episode apparait sur `/api/public/episodes`
+
+### 3.7 Admin / Monitoring (conserves)
 
 | Route | Statut |
 |-------|--------|
-| `/api/claude/query` | **Conservée** — monitoring SQL |
-| `/api/job-status/{id}` | **Conservée** — polling jobs async |
-| `/api/running-jobs` | **Conservée** — reconnexion browser |
-| `/api/storage-status` | **Conservée** — diagnostic |
-| `/api/purge/saison/{num}` | **Conservée** |
-| `/api/purge/tout` | **Conservée** |
-| `/api/public/episodes` | **Conservée** — front public |
-| Auth routes | **Conservées** |
+| `/api/claude/query` | Conservee |
+| `/api/job-status/{id}` | Conservee |
+| `/api/running-jobs` | Conservee |
+| `/api/storage-status` | Conservee |
+| `/api/purge/saison/{num}` | Conservee — ajouter cleanup `segments_audio` + `montages` |
+| `/api/purge/tout` | Conservee — ajouter cleanup `segments_audio` + `montages` |
+| `/api/public/episodes` | Conservee |
+| Auth routes | Conservees |
 
-### 4.6 Routes supprimées
+### 3.8 Routes supprimees
 
-| Route | Raison |
-|-------|--------|
-| `/api/produire` | Pipeline monolithique → remplacé par push-script + generate-audio |
+| Route v1 | Remplacement v2 |
+|----------|-----------------|
+| `/api/produire` | `push-script` + `generate-audio` |
+| `/api/episode/{eid}/launch-fresh` | `push-script` + `generate-audio` |
+| `/api/episode/{eid}/continue-production` | `generate-audio` / `montage` |
+| `/api/episode/{eid}/regenerate` | `segment/{seg}/regenerate` |
+| `/api/episode/{eid}/validate` | `validate-script` / `validate-all-segments` / `publish` |
+| `/api/episode/{eid}/kill-productions` | Jobs V2 sont granulaires, pas besoin |
+| `/api/reprendre` | Reprise implicite (segments pending = regenerer) |
+| `/api/batch` | Hors scope |
+| `/api/produire-saison` | Hors scope |
 | `/api/planifier-saison` | Fait dans Claude Code |
-| `/api/produire-saison` | Pipeline monolithique |
-| `/api/reprendre` | Remplacé par generate-audio / montage |
-| `/api/batch` | Plus pertinent |
-| `/api/episode/{id}/launch-fresh` | Remplacé par push-script + generate-audio |
-| `/api/episode/{id}/continue-production` | Remplacé par generate-audio / montage |
-| `/api/episode/{id}/kill-productions` | Simplifié — les jobs V2 sont granulaires |
 
 ---
 
-## 5. Écrans
+## 4. Ecrans
 
-### Écran 1 : Hub épisodes (`/admin`)
+### 4.1 Hub episodes (`/admin`)
 
-**Vue** : Tableau des 30 épisodes (3 saisons), groupés par onglets saison.
+**Composants** : Onglets par saison (S1, S2, S3). Tableau par saison :
 
 | Colonne | Contenu |
 |---------|---------|
-| # | Numéro |
-| Titre | Titre de l'épisode (depuis saison plan) |
-| Type | ouverture / standard / mi-saison / final |
-| Script | Badge : ✓ validé / ⏳ poussé / — aucun |
-| Audio | Badge : ✓ N/N segments / ⏳ en cours / — |
-| Montage | Badge : ✓ N montages / — |
-| Publié | Badge vert si un montage est publié |
-| Action | Bouton → détail épisode |
+| # | Numero |
+| Titre | Depuis `saison_XX.json` |
+| Type | Badge : ouverture / standard / mi-saison / final |
+| Script | `--` / `Pousse` / `Valide` |
+| Audio | `--` / `12/156` / `156/156` |
+| Montage | `--` / `2 montages` |
+| Publie | Badge vert si `is_published` |
+| Action | Lien vers detail |
 
-**États** :
-- Vide : "Aucune saison planifiée" (ne devrait pas arriver — les 3 saisons sont imposées)
-- Normal : tableau avec badges colorés
+**Etats** :
+- Vide : "Aucune saison planifiee" (improbable — 3 saisons imposees)
+- Normal : badges couleur par statut
 
-### Écran 2 : Détail épisode (`/admin/episode/{id}`)
+### 4.2 Detail episode (`/admin/episode/{eid}`)
 
-Page unique avec 4 sections verticales (accordéon ou toujours visibles) :
+4 sections verticales :
 
 **Section A — Script**
-- Affichage du script : liste scrollable des segments (personnage, texte, ton, type)
 - Stats : nb segments, nb mots, ratios personnages, score review
-- Actions : "Pousser un script" (upload JSON), "Valider le script"
-- Si pas de script : zone d'upload (drag & drop ou bouton)
+- Liste scrollable des segments (read-only ici)
+- Bouton "Valider le script" (si pas encore valide)
+- Si pas de script : message "En attente — poussez le script depuis Claude Code"
 
 **Section B — Audio**
-- Barre de progression : "42/156 segments générés"
-- Bouton "Lancer la génération audio" (disabled si script non validé)
-- Liste des segments avec player audio inline :
-  - Chaque ligne : `[▶] seg_003 | papy_babou | "Il était une fois..." | ✓ validé`
-  - Clic sur texte → édition inline
-  - Bouton "Regénérer" par segment
-  - Bouton "Valider" par segment
-  - Bouton "Tout valider" en haut
-- Filtres : Tous / Voix seulement / SFX seulement / Erreurs
+- Barre de progression : `42/156 segments generes (12 valides)`
+- Bouton "Generer l'audio" (disabled si script non valide)
+- Bouton "Voir les segments" → lien vers ecran 4.3
+- Bouton "Tout valider" (disabled si pas tous generes)
 
 **Section C — Montage**
-- Bouton "Lancer le montage" (disabled si segments non tous validés/générés)
-- Liste des montages existants : player, durée, taille, date, bouton "Télécharger HD"
-- Bouton "Publier" par montage (radio — 1 seul actif)
+- Bouton "Lancer montage" (disabled si segments non tous valides/generes)
+- Liste montages avec player inline, duree, taille
+- Bouton "Telecharger HD" et "Publier" par montage
+- Badge "Publie" sur le montage actif
 
 **Section D — Info**
-- Épisode : saison, numéro, type, histoire biblique
+- Saison, numero, type, histoire biblique
 - Cover art (si existante)
-- Lien vers le front public si publié
+- Lien front public si publie
 
-### Écran 3 : Login (`/admin/login`)
+### 4.3 Segments audio (`/admin/episode/{eid}/segments`)
 
-Inchangé.
+**Composants** :
+- **Filtres** en haut : Tous / Voix / SFX / A valider / Erreurs
+- **Barre progression** sticky : `N/total valides`
+- **Liste segments** :
+  - Badge personnage (couleur : rouge Antoine, jaune Noemie, bleu Papy, rose Mamie, gris SFX)
+  - Texte du segment (editable inline pour voix, read-only pour SFX)
+  - Player audio mini (play/pause + duree)
+  - Badges ton + rythme
+  - Boutons : Valider (check) / Regenerer (refresh) / Editer (crayon)
+- **Bouton "Tout valider"** en sticky bottom
+
+**Etats par segment** :
+| Status | Visuel |
+|--------|--------|
+| pending | Grise, pas de player |
+| generating | Spinner anime |
+| generated | Player actif, boutons visibles |
+| validated | Check vert, texte verrouille (clic pour deverrouiller) |
+| error | Rouge, message erreur, bouton "Regenerer" |
+
+### 4.4 Montages (`/admin/episode/{eid}/montages`)
+
+Integre dans la Section C de l'ecran 4.2. Pas d'ecran separe.
+
+### 4.5 Login (`/admin/login`)
+
+Inchange.
+
+### 4.6 Dashboard stats (`/admin/dashboard`)
+
+Stats globales : episodes par statut, segments generes total, montages, couts API.
+Conserve les panels v1 (preferences producteur, retours humains).
+Ajoute des stats depuis `segments_audio` et `montages`.
 
 ---
 
-## 6. Workflow utilisateur
+## 5. Workflow detaille
 
 ```
-Claude Code                          Back-office V2
-───────────                          ──────────────
-1. Écrire script
-2. Auditer (@audit-episode)
-3. Itérer jusqu'à 9/10
-4. POST /api/v2/episode/{id}/push-script ──→ Script sauvé + segments créés
-                                          5. Client ouvre /admin/episode/{id}
-                                          6. Relit le script (Section A)
-                                          7. Clique "Valider le script"
-                                          8. Clique "Lancer la génération audio"
-                                          9. Attend (~15-25 min) — barre progression
-                                         10. Écoute chaque segment (Section B)
-                                         11. Édite texte + regénère si besoin
-                                         12. Valide tous les segments
-                                         13. Clique "Lancer le montage"
-                                         14. Attend (~20-30 min)
-                                         15. Écoute le montage final
-                                         16. Télécharge en HD si besoin
-                                         17. Clique "Publier" → épisode visible sur site public
+Claude Code                          Back-office V2                    Front public
+-----------                          --------------                    ------------
+1. Ecrit script (scripteur+audit)
+2. POST push-script {script} ------> 3. Script sauve (DB+FS+OS)
+                                         Segments crees (pending)
+                                      4. Client ouvre /admin/episode/{id}
+                                      5. Relit le script
+                                      6. Clique "Valider le script"
+                                      7. Clique "Generer l'audio"
+                                      8. Job async demarre :
+                                         seg_001 pending→generating→generated
+                                         seg_002 pending→generating→generated
+                                         ...
+                                         sfx_001 pending→generating→generated
+                                         (barre de progression en temps reel)
+                                      9. Client ecoute segment par segment
+                                     10. Edite texte si besoin :
+                                         POST segment/edit → texte MAJ
+                                         POST segment/regenerate → TTS relance
+                                         Script JSON MAJ automatiquement
+                                     11. Valide les segments (un par un ou tous)
+                                     12. Clique "Lancer montage"
+                                     13. Job async (~25 min) :
+                                         Monteur.assembler()
+                                         → ligne montages en DB
+                                     14. Ecoute le montage
+                                     15. Telecharge HD si besoin
+                                     16. Clique "Publier" ------------>  Episode visible
+                                                                         sur le site
 ```
 
----
+### Resilience (redeploy Replit)
 
-## 7. Détails techniques
+| Evenement | Consequence | Reprise |
+|-----------|-------------|---------|
+| Redeploy pendant generation TTS | Segments `generating` perdus | Client relance `generate-audio` — les segments `generated`/`validated` sont skip |
+| Redeploy pendant montage | Montage `processing` perdu | Client relance `montage` — segments intacts |
+| Filesystem wipe | Fichiers MP3 locaux perdus | Restauration automatique depuis Object Storage via `restore_segments()` |
 
-### 7.1 Génération audio — réutilisation du code existant
-
-```python
-# producteur_audio.py — méthode existante réutilisée directement
-ProducteurAudio._generer_segment(segment: dict, chemin_sortie: Path) -> None
-
-# sfx_provider.py — méthode existante
-SfxProvider.generer(description: str, chemin_sortie: Path) -> Path
-
-# monteur.py — méthode existante
-Monteur.assembler(script: dict, dossier_segments: Path, dossier_sortie: Path) -> dict
-```
-
-Le V2 appelle ces méthodes directement depuis les routes Flask (via jobs async), au lieu de lancer un subprocess `main.py`.
-
-### 7.2 Jobs async
-
-Pattern existant conservé : `_start_job(job_id, target_fn, args)` + `_jobs` dict en mémoire + polling `/api/job-status/{id}`.
-
-Nouveaux jobs :
-- `generate-audio-{episode_id}` : itère sur les segments, appelle `_generer_segment()` pour chacun
-- `regenerate-{episode_id}-{segment_id}` : regénère 1 segment
-- `montage-{episode_id}` : appelle `Monteur.assembler()`
-
-### 7.3 SIGTERM resilience
-
-Chaque segment généré est immédiatement persisté (DB + Object Storage). Sur redeploy :
-- Les segments `generated`/`validated` survivent
-- Les segments `generating` sont reset à `pending`
-- Le client relance `generate-audio` qui ne regénère que les `pending`
-
-### 7.4 Script sync on text edit
-
-Quand un segment est regénéré avec un texte modifié :
-1. `segments_audio.texte` mis à jour en DB
-2. Le script JSON source est rechargé, le segment trouvé par `segment_id`, le texte remplacé
-3. Le script est resauvé dans `_script.json` + `_valide.json` + Object Storage
-4. Ceci garantit que le montage utilise toujours le texte le plus récent
+**Principe** : chaque segment genere est immediatement persiste en DB + Object Storage. La reprise est implicite — relancer `generate-audio` ne regenere que les `pending`.
 
 ---
 
-## 8. Migration
+## 6. Migration
 
-### Phase 1 : Nouvelles routes et nouveau template
-- Créer `web_v2.py` (ou ajouter les routes V2 dans `web.py` avec préfixe `/api/v2/`)
-- Créer `templates/admin_v2.html` (nouveau dashboard)
-- Ajouter tables `segments_audio` et `montages` dans `database.py`
+### Phase 1 — Coexistence (zero downtime)
 
-### Phase 2 : Basculement
-- `/admin` → sert `admin_v2.html` au lieu de `dashboard.html`
-- Anciennes routes conservées temporairement (préfixe `/api/legacy/`) puis supprimées
+1. Ajouter les 2 tables SQL (`segments_audio`, `montages`) + ALTER TABLE episodes
+2. Ajouter les routes `/api/v2/*` dans `web.py` (le v1 reste fonctionnel)
+3. Creer les templates Jinja2 dans `templates/admin/`
+4. Brancher `/admin` sur le nouveau template
 
-### Ce qui est conservé tel quel
-- `public.html` et toutes ses routes
-- Auth (Bearer token)
-- `_start_job` / `_jobs` / `pollJob` pattern
-- Object Storage (persistent_storage.py)
-- Tous les agents Python (producteur_audio, sfx_provider, monteur)
+### Phase 2 — Nettoyage
+
+1. Supprimer `dashboard.html`
+2. Supprimer les routes v1 obsoletes (voir 3.8)
+3. Supprimer les fonctions helper v1 (`_chain_sfx_then_montage`, `_chain_montage`, etc.)
+
+### Conserve tel quel
+
+| Element | Raison |
+|---------|--------|
+| `public.html` + routes publiques | Front public inchange |
+| `admin_login.html` | Auth inchangee |
+| `producteur_audio.py` (`_generer_segment`) | Reutilise directement |
+| `sfx_provider.py` (`generer`) | Reutilise directement |
+| `monteur.py` (`assembler`) | Reutilise directement |
+| `persistent_storage.py` | Upload/restore inchange |
+| `db_models.py` classes existantes | Backward compat |
+| `database.py` schema existant | Additif uniquement |
+| Routes `/api/claude/*` | Debug/monitoring |
+| Routes `/api/purge/*` | Admin |
+| Job system (`_jobs` dict, `_start_job`) | Pattern reutilise |
+| SIGTERM handler | Conserve pour montage (20-30 min) |
+
+### Episodes v1 deja produits
+
+Les episodes produits en v1 restent visibles. Les donnees sont dans `productions`, `fichiers_audio`, `historique_episodes` — non touches. Le front public (`/api/public/episodes`) continue de lire `historique_episodes`.
 
 ---
 
-## 9. Répartition agents
+## 7. Repartition agents
 
-| Phase | Agent | Mission | Fichiers |
-|-------|-------|---------|----------|
-| 1 | @product-manager | User stories + critères d'acceptation détaillés | `docs/specs/backoffice-v2-stories.md` |
-| 2 | @fullstack | Migration DB (tables segments_audio, montages) | `database.py` |
-| 3 | @fullstack | Routes API V2 (scripts, audio, montage, publication) | `web.py` ou `web_v2.py` |
-| 4 | @fullstack | Template admin V2 (HTML/JS/CSS) | `templates/admin_v2.html` |
-| 5 | @design | Audit visuel du dashboard V2 vs charte graphique | Corrections CSS |
-| 6 | @qa | Tests routes API + workflow E2E | `tests/test_web_v2.py` |
-
-**Phase 1 optionnelle** — le plan actuel est suffisamment détaillé pour que @fullstack commence directement en Phase 2.
+| Phase | Agent | Mission | Fichiers a produire |
+|-------|-------|---------|---------------------|
+| 1 | @fullstack | Migration SQL : 2 tables + ALTER | `database.py` |
+| 2 | @fullstack | Repos DB : `SegmentAudioRepo`, `MontageRepo` | `db_models.py` |
+| 3 | @fullstack | Routes API V2 : scripts, audio, segments, montage, publication | `web.py` (section v2) |
+| 4 | @fullstack | Jobs async : generate-audio, regenerate, montage | `web.py` (section jobs v2) |
+| 5 | @fullstack + @design | Templates Jinja2 + CSS + JS | `templates/admin/base.html`, `episode.html`, `segments.html`, `static/admin_v2.js`, `static/admin_v2.css` |
+| 6 | @qa | Tests API + workflow E2E | `tests/test_backoffice_v2.py` |
+| 7 | @infrastructure | Basculement routes, cleanup v1, verification Object Storage | `web.py` |
 
 ---
 
-## 10. Risques et mitigations
+## 8. Questions resolues
 
-| Risque | Impact | Mitigation |
-|--------|--------|------------|
-| `_generer_segment()` hors pipeline perd SIGTERM handler | Segments perdus | Chaque segment persisté immédiatement en DB + OS |
-| Replit redeploy pendant génération | Job interrompu | Segments `generating` → reset `pending` au restart |
-| Monteur attend segments dans un dossier | Path mismatch | Convention conservée : `output/segments/{episode_id}/` |
-| Édition texte désynchronise script | Montage incohérent | Sync automatique script JSON sur chaque regénération |
-| 30+ min de montage dépasse timeout | Job tué | Timeout Gunicorn 3900s > montage max 30 min |
+| # | Question | Reponse |
+|---|----------|---------|
+| Q1 | SFX : validation individuelle ? | **Non.** Generes automatiquement en batch par `generate-audio`. Affiches en gris dans la liste, non editables. |
+| Q2 | Edit texte → sync script ? | **Oui.** `POST segment/edit` met a jour le segment en DB ET le script JSON source (nouvelle version via `ScriptRepo`). |
+| Q3 | Association montage ↔ episode | **Contraint.** Un montage appartient a son episode. N montages par episode. Le client choisit lequel publier. Pas de desassociation. |
+| Q4 | Routes Claude API | **Conservees.** `/api/claude/query` reste pour le monitoring. Pas de nouvelles routes IA. |
+| Q5 | Publication = quoi ? | **Rendre ecoutable sur le site.** Pas de RSS, pas de Buzzsprout. `is_published=TRUE` sur le montage + copie audio vers le chemin front public. |
+| Q6 | Purge | **Conservee.** `/api/purge/*` inchanges + cleanup `segments_audio` et `montages`. |
