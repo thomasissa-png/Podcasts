@@ -5142,8 +5142,9 @@ def _build_v1_montage_dict(episode_id, rapport, montage_data):
             taille = local_hq.stat().st_size
         chapitres = montage_data.get("chapitres", [])
 
-        # ID unique par fichier audio (hash du chemin pour distinguer les montages)
-        v1_id = f"v1_{hash(chemin_hq) & 0xFFFFFFFF:08x}"
+        # ID unique et stable par fichier audio (deterministe entre redeploys)
+        import hashlib
+        v1_id = f"v1_{hashlib.md5(chemin_hq.encode()).hexdigest()[:8]}"
 
         return {
             "id": v1_id,
@@ -5291,9 +5292,9 @@ def api_v2_publish(montage_id):
 
     episode_id = montage["episode_id"]
 
-    # Copier l'audio vers le chemin attendu par le front public
+    # Copier l'audio vers config.OUTPUT_DIR (= output/episodes/) — servi par /audio/episodes/<filename>
     if montage.get("audio_path_hq") and Path(montage["audio_path_hq"]).exists():
-        public_dir = config.OUTPUT_DIR / "audio" / "episodes"
+        public_dir = config.OUTPUT_DIR
         public_dir.mkdir(parents=True, exist_ok=True)
         src = Path(montage["audio_path_hq"])
         dst = public_dir / f"{episode_id}_192k.mp3"
@@ -5406,18 +5407,20 @@ def api_v2_publish_v1(episode_id):
 
     # Extraire le nom du fichier depuis l'URL (ex: /audio/episodes/S01E01_xxx_192k.mp3)
     audio_filename = audio_url.split("/")[-1].split("?")[0]
-    src = config.OUTPUT_DIR / "episodes" / audio_filename
+    # Security: no path traversal
+    if ".." in audio_filename or "/" in audio_filename or "\\" in audio_filename:
+        return jsonify({"error": "Nom de fichier invalide"}), 400
+
+    # Chercher le fichier source dans config.OUTPUT_DIR (= output/episodes/)
+    src = config.OUTPUT_DIR / audio_filename
     if not src.exists():
-        # Essayer le chemin direct
-        src = Path(audio_url.lstrip("/"))
-        if not src.exists():
-            return jsonify({"error": f"Fichier audio introuvable: {audio_filename}"}), 404
+        return jsonify({"error": f"Fichier audio introuvable: {audio_filename}"}), 404
 
     import shutil
-    public_dir = config.OUTPUT_DIR / "audio" / "episodes"
-    public_dir.mkdir(parents=True, exist_ok=True)
-    dst = public_dir / f"{episode_id}_192k.mp3"
-    shutil.copy2(str(src), str(dst))
+    # Copier vers config.OUTPUT_DIR avec le nom canonique — servi par /audio/episodes/<filename>
+    dst = config.OUTPUT_DIR / f"{episode_id}_192k.mp3"
+    if src.resolve() != dst.resolve():
+        shutil.copy2(str(src), str(dst))
 
     # Mettre à jour le rapport pour que la homepage voie l'épisode comme publié
     try:
@@ -5455,6 +5458,12 @@ def api_v2_depublish(montage_id):
 
     try:
         MontageRepo.depublier(montage_id)
+        # Supprimer le fichier audio public pour retirer l'episode de la homepage
+        episode_id = montage["episode_id"]
+        public_audio = config.OUTPUT_DIR / f"{episode_id}_192k.mp3"
+        if public_audio.exists():
+            public_audio.unlink()
+            logger.info("depublish: fichier audio public supprime: %s", public_audio)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
