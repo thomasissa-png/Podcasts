@@ -998,3 +998,180 @@ class TestWorkflowIntegration:
 
         resp = client.get("/api/v2/segment/S01E01/seg_999/audio", headers=_auth_headers())
         assert resp.status_code == 404
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# F. Tests script version selector + montage selection
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+class TestScriptRepoValider:
+    """Tests pour ScriptRepo.valider()."""
+
+    def test_valider_devalide_autres_versions(self):
+        """valider() de-valide les autres et valide la demandee."""
+        from contextlib import contextmanager
+        from db_models import ScriptRepo
+
+        executed_sqls = []
+        executed_params = []
+
+        @contextmanager
+        def _fake_get_cursor(commit=True):
+            cur = _FakeCursor(fetchone_val=_FakeRow({"id": 42}))
+            orig_execute = cur.execute
+            def _track(sql, params=None):
+                executed_sqls.append(sql)
+                executed_params.append(params)
+                orig_execute(sql, params)
+            cur.execute = _track
+            yield cur
+
+        with patch("db_models.get_cursor", side_effect=_fake_get_cursor):
+            result = ScriptRepo.valider("S01E01", 3)
+
+        assert result is True
+        assert len(executed_sqls) == 3
+        assert "is_validated = FALSE" in executed_sqls[1]
+        assert "is_validated = TRUE" in executed_sqls[2]
+
+    def test_valider_version_inexistante(self):
+        """valider() retourne False si la version n'existe pas."""
+        from contextlib import contextmanager
+        from db_models import ScriptRepo
+
+        @contextmanager
+        def _fake_get_cursor(commit=True):
+            cur = _FakeCursor(fetchone_val=None)
+            yield cur
+
+        with patch("db_models.get_cursor", side_effect=_fake_get_cursor):
+            result = ScriptRepo.valider("S01E01", 99)
+
+        assert result is False
+
+
+class TestScriptRepoHistoriqueAvecScore:
+    """Tests pour ScriptRepo.historique() avec score_review."""
+
+    def test_historique_inclut_score_review(self, mock_get_cursor_with_rows):
+        """historique() retourne score_review depuis la table reviews."""
+        from db_models import ScriptRepo
+
+        rows = [
+            _FakeRow({"id": 1, "version": 2, "nb_mots": 500, "nb_segments": 30,
+                       "is_validated": True, "source": "scripteur",
+                       "created_at": "2026-01-01", "score_review": 8.5}),
+            _FakeRow({"id": 2, "version": 1, "nb_mots": 450, "nb_segments": 28,
+                       "is_validated": False, "source": "scripteur",
+                       "created_at": "2025-12-31", "score_review": None}),
+        ]
+        fake_get_cursor, cursors = mock_get_cursor_with_rows(rows=rows)
+        with patch("db_models.get_cursor", side_effect=fake_get_cursor):
+            result = ScriptRepo.historique("S01E01")
+
+        assert len(result) == 2
+        assert result[0]["score_review"] == 8.5
+        assert result[1]["score_review"] is None
+
+
+class TestApiV2ListScripts:
+    """Tests pour GET /api/v2/episode/<eid>/scripts."""
+
+    def test_list_scripts_retourne_versions(self, client, monkeypatch):
+        """La route retourne la liste des versions."""
+        import web
+
+        mock_script_repo = MagicMock()
+        mock_script_repo.historique.return_value = [
+            {"id": 2, "version": 2, "nb_mots": 500, "nb_segments": 30,
+             "is_validated": True, "source": "scripteur", "created_at": "2026-01-01T12:00:00", "score_review": 8.5},
+            {"id": 1, "version": 1, "nb_mots": 450, "nb_segments": 28,
+             "is_validated": False, "source": "scripteur", "created_at": "2025-12-31T10:00:00", "score_review": None},
+        ]
+
+        with patch("web.ScriptRepo", mock_script_repo, create=True):
+            # Need to patch the import inside the function
+            with patch.dict("sys.modules", {"db_models": MagicMock(ScriptRepo=mock_script_repo)}):
+                resp = client.get("/api/v2/episode/S01E01/scripts", headers=_auth_headers())
+
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert len(data) == 2
+        assert data[0]["version"] == 2
+        assert data[0]["is_validated"] is True
+        assert data[0]["score_review"] == 8.5
+
+    def test_list_scripts_sans_db(self, client, monkeypatch):
+        """Sans DB, la route retourne 503."""
+        import web
+        monkeypatch.setattr(web, "_DB_AVAILABLE", False)
+
+        resp = client.get("/api/v2/episode/S01E01/scripts", headers=_auth_headers())
+        assert resp.status_code == 503
+
+
+class TestApiV2ValidateScriptVersion:
+    """Tests pour POST /api/v2/episode/<eid>/script/<version>/validate."""
+
+    def test_validate_version_specifique(self, client, monkeypatch):
+        """Valider une version specifique retourne ok."""
+        import web
+
+        mock_script_repo = MagicMock()
+        mock_script_repo.valider.return_value = True
+        mock_script_repo.charger_valide.return_value = {
+            "episode": {"titre": "Test", "segments": [{"id": "seg_001", "personnage": "papy_babou", "texte": "Hello"}]}
+        }
+
+        with patch.dict("sys.modules", {"db_models": MagicMock(ScriptRepo=mock_script_repo)}):
+            resp = client.post("/api/v2/episode/S01E01/script/2/validate", headers=_auth_headers())
+
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["ok"] is True
+        assert data["version"] == 2
+
+    def test_validate_version_inexistante_retourne_404(self, client, monkeypatch):
+        """Valider une version inexistante retourne 404."""
+        import web
+
+        mock_script_repo = MagicMock()
+        mock_script_repo.valider.return_value = False
+
+        with patch.dict("sys.modules", {"db_models": MagicMock(ScriptRepo=mock_script_repo)}):
+            resp = client.post("/api/v2/episode/S01E01/script/99/validate", headers=_auth_headers())
+
+        assert resp.status_code == 404
+
+
+class TestApiV2Depublish:
+    """Tests pour POST /api/v2/montage/<id>/depublish."""
+
+    def test_depublish_montage_publie(self, client):
+        """Depublier un montage publie retourne ok."""
+        client._mock_montage_repo.charger.return_value = {
+            "id": 1, "episode_id": "S01E01", "is_published": True, "status": "completed"
+        }
+
+        resp = client.post("/api/v2/montage/1/depublish", headers=_auth_headers())
+
+        assert resp.status_code == 200
+        assert resp.get_json()["ok"] is True
+        client._mock_montage_repo.depublier.assert_called_once_with(1)
+
+    def test_depublish_montage_non_publie_retourne_400(self, client):
+        """Depublier un montage non publie retourne 400."""
+        client._mock_montage_repo.charger.return_value = {
+            "id": 1, "episode_id": "S01E01", "is_published": False, "status": "completed"
+        }
+
+        resp = client.post("/api/v2/montage/1/depublish", headers=_auth_headers())
+        assert resp.status_code == 400
+
+    def test_depublish_montage_inexistant_retourne_404(self, client):
+        """Depublier un montage inexistant retourne 404."""
+        client._mock_montage_repo.charger.return_value = None
+
+        resp = client.post("/api/v2/montage/999/depublish", headers=_auth_headers())
+        assert resp.status_code == 404

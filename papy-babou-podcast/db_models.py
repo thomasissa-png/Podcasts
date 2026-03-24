@@ -308,15 +308,57 @@ class ScriptRepo:
 
     @staticmethod
     def historique(episode_id: str) -> list[dict]:
-        """Retourne l'historique des versions d'un script."""
+        """Retourne l'historique des versions d'un script avec score review."""
         with get_cursor(commit=False) as cur:
             cur.execute(
-                "SELECT id, version, nb_mots, nb_segments, is_validated, "
-                "source, created_at FROM scripts "
-                "WHERE episode_id = %s ORDER BY version DESC",
+                "SELECT s.id, s.version, s.nb_mots, s.nb_segments, s.is_validated, "
+                "s.source, s.created_at, "
+                "( SELECT MAX(r.score) FROM reviews r WHERE r.script_id = s.id ) AS score_review "
+                "FROM scripts s "
+                "WHERE s.episode_id = %s ORDER BY s.version DESC",
                 (episode_id,),
             )
             return [dict(row) for row in cur.fetchall()]
+
+    @staticmethod
+    def valider(episode_id: str, version: int) -> bool:
+        """Valide une version specifique du script (de-valide les autres).
+
+        Args:
+            episode_id: Identifiant de l'episode.
+            version: Numero de version a valider.
+
+        Returns:
+            True si la version existe et a ete validee.
+        """
+        with get_cursor() as cur:
+            # Verifier que la version existe
+            cur.execute(
+                "SELECT id FROM scripts WHERE episode_id = %s AND version = %s",
+                (episode_id, version),
+            )
+            row = cur.fetchone()
+            if not row:
+                return False
+
+            # De-valider toutes les versions
+            cur.execute(
+                "UPDATE scripts SET is_validated = FALSE "
+                "WHERE episode_id = %s AND is_validated = TRUE",
+                (episode_id,),
+            )
+
+            # Valider la version demandee
+            cur.execute(
+                "UPDATE scripts SET is_validated = TRUE "
+                "WHERE episode_id = %s AND version = %s",
+                (episode_id, version),
+            )
+
+        logger.info(
+            "Script %s v%d valide (autres de-validees)", episode_id, version,
+        )
+        return True
 
 
 # ── Reviews ──────────────────────────────────────────────────────────────────

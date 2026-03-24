@@ -90,6 +90,19 @@
     .bulk-bar { display: flex; gap: 0.75rem; align-items: center; }
     .bulk-bar .bulk-count { font-size: 0.85rem; color: var(--gris); font-weight: 600; }
     .diff-actions { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+    .version-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .version-card { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; border: 2px solid var(--gris-clair); border-radius: 10px; cursor: pointer; transition: border-color .2s, background .15s; flex-wrap: wrap; }
+    .version-card:hover { border-color: var(--bleu-doux); background: #f0f7ff; }
+    .version-card.selected { border-color: var(--dore); background: #fffbeb; }
+    .version-card.validated { border-color: var(--vert); }
+    .version-card .v-num { font-family: var(--font-display); font-size: 1.1rem; color: var(--bleu); min-width: 40px; }
+    .version-card .v-meta { font-size: 0.8rem; color: var(--gris); display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .version-card .v-score { font-weight: 700; color: var(--dore); }
+    .montage-card { display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 2px solid var(--gris-clair); border-radius: 10px; transition: border-color .2s, background .15s; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .montage-card:hover { border-color: var(--bleu-doux); }
+    .montage-card.selected { border-color: var(--dore); background: #fffbeb; }
+    .montage-card.published { border-color: var(--vert); background: #f0fdf4; }
+    .montage-card .m-check { font-size: 1.2rem; color: var(--vert); margin-left: auto; }
     @media (max-width: 768px) {
       nav { padding: 0.75rem 1rem; }
       main { padding: 1rem; }
@@ -246,32 +259,64 @@
     async function renderEpisode(eid) {
       app.innerHTML = '<div class="empty-state"><div class="spinner"></div> Chargement...</div>';
       try {
-        const [scriptData, progress, montages] = await Promise.allSettled([
+        const [scriptData, progress, montages, scriptVersions] = await Promise.allSettled([
           api(`/api/v2/episode/${eid}/script`),
           api(`/api/v2/episode/${eid}/audio-progress`),
-          api(`/api/v2/episode/${eid}/montages`)
+          api(`/api/v2/episode/${eid}/montages`),
+          api(`/api/v2/episode/${eid}/scripts`)
         ]);
         const sc = scriptData.status === 'fulfilled' ? scriptData.value : null;
         const pr = progress.status === 'fulfilled' ? progress.value : {};
         const mt = montages.status === 'fulfilled' ? montages.value : [];
+        const versions = scriptVersions.status === 'fulfilled' ? scriptVersions.value : [];
 
         const stats = sc?.stats || {};
         const pct = pr.percent || 0;
+        const hasMultipleVersions = versions.length > 1;
+        const validatedVersion = versions.find(v => v.is_validated);
 
         let scriptSection;
         if (!sc || !sc.script) {
           scriptSection = '<div class="card"><h2 class="section-title">Script</h2><div class="empty-state">Aucun script disponible.</div></div>';
         } else {
+          // Version selector (shown when multiple versions exist)
+          let versionSelector = '';
+          if (hasMultipleVersions) {
+            versionSelector = `<div style="margin-bottom:1rem;">
+              <h3 style="font-size:0.95rem;font-weight:700;margin:0 0 0.5rem 0;color:var(--gris);">Versions du script</h3>
+              <div class="version-list" id="version-list">
+                ${versions.map(v => {
+                  const isValidated = v.is_validated;
+                  const date = v.created_at ? new Date(v.created_at).toLocaleDateString('fr-FR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+                  return `<div class="version-card${isValidated ? ' validated selected' : ''}" data-version="${v.version}">
+                    <span class="v-num">v${v.version}</span>
+                    <div class="v-meta">
+                      <span>${v.nb_segments || 0} seg</span>
+                      <span>${v.nb_mots || 0} mots</span>
+                      ${v.score_review ? `<span class="v-score">${v.score_review.toFixed(1)}/10</span>` : ''}
+                      <span>${date}</span>
+                      <span>${esc(v.source || '')}</span>
+                    </div>
+                    ${isValidated ? '<span class="badge badge-vert">Active</span>' : ''}
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>`;
+          }
+
           scriptSection = `<div class="card">
             <h2 class="section-title">Script</h2>
+            ${versionSelector}
             <div class="stat-grid">
               <div class="stat-box"><div class="stat-val">${stats.nb_segments || 0}</div><div class="stat-label">Segments</div></div>
               <div class="stat-box"><div class="stat-val">${stats.nb_voix || 0}</div><div class="stat-label">Voix</div></div>
               <div class="stat-box"><div class="stat-val">${stats.nb_sfx || 0}</div><div class="stat-label">SFX</div></div>
               <div class="stat-box"><div class="stat-val">${stats.nb_mots || 0}</div><div class="stat-label">Mots</div></div>
             </div>
-            ${sc.validated ? badgeHtml('Script valide', 'vert') : `<button class="btn btn-primary" id="btn-validate-script">Valider le script</button>`}
-            <a href="#/episode/${eid}/segments" class="btn btn-outline" style="margin-left:0.5rem;">Voir les segments</a>
+            <div id="script-actions">
+              ${sc.validated ? badgeHtml('Script valide', 'vert') : `<button class="btn btn-primary" id="btn-validate-script">Valider le script</button>`}
+              <a href="#/episode/${eid}/segments" class="btn btn-outline" style="margin-left:0.5rem;">Voir les segments</a>
+            </div>
             <details class="script-inline" style="margin-top:1rem;" id="script-details">
               <summary style="cursor:pointer;font-weight:600;font-size:0.9rem;color:var(--bleu);user-select:none;">Voir le script complet</summary>
               <div id="script-inline-content" style="margin-top:0.5rem;max-height:500px;overflow-y:auto;border:1px solid var(--gris-clair);border-radius:8px;padding:0.25rem 0;"><div class="empty-state" style="padding:1rem;"><span class="spinner"></span> Chargement...</div></div>
@@ -301,17 +346,23 @@
           montageSection += '<div class="empty-state">Aucun montage.</div>';
         } else {
           mt.forEach(m => {
+            const isPublished = m.is_published;
+            const isCompleted = m.status === 'completed';
             const mismatchWarning = m.script_mismatch
               ? `<div style="background:var(--dore-light,#FFD234);color:#333;padding:0.5rem 0.75rem;border-radius:8px;font-size:0.85rem;width:100%;margin-bottom:0.5rem;">&#9888; L'audio a ete produit avec une version anterieure du script. Relancez le montage pour mettre a jour.</div>`
               : '';
-            montageSection += `<div class="montage-item" style="flex-wrap:wrap;">
+            montageSection += `<div class="montage-card${isPublished ? ' published' : ''}" data-mid="${m.id}">
               ${mismatchWarning}
-              ${m.audio_url_hq ? `<audio controls preload="none" src="${m.audio_url_hq}" style="height:40px;"></audio>` : '<span class="badge badge-gris">Pas d\'audio</span>'}
-              <span>${formatDuration(m.duree_secondes)}</span>
-              <span>${formatSize(m.taille_bytes)}</span>
-              <span>${badgeHtml(m.status, m.status === 'published' ? 'vert' : m.status === 'completed' ? 'bleu' : 'orange')}</span>
-              ${m.download_url ? `<a href="${m.download_url}" class="btn btn-outline btn-sm" download>Telecharger</a>` : ''}
-              ${!m.is_published && m.status === 'completed' ? `<button class="btn btn-success btn-sm btn-publish-montage" data-mid="${m.id}">Publier</button>` : ''}
+              <div style="display:flex;align-items:center;gap:1rem;flex:1;flex-wrap:wrap;">
+                ${m.audio_url_hq ? `<audio controls preload="none" src="${m.audio_url_hq}" style="height:40px;"></audio>` : '<span class="badge badge-gris">Pas d\'audio</span>'}
+                <span>${formatDuration(m.duree_secondes)}</span>
+                <span>${formatSize(m.taille_bytes)}</span>
+                <span>${badgeHtml(m.status, isPublished ? 'vert' : isCompleted ? 'bleu' : m.status === 'error' ? 'rouge' : 'orange')}</span>
+                ${m.download_url ? `<a href="${m.download_url}" class="btn btn-outline btn-sm" download>Telecharger</a>` : ''}
+                ${!isPublished && isCompleted ? `<button class="btn btn-success btn-sm btn-publish-montage" data-mid="${m.id}">Publier</button>` : ''}
+                ${isPublished ? `<button class="btn btn-outline btn-sm btn-depublish-montage" data-mid="${m.id}" style="color:var(--corail);border-color:var(--corail);">Depublier</button>` : ''}
+              </div>
+              ${isPublished ? '<span class="m-check">&#10004;</span>' : ''}
             </div>`;
           });
         }
@@ -329,6 +380,28 @@
         `;
 
         // ── Event listeners ──
+
+        // ── Version cards: click to select + validate ──
+        const versionList = $('#version-list');
+        if (versionList) {
+          versionList.querySelectorAll('.version-card').forEach(card => {
+            card.addEventListener('click', async () => {
+              const ver = parseInt(card.dataset.version);
+              if (card.classList.contains('validated')) return; // Already active
+              if (!confirm(`Activer la version ${ver} du script ? Cela la designera comme version de production.`)) return;
+              card.style.opacity = '0.5';
+              try {
+                await api(`/api/v2/episode/${eid}/script/${ver}/validate`, { method: 'POST' });
+                toast(`Version ${ver} activee`);
+                renderEpisode(eid);
+              } catch (e) {
+                toast(e.message, false);
+                card.style.opacity = '1';
+              }
+            });
+          });
+        }
+
         // ── Inline script view (P2-2) ──
         const scriptDetails = $('#script-details');
         if (scriptDetails) {
@@ -426,6 +499,14 @@
           btn.addEventListener('click', async () => {
             btn.disabled = true;
             try { await api(`/api/v2/montage/${btn.dataset.mid}/publish`, { method: 'POST' }); toast('Montage publie'); renderEpisode(eid); } catch (e) { toast(e.message, false); btn.disabled = false; }
+          });
+        });
+
+        document.querySelectorAll('.btn-depublish-montage').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Depublier ce montage ?')) return;
+            btn.disabled = true;
+            try { await api(`/api/v2/montage/${btn.dataset.mid}/depublish`, { method: 'POST' }); toast('Montage depublie'); renderEpisode(eid); } catch (e) { toast(e.message, false); btn.disabled = false; }
           });
         });
 

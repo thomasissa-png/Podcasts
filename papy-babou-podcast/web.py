@@ -4275,6 +4275,71 @@ def api_v2_validate_script(episode_id):
     return jsonify({"ok": True, "validated_at": datetime.utcnow().isoformat()})
 
 
+@app.route("/api/v2/episode/<episode_id>/scripts")
+def api_v2_list_scripts(episode_id):
+    """Liste toutes les versions de script d'un episode (metadata only, pas le contenu)."""
+    if not _DB_AVAILABLE:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    try:
+        from db_models import ScriptRepo
+        versions = ScriptRepo.historique(episode_id)
+    except Exception as e:
+        logger.warning("Erreur lecture historique scripts %s: %s", episode_id, e)
+        return jsonify({"error": "Erreur DB"}), 500
+
+    # Serialiser les datetimes
+    for v in versions:
+        if v.get("created_at"):
+            v["created_at"] = v["created_at"].isoformat() if hasattr(v["created_at"], "isoformat") else str(v["created_at"])
+
+    return jsonify(versions)
+
+
+@app.route("/api/v2/episode/<episode_id>/script/<int:version>/validate", methods=["POST"])
+def api_v2_validate_script_version(episode_id, version):
+    """Valide une version specifique du script et l'active pour la production."""
+    if not _DB_AVAILABLE:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    try:
+        from db_models import ScriptRepo
+
+        # Valider la version en DB
+        ok = ScriptRepo.valider(episode_id, version)
+        if not ok:
+            return jsonify({"error": f"Version {version} non trouvee pour {episode_id}"}), 404
+
+        # Charger le script valide et ecrire sur le filesystem
+        script = ScriptRepo.charger_valide(episode_id)
+        if script and script.get("episode"):
+            config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+            script_text = json.dumps(script, ensure_ascii=False, indent=2)
+            for suffix in ("_script.json", "_valide.json", "_script_valide.json"):
+                p = config.SCRIPTS_DIR / f"{episode_id}{suffix}"
+                p.write_text(script_text, encoding="utf-8")
+
+            # Upload Object Storage
+            if ps and ps.is_available():
+                try:
+                    ps.upload_script(episode_id, config.SCRIPTS_DIR / f"{episode_id}_script.json")
+                except Exception as e:
+                    logger.warning("Upload script OS echoue: %s", e)
+
+            # Recreer les segments_audio pour la nouvelle version
+            if SegmentAudioRepo:
+                try:
+                    SegmentAudioRepo.creer_depuis_script(episode_id, script)
+                except Exception as e:
+                    logger.warning("Recreation segments_audio echouee: %s", e)
+
+    except Exception as e:
+        logger.warning("Erreur validation script %s v%d: %s", episode_id, version, e)
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"ok": True, "version": version, "validated_at": datetime.utcnow().isoformat()})
+
+
 # ── V2 : Audio — Génération ──────────────────────────────────────────────────
 
 
@@ -5294,6 +5359,26 @@ def api_v2_publish(montage_id):
         logger.warning("Création rapport V1 échouée: %s", e)
 
     return jsonify({"ok": True, "episode_id": episode_id, "montage_id": montage_id})
+
+
+@app.route("/api/v2/montage/<int:montage_id>/depublish", methods=["POST"])
+def api_v2_depublish(montage_id):
+    """Depublie un montage."""
+    if not _DB_AVAILABLE or not MontageRepo:
+        return jsonify({"error": "DB non disponible"}), 503
+
+    montage = MontageRepo.charger(montage_id)
+    if not montage:
+        return jsonify({"error": "Montage non trouve"}), 404
+    if not montage.get("is_published"):
+        return jsonify({"error": "Ce montage n'est pas publie"}), 400
+
+    try:
+        MontageRepo.depublier(montage_id)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"ok": True, "montage_id": montage_id})
 
 
 # ── V2 : Vue saisons ─────────────────────────────────────────────────────────
