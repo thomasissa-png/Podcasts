@@ -2423,6 +2423,7 @@ def pipeline(
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
                 "stop_after": stop_after,
+                "production_run_id": rapport.get("production_run_id", ""),
                 "script_content_hash": rapport.get("script_content_hash", ""),
             })
         except Exception:
@@ -2589,6 +2590,17 @@ def _pipeline_inner(
     score = 0
     meta = None
     chemin_meta = config.SCRIPTS_DIR / f"{episode_id}_meta.json"
+
+    # ── Production Run ID — namespacing des segments par production ──
+    # Chaque production a son propre dossier de segments pour éviter
+    # la contamination croisée entre productions successives.
+    production_run_id = (
+        (checkpoint_data or {}).get("production_run_id")
+        or f"prod_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    )
+    segments_production_dir = config.SEGMENTS_DIR / episode_id / production_run_id
+    rapport["production_run_id"] = production_run_id
+    _log_direct(f"production_run_id={production_run_id}")
 
     # Restaurer les variables depuis le checkpoint si on reprend après le montage
     if checkpoint_data and etape_idx > 4:
@@ -3197,6 +3209,7 @@ def _pipeline_inner(
             "chemin_script_valide": str(chemin_valide),
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": stop_after,
+            "production_run_id": production_run_id,
             "script_content_hash": compute_script_hash(script),
         })
 
@@ -3278,8 +3291,8 @@ def _pipeline_inner(
                 "Purge des segments et régénération audio.",
                 _hash_checkpoint, _hash_actuel,
             )
-            # Purger tous les segments existants
-            _purge_dir = config.SEGMENTS_DIR / episode_id
+            # Purger tous les segments existants dans le dossier de cette production
+            _purge_dir = segments_production_dir
             if _purge_dir.exists():
                 _nb_purges = 0
                 for _old_f in _purge_dir.glob("*.mp3"):
@@ -3312,16 +3325,19 @@ def _pipeline_inner(
     #    pour régénérer. Cela arrive quand les segments ont été générés avant
     #    l'introduction de l'upload Object Storage, puis perdus au redéploiement.
     if not dry_run and etape_idx > 2:
-        segments_episode_dir = config.SEGMENTS_DIR / episode_id
+        segments_episode_dir = segments_production_dir
         _segments_present = (
             segments_episode_dir.exists()
             and any(segments_episode_dir.glob("*.mp3"))
         )
         if not _segments_present:
-            # Tenter la restauration depuis Object Storage
+            # Tenter la restauration depuis Object Storage (namespaced)
             try:
                 import persistent_storage
-                nb_restored = persistent_storage.restore_segments(episode_id, config.SEGMENTS_DIR)
+                nb_restored = persistent_storage.restore_segments(
+                    episode_id, config.SEGMENTS_DIR,
+                    production_run_id=production_run_id,
+                )
                 if nb_restored > 0:
                     logger.info(
                         "Segments restaurés depuis Object Storage : %d fichiers", nb_restored
@@ -3333,6 +3349,26 @@ def _pipeline_inner(
                     _segments_present = True
             except Exception as e:
                 logger.warning("Restauration segments Object Storage échouée : %s", e)
+        if not _segments_present:
+            # Fallback: try legacy (non-namespaced) segments
+            try:
+                import persistent_storage
+                _legacy_dir = config.SEGMENTS_DIR / episode_id
+                nb_restored = persistent_storage.restore_segments(
+                    episode_id, config.SEGMENTS_DIR,
+                )
+                if nb_restored > 0:
+                    # Move legacy segments to production dir
+                    segments_episode_dir.mkdir(parents=True, exist_ok=True)
+                    import shutil
+                    for _f in _legacy_dir.glob("*.mp3"):
+                        shutil.move(str(_f), str(segments_episode_dir / _f.name))
+                    logger.info(
+                        "Segments legacy restaurés et déplacés : %d fichiers", nb_restored
+                    )
+                    _segments_present = True
+            except Exception as e:
+                logger.warning("Restauration segments legacy échouée : %s", e)
 
         if not _segments_present:
             logger.warning(
@@ -3369,35 +3405,17 @@ def _pipeline_inner(
                     "Segments à regénérer supprimés : %s", _segs_a_regen
                 )
 
-        # ── Nettoyage des segments périmés ──
-        # Après restauration depuis Object Storage, il peut y avoir des segments
-        # d'anciennes productions (IDs différents du script actuel).
-        # Les supprimer pour éviter toute confusion lors du montage.
+        # ── Vérification des segments manquants ──
+        # Avec le namespacing par production_run_id, le nettoyage des segments
+        # périmés n'est plus nécessaire (chaque production a son propre dossier).
+        # On vérifie simplement les segments manquants pour décider si un fallback
+        # vers la régénération audio est nécessaire.
         if _segments_present and script:
             _ids_attendus = {s["id"] for s in script["episode"]["segments"]}
             _voix_ids = {
                 s["id"] for s in script["episode"]["segments"]
                 if s["personnage"] != "sfx"
             }
-            _nb_nettoyes = 0
-            for _old_mp3 in segments_episode_dir.glob("*.mp3"):
-                _seg_id = _old_mp3.stem  # ex: "seg_001" from "seg_001.mp3"
-                if _seg_id not in _ids_attendus:
-                    try:
-                        _old_mp3.unlink()
-                        _nb_nettoyes += 1
-                    except OSError:
-                        pass
-            if _nb_nettoyes > 0:
-                _log_direct(
-                    f"Nettoyage : {_nb_nettoyes} segments périmés supprimés "
-                    f"(ne correspondent pas au script actuel avec {len(_ids_attendus)} segments)"
-                )
-                logger.info(
-                    "Segments périmés nettoyés : %d fichiers supprimés "
-                    "(script actuel : %d segments)",
-                    _nb_nettoyes, len(_ids_attendus),
-                )
 
             # Vérifier que les segments voix du script actuel sont présents
             _fichiers_restants = {f.stem for f in segments_episode_dir.glob("*.mp3")}
@@ -3463,7 +3481,9 @@ def _pipeline_inner(
                     "Generation des segments audio...",
                     total=len(segments_voix),
                 )
-                fichiers_audio = producteur.produire_episode(script)
+                fichiers_audio = producteur.produire_episode(
+                    script, dossier_episode=segments_production_dir,
+                )
                 progress.update(task, completed=len(segments_voix))
 
             nb_attendus = len(segments_voix)
@@ -3486,7 +3506,7 @@ def _pipeline_inner(
                     for seg_audio in script["episode"]["segments"]:
                         if seg_audio["personnage"] == "sfx":
                             continue
-                        chemin_seg = config.SEGMENTS_DIR / episode_id / f"{seg_audio['id']}.mp3"
+                        chemin_seg = segments_production_dir / f"{seg_audio['id']}.mp3"
                         nb_chars = len(seg_audio.get("texte", ""))
                         FichierAudioRepo.enregistrer(
                             episode_id=episode_id,
@@ -3514,7 +3534,10 @@ def _pipeline_inner(
             # Upload segments voix vers Object Storage (survie au redéploiement)
             try:
                 import persistent_storage
-                nb_uploaded = persistent_storage.upload_segments(episode_id, config.SEGMENTS_DIR)
+                nb_uploaded = persistent_storage.upload_segments(
+                    episode_id, config.SEGMENTS_DIR,
+                    production_run_id=production_run_id,
+                )
                 if nb_uploaded > 0:
                     logger.info("Segments voix uploadés : %d fichiers", nb_uploaded)
             except Exception as e:
@@ -3529,6 +3552,7 @@ def _pipeline_inner(
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
                 "stop_after": stop_after,
+                "production_run_id": production_run_id,
                 "script_content_hash": compute_script_hash(script),
             })
 
@@ -3544,6 +3568,7 @@ def _pipeline_inner(
             "dry_run": dry_run, "rapport": rapport,
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": "montage",  # Destination finale, pas l'étape intermédiaire
+            "production_run_id": production_run_id,
             "script_content_hash": compute_script_hash(script),
         })
         rapport["stop_after"] = "audio"
@@ -3603,7 +3628,7 @@ def _pipeline_inner(
             rapport.setdefault("alertes_post_generation", []).extend(sfx_validation["alertes"])
 
             sfx_provider = SfxProvider()
-            fichiers_sfx = sfx_provider.produire_sfx(script)
+            fichiers_sfx = sfx_provider.produire_sfx(script, dossier_sortie=segments_production_dir)
 
             console.print(f"  {len(fichiers_sfx)} bruitages générés/téléchargés")
             for seg_id, source in sfx_provider.stats.items():
@@ -3642,7 +3667,7 @@ def _pipeline_inner(
             if _use_db():
                 try:
                     for seg_id, source in sfx_provider.stats.items():
-                        chemin_sfx = config.SEGMENTS_DIR / episode_id / f"{seg_id}.mp3"
+                        chemin_sfx = segments_production_dir / f"{seg_id}.mp3"
                         FichierAudioRepo.enregistrer(
                             episode_id=episode_id,
                             type_fichier="segment_sfx",
@@ -3669,7 +3694,10 @@ def _pipeline_inner(
         if not dry_run and nb_sfx > 0:
             try:
                 import persistent_storage
-                nb_uploaded = persistent_storage.upload_segments(episode_id, config.SEGMENTS_DIR)
+                nb_uploaded = persistent_storage.upload_segments(
+                    episode_id, config.SEGMENTS_DIR,
+                    production_run_id=production_run_id,
+                )
                 if nb_uploaded > 0:
                     logger.info("Segments (voix+SFX) uploadés : %d fichiers", nb_uploaded)
             except Exception as e:
@@ -3685,6 +3713,7 @@ def _pipeline_inner(
             "dry_run": dry_run, "rapport": rapport,
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": stop_after,
+            "production_run_id": production_run_id,
             "script_content_hash": compute_script_hash(script),
         })
 
@@ -3698,6 +3727,7 @@ def _pipeline_inner(
             "dry_run": dry_run, "rapport": rapport,
             "pubdate_offset_seconds": pubdate_offset_seconds,
             "stop_after": "montage",  # Destination finale, pas l'étape intermédiaire
+            "production_run_id": production_run_id,
             "script_content_hash": compute_script_hash(script),
         })
         rapport["stop_after"] = "sfx"
@@ -3768,7 +3798,7 @@ def _pipeline_inner(
             # CRITIQUE : si les segments locaux ne correspondent pas au script actuel
             # (ex: anciennes productions restaurées depuis Object Storage), le montage
             # produira un épisode incohérent ou échouera silencieusement.
-            _seg_dir_check = config.SEGMENTS_DIR / episode_id
+            _seg_dir_check = segments_production_dir
             if _seg_dir_check.exists() and script:
                 _voix_ids_script = {
                     s["id"] for s in script["episode"]["segments"]
@@ -3847,7 +3877,7 @@ def _pipeline_inner(
                 logger.warning("Audit musiques de fond échoué : %s", e)
 
             # Vérifier que les segments audio existent avant de lancer le montage
-            _seg_dir = config.SEGMENTS_DIR / episode_id
+            _seg_dir = segments_production_dir
             _seg_count = len(list(_seg_dir.glob("*.mp3"))) if _seg_dir.exists() else 0
             _script_seg_count = len(script["episode"]["segments"])
             _log_direct(
@@ -3856,7 +3886,7 @@ def _pipeline_inner(
                 f"{_script_seg_count} segments dans le script"
             )
             try:
-                resultat_montage = monteur.assembler(script)
+                resultat_montage = monteur.assembler(script, dossier_segments=segments_production_dir)
                 _log_direct(
                     f"Montage terminé — "
                     f"durée={resultat_montage.get('duree_secondes', '?')}s, "
@@ -3890,6 +3920,7 @@ def _pipeline_inner(
                     "dry_run": dry_run, "rapport": rapport,
                     "pubdate_offset_seconds": pubdate_offset_seconds,
                     "stop_after": stop_after,
+                    "production_run_id": production_run_id,
                     "script_content_hash": compute_script_hash(script),
                 })
                 raise  # Re-raise pour que le outer handler marque failed en DB
@@ -3954,6 +3985,7 @@ def _pipeline_inner(
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
                 "stop_after": stop_after,
+                "production_run_id": production_run_id,
                 "script_content_hash": compute_script_hash(script),
             })
 
@@ -3982,7 +4014,7 @@ def _pipeline_inner(
             while demande_remontage:
                 console.print(f"\n{Typo.etape(5, 8, 'Remontage')}")
                 monteur = Monteur()
-                resultat_montage = monteur.assembler(script)
+                resultat_montage = monteur.assembler(script, dossier_segments=segments_production_dir)
 
                 duree_secondes = resultat_montage["duree_secondes"]
                 taille_bytes = resultat_montage["taille_bytes"]
@@ -4032,6 +4064,7 @@ def _pipeline_inner(
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
                 "stop_after": stop_after,
+                "production_run_id": production_run_id,
                 "script_content_hash": compute_script_hash(script),
             })
         else:

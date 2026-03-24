@@ -2629,6 +2629,9 @@ def api_launch_fresh(episode_id):
     numero = int(episode_id[4:6])
     now = datetime.utcnow().isoformat()
 
+    # Générer un production_run_id unique pour isoler les segments de cette production
+    production_run_id = f"prod_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+
     # Créer un checkpoint neuf à l'étape "audio"
     checkpoint_data = {
         "episode_id": episode_id,
@@ -2648,6 +2651,7 @@ def api_launch_fresh(episode_id):
                 "titre": titre,
                 "dry_run": False,
                 "debut": now,
+                "production_run_id": production_run_id,
                 "etapes": {
                     "script": {
                         "status": "ok",
@@ -2662,6 +2666,7 @@ def api_launch_fresh(episode_id):
             "script_path": str(valide_path),
             "pubdate_offset_seconds": numero * 3600,
             "stop_after": "",
+            "production_run_id": production_run_id,
         },
     }
 
@@ -2713,7 +2718,7 @@ def api_launch_fresh(episode_id):
         import persistent_storage as _ps
         if _ps.is_available():
             for prefix in [
-                f"segments/{episode_id}/",
+                # segments/ NOT purged — production_run_id namespacing isolates each production
                 f"audio/{episode_id}",          # audio/S01E01_*.mp3
                 f"montage_wav/{episode_id}",     # WAV intermédiaires
                 f"rapports/{episode_id}",        # anciens rapports
@@ -4400,8 +4405,22 @@ def _job_generate_audio(episode_id, script_path):
     script = json.loads(script_path.read_text(encoding="utf-8"))
     segments = script.get("episode", {}).get("segments", [])
 
-    # Dossier de sortie
-    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    # Résoudre le production_run_id depuis le checkpoint (si disponible)
+    _prod_run_id = None
+    _cp_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    if _cp_path.exists():
+        try:
+            _cp_data = json.loads(_cp_path.read_text(encoding="utf-8"))
+            _inner = _cp_data.get("data", _cp_data)
+            _prod_run_id = _inner.get("production_run_id")
+        except Exception:
+            pass
+
+    # Dossier de sortie — namespaced par production_run_id si disponible
+    if _prod_run_id:
+        segments_dir = config.OUTPUT_DIR / "segments" / episode_id / _prod_run_id
+    else:
+        segments_dir = config.OUTPUT_DIR / "segments" / episode_id
     segments_dir.mkdir(parents=True, exist_ok=True)
 
     producteur = ProducteurAudio()
@@ -4427,7 +4446,11 @@ def _job_generate_audio(episode_id, script_path):
                 # Fichier absent localement (redeploy) — tenter restore Object Storage
                 if audio_path and ps and ps.is_available():
                     try:
-                        os_key = db_seg.get("audio_os_key") or f"segments/{episode_id}/{seg_id}.mp3"
+                        if _prod_run_id:
+                            _default_os_key = f"segments/{episode_id}/{_prod_run_id}/{seg_id}.mp3"
+                        else:
+                            _default_os_key = f"segments/{episode_id}/{seg_id}.mp3"
+                        os_key = db_seg.get("audio_os_key") or _default_os_key
                         dest = Path(audio_path)
                         dest.parent.mkdir(parents=True, exist_ok=True)
                         if ps.download_file(os_key, str(dest)):
@@ -4472,7 +4495,10 @@ def _job_generate_audio(episode_id, script_path):
             os_key = None
             if ps and ps.is_available():
                 try:
-                    os_key = f"segments/{episode_id}/{seg_id}.mp3"
+                    if _prod_run_id:
+                        os_key = f"segments/{episode_id}/{_prod_run_id}/{seg_id}.mp3"
+                    else:
+                        os_key = f"segments/{episode_id}/{seg_id}.mp3"
                     ps.upload_file(str(chemin), os_key)
                 except Exception:
                     os_key = None
@@ -4757,7 +4783,21 @@ def _job_regenerate_segment(episode_id, segment_id):
             seg["texte"] = db_seg["texte"]
         SegmentAudioRepo.maj_status(episode_id, segment_id, "generating")
 
-    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+    # Résoudre le production_run_id depuis le checkpoint (si disponible)
+    _prod_run_id = None
+    _cp_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    if _cp_path.exists():
+        try:
+            _cp_data = json.loads(_cp_path.read_text(encoding="utf-8"))
+            _inner = _cp_data.get("data", _cp_data)
+            _prod_run_id = _inner.get("production_run_id")
+        except Exception:
+            pass
+
+    if _prod_run_id:
+        segments_dir = config.OUTPUT_DIR / "segments" / episode_id / _prod_run_id
+    else:
+        segments_dir = config.OUTPUT_DIR / "segments" / episode_id
     segments_dir.mkdir(parents=True, exist_ok=True)
     chemin = segments_dir / f"{segment_id}.mp3"
 
@@ -4939,7 +4979,22 @@ def _job_montage(episode_id, montage_id):
         script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
 
     script = json.loads(script_path.read_text(encoding="utf-8"))
-    segments_dir = config.OUTPUT_DIR / "segments" / episode_id
+
+    # Résoudre le production_run_id depuis le checkpoint (si disponible)
+    _prod_run_id = None
+    _cp_path = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
+    if _cp_path.exists():
+        try:
+            _cp_data = json.loads(_cp_path.read_text(encoding="utf-8"))
+            _inner = _cp_data.get("data", _cp_data)
+            _prod_run_id = _inner.get("production_run_id")
+        except Exception:
+            pass
+
+    if _prod_run_id:
+        segments_dir = config.OUTPUT_DIR / "segments" / episode_id / _prod_run_id
+    else:
+        segments_dir = config.OUTPUT_DIR / "segments" / episode_id
     sortie_dir = config.OUTPUT_DIR
     sortie_dir.mkdir(parents=True, exist_ok=True)
 
