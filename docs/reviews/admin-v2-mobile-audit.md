@@ -87,10 +87,32 @@
 **P1-12 : Section titles trop grands**
 - Fix : `.section-title` reduit a 1.2rem sur tablet, 1.1rem sur phone
 
-### P2 POLISH (non implemente, pour reference)
+### P2 POLISH (4/5 implementes)
 
-- P2-1 : Animation de transition entre vues (slide-in)
-- P2-2 : Pull-to-refresh sur la liste des episodes
-- P2-3 : Swipe-to-delete sur les segments
-- P2-4 : Skeleton loading au lieu du spinner
-- P2-5 : Dark mode support
+**P2-1 : Transitions entre vues (slide-in/slide-out)**
+- Fix : les changements de vue (hub → episode → segments) ont une animation directionnelle
+- Navigation en avant : slide-in depuis la droite (0.25s ease-out)
+- Navigation en arriere : slide-in depuis la gauche
+- Meme profondeur : fade-in simple
+- Tracking automatique de la profondeur via `_viewClass()`
+
+**P2-2 : Pull-to-refresh (mobile)**
+- Fix : sur mobile, tirer vers le bas (>100px) depuis le haut de la page relance `route()`
+- Touch events passifs (pas d'impact sur le scroll)
+- Toast "Actualise" affiche en feedback
+
+**P2-3 : Swipe-to-delete sur les segments — NON implemente**
+- Raison : risque d'interference avec le scroll horizontal natif et les gestes de navigation du navigateur mobile. Le workflow existant (checkbox + bulk actions) est plus sur pour un admin panel.
+
+**P2-4 : Skeleton loading**
+- Fix : les 3 vues (hub, episode, segments) affichent des squelettes animes au lieu du spinner
+- Hub : 6 lignes avec avatar rond + barre de texte
+- Episode : titre + 4 stat boxes + barre de progression
+- Segments : 10 lignes avec avatar + 2 barres de texte
+- Animation shimmer gradient (1.5s infinite)
+
+**P2-5 : Dark mode (prefers-color-scheme)**
+- Fix : dark mode automatique via `@media (prefers-color-scheme: dark)`
+- Palette dark : sable=#1a1a2e, blanc=#16213e, gris=#a0aec0, gris-clair=#2d3748
+- Tous les composants styles : cards, badges, tables, inputs, toasts, diffs, segments, montages, versions, nav, skeleton
+- Pas de toggle manuel — suit les preferences systeme

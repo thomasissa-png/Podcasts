@@ -103,6 +103,69 @@
     .montage-card.selected { border-color: var(--dore); background: #fffbeb; }
     .montage-card.published { border-color: var(--vert); background: #f0fdf4; }
     .montage-card .m-check { font-size: 1.2rem; color: var(--vert); margin-left: auto; }
+    /* ── P2-1: View transitions (slide-in) ── */
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .view-enter { animation: slideInRight 0.25s ease-out; }
+    .view-enter-back { animation: slideInLeft 0.25s ease-out; }
+    .view-fade { animation: fadeIn 0.2s ease-out; }
+
+    /* ── P2-4: Skeleton loading ── */
+    .skeleton { background: linear-gradient(90deg, var(--gris-clair) 25%, #f0f0f0 50%, var(--gris-clair) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+    .skeleton-text { height: 1rem; margin-bottom: 0.5rem; }
+    .skeleton-title { height: 1.6rem; width: 60%; margin-bottom: 1rem; }
+    .skeleton-stat { height: 3rem; border-radius: 8px; }
+    .skeleton-row { display: flex; gap: 1rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--gris-clair); }
+    .skeleton-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+    .skeleton-bar { height: 8px; border-radius: 4px; flex: 1; }
+
+    /* ── P2-5: Dark mode ── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --sable: #1a1a2e; --blanc: #16213e; --gris: #a0aec0; --gris-clair: #2d3748;
+      }
+      body { color: #e2e8f0; }
+      nav { background: #16213e; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+      .card { background: #16213e; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+      tr:hover { background: #1e2d4a; }
+      .segment-row:hover { background: #1e2d4a; }
+      .search-input { background: #1a1a2e; color: #e2e8f0; border-color: #2d3748; }
+      .search-input:focus { border-color: var(--bleu); }
+      .segment-texte-edit { background: #1a1a2e; color: #e2e8f0; }
+      .diff-panel { background: #1e2d4a; }
+      .diff-before { background: #4a1c1c; color: #fca5a5; }
+      .diff-after { background: #1c4a2e; color: #86efac; }
+      .sticky-bottom { background: #16213e; border-top-color: #2d3748; box-shadow: 0 -2px 8px rgba(0,0,0,.3); }
+      .toast-ok { background: #166534; }
+      .toast-err { background: #991b1b; }
+      .episode-card-mobile { border-bottom-color: #2d3748; }
+      .nav-hamburger { color: #a0aec0; }
+      .nav-links { background: #16213e; }
+      .badge-gris { background: #2d3748; color: #a0aec0; }
+      .badge-vert { background: #1c4a2e; color: #86efac; }
+      .badge-orange { background: #4a3c1c; color: #fcd34d; }
+      .badge-rouge { background: #4a1c1c; color: #fca5a5; }
+      .badge-bleu { background: #1c2e4a; color: #93c5fd; }
+      .version-card { border-color: #2d3748; }
+      .version-card:hover { background: #1e2d4a; border-color: var(--bleu-doux); }
+      .version-card.selected { background: #2d2a1c; border-color: var(--dore); }
+      .version-card.validated { border-color: var(--vert); }
+      .montage-card { border-color: #2d3748; }
+      .montage-card:hover { border-color: var(--bleu-doux); }
+      .montage-card.published { border-color: var(--vert); background: #1c4a2e; }
+      mark { background: #854d0e; color: #fef08a; }
+      .skeleton { background: linear-gradient(90deg, #2d3748 25%, #374151 50%, #2d3748 75%); background-size: 200% 100%; }
+      a { color: var(--bleu-doux); }
+      .breadcrumb a { color: var(--bleu-doux); }
+      .btn-outline { border-color: #2d3748; color: #a0aec0; }
+      .btn-outline:hover { border-color: var(--bleu); color: var(--bleu-doux); }
+      th { color: #a0aec0; border-bottom-color: #2d3748; }
+      td { border-bottom-color: #2d3748; }
+      .progress-bar { background: #2d3748; }
+    }
+
     /* ── Mobile: hamburger menu ── */
     .nav-hamburger { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; line-height: 1; font-size: 1.5rem; color: var(--gris); min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
 
@@ -283,6 +346,54 @@
       document.addEventListener('click', (e) => { if (!navLinks.contains(e.target) && e.target !== navHamburger) navLinks.classList.remove('open'); });
     }
 
+    // ── P2-4: Skeleton loading helpers ──
+    function skeletonHub() {
+      return `<h1 class="section-title"><div class="skeleton skeleton-title"></div></h1>
+        <div class="card">
+          ${Array.from({length: 6}, () => `<div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-bar"></div><div class="skeleton" style="width:60px;height:1.2rem;"></div></div>`).join('')}
+        </div>`;
+    }
+    function skeletonEpisode() {
+      return `<div class="skeleton skeleton-title" style="margin-bottom:1.5rem;"></div>
+        <div class="card"><div class="skeleton skeleton-title" style="width:40%;"></div>
+          <div class="stat-grid">${Array.from({length: 4}, () => '<div class="skeleton skeleton-stat"></div>').join('')}</div>
+          <div class="skeleton" style="height:2.5rem;width:180px;"></div>
+        </div>
+        <div class="card"><div class="skeleton skeleton-title" style="width:30%;"></div>
+          <div class="skeleton skeleton-bar" style="height:8px;margin-bottom:1rem;"></div>
+        </div>`;
+    }
+
+    // ── P2-1: View transition tracking ──
+    let _prevView = '/';
+    function _viewClass(newView) {
+      const depth = { '/': 0, 'episode': 1, 'segments': 2 };
+      const prev = _prevView.includes('segments') ? 2 : _prevView.includes('episode') ? 1 : 0;
+      const next = newView.includes('segments') ? 2 : newView.includes('episode') ? 1 : 0;
+      _prevView = newView;
+      if (next > prev) return 'view-enter';
+      if (next < prev) return 'view-enter-back';
+      return 'view-fade';
+    }
+    function _animateView(viewName) {
+      const cls = _viewClass(viewName);
+      app.classList.remove('view-enter', 'view-enter-back', 'view-fade');
+      void app.offsetWidth; // force reflow
+      app.classList.add(cls);
+    }
+
+    // ── P2-2: Pull-to-refresh (mobile only) ──
+    let _pullStartY = 0; let _pulling = false;
+    document.addEventListener('touchstart', (e) => {
+      if (window.scrollY === 0 && e.touches.length === 1) { _pullStartY = e.touches[0].clientY; _pulling = true; }
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      if (!_pulling) return;
+      const dy = (e.changedTouches[0]?.clientY || 0) - _pullStartY;
+      _pulling = false;
+      if (dy > 100 && window.scrollY === 0) { route(); toast('Actualise', true); }
+    }, { passive: true });
+
     // ── Router ──
     window.addEventListener('hashchange', route);
     window.addEventListener('load', route);
@@ -312,7 +423,8 @@
     // ── HUB ──
     // ══════════════════════════════════════════
     async function renderHub() {
-      app.innerHTML = '<div class="empty-state"><div class="spinner"></div> Chargement...</div>';
+      app.innerHTML = skeletonHub();
+      _animateView('/');
       try {
         const eps = await api('/api/v2/saisons/episodes');
         const saisons = {};
@@ -400,7 +512,8 @@
     // ── EPISODE ──
     // ══════════════════════════════════════════
     async function renderEpisode(eid) {
-      app.innerHTML = '<div class="empty-state"><div class="spinner"></div> Chargement...</div>';
+      app.innerHTML = skeletonEpisode();
+      _animateView('episode/' + eid);
       try {
         const [scriptData, progress, montages, scriptVersions] = await Promise.allSettled([
           api(`/api/v2/episode/${eid}/script`),
@@ -668,7 +781,8 @@
     // ── SEGMENTS ──
     // ══════════════════════════════════════════
     async function renderSegments(eid) {
-      app.innerHTML = '<div class="empty-state"><div class="spinner"></div> Chargement des segments...</div>';
+      app.innerHTML = `<div class="card">${Array.from({length: 10}, () => `<div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton skeleton-text" style="width:80%;"></div><div class="skeleton skeleton-text" style="width:50%;"></div></div></div>`).join('')}</div>`;
+      _animateView('segments/' + eid);
       try {
         const segments = await api(`/api/v2/episode/${eid}/segments`);
         let filter = 'all';
