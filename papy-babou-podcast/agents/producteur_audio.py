@@ -385,6 +385,37 @@ class ProducteurAudio:
             f"après {max_tentatives} tentatives."
         )
 
+    def generer_segment(self, segment: dict, chemin_sortie: Path) -> dict:
+        """Genere UN seul segment audio via ElevenLabs TTS.
+
+        Methode publique qui effectue le setup necessaire (voice_id lookup,
+        rate limiter) avant d'appeler _generer_segment.
+
+        Args:
+            segment: Dict du segment avec au minimum 'id', 'personnage', 'texte'.
+                     Optionnel: 'ton', 'rythme'.
+            chemin_sortie: Chemin du fichier MP3 de sortie.
+
+        Returns:
+            Dict avec 'status', 'personnage', 'nb_caracteres', 'chemin'.
+
+        Raises:
+            RuntimeError: Si la generation echoue apres toutes les tentatives.
+            ValueError: Si aucune voix n'est configuree pour le personnage.
+        """
+        chemin_sortie.parent.mkdir(parents=True, exist_ok=True)
+
+        # Appeler _generer_segment qui gere le voice_id lookup et le retry
+        self._generer_segment(segment, chemin_sortie)
+
+        nb_chars = len(segment.get("texte", ""))
+        return {
+            "status": "generated",
+            "personnage": segment.get("personnage", ""),
+            "nb_caracteres": nb_chars,
+            "chemin": str(chemin_sortie),
+        }
+
     def _logger_couts(self, episode_id: str) -> None:
         """Affiche un résumé des caractères utilisés par voix."""
         total = sum(self.caracteres_utilises.values())

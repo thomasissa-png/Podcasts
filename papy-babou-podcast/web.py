@@ -4272,10 +4272,23 @@ def _job_generate_audio(episode_id, script_path):
         if _DB_AVAILABLE and SegmentAudioRepo:
             db_seg = SegmentAudioRepo.charger(episode_id, seg_id)
             if db_seg and db_seg["status"] in ("generated", "validated"):
-                # Vérifier que le fichier existe
-                if db_seg.get("audio_path") and Path(db_seg["audio_path"]).exists():
+                audio_path = db_seg.get("audio_path", "")
+                # Vérifier que le fichier existe localement
+                if audio_path and Path(audio_path).exists():
                     generated += 1
                     continue
+                # Fichier absent localement (redeploy) — tenter restore Object Storage
+                if audio_path and ps and ps.is_available():
+                    try:
+                        os_key = db_seg.get("audio_os_key") or f"segments/{episode_id}/{seg_id}.mp3"
+                        dest = Path(audio_path)
+                        dest.parent.mkdir(parents=True, exist_ok=True)
+                        if ps.download_file(os_key, str(dest)):
+                            logger.info("Segment %s restauré depuis Object Storage", seg_id)
+                            generated += 1
+                            continue
+                    except Exception as e_os:
+                        logger.warning("Restore OS segment %s échoué: %s", seg_id, e_os)
 
         chemin = segments_dir / f"{seg_id}.mp3"
 
@@ -4288,9 +4301,9 @@ def _job_generate_audio(episode_id, script_path):
 
         try:
             if is_sfx:
-                sfx_provider.generer(seg.get("texte", ""), chemin)
+                sfx_provider.generer_segment(seg.get("texte", ""), chemin)
             else:
-                producteur._generer_segment(seg, chemin)
+                producteur.generer_segment(seg, chemin)
 
             # Mesurer durée
             duree_ms = 0
@@ -4820,6 +4833,7 @@ def api_v2_saisons_episodes():
 
 @app.route("/admin/v2")
 @app.route("/admin/v2/")
+@_admin_required
 def admin_v2():
     return render_template("admin_v2.html")
 
