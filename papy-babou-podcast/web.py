@@ -4376,15 +4376,55 @@ def _job_generate_audio(episode_id, script_path):
 
 @app.route("/api/v2/episode/<episode_id>/segments")
 def api_v2_segments(episode_id):
-    """Liste les segments audio avec leur statut."""
-    if not _DB_AVAILABLE or not SegmentAudioRepo:
-        return jsonify({"error": "DB non disponible"}), 503
+    """Liste les segments audio avec leur statut.
 
+    Priority: DB segments (with audio status) → script JSON fallback.
+    """
     seg_type = request.args.get("type")
     status = request.args.get("status")
-    segments = SegmentAudioRepo.lister(episode_id, segment_type=seg_type, status=status)
+    segments = []
 
-    # Ajouter audio_url
+    # 1. Try DB first (has audio status, paths, etc.)
+    if _DB_AVAILABLE and SegmentAudioRepo:
+        try:
+            segments = SegmentAudioRepo.lister(episode_id, segment_type=seg_type, status=status)
+        except Exception:
+            pass
+
+    # 2. Fallback: read from script JSON (covers pre-validation state)
+    if not segments:
+        script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+        if not script_path.exists():
+            return jsonify([])
+        try:
+            script = json.loads(script_path.read_text(encoding="utf-8"))
+            raw_segs = script.get("episode", {}).get("segments", [])
+            for s in raw_segs:
+                seg_id = s.get("id", "")
+                personnage = s.get("personnage", "")
+                is_sfx = personnage == "sfx" or s.get("type") == "sfx"
+                s_type = "sfx" if is_sfx else "voix"
+                # Apply type filter
+                if seg_type and s_type != seg_type:
+                    continue
+                segments.append({
+                    "segment_id": seg_id,
+                    "episode_id": episode_id,
+                    "personnage": personnage,
+                    "texte": s.get("texte", s.get("description", "")),
+                    "ton": s.get("ton", ""),
+                    "rythme": s.get("rythme", "normal"),
+                    "segment_type": s_type,
+                    "status": "pending",
+                    "audio_url": None,
+                    "duree_ms": s.get("duree_ms") or s.get("duree_secondes", 0) * 1000,
+                    "source": "script_json",
+                })
+        except Exception:
+            return jsonify([])
+        return jsonify(segments)
+
+    # Enrich DB segments with audio_url
     for s in segments:
         if s.get("audio_path") and Path(s["audio_path"]).exists():
             s["audio_url"] = f"/api/v2/segment/{episode_id}/{s['segment_id']}/audio"

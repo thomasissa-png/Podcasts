@@ -944,12 +944,52 @@ class TestWorkflowIntegration:
         resp = client.get("/api/v2/episode/S01E01/segments")
         assert resp.status_code == 401
 
-    def test_montage_sans_db_retourne_503(self, client, monkeypatch):
-        """Quand la DB est indisponible, les routes DB-dependantes retournent 503."""
+    def test_segments_sans_db_fallback_json(self, client, monkeypatch):
+        """Quand la DB est indisponible, segments endpoint falls back to script JSON."""
         import web
         monkeypatch.setattr(web, "_DB_AVAILABLE", False)
 
+        # Without a script file, returns empty array (200)
         resp = client.get("/api/v2/episode/S01E01/segments", headers=_auth_headers())
+        assert resp.status_code == 200
+        assert resp.get_json() == []
+
+    def test_segments_fallback_json_with_script(self, client, monkeypatch, tmp_path):
+        """Segments endpoint returns data from script JSON when DB is empty."""
+        import web
+        # Make DB return empty
+        client._mock_seg_repo.lister.return_value = []
+
+        # Create a test script file
+        script = {"episode": {"segments": [
+            {"id": "seg_001", "personnage": "papy_babou", "texte": "Bonjour", "ton": "joyeux"},
+            {"id": "sfx_001", "personnage": "sfx", "description": "Birds chirping"},
+        ]}}
+        script_dir = tmp_path / "scripts" / "episodes"
+        script_dir.mkdir(parents=True, exist_ok=True)
+        script_path = script_dir / "S01E99_script.json"
+        script_path.write_text(json.dumps(script), encoding="utf-8")
+        monkeypatch.setattr(web.config, "SCRIPTS_DIR", script_dir)
+
+        resp = client.get("/api/v2/episode/S01E99/segments", headers=_auth_headers())
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert len(data) == 2
+        assert data[0]["segment_id"] == "seg_001"
+        assert data[0]["personnage"] == "papy_babou"
+        assert data[0]["texte"] == "Bonjour"
+        assert data[0]["segment_type"] == "voix"
+        assert data[0]["source"] == "script_json"
+        assert data[1]["segment_id"] == "sfx_001"
+        assert data[1]["segment_type"] == "sfx"
+        assert data[1]["texte"] == "Birds chirping"
+
+    def test_audio_progress_sans_db_retourne_503(self, client, monkeypatch):
+        """Quand la DB est indisponible, audio-progress retourne 503."""
+        import web
+        monkeypatch.setattr(web, "_DB_AVAILABLE", False)
+
+        resp = client.get("/api/v2/episode/S01E01/audio-progress", headers=_auth_headers())
         assert resp.status_code == 503
 
     def test_segment_audio_inexistant(self, client):
