@@ -1,0 +1,1685 @@
+{
+  "episode": {
+    "titre": "Joseph et la tunique de couleurs — trahi par ses frères",
+    "numero": 4,
+    "saison": 1,
+    "duree_cible_minutes": 18,
+    "ambiance": "dramatique",
+    "morale": "Le pardon est plus fort que la rancune. Même dans les épreuves les plus dures, quelque chose de beau peut naître.",
+    "personnages_presents": ["papy_babou", "antoine", "noemie"],
+    "moments_cles": [
+      "Les frères qui déchirent la tunique — Noémie est révoltée",
+      "Joseph en prison qui garde espoir",
+      "Les retrouvailles et le pardon — Antoine a les yeux qui brillent"
+    ],
+    "segments": [
+      {
+        "id": "seg_000",
+        "personnage": "papy_babou",
+        "texte": "Un manteau. Un simple manteau de couleurs. Et pourtant, ce manteau a déclenché une histoire terrible.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 1200
+      },
+      {
+        "id": "seg_000b",
+        "personnage": "papy_babou",
+        "texte": "Une trahison, un voyage au fond d'un puits, et un pardon qui a changé le monde. Mais ça, je vous le raconte dans un instant.",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_000",
+        "personnage": "sfx",
+        "texte": "Sharp fabric tearing rip followed by soft shimmering sparkle, brief metallic accent fading into wide reverb",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_001",
+        "personnage": "sfx",
+        "texte": "Crackling fireplace ambiance with low-frequency warmth, gentle ember pops, soft cozy room tone, analog warmth undertone",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_001",
+        "personnage": "papy_babou",
+        "texte": "Qu'est-ce que c'est que cette tête, Antoine ? Tu es arrivé chez Papy avec un visage de trois kilomètres de long. Et toi, Noémie, tu as l'air de marcher sur des œufs. Qu'est-ce qui se passe, mes petits loups ?",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_002",
+        "personnage": "antoine",
+        "texte": "C'est Maxime, Papy. Il a dit à tout le monde que j'avais triché au contrôle de maths. Alors que c'est même pas vrai ! Et maintenant, personne veut jouer avec moi à la récré.",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_003",
+        "personnage": "noemie",
+        "texte": "C'est vrai, Papy. Antoine il a pleuré dans la voiture. Mais il veut pas le dire.",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_004",
+        "personnage": "antoine",
+        "texte": "J'ai PAS pleuré ! J'avais juste une poussière dans l'oeil. Et de toute façon, Maxime, je lui parlerai plus JAMAIS.",
+        "ton": "déterminé",
+        "rythme": "rapide",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_004b",
+        "personnage": "noemie",
+        "texte": "Si t'avais pleuré, c'est pas grave, Antoine. Même les chevaliers, ils pleurent.",
+        "ton": "tendre",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_004c",
+        "personnage": "papy_babou",
+        "texte": "Ta sœur a raison, mon bonhomme. Allez, venez vous asseoir sur le gros coussin.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_001d",
+        "personnage": "sfx",
+        "texte": "Soft cushion compression with gentle fabric rustling, children settling into cozy seat, brief squeaky spring",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_005",
+        "personnage": "papy_babou",
+        "texte": "Mes petits loups, installez-vous bien confortablement. Fermez bien les yeux et ouvrez grand vos oreilles !",
+        "ton": "chaleureux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_005b",
+        "personnage": "papy_babou",
+        "texte": "Papy a une histoire extraordinaire à vous raconter aujourd'hui. Une histoire de trahison bien pire que celle de Maxime.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_005c",
+        "personnage": "papy_babou",
+        "texte": "Mais aussi une histoire de pardon qui va te surprendre, mon bonhomme.",
+        "ton": "tendre",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_001b",
+        "personnage": "sfx",
+        "texte": "Soft crackling fireplace with gentle low-frequency hum, distant outdoor wind behind glass, warm analog room tone, slow ticking clock",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_006",
+        "personnage": "antoine",
+        "texte": "Pire que Maxime ? Qu'est-ce qui peut être pire que ça ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_006b",
+        "personnage": "noemie",
+        "texte": "Moi je sais ! C'est quand quelqu'un te vole ton doudou !",
+        "ton": "espiègle",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_006c",
+        "personnage": "antoine",
+        "texte": "C'est pas pareil, Noémie. C'est plus grave que ça.",
+        "ton": "boudeur",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_007",
+        "personnage": "papy_babou",
+        "texte": "Eh bien, tu te souviens d'Abraham, la dernière fois ? Celui qui a tout quitté pour suivre la voix de Dieu ?",
+        "ton": "mystérieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_008",
+        "personnage": "antoine",
+        "texte": "Oui ! Celui qui comptait les étoiles ! Et sa femme Sara qui a ri quand Dieu a dit qu'elle aurait un bébé !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_009",
+        "personnage": "noemie",
+        "texte": "Et le bébé il s'appelait Isaac, parce que ça veut dire « il rit » !",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_009b",
+        "personnage": "papy_babou",
+        "texte": "Quelle mémoire, mes petits loups ! Bravo !",
+        "ton": "chaleureux",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_009c",
+        "personnage": "antoine",
+        "texte": "C'est normal, Papy. Tes histoires, on les oublie jamais.",
+        "ton": "fier",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_001e",
+        "personnage": "sfx",
+        "texte": "Warm book page turning sound with soft leather creak, storytelling beginning atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 2.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_001c",
+        "personnage": "sfx",
+        "texte": "Gentle harp glissando with soft reverb bloom, dreamy transition sweep ascending slowly",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_010",
+        "personnage": "papy_babou",
+        "texte": "Figurez-vous qu'Isaac a grandi, il a eu des enfants, et ses enfants ont eu des enfants.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_010b",
+        "personnage": "papy_babou",
+        "texte": "Et parmi eux, il y avait un homme qui s'appelait Jacob. Et Jacob, lui, il a eu douze fils. Douze !",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_011",
+        "personnage": "noemie",
+        "texte": "Douze ? Comme les mois de l'année ? C'est beaucoup trop de frères !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_011b",
+        "personnage": "antoine",
+        "texte": "Imagine la bagarre pour la salle de bain le matin !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_011c",
+        "personnage": "papy_babou",
+        "texte": "Ha ! Pas faux, mon bonhomme.",
+        "ton": "amusé",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_012",
+        "personnage": "papy_babou",
+        "texte": "Et parmi ces douze fils, il y en avait un que Jacob aimait plus que les autres. Il s'appelait Joseph.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_012b",
+        "personnage": "papy_babou",
+        "texte": "C'était l'avant-dernier, et son papa lui a offert un cadeau extraordinaire.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_013",
+        "personnage": "antoine",
+        "texte": "C'était quoi, le cadeau ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_002",
+        "personnage": "sfx",
+        "texte": "Soft shimmering fabric rustling with warm tonal shimmer, gentle high-register sparkle chimes, layered silk texture",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_014",
+        "personnage": "papy_babou",
+        "texte": "Une tunique. Mais pas n'importe quelle tunique ! Un manteau long, tissé avec des fils de toutes les couleurs.",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_014b",
+        "personnage": "papy_babou",
+        "texte": "Du rouge, du bleu, du vert, de l'or. Quand Joseph la portait, on aurait dit un arc-en-ciel qui marchait dans le désert.",
+        "ton": "émerveillé",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_014c",
+        "personnage": "noemie",
+        "texte": "Oooh ! Comme un super-héros avec sa cape !",
+        "ton": "émerveillée",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_002b",
+        "personnage": "sfx",
+        "texte": "Warm desert wind breeze with soft sand texture, distant heat shimmer, dry wide ambiance",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_015",
+        "personnage": "noemie",
+        "texte": "Moi aussi je veux un manteau arc-en-ciel ! Est-ce que le bébé Lucas il en aura un quand il naîtra ?",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_015b",
+        "personnage": "antoine",
+        "texte": "Noémie ! C'est pas le moment pour Lucas !",
+        "ton": "impatient",
+        "rythme": "rapide",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_016",
+        "personnage": "antoine",
+        "texte": "Mais Papy, si le papa a donné un cadeau juste à un seul fils, les autres ils devaient être verts de jalousie, non ?",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_017",
+        "personnage": "papy_babou",
+        "texte": "Tu as tout compris, mon bonhomme. Les onze frères étaient furieux.",
+        "ton": "grave",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_017b",
+        "personnage": "papy_babou",
+        "texte": "Chaque matin, ils voyaient Joseph enfiler cette tunique magnifique, et la colère grandissait dans leur cœur. Comme un feu qu'on ne peut plus éteindre.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_017c",
+        "personnage": "noemie",
+        "texte": "Mais c'est pas la faute de Joseph si son papa l'aime plus !",
+        "ton": "indignée",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_017d",
+        "personnage": "papy_babou",
+        "texte": "Tu as raison, ma puce. Ce n'est pas sa faute. Mais attends, ça va empirer.",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_018",
+        "personnage": "papy_babou",
+        "texte": "Et pour ne rien arranger, Joseph faisait des rêves. Des rêves étranges.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_002c",
+        "personnage": "sfx",
+        "texte": "Dreamy ethereal synth pad with soft reverb bloom, slow ascending tones, mystical shimmer texture",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 12.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_018b",
+        "personnage": "papy_babou",
+        "texte": "Une nuit, il a rêvé que lui et ses frères étaient dans un champ en train de faire des gerbes de blé.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_018c",
+        "personnage": "papy_babou",
+        "texte": "Et d'un coup, toutes les gerbes de ses frères se sont inclinées devant la sienne !",
+        "ton": "dramatique",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_019",
+        "personnage": "antoine",
+        "texte": "Et il a raconté son rêve à ses frères ? C'était pas très malin, ça !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_020",
+        "personnage": "papy_babou",
+        "texte": "Pas très malin, non. Joseph était un peu naïf, tu vois. Il a même raconté un deuxième rêve : le soleil, la lune et onze étoiles s'inclinaient devant lui.",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_020b",
+        "personnage": "antoine",
+        "texte": "Ouh là. Il aurait mieux fait de se taire, celui-là.",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_020c",
+        "personnage": "papy_babou",
+        "texte": "Ses frères ont serré les poings. Cette fois, c'en était trop.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_003",
+        "personnage": "sfx",
+        "texte": "Low-pitched string tension drone building slowly, ominous rumble, uneasy atmosphere with sparse metallic accents",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_021",
+        "personnage": "papy_babou",
+        "texte": "Un jour, Jacob a envoyé Joseph voir ses frères qui gardaient les troupeaux, loin dans les collines.",
+        "ton": "dramatique",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_021b",
+        "personnage": "papy_babou",
+        "texte": "Joseph est parti, tout seul, avec sa belle tunique sur le dos.",
+        "ton": "tendre",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_003c",
+        "personnage": "sfx",
+        "texte": "Solitary footsteps on dry dusty path with distant wind, lonely journey atmosphere, sparse cricket sounds",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 8.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_021c",
+        "personnage": "papy_babou",
+        "texte": "Et quand ses frères l'ont vu arriver de loin...",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_022",
+        "personnage": "noemie",
+        "texte": "Ils vont lui faire du mal ? Papy, dis-moi qu'ils vont pas lui faire du mal !",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_022b",
+        "personnage": "antoine",
+        "texte": "Chut, Noémie, laisse Papy raconter !",
+        "ton": "impatient",
+        "rythme": "rapide",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_023",
+        "personnage": "papy_babou",
+        "texte": "Ils l'ont attrapé, ma puce. Ils lui ont arraché sa tunique. Tu entends ? Ce bruit de tissu qu'on déchire ?",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_003b",
+        "personnage": "sfx",
+        "texte": "Sharp fabric tearing rip with resonant mid-frequency crack, brief textile shredding texture",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_023b",
+        "personnage": "papy_babou",
+        "texte": "Et ils l'ont jeté au fond d'un puits. Écoute comme c'est profond.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "sfx_004",
+        "personnage": "sfx",
+        "texte": "Deep hollow impact reverberating in stone well, distant echoing drip, enclosed narrow space ambiance with low resonant drone",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_024",
+        "personnage": "noemie",
+        "texte": "C'est horrible ! C'est les pires frères du monde entier ! Moi je serais descendue le chercher, Papy !",
+        "ton": "indignée",
+        "rythme": "rapide",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_025",
+        "personnage": "antoine",
+        "texte": "Attends, attends. Ses propres frères ? Sa propre famille ? Mais c'est mille fois pire que Maxime !",
+        "ton": "inquiet",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_025b",
+        "personnage": "papy_babou",
+        "texte": "Oui, mon grand. Et ce n'est pas fini.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_026",
+        "personnage": "papy_babou",
+        "texte": "Des marchands qui passaient par là, avec leurs chameaux chargés d'épices, ont vu le puits.",
+        "ton": "dramatique",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_026b",
+        "personnage": "papy_babou",
+        "texte": "Les frères leur ont vendu Joseph. Vendu ! Comme on vendrait un animal au marché.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_026c",
+        "personnage": "noemie",
+        "texte": "Vendu ?! On peut pas vendre son frère !",
+        "ton": "indignée",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_026d",
+        "personnage": "papy_babou",
+        "texte": "Pour vingt pièces d'argent, ma puce. Ça vaut à peine le prix de deux sandales à l'époque.",
+        "ton": "grave",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_005",
+        "personnage": "sfx",
+        "texte": "Distant camel caravan bells with dry desert wind gusts, jingling metal coins, shuffling hooves on sand, sparse percussive accents",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_027",
+        "personnage": "noemie",
+        "texte": "Et leur papa ? Il savait pas, Jacob ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_028",
+        "personnage": "papy_babou",
+        "texte": "Les frères ont pris la tunique de Joseph, ils l'ont trempée dans du sang de chèvre, et ils l'ont rapportée à leur père.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_028c",
+        "personnage": "antoine",
+        "texte": "Des menteurs en plus ! Ils mentent à leur propre papa !",
+        "ton": "indigné",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_028d",
+        "personnage": "papy_babou",
+        "texte": "Ils lui ont dit : on a trouvé ça par terre. C'est pas la tunique de Joseph ?",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_028b",
+        "personnage": "papy_babou",
+        "texte": "Jacob a cru que son fils avait été dévoré par une bête sauvage. Il a pleuré, pleuré, pendant des jours et des nuits.",
+        "ton": "tendre",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_029",
+        "personnage": "noemie",
+        "texte": "Le pauvre papa. C'est trop triste, Papy.",
+        "ton": "triste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_005b",
+        "personnage": "sfx",
+        "texte": "Soft sustained minor-key string pad with gentle tremolo, low cello drone, melancholic reverb wash, slow fading",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_005d",
+        "personnage": "sfx",
+        "texte": "Bright ascending orchestral sweep with warm brass, transition from sadness to adventure, wide reverb bloom",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_005e",
+        "personnage": "sfx",
+        "texte": "Exotic Egyptian atmosphere with soft oud melody, distant market bustle, warm sandy wind gusts, ancient civilization ambiance",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_030",
+        "personnage": "papy_babou",
+        "texte": "Pendant ce temps, les marchands ont emmené Joseph très loin, jusqu'en Égypte. Le pays des pyramides et du grand fleuve, le Nil. Un fleuve tellement immense qu'il faut une journée entière pour le traverser en barque !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_030b",
+        "personnage": "noemie",
+        "texte": "Une journée en barque ? C'est plus large que la piscine du centre sportif !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_030d",
+        "personnage": "antoine",
+        "texte": "C'est un fleuve, Noémie, pas une piscine ! Avec des crocodiles et tout !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_005c",
+        "personnage": "sfx",
+        "texte": "Flowing river water with distant exotic bird calls, warm Egyptian ambiance, gentle lapping waves, humid atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_030c",
+        "personnage": "papy_babou",
+        "texte": "Bien plus grand, ma puce ! Joseph a été vendu à un homme riche et puissant. Et même là-bas, loin de sa famille, loin de tout, Joseph n'a pas abandonné.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_031",
+        "personnage": "antoine",
+        "texte": "C'est vrai, Papy ? Il a pas baissé les bras ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_032",
+        "personnage": "papy_babou",
+        "texte": "Jamais. Joseph travaillait tellement bien que son maître lui a confié toute sa maison.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_032b",
+        "personnage": "antoine",
+        "texte": "Comme un directeur ?",
+        "ton": "curieux",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_032c",
+        "personnage": "papy_babou",
+        "texte": "Exactement ! Mais un jour, on l'a accusé à tort d'une faute qu'il n'avait pas commise.",
+        "ton": "grave",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_032d",
+        "personnage": "papy_babou",
+        "texte": "Et on l'a jeté en prison.",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_006",
+        "personnage": "sfx",
+        "texte": "Heavy iron door slamming shut with deep metallic echo, distant dripping water in stone chamber, low resonant room tone",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_006c",
+        "personnage": "sfx",
+        "texte": "Dark prison ambiance with distant chains rattling, slow dripping echoes, cold stone atmosphere, sparse rat scurrying sounds",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_032e",
+        "personnage": "papy_babou",
+        "texte": "Une prison sombre, froide, avec des murs en pierre. On entendait l'eau qui tombait goutte à goutte.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_033",
+        "personnage": "noemie",
+        "texte": "En prison ? Mais il avait rien fait ! C'est pas juste du tout !",
+        "ton": "inquiet",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_034",
+        "personnage": "papy_babou",
+        "texte": "C'est pas juste, tu as raison. Mais dis-moi, Antoine.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_034c",
+        "personnage": "papy_babou",
+        "texte": "Si toi, on t'enfermait dans une pièce toute noire, sans tes copains, sans ta console, sans personne. Qu'est-ce que tu garderais dans ta tête pour tenir le coup ?",
+        "ton": "chaleureux",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_034b",
+        "personnage": "antoine",
+        "texte": "Je penserais à maman. Et à toi, Papy. Et peut-être à mes dessins.",
+        "ton": "pensif",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_035",
+        "personnage": "noemie",
+        "texte": "Moi je penserais à mon doudou lapin !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_006f",
+        "personnage": "sfx",
+        "texte": "Soft hopeful ascending tone with gentle reverb, light breaking through darkness metaphor, warm rising shimmer",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 10.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_036",
+        "personnage": "papy_babou",
+        "texte": "Tu vois ! Toi c'est ta famille et tes dessins. Joseph, c'était sa confiance en Dieu. Et son don incroyable pour les rêves.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_036b",
+        "personnage": "papy_babou",
+        "texte": "Parce que figure-toi qu'en prison, il a rencontré deux serviteurs du Pharaon qui faisaient des cauchemars terribles.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_036c",
+        "personnage": "noemie",
+        "texte": "Des cauchemars avec des monstres ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_036d",
+        "personnage": "papy_babou",
+        "texte": "Pas des monstres, mais des rêves très étranges. Joseph les a écoutés, il a fermé les yeux, et il leur a dit exactement ce que leurs rêves voulaient dire.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_037",
+        "personnage": "antoine",
+        "texte": "Comme un super-pouvoir ! Il pouvait lire les rêves !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_006b",
+        "personnage": "sfx",
+        "texte": "Ethereal high-register synth pad with soft granular shimmer, slow pitch modulation, dreamy wide reverb, delicate chime accents",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_038",
+        "personnage": "papy_babou",
+        "texte": "Exactement. Et deux ans plus tard, c'est le Pharaon lui-même, le roi d'Égypte, qui a fait un rêve terrifiant.",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_006d",
+        "personnage": "sfx",
+        "texte": "Eerie nightmare atmosphere with low distorted cow lowing sounds, unsettling underwater reverb, dark pulsing bass",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 10.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_038b",
+        "personnage": "papy_babou",
+        "texte": "Il a rêvé de sept vaches grasses et belles qui sortaient du Nil. Et juste derrière, sept vaches maigres, horribles, squelettiques, qui ont dévoré les vaches grasses !",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_039",
+        "personnage": "noemie",
+        "texte": "Des vaches qui mangent des vaches ? C'est trop dégoûtant !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_040",
+        "personnage": "papy_babou",
+        "texte": "Personne ne pouvait expliquer ce rêve au Pharaon. Personne ! Jusqu'à ce qu'on se souvienne de Joseph, le prisonnier qui savait lire les rêves.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_040b",
+        "personnage": "antoine",
+        "texte": "Ils l'ont sorti de prison ?!",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_040c",
+        "personnage": "papy_babou",
+        "texte": "On l'a fait sortir, on l'a lavé, habillé avec de beaux vêtements, et amené devant le roi.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_007",
+        "personnage": "sfx",
+        "texte": "Grand Egyptian palace atmosphere with distant horn fanfare, reverberant stone hall acoustics, ceremonial low drum pulse",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_041",
+        "personnage": "antoine",
+        "texte": "Et après, qu'est-ce qui s'est passé ? Il a compris le rêve ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_042",
+        "personnage": "papy_babou",
+        "texte": "Joseph a regardé le Pharaon droit dans les yeux. Et il a dit : les sept vaches grasses, ce sont sept années où tout ira bien. Les récoltes seront magnifiques.",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_042b",
+        "personnage": "papy_babou",
+        "texte": "Mais les sept vaches maigres, ce sont sept années de famine terrible. Plus rien ne poussera.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_006e",
+        "personnage": "sfx",
+        "texte": "Brief comic record scratch sound effect with playful descending tone, humorous interruption accent",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 2.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_043",
+        "personnage": "noemie",
+        "texte": "Papy, c'est quoi le goûter aujourd'hui ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_044",
+        "personnage": "antoine",
+        "texte": "Noémie ! Laisse Papy finir ! Je veux savoir ce que le Pharaon a fait !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_045",
+        "personnage": "papy_babou",
+        "texte": "Le Pharaon a été tellement impressionné qu'il a dit : cet homme est le plus sage de tout le royaume !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_045b",
+        "personnage": "papy_babou",
+        "texte": "Et il a nommé Joseph gouverneur de toute l'Égypte.",
+        "ton": "solennel",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_045c",
+        "personnage": "noemie",
+        "texte": "Gouverneur ? C'est comme un président ?",
+        "ton": "curieux",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_045d",
+        "personnage": "papy_babou",
+        "texte": "Presque ! Du prisonnier au bras droit du roi. D'un coup !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_046",
+        "personnage": "antoine",
+        "texte": "Du fond du puits jusqu'au palais du roi ! C'est le plus grand retournement de situation de tous les temps !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_007b",
+        "personnage": "sfx",
+        "texte": "Ascending brass fanfare stab with percussive accent, wide reverb tail, triumphant short motif resolving upward",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_008",
+        "personnage": "sfx",
+        "texte": "Sustained low-frequency wind drone with gritty sand texture, distant rumbling sub-bass, sparse hollow gusts, desolate empty reverb",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_047",
+        "personnage": "papy_babou",
+        "texte": "Joseph a fait stocker des montagnes de blé pendant les sept bonnes années. Et quand la famine est arrivée, l'Égypte avait de quoi nourrir tout le monde.",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_047b",
+        "personnage": "papy_babou",
+        "texte": "Les pays voisins, eux, mouraient de faim. Et devinez qui est venu en Égypte pour acheter du blé ?",
+        "ton": "mystérieux",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_048",
+        "personnage": "antoine",
+        "texte": "Non... Ses frères ?!",
+        "ton": "curieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_049",
+        "personnage": "papy_babou",
+        "texte": "Ses frères. Les mêmes qui l'avaient jeté dans le puits. Les mêmes qui l'avaient vendu.",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 1200
+      },
+      {
+        "id": "seg_049b",
+        "personnage": "papy_babou",
+        "texte": "Ils se sont agenouillés devant le gouverneur d'Égypte pour demander du blé. Et ils ne l'ont même pas reconnu.",
+        "ton": "dramatique",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_050",
+        "personnage": "noemie",
+        "texte": "C'est comme dans le rêve ! Le blé qui se baissait devant lui !",
+        "ton": "émerveillée",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_050b",
+        "personnage": "papy_babou",
+        "texte": "Exactement ! Mais Joseph ne s'est pas dévoilé tout de suite. Il voulait savoir si ses frères avaient changé.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_050c",
+        "personnage": "antoine",
+        "texte": "Comment il a fait pour savoir ?",
+        "ton": "curieux",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_008d",
+        "personnage": "sfx",
+        "texte": "Grand Egyptian palace hall ambiance with distant guard footsteps, stone reverb, ceremonial low brass drone",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_050d",
+        "personnage": "papy_babou",
+        "texte": "Il leur a tendu un piège, mon bonhomme. Il a dit : vous êtes des espions ! Et il a gardé un de ses frères en prison.",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_050e",
+        "personnage": "noemie",
+        "texte": "Ooh ! C'est un peu méchant, non ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_050f",
+        "personnage": "papy_babou",
+        "texte": "Attends, attends. Il leur a dit : pour prouver que vous n'êtes pas des espions, ramenez-moi votre plus petit frère. Benjamin. Le dernier fils de Jacob.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_008c",
+        "personnage": "sfx",
+        "texte": "Tense suspenseful strings with soft pizzicato accents, building anticipation, quiet dramatic undertone",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 12.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_050g",
+        "personnage": "antoine",
+        "texte": "Et ils l'ont ramené, Benjamin ?",
+        "ton": "impatient",
+        "rythme": "rapide",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_050h",
+        "personnage": "papy_babou",
+        "texte": "Oui. Et quand Joseph a vu Benjamin, son petit frère, il a dû quitter la salle pour aller pleurer en cachette. Parce que Benjamin, c'était le seul frère qui ne l'avait pas trahi.",
+        "ton": "tendre",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_050i",
+        "personnage": "noemie",
+        "texte": "Le pauvre. Il avait trop d'émotions dans le cœur.",
+        "ton": "triste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_050j",
+        "personnage": "papy_babou",
+        "texte": "Et là, Joseph a fait un dernier test. Il a caché une coupe en argent dans le sac de Benjamin.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_050k",
+        "personnage": "antoine",
+        "texte": "Pourquoi ? C'est piégé !",
+        "ton": "curieux",
+        "rythme": "rapide",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_008e",
+        "personnage": "sfx",
+        "texte": "Metallic cup clinking in fabric sack, guard footsteps approaching, tense accusation atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_050l",
+        "personnage": "papy_babou",
+        "texte": "Les gardes ont fouillé les sacs et trouvé la coupe. Joseph a dit : celui qui a volé sera mon esclave.",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_050m",
+        "personnage": "papy_babou",
+        "texte": "Et là, un des frères, Juda, a fait quelque chose de magnifique. Il s'est avancé et il a dit : prends-moi à sa place. Que le petit rentre chez notre père.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 1200
+      },
+      {
+        "id": "seg_050n",
+        "personnage": "noemie",
+        "texte": "Oh ! Il a voulu se sacrifier pour son petit frère !",
+        "ton": "émerveillée",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_050o",
+        "personnage": "papy_babou",
+        "texte": "Tu as compris, ma puce. Les frères avaient changé. Ils ne feraient plus jamais de mal au petit dernier. Joseph avait sa réponse.",
+        "ton": "tendre",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_051",
+        "personnage": "papy_babou",
+        "texte": "Et c'est là que Joseph n'a plus pu tenir. Son cœur battait à cent à l'heure. Ses mains tremblaient.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_051b",
+        "personnage": "papy_babou",
+        "texte": "Des années de douleur, de solitude. Tout lui est revenu d'un coup.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_052",
+        "personnage": "antoine",
+        "texte": "Et il a fait quoi ? Il s'est vengé ? Moi j'aurais, j'aurais pas pu me retenir !",
+        "ton": "impatient",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_052b",
+        "personnage": "noemie",
+        "texte": "Moi je dis qu'il les a pardonnés. Parce que c'est un gentil.",
+        "ton": "tendre",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_008b",
+        "personnage": "sfx",
+        "texte": "Deep resonant bell toll with wide reverb tail, dramatic revelation accent fading slowly",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_009",
+        "personnage": "sfx",
+        "texte": "Solo cello melody rising from pianissimo to forte with full string orchestra joining, low drum pulse underneath, building to overwhelming warmth then releasing into gentle resolution",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 25.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_053",
+        "personnage": "papy_babou",
+        "texte": "Et là, Joseph n'a plus pu se retenir. Il a pleuré. Fort. Si fort que tout le palais l'a entendu.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1200
+      },
+      {
+        "id": "sfx_008f",
+        "personnage": "sfx",
+        "texte": "Emotional deep breath followed by soft sobbing echo in stone hall, intimate vulnerability in grand space",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_053b",
+        "personnage": "papy_babou",
+        "texte": "Et d'une voix tremblante, il a dit : c'est moi. C'est moi, Joseph. Votre frère.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "seg_054",
+        "personnage": "noemie",
+        "texte": "Les frères, ils ont eu peur ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_055",
+        "personnage": "papy_babou",
+        "texte": "Ils étaient terrifiés, ma puce. Le gouverneur d'Égypte, l'homme le plus puissant après le Pharaon, c'était leur frère qu'ils avaient trahi.",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_055b",
+        "personnage": "papy_babou",
+        "texte": "Ils pensaient qu'il allait les punir, les jeter en prison, ou pire.",
+        "ton": "grave",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_055c",
+        "personnage": "antoine",
+        "texte": "Et ils auraient mérité, en plus !",
+        "ton": "déterminé",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_056",
+        "personnage": "papy_babou",
+        "texte": "Mais Joseph a fait quelque chose d'extraordinaire. Il les a pris dans ses bras, un par un.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 1200
+      },
+      {
+        "id": "seg_056b",
+        "personnage": "papy_babou",
+        "texte": "Et il leur a dit : ne soyez pas tristes, ne vous en voulez pas. C'est Dieu qui m'a envoyé ici avant vous, pour sauver des vies.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 1200
+      },
+      {
+        "id": "seg_056c",
+        "personnage": "papy_babou",
+        "texte": "Ce que vous aviez voulu pour le mal, Dieu l'a changé en bien.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 2000
+      },
+      {
+        "id": "sfx_010",
+        "personnage": "sfx",
+        "texte": "Warm major-key orchestral pad resolving gently, soft harp arpeggios, peaceful reconciliation atmosphere, wide reverb",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_057",
+        "personnage": "antoine",
+        "texte": "Il les a pardonnés ? Après tout ce qu'ils lui ont fait ?",
+        "ton": "admiratif",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_058",
+        "personnage": "papy_babou",
+        "texte": "Oui, mon bonhomme. Il les a pardonnés. Et il a fait venir toute sa famille en Égypte.",
+        "ton": "rassurant",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_058c",
+        "personnage": "papy_babou",
+        "texte": "Son vieux papa Jacob, ses frères, leurs femmes, leurs enfants. Il les a tous nourris, tous protégés.",
+        "ton": "tendre",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_058b",
+        "personnage": "papy_babou",
+        "texte": "Parce que le pardon, c'est pas oublier ce qu'on t'a fait. C'est choisir de ne pas laisser la colère gagner.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "seg_059",
+        "personnage": "noemie",
+        "texte": "Et le papa Jacob, quand il a vu Joseph ? Il devait être tellement content !",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_059b",
+        "personnage": "antoine",
+        "texte": "Il a dû pleurer aussi, le papa ?",
+        "ton": "pensif",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_009b",
+        "personnage": "sfx",
+        "texte": "Gentle emotional strings with warm cello melody, soft piano accompaniment, tender reunion atmosphere with reverb bloom",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_060",
+        "personnage": "papy_babou",
+        "texte": "Ma puce, Jacob a pris Joseph dans ses bras et il a dit : maintenant je peux mourir en paix, parce que j'ai revu ton visage. C'est un des plus beaux moments de toute la Bible.",
+        "ton": "tendre",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_010b",
+        "personnage": "sfx",
+        "texte": "Warm descending chime with soft crackling fireplace fade-in, gentle room tone transition",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_011",
+        "personnage": "sfx",
+        "texte": "Crackling fireplace with warm low-frequency room tone, gentle clock ticking, soft ember pops, cozy interior settling sounds",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_010c",
+        "personnage": "sfx",
+        "texte": "Warm descending harp glissando transitioning to cozy fireplace crackle, gentle room tone with clock ticking",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_010d",
+        "personnage": "sfx",
+        "texte": "Crackling fireplace with warm low-frequency hum, soft blanket rustling, intimate cozy evening atmosphere, gentle clock ticking",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 20.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_061",
+        "personnage": "antoine",
+        "texte": "Papy... tu crois que Maxime, il savait que c'était méchant ce qu'il faisait ? Les frères de Joseph, ils savaient ?",
+        "ton": "curieux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_062",
+        "personnage": "papy_babou",
+        "texte": "Tu sais, mon grand, la jalousie, c'est comme un petit monstre. Au début il est tout petit, et puis il grandit, il grandit.",
+        "ton": "rassurant",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_062b",
+        "personnage": "papy_babou",
+        "texte": "Jusqu'à ce qu'on fasse des choses qu'on regrette. Les frères de Joseph ont regretté. Et Maxime, peut-être qu'il regrette aussi.",
+        "ton": "tendre",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_063",
+        "personnage": "antoine",
+        "texte": "Mais Joseph, c'était dur de pardonner, non ? Il avait le droit d'être en colère !",
+        "ton": "déterminé",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_064",
+        "personnage": "papy_babou",
+        "texte": "Bien sûr qu'il avait le droit. Et pardonner, ça ne veut pas dire que ce qu'on t'a fait c'était bien.",
+        "ton": "solennel",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_064b",
+        "personnage": "papy_babou",
+        "texte": "Ça veut dire que tu choisis d'avancer, au lieu de rester prisonnier de ta colère.",
+        "ton": "solennel",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_064c",
+        "personnage": "papy_babou",
+        "texte": "Parce que tu sais quoi, mon bonhomme ? La rancune, c'est comme rester au fond du puits. Le pardon, c'est en sortir.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 1500
+      },
+      {
+        "id": "sfx_011c",
+        "personnage": "sfx",
+        "texte": "Soft contemplative piano note with wide reverb, gentle resolution, warm harmonic overtone fading slowly",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_065",
+        "personnage": "noemie",
+        "texte": "Antoine, tu vas pardonner Maxime alors ?",
+        "ton": "curieux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_066",
+        "personnage": "antoine",
+        "texte": "Bon, je vais pas le jeter dans un puits, Maxime. Mais je lui pardonne pas tout de suite ! Genre peut-être lundi. Ou mardi.",
+        "ton": "boudeur",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_066b",
+        "personnage": "noemie",
+        "texte": "Moi je dis mercredi. Comme ça t'as le temps de faire ta tête de mule !",
+        "ton": "espiègle",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_066c",
+        "personnage": "antoine",
+        "texte": "J'ai pas une tête de mule !",
+        "ton": "indigné",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_011b",
+        "personnage": "sfx",
+        "texte": "Warm gentle children giggling with cozy room ambiance, brief playful moment, soft natural laughter",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_066d",
+        "personnage": "papy_babou",
+        "texte": "Un tout petit peu quand même, mon bonhomme !",
+        "ton": "amusé",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_067",
+        "personnage": "papy_babou",
+        "texte": "C'est déjà un premier pas, mon grand. Comme disait ma grand-mère : le pardon, c'est un cadeau qu'on se fait à soi-même.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_011d",
+        "personnage": "sfx",
+        "texte": "Soft warm string pad with gentle major-key resolution, cozy atmosphere, intimate close-mic room tone",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_068",
+        "personnage": "noemie",
+        "texte": "Dis Papy, est-ce que le bébé Lucas il aura un manteau de couleurs quand il naîtra ? Comme Joseph ?",
+        "ton": "joyeux",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_069",
+        "personnage": "antoine",
+        "texte": "Et moi je serai un grand frère bien, hein Papy ? Pas comme les frères de Joseph !",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_070",
+        "personnage": "papy_babou",
+        "texte": "J'en suis sûr, mon bonhomme. Tu seras le meilleur des grands frères. Et Lucas aura beaucoup de chance de t'avoir.",
+        "ton": "tendre",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_011e",
+        "personnage": "sfx",
+        "texte": "Soft gentle kiss sound with brief warm exhale, tender family moment accent",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 2.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_012",
+        "personnage": "sfx",
+        "texte": "Gentle high-frequency shimmer pad with slow amplitude modulation, soft reverb wash, warm harmonic overtones, wide stereo field",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_071",
+        "personnage": "noemie",
+        "texte": "Raconte encore, Papy ! Qu'est-ce qui est arrivé après, à la famille de Joseph en Égypte ?",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_072",
+        "personnage": "papy_babou",
+        "texte": "Ah, ça, c'est une autre histoire ! Figurez-vous que la famille de Joseph est restée en Égypte très, très longtemps. Des années, des siècles même.",
+        "ton": "mystérieux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "sfx_012b",
+        "personnage": "sfx",
+        "texte": "Low ominous drone building slowly with distant thunder rumble, foreboding atmosphere, dark tonal shift",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 10.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_072b",
+        "personnage": "papy_babou",
+        "texte": "Et un jour, un nouveau Pharaon est arrivé au pouvoir. Un Pharaon qui ne connaissait pas Joseph.",
+        "ton": "dramatique",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_072c",
+        "personnage": "papy_babou",
+        "texte": "Et il a fait quelque chose de terrible : il a réduit la famille de Joseph en esclavage.",
+        "ton": "grave",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_073",
+        "personnage": "antoine",
+        "texte": "Et personne les a aidés ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_073b",
+        "personnage": "noemie",
+        "texte": "C'est trop injuste !",
+        "ton": "indignée",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_012c",
+        "personnage": "sfx",
+        "texte": "Mysterious ascending chime motif with soft reverb, teasing cliffhanger atmosphere, anticipation building tone",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_074",
+        "personnage": "papy_babou",
+        "texte": "Si ! Un petit bébé, caché dans un panier sur le fleuve, a été trouvé par une princesse. Et ce bébé a fait quelque chose d'incroyable en grandissant. Mais ça, ce sera pour la prochaine fois !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_075",
+        "personnage": "noemie",
+        "texte": "Un bébé dans un panier ? Comme un petit Moïse ? Mais ça finit bien, hein Papy ?",
+        "ton": "inquiet",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "seg_076",
+        "personnage": "papy_babou",
+        "texte": "Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
+        "ton": "chaleureux",
+        "pause_apres_ms": 800
+      },
+      {
+        "id": "seg_076b",
+        "personnage": "noemie",
+        "texte": "Et le bébé dans le panier ? Tu nous la raconteras, hein Papy ?",
+        "ton": "enthousiaste",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_076c",
+        "personnage": "papy_babou",
+        "texte": "Promis, ma puce. La prochaine fois !",
+        "ton": "tendre",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_012d",
+        "personnage": "sfx",
+        "texte": "Warm gentle music box melody with soft reverb, nostalgic closing lullaby feel, intimate and tender",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 12.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_076d",
+        "personnage": "papy_babou",
+        "texte": "Et n'oubliez pas la leçon de Joseph : le pardon, c'est plus fort que la rancune. Même dans les épreuves les plus dures, quelque chose de beau peut naître.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "seg_076e",
+        "personnage": "papy_babou",
+        "texte": "À la prochaine, mes petits loups !",
+        "ton": "joyeux",
+        "pause_apres_ms": 1000
+      },
+      {
+        "id": "sfx_013",
+        "personnage": "sfx",
+        "texte": "Warm outro music with soft oud melody fading out, Middle Eastern string warmth, gentle reverb, cozy and hopeful closing feel",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 15.0,
+        "mode": "insert"
+      }
+    ]
+  }
+}

@@ -44,7 +44,7 @@ papy-babou-podcast/
 
 ### Serial Production System
 - **Season Plans**: Generated via `planifier-saison`, stored as `saisons/saison_XX.json`
-- **Episode Types**: `ouverture` (15min/1600 words), `standard` (13min/1400), `mi-saison` (15/1600), `final` (18/1900), `bonus` (10/1000)
+- **Episode Types**: `ouverture` (15min/2800 words/165 voix/47 SFX), `standard` (13min/2800/165/47), `mi-saison` (15/2800/165/47), `final` (18/3200/185/55), `bonus` (10/1800/100/30)
 - **STRUCTURES_NARRATIVES**: Template dict in scripteur.py with previously-on, teasing, rituals per type
 - **Character Evolution**: arcs_personnages in season bible, tracked across episodes
 - **Dynamic Characters**: `config.ajouter_personnage()` + `config.personnages_valides()` (set-based)
@@ -371,6 +371,129 @@ Clear visual separation between single-episode and season production workflows:
 - `publisher.py` now imports `time` (for retry sleep) and `fichier_lock` from utils
 - `_mettre_a_jour_rss()` delegates to `_ecrire_rss()` under lock
 - `_upload_buzzsprout()` has retry loop — mock `time.sleep` in tests
+
+## Audit Episode System (Session 7)
+
+### Agents d'audit qualité pré-production
+5 agents spécialisés dans `.claude/agents/` pour l'audit qualité des scripts d'épisode. Source originale : branche `claude/episode-2-script-QbSiY`.
+
+Si les agents ne sont pas sur la branche courante, les récupérer avec :
+```bash
+git fetch origin claude/episode-2-script-QbSiY && git checkout origin/claude/episode-2-script-QbSiY -- papy-babou-podcast/.claude/agents/audit-episode.md papy-babou-podcast/.claude/agents/audit-sfx.md papy-babou-podcast/.claude/agents/audit-voix.md papy-babou-podcast/.claude/agents/audit-marc.md papy-babou-podcast/.claude/agents/audit-claire.md
+```
+
+**IMPORTANT** : Ces agents sont dans `papy-babou-podcast/.claude/agents/`, pas à la racine du repo. Pour que Claude Code les détecte comme `subagent_type`, il faut lancer Claude depuis `papy-babou-podcast/` (i.e. `cd papy-babou-podcast && claude`).
+
+### Orchestrateur : `audit-episode`
+Coordonne 4 audits spécialisés en 4 phases :
+
+| Phase | Agents | Mode |
+|-------|--------|------|
+| 1. Techniques | `@audit-sfx` (Thomas Lavigne) + `@audit-voix` (Isabelle Fontaine) | PARALLÈLE |
+| 2. Créatifs | `@audit-marc` (Marc Delacroix) + `@audit-claire` (Claire Moreau) | PARALLÈLE |
+| 3. Consolidation | Orchestrateur | Tableau croisé, convergences, plan d'action P0-P3 |
+| 4. Corrections | Orchestrateur | Application P0+P1 automatiques, P2/P3 pour décision humaine |
+
+### Les 4 auditeurs
+
+| Agent | Fichier | Rôle | Axes | Personas | Cible |
+|-------|---------|------|------|----------|-------|
+| **Thomas Lavigne** | `audit-sfx.md` | Sound designer | 10 règles conformité + B1-B5 créatif (couverture, densité, transitions, émotion, prompts) | — | 9/10 |
+| **Isabelle Fontaine** | `audit-voix.md` | Directrice vocale | 6 règles TTS + B1-B5 créatif (tons, rythme, naturalité enfants, arc émotionnel, dynamique) | — | 9/10 |
+| **Marc Delacroix** | `audit-marc.md` | Directeur créatif #1 France | 5 axes (immersion, rythme, émotion, éducatif, production IA) | Lina 7ans (30%), Noah 10ans (30%), Sophie parent catho (40%) | 9/10 |
+| **Claire Moreau** | `audit-claire.md` | Concurrente directe (podcast Tina) | 6 axes (accroche, pacing, authenticité, immersion, éducatif, viralité) | Timéo 9ans accro YouTube (50%), Camille parent non-pratiquante (50%) | 9/10 |
+
+### Seuil qualité
+- **9/10 minimum** sur TOUTES les dimensions clés
+- Un épisode à 9/10 = "l'enfant dit 'remets l'épisode', le parent recommande à ses amis"
+- Les 7 critères du 9/10 : réécoute, raconte l'histoire, parent recommande, son transporte, voix vivantes, 3 émotions minimum, on apprend quelque chose
+
+### Fichiers de sortie
+- Rapports individuels : `output/scripts/[EPISODE_ID]_audit_sfx.md`, `_audit_voix.md`, `_audit_marc.md`, `_audit_claire.md`
+- Rapport consolidé : `output/scripts/[EPISODE_ID]_audit_complet.md`
+
+### Verdicts
+- **`feu_vert`** : moyenne >= 9.0 ET audience >= 8.5 ET 0 axe < 8.0
+- **`ajustements_mineurs`** : moyenne >= 8.0 ET audience >= 7.5 ET 0 axe < 7.0
+- **`retravailler`** : moyenne < 8.0 OU un axe < 7.0 OU audience < 7.5
+
+## Prérequis de Scripting — Densité et Qualité (Session 9)
+
+### Cibles de densité (basées sur E02 — gold standard)
+Chaque épisode standard doit atteindre ces métriques de densité :
+
+| Métrique | Cible | Tolérance |
+|----------|-------|-----------|
+| Segments voix | ~165 | ±15 |
+| Segments SFX | ~47 | ±5 |
+| Mots dialogue | ~2800 | ±200 |
+| Segments totaux | ~210 | ±20 |
+| Mots/segment voix (moyenne) | ~17 | 10-25 |
+| Ratio overlay SFX | >=30% | — |
+| Ratio Papy | 55-70% | — |
+| Ratio enfants | 25-40% | — |
+| Tons distincts Papy | >=8 | — |
+| Tons distincts par enfant | >=5 | — |
+| Rythme non-normal | >=20% | — |
+| Tics de langage utilisés | >=6 total | — |
+| Interruptions enfants | >=5 | — |
+| Échanges Antoine↔Noémie | >=4 | — |
+
+### Règles SFX (40-55 par épisode)
+- **Overlays longs (15-25s)** pour chaque ambiance de lieu (salon, désert, palais, nuit...)
+- **Inserts courts (2-5s)** pour les moments ponctuels (tonnerre, harpe, cloche, tissu)
+- **Pas de trou >6 segments voix** sans SFX
+- **Cold open** : au moins 1 SFX dans les 15 premières secondes
+- **Transition salon↔récit** : toujours marquée par un SFX dédié
+- **Climax** : au moins 2-3 SFX superposés pour le moment le plus intense
+- **Intégration dialogue** : les personnages réagissent aux sons quand c'est pertinent
+
+### Structure segments voix
+- **Segments courts** : 10-25 mots en moyenne pour un rendu TTS naturel
+- **Max adulte** : 60 mots par segment
+- **Max enfant** : 40 mots par segment
+- **Interactions fréquentes** : enfants toutes les 60-90 secondes (~100-150 mots de Papy max)
+
+## Rédaction de Script — Bonnes Pratiques (Session 8)
+
+### Gestion des timeouts lors de la rédaction
+Les scripts d'épisode sont longs (20+ segments). La génération/édition d'un script complet en une seule passe provoque systématiquement des timeouts.
+
+**Stratégie anti-timeout pour la rédaction :**
+1. **Ne JAMAIS réécrire tout le script d'un coup** — toujours travailler segment par segment ou par petits groupes (3-5 segments max)
+2. **Préparer le texte avant l'outil Edit** — rédiger le contenu dans la réponse, puis faire un seul `Edit` ciblé
+3. **Découper les modifications en passes successives** :
+   - Passe 1 : corrections structurelles (personnages_presents, métadonnées)
+   - Passe 2 : réécriture des segments un par un
+4. **Pour les gros segments** (>15 lignes de dialogue) : les traiter individuellement
+5. **Valider après chaque modification** — ne pas attendre d'avoir tout fait pour vérifier
+
+### Gestion des timeouts lors des audits (`audit-episode`)
+Les agents d'audit (audit-sfx, audit-voix, audit-marc, audit-claire) sont lancés en parallèle et lisent chacun le script complet + la bible des personnages. Cela peut provoquer des timeouts sur les phases de consolidation.
+
+**Stratégie anti-timeout pour les audits :**
+1. **Phase 1 + 2 en parallèle** : Lancer les 4 agents en parallèle est OK (c'est le design voulu)
+2. **Si un agent timeout** : le relancer seul (pas besoin de relancer les 4)
+3. **Phase 3 (consolidation)** : Si elle timeout, découper :
+   - D'abord synthétiser les rapports techniques (SFX + voix)
+   - Puis synthétiser les rapports créatifs (Marc + Claire)
+   - Enfin fusionner les deux synthèses
+4. **Phase 4 (corrections)** : Appliquer les corrections P0/P1 segment par segment, pas en bloc
+5. **Sauvegarder les rapports individuels au fur et à mesure** — ne pas attendre la consolidation
+
+### Suppression du narrateur — Pattern récurrent
+Le narrateur (`narrateur`) n'est PAS un personnage et ne doit JAMAIS apparaître dans `personnages_presents`. C'est un artefact du LLM qui le confond avec papy_babou.
+
+**Règle** : Après chaque génération de script, vérifier `personnages_presents` et retirer `"narrateur"` s'il y est. Les segments attribués au narrateur doivent être réattribués à `papy_babou` (le vrai narrateur de l'histoire).
+
+### Réécriture de segments — Qualité 9/10
+Pour atteindre le niveau 9/10 exigé par les auditeurs :
+- **Naturalité** : Utiliser des interjections naturelles ("Oh", "Hé", "Dis"), des hésitations ("euh"), des questions rhétoriques
+- **Interaction** : Les enfants (Marc, Claire) doivent poser des questions, réagir, pas juste écouter
+- **Immersion sonore** : Les SFX doivent être intégrés dans le dialogue ("Tu entends ce bruit ?"), pas juste décoratifs
+- **Arc émotionnel** : Chaque segment a une émotion dominante — varier sur l'ensemble de l'épisode
+- **Rituels** : Respecter les rituels de début (chanson d'intro, "Installez-vous bien") et de fin ("À la semaine prochaine")
+- **Tons vocaux** : Varier les `ton` dans les répliques (curieux, émerveillé, mystérieux, tendre, solennel) — jamais le même ton 3 fois de suite
 
 ## Git Workflow
 - Branch: `claude/podcast-production-system-YkngW`

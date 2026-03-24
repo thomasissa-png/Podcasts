@@ -518,27 +518,37 @@ def liste_saisons() -> list[int]:
 FORMATS_EPISODES = {
     "ouverture": {
         "duree_cible_minutes": 15,
-        "mots_cible": 1600,
+        "mots_cible": 2800,
+        "segments_voix_cible": 165,
+        "sfx_cible": 47,
         "description": "Premier épisode de saison — présentation du thème et des enjeux",
     },
     "standard": {
         "duree_cible_minutes": 13,
-        "mots_cible": 1400,
+        "mots_cible": 2800,
+        "segments_voix_cible": 165,
+        "sfx_cible": 47,
         "description": "Épisode classique de la saison",
     },
     "mi-saison": {
         "duree_cible_minutes": 15,
-        "mots_cible": 1600,
+        "mots_cible": 2800,
+        "segments_voix_cible": 165,
+        "sfx_cible": 47,
         "description": "Épisode pivot — tournant dramatique ou récapitulatif",
     },
     "final": {
         "duree_cible_minutes": 18,
-        "mots_cible": 1900,
+        "mots_cible": 3200,
+        "segments_voix_cible": 185,
+        "sfx_cible": 55,
         "description": "Dernier épisode — conclusion de l'arc de saison",
     },
     "bonus": {
         "duree_cible_minutes": 10,
-        "mots_cible": 1000,
+        "mots_cible": 1800,
+        "segments_voix_cible": 100,
+        "sfx_cible": 30,
         "description": "Épisode bonus — Q&R, coulisses, ou récap",
     },
 }

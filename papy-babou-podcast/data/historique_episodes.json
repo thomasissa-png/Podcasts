@@ -1,0 +1,59 @@
+[
+  {
+    "episode_id": "S01E01",
+    "saison": 1,
+    "numero": 1,
+    "titre": "La création du monde — quand Dieu a tout inventé",
+    "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
+    "resume_court": "Papy raconte comment Dieu a créé le monde en six jours : la lumière, le ciel, la mer, les plantes, les étoiles, les animaux, et enfin l'homme et la femme. Chaque jour apporte une nouvelle merveille. Le septième jour, Dieu se repose et contemple son œuvre.",
+    "date_production": "2026-03-20T06:46:39.946384",
+    "score_review": 9.2,
+    "personnages_presents": ["antoine", "mamie_sonia", "noemie", "papy_babou"],
+    "moments_cles": [
+      "Le cold open : la voix de Dieu dans le néant et la lumière qui jaillit",
+      "Noémie qui demande 'c'est qui qui a fait les fleurs' dans le jardin de Papy",
+      "L'anecdote de Papy sur les étoiles vues depuis le toit à Dakar",
+      "Mamie Sonia qui raconte que chaque animal est une lettre de l'alphabet de Dieu",
+      "Noémie qui compare la première respiration d'Adam à la naissance de Lucas",
+      "Le récap où Antoine récite les 6 jours dans l'ordre"
+    ],
+    "questions_ouvertes": [],
+    "evolutions_personnages": "Noémie développe son émerveillement devant la Création et commence à faire des liens avec la naissance de Lucas. Antoine montre sa curiosité scientifique et sa capacité à retenir les faits dans l'ordre.",
+    "ambiance": "joyeux",
+    "type_episode": "ouverture",
+    "retours_humains": "",
+    "ratio_biblique": 0,
+    "ratio_enfants": 0,
+    "elements_fil_rouge": ""
+  },
+  {
+    "episode_id": "S01E02",
+    "saison": 1,
+    "numero": 2,
+    "titre": "Noé et le déluge — l'arche qui a sauvé le monde",
+    "morale": "Avoir le courage de faire ce qui est juste, même quand tout le monde se moque de nous. La persévérance est récompensée.",
+    "resume_court": "Papy raconte comment Dieu, triste de voir les hommes devenir méchants, a choisi Noé pour construire une immense arche. Tout le monde se moquait de lui, mais Noé a obéi. La pluie est tombée pendant quarante jours, puis l'eau s'est retirée. Une colombe a rapporté un rameau d'olivier, et l'arc-en-ciel est apparu comme promesse de Dieu.",
+    "date_production": "2026-03-21T14:30:00.000000",
+    "score_review": 9.0,
+    "personnages_presents": ["antoine", "mamie_sonia", "noemie", "papy_babou"],
+    "moments_cles": [
+      "La pluie battante dehors qui lance l'histoire — les enfants coincés à l'intérieur",
+      "Noémie qui veut savoir comment les girafes sont entrées dans l'arche",
+      "Antoine touché par le courage de Noé face aux moqueries — fait le lien avec l'école",
+      "Le silence puis la joie quand la pluie s'arrête enfin",
+      "Noémie qui court à la fenêtre chercher un vrai arc-en-ciel",
+      "Mamie Sonia qui taquine Papy sur ses exagérations"
+    ],
+    "questions_ouvertes": [
+      "Combien de temps Noé a-t-il mis à construire l'arche ?",
+      "Est-ce que tous les animaux se sont bien entendus dans l'arche ?"
+    ],
+    "evolutions_personnages": "Antoine est touché par le courage de Noé face aux moqueries et fait le lien avec une situation à l'école où on s'est moqué de lui. Mamie Sonia apparaît pour la première fois et apporte sa touche de tendresse et d'humour.",
+    "ambiance": "dramatique",
+    "type_episode": "standard",
+    "retours_humains": "",
+    "ratio_biblique": 0,
+    "ratio_enfants": 0,
+    "elements_fil_rouge": "Mamie Sonia apparaît pour la première fois. Antoine demande si le bébé aura peur de l'orage."
+  }
+]

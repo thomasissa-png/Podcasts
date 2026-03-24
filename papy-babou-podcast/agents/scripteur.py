@@ -29,7 +29,9 @@ STRUCTURE NARRATIVE :
 
 RÈGLES STRICTES :
 1. Le script doit faire environ {mots_cible} mots pour {duree_cible} minutes (rythme adapté aux enfants).
-2. Les enfants doivent intervenir au moins toutes les 90 secondes de narration (~150-180 mots).
+   Cible : ~165 segments voix + ~47 SFX = ~210 segments totaux.
+   Les segments voix doivent être COURTS (10-25 mots en moyenne) pour un rendu TTS naturel.
+2. Les enfants doivent intervenir au moins toutes les 60-90 secondes de narration (~100-150 mots).
 3. Alterner entre Antoine (questions logiques/action) et Noémie (questions émotionnelles).
 4. Utiliser les tics de langage de chaque personnage régulièrement.
 5. Expliquer les mots ou concepts difficiles avec des analogies simples.
@@ -45,7 +47,11 @@ RÈGLES STRICTES :
       effets ponctuels (tonnerre, porte qui claque, cri d'animal).
     - Place les bruitages aux moments clés : entrée des enfants, moments dramatiques,
       transitions de scène, et pour illustrer les éléments de l'histoire.
-    - Utilise 3 à 8 bruitages par épisode, pas plus (ne pas surcharger).
+    - Utilise environ 40 à 55 bruitages par épisode pour une immersion sonore complète.
+      Chaque lieu doit avoir sa signature sonore (overlay long). Chaque transition de scène
+      doit être marquée par un SFX. Le ratio overlay >= 30% est non négociable.
+    - Les SFX doivent être INTÉGRÉS dans le dialogue quand c'est pertinent
+      ("Tu entends ce bruit ?", "Écoute comme c'est profond...").
 11. AMBIANCE MUSICALE : choisis l'ambiance générale de l'épisode parmi :
     "joyeux", "dramatique", "calme", "mystere", "epique", "tendre", "humoristique", "solennel".
     Indique-la dans le champ "ambiance" de l'épisode.
@@ -580,11 +586,11 @@ class Scripteur:
 
         # max_tokens adaptatif selon le type d'épisode
         max_tokens_map = {
-            "ouverture": 10000,
-            "standard": 8192,
-            "mi-saison": 10000,
-            "final": 12000,
-            "bonus": 6144,
+            "ouverture": 16384,
+            "standard": 16384,
+            "mi-saison": 16384,
+            "final": 16384,
+            "bonus": 12288,
         }
         max_tokens = max_tokens_map.get(type_episode, 8192)
 
@@ -766,7 +772,7 @@ class Scripteur:
                         seg["mode"], seg["id"],
                     )
 
-        if sfx_count > 8:
-            logger.warning("Trop de bruitages : %d (recommandé 3-8).", sfx_count)
-        elif sfx_count < 1:
-            logger.warning("Aucun bruitage dans le script (recommandé 3-8).")
+        if sfx_count > 70:
+            logger.warning("Trop de bruitages : %d (recommandé 40-55).", sfx_count)
+        elif sfx_count < 30:
+            logger.warning("Pas assez de bruitages : %d (recommandé 40-55).", sfx_count)
