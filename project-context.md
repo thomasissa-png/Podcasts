@@ -17,11 +17,11 @@
 - **Promesse unique** : Le seul podcast ou vos enfants ne sont pas spectateurs — ils participent a l'aventure biblique avec Papy Babou, en posant des questions, en resolvant des enigmes, et en decouvrant des fun facts scientifiques. Un moment familial divertissant pour se cultiver et decouvrir les grandes histoires de la Bible, sans etre un cours de catechisme.
 - **Ton de marque** : Bienveillant et chaleureux, adapte aux enfants. Expert sur le fond biblique mais jamais moralisateur. Emerveillement et humour plutot que lecons. "On guide sans jargon, on rassure sans simplifier."
 - **3 mots** : Bienveillant, Aventures, Experience audio
-- **Concurrent principal** : Podcast "Les aventures de Tina" (histoires pour enfants, pas biblique), Podcast "Les voyages d'Amelia" (histoires pour enfants, pas biblique), Les Odyssees (France Inter — histoires historiques, pas biblique, reference qualite audio). Notre difference : seul podcast narratif immersif sur les histoires bibliques en francais, avec format interactif (questions des enfants, fun facts, running gags).
+- **Concurrent principal** : Podcast "Les aventures de Tina" (histoires pour enfants, pas biblique, excellents avis), Podcast "Les voyages d'Amelia" (histoires pour enfants, pas biblique, excellents avis). Benchmark qualite : Les Odyssees (France Inter — histoires historiques, pas biblique, reference production audio). Notre difference : seul podcast narratif immersif sur les histoires bibliques en francais, avec format interactif (questions des enfants, fun facts, running gags).
 
 ## Objectifs
 - **Objectif principal a 6 mois** : 3000 ecoutes par mois, saison 1 complete (10 episodes produits et publies), presence sur Apple Podcasts + Spotify + site web
-- **KPI North Star** : Nombre d'ecoutes mensuelles (3000/mois = seuil de visibilite pour les annonceurs podcast)
+- **KPI North Star** : Nombre d'ecoutes completes mensuelles (3000 ecoutes completes/mois = seuil de visibilite pour les annonceurs podcast). Une ecoute complete = episode ecoute jusqu'au bout.
 
 ## Stack technique
 - **Frontend** : Templates HTML/CSS/JS (Jinja2) servis par Flask — `public.html` (site public), `dashboard.html` (admin), `admin_login.html`
@@ -40,7 +40,7 @@
 ## Budget & Contraintes
 - **Budget infra mensuel** : Pas de limite stricte, optimisation intelligente. Couts principaux : API Claude (~$2-5/episode script), ElevenLabs (~$5-10/episode TTS+SFX), Replit hosting, Neon PostgreSQL (free tier), OpenAI DALL-E 3 (~$0.04/cover si pas de cover custom)
 - **Budget acquisition mensuel** : A definir (actuellement 0 — aucun reseau social, aucune base email)
-- **Timeline** : Le plus tot possible — S01E01 et S01E02 scripts valides, prets pour production audio
+- **Timeline** : Lancement apres production complete des 10 episodes de la saison 1. Distribution Apple Podcasts + Spotify une fois les 10 episodes prets.
 - **Contraintes specifiques** : Production audio longue (~30-45 min par episode sur Replit, sujet aux redeploys SIGTERM). Episodes imposes pour les 3 premieres saisons (10 histoires bibliques par saison, pas de generation libre). Regle absolue : 1 sujet biblique complet par episode, jamais de multi-part.
 
 ## Presence existante
