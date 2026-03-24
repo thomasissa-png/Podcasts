@@ -2201,3 +2201,106 @@ Compare `nb_caracteres` with the expected value from the local script. If it doe
 - **NEVER** call `launch-fresh` without `kill-productions` first — old auto-resume jobs may conflict
 - **NEVER** soft-delete an episode you want to reproduce — it archives everything including scripts
 - **NEVER** trust production output without verifying seg_003 first
+
+## Prompts de Production — Copier-coller pour nouvelle session
+
+### Prompt 1 : Écrire un nouveau script
+
+```
+Écris le script complet de l'épisode S01EXX "TITRE" (saison 1, épisode XX, type standard).
+
+AVANT D'ÉCRIRE, lis ces fichiers dans l'ordre :
+1. data/preferences_producteur.json — les 24 règles obligatoires
+2. data/personnages.json — la bible des personnages
+3. data/saisons/saison_01.json — le plan de saison (épisode XX pour le résumé, prétexte, teasing)
+4. scripts/episodes/S01E01_script.json — script de référence (9.2/10, 214 segments)
+5. scripts/episodes/S01E02_script.json — script de référence (9.0/10, 212 segments)
+
+CIBLES QUANTITATIVES (épisode standard 25 min) :
+- ~165 segments voix + ~40 SFX = ~205 segments total
+- ~2800 mots (segments voix uniquement)
+- Ratio : Papy 46-51%, Antoine ~23%, Noémie 21-25%, Mamie 5-6%
+- 12+ tons distincts, ~60% normal, ~15-20% rapide, ~12-15% lent
+- Max 60 mots/segment adulte, 40 mots/segment enfant
+
+STRUCTURE 5 ACTES :
+- Acte 1 Arrivée (~18 seg) : cold open SFX+enfant, previously-on épisode N-1, goûter thématique Mamie
+- Acte 2 Début récit (~35 seg) : transition naturelle, contexte biblique, fun facts
+- Acte 3 Cœur (~50 seg) : aventure principale, 3 fun facts, running gag, pics émotionnels
+- Acte 4 Dénouement (~25 seg) : résolution, morale naturelle (enfant reformule), parallèle vie réelle
+- Acte 5 Au revoir (~15 seg) : teasing E(XX+1) mystérieux, ritual complet (Antoine merci → Noémie merci Mamie goûter → Mamie au revoir poétique)
+
+RÈGLES AUDIO TTS : pas d'onomatopées, noms propres phonétiques, SFX en anglais concrets, nombres en lettres.
+
+Écris dans scripts/episodes/S01EXX_script.json puis copie vers S01EXX_script_valide.json.
+Vérifie les stats (segments, mots, ratios, tons) avec un script Python.
+```
+
+### Prompt 2 : Auditer un script avant production
+
+```
+Lance l'audit complet du script S01EXX avec @audit-episode :
+
+@audit-episode scripts/episodes/S01EXX_script.json
+
+CONTEXTE : Épisode XX de la saison 1. Lis aussi les scripts des épisodes précédents pour la cohérence sérielle :
+- scripts/episodes/S01E01_script.json (E01 La création, score 9.2/10)
+- scripts/episodes/S01E02_script.json (E02 Noé, score 9.0/10)
+- [ajouter les épisodes intermédiaires si existants]
+
+VÉRIFIE EN PARTICULIER :
+1. Cohérence avec les épisodes précédents (personnages, arcs, rituels)
+2. Ratios personnages respectés (Papy 46-51%, Antoine 23%, Noémie 21-25%, Mamie 5-6%)
+3. Teasing mystérieux vers l'épisode suivant
+4. Goûter thématique différent des épisodes précédents (E01=sablés étoiles, E02=chocolat chaud cannelle)
+5. Pas d'onomatopées, SFX en anglais concrets
+6. Previously-on correct de l'épisode N-1
+7. Min 3 fun facts, running gag, 3 pics émotionnels
+8. ~165 voix + ~40 SFX, ~2800 mots
+
+Seuil : 9/10 minimum par auditeur. Applique les corrections P0+P1 automatiquement.
+Si le score est < 9/10, itère (corrige et relance l'audit) jusqu'à atteindre le seuil.
+```
+
+### Prompt 3 : Lancer la production audio
+
+```
+Lance la production audio de S01EXX. Suis le protocole EXACT :
+
+1. KILL les anciennes productions :
+   curl -s -X POST -H "Authorization: Bearer allezpsg" "https://podcasts-toum92.replit.app/api/episode/S01EXX/kill-productions"
+
+2. LAUNCH FRESH avec le script dans le body (OBLIGATOIRE — ne jamais compter sur le filesystem serveur) :
+   python3 -c "
+   import json, subprocess
+   with open('papy-babou-podcast/scripts/episodes/S01EXX_script.json') as f:
+       script = json.load(f)
+   # Vérifier seg_003 AVANT envoi
+   for s in script['episode']['segments']:
+       if s.get('id') == 'seg_003':
+           print(f'seg_003: [{s[\"personnage\"]}] {len(s[\"texte\"])} chars: {s[\"texte\"]}')
+           break
+   body = json.dumps({'script': script})
+   r = subprocess.run(['curl', '-s', '-X', 'POST', '-H', 'Authorization: Bearer allezpsg',
+       '-H', 'Content-Type: application/json',
+       'https://podcasts-toum92.replit.app/api/episode/S01EXX/launch-fresh',
+       '-d', body], capture_output=True, text=True, timeout=30)
+   print(r.stdout)
+   "
+
+3. VÉRIFIER seg_003 après 90s (OBLIGATOIRE) :
+   Attendre 90s puis requête SQL via /api/claude/query :
+   SELECT segment_id, personnage, nb_caracteres FROM fichiers_audio
+   WHERE production_id=(SELECT id FROM productions WHERE episode_id='S01EXX' ORDER BY id DESC LIMIT 1)
+   AND segment_id='seg_003'
+   → Comparer nb_caracteres avec la valeur attendue. Si différent → kill + relancer.
+
+4. MONITORER jusqu'à completion (~30-45 min) :
+   Polling toutes les 60s sur /api/job-status/<job_id> et DB etape_courante.
+   Auto-chain : audio → SFX → montage.
+
+5. VÉRIFIER L'AUDIO FINAL après montage :
+   Ouvrir https://podcasts-toum92.replit.app/audio/episodes/S01EXX_..._192k.mp3?v=TIMESTAMP
+   Écouter les premières secondes pour confirmer le bon seg_003.
+   Si mauvais → kill + relancer (le fix purge 7 préfixes Object Storage empêche normalement ce problème).
+```
