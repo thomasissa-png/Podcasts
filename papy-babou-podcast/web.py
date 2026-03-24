@@ -4924,8 +4924,13 @@ def api_v2_list_montages(episode_id):
                 # Update the stale row in DB with V1 data
                 try:
                     _update_montage_from_v1(stale[0]["id"], v1_montage)
-                    # Refresh from DB
+                    # Refresh from DB — preserve V1 audio URLs for serving
                     montages = MontageRepo.lister(episode_id)
+                    # Inject V1 audio URLs into the updated row (lost during DB reload)
+                    for m in montages:
+                        if m.get("id") == stale[0]["id"]:
+                            m["_v1_audio_url_hq"] = v1_montage.get("_v1_audio_url_hq")
+                            m["_v1_audio_url_preview"] = v1_montage.get("_v1_audio_url_preview")
                 except Exception as e:
                     logger.warning("Impossible de mettre à jour montage V2 depuis V1: %s", e)
             else:
@@ -5110,11 +5115,26 @@ def api_v2_montage_audio(montage_id):
     key = "audio_path_hq" if quality == "hq" else "audio_path_preview"
     path = montage.get(key) or montage.get("audio_path_hq")
 
-    if not path or not Path(path).exists():
-        return jsonify({"error": "Fichier audio non trouvé"}), 404
+    # Try local file first
+    if path and Path(path).exists():
+        p = Path(path)
+        return send_from_directory(str(p.parent), p.name, mimetype="audio/mpeg")
 
-    p = Path(path)
-    return send_from_directory(str(p.parent), p.name, mimetype="audio/mpeg")
+    # Fallback: restore from Object Storage
+    os_key_field = "audio_os_key_hq" if quality == "hq" else "audio_os_key_preview"
+    os_key = montage.get(os_key_field) or montage.get("audio_os_key_hq")
+    if os_key and ps and ps.is_available():
+        try:
+            local_path = config.OUTPUT_DIR / "audio" / "episodes" / Path(os_key).name
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            if not local_path.exists():
+                ps.download_file(os_key, str(local_path))
+            if local_path.exists():
+                return send_from_directory(str(local_path.parent), local_path.name, mimetype="audio/mpeg")
+        except Exception as e:
+            logger.warning("Restore audio OS échoué pour montage %s: %s", montage_id, e)
+
+    return jsonify({"error": "Fichier audio non trouvé"}), 404
 
 
 @app.route("/api/v2/montage/<int:montage_id>/download")
@@ -5128,16 +5148,36 @@ def api_v2_montage_download(montage_id):
         return jsonify({"error": "Montage non trouvé"}), 404
 
     path = montage.get("audio_path_hq")
-    if not path or not Path(path).exists():
-        return jsonify({"error": "Fichier HD non trouvé"}), 404
 
-    p = Path(path)
-    return send_from_directory(
-        str(p.parent), p.name,
-        mimetype="audio/mpeg",
-        as_attachment=True,
-        download_name=f"{montage['episode_id']}_montage_{montage_id}_hq.mp3",
-    )
+    # Try local file first
+    if path and Path(path).exists():
+        p = Path(path)
+        return send_from_directory(
+            str(p.parent), p.name,
+            mimetype="audio/mpeg",
+            as_attachment=True,
+            download_name=f"{montage['episode_id']}_montage_{montage_id}_hq.mp3",
+        )
+
+    # Fallback: restore from Object Storage
+    os_key = montage.get("audio_os_key_hq")
+    if os_key and ps and ps.is_available():
+        try:
+            local_path = config.OUTPUT_DIR / "audio" / "episodes" / Path(os_key).name
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            if not local_path.exists():
+                ps.download_file(os_key, str(local_path))
+            if local_path.exists():
+                return send_from_directory(
+                    str(local_path.parent), local_path.name,
+                    mimetype="audio/mpeg",
+                    as_attachment=True,
+                    download_name=f"{montage['episode_id']}_montage_{montage_id}_hq.mp3",
+                )
+        except Exception as e:
+            logger.warning("Restore audio OS échoué pour download montage %s: %s", montage_id, e)
+
+    return jsonify({"error": "Fichier HD non trouvé"}), 404
 
 
 # ── V2 : Publication ─────────────────────────────────────────────────────────
