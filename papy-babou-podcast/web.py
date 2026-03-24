@@ -4978,21 +4978,44 @@ def api_v2_list_montages(episode_id):
 
     montages = MontageRepo.lister(episode_id)
 
-    # ── Fallback V1: si aucun montage V2 completed, chercher dans le pipeline V1 ──
-    has_completed_v2 = any(m.get("status") == "completed" for m in montages)
-    if not has_completed_v2:
-        v1_montage = _find_v1_montage(episode_id)
-        if v1_montage:
-            # Update any stale "processing" row, or inject a virtual montage
+    # ── Toujours chercher un montage V1 et l'inclure s'il est plus récent ──
+    # Bug fix: avant, si un vieux montage V2 "completed" existait (ex: 7min50),
+    # le fallback V1 était sauté et le montage récent (~30min) restait invisible.
+    v1_montage = _find_v1_montage(episode_id)
+    if v1_montage:
+        # Déterminer si le V1 est plus récent que le dernier V2 completed
+        newest_v2_completed = None
+        for m in montages:
+            if m.get("status") == "completed":
+                newest_v2_completed = m
+                break  # Déjà trié par created_at DESC
+
+        _v1_is_newer = False
+        if newest_v2_completed:
+            # Comparer les dates: V1 created_at (from rapport["debut"]) vs V2 created_at
+            v1_date = str(v1_montage.get("created_at", ""))
+            v2_date = str(newest_v2_completed.get("created_at", ""))
+            if v1_date and v2_date:
+                _v1_is_newer = v1_date > v2_date
+            # Aussi comparer les durées: si V1 a une durée très différente, c'est un montage différent
+            v1_duree = v1_montage.get("duree_secondes", 0)
+            v2_duree = newest_v2_completed.get("duree_secondes", 0)
+            if v1_duree and v2_duree and abs(v1_duree - v2_duree) > 60:
+                # Durées différentes de plus d'1 minute = montages différents
+                # Le plus long est probablement le bon (30min vs 7min)
+                _v1_is_newer = _v1_is_newer or (v1_duree > v2_duree)
+        else:
+            # Pas de V2 completed du tout — toujours inclure V1
+            _v1_is_newer = True
+
+        if _v1_is_newer:
+            # Mettre à jour les lignes V2 stale "processing", ou injecter le V1
             stale = [m for m in montages if m.get("status") == "processing"]
             if stale:
-                # Update the stale row in DB with V1 data
                 _v1_update_ok = False
                 try:
                     _update_montage_from_v1(stale[0]["id"], v1_montage)
-                    # Refresh from DB — preserve V1 audio URLs for serving
                     montages = MontageRepo.lister(episode_id)
-                    # Inject V1 audio URLs into the updated row (lost during DB reload)
                     for m in montages:
                         if m.get("id") == stale[0]["id"]:
                             m["_v1_audio_url_hq"] = v1_montage.get("_v1_audio_url_hq")
@@ -5000,13 +5023,12 @@ def api_v2_list_montages(episode_id):
                     _v1_update_ok = True
                 except Exception as e:
                     logger.warning("Impossible de mettre à jour montage V2 depuis V1: %s", e)
-                # If DB update failed, replace the stale row with virtual V1 montage
                 if not _v1_update_ok:
                     montages = [m for m in montages if m.get("status") != "processing"]
                     montages.append(v1_montage)
             else:
-                # No V2 row at all — inject virtual montage from V1
-                montages.append(v1_montage)
+                # Injecter le V1 comme montage virtuel (en tête de liste = le plus récent)
+                montages.insert(0, v1_montage)
 
     # ── Compute current script hash for mismatch detection ──
     _current_script_hash = None
@@ -5079,11 +5101,56 @@ def api_v2_list_montages(episode_id):
     return jsonify(montages)
 
 
-def _find_v1_montage(episode_id):
-    """Cherche un montage terminé dans le pipeline V1 (productions + fichiers_audio)."""
+def _find_v1_rapport_with_montage(episode_id):
+    """Cherche le rapport le plus récent qui contient un vrai montage (chemin_hq).
+
+    Parcourt les productions du plus récent au plus ancien. Contrairement à
+    charger_rapport() qui retourne la production la plus récente (même si c'est
+    un test échoué), cette fonction cherche spécifiquement une production avec
+    un montage terminé.
+    """
+    # 1. DB: chercher parmi toutes les productions avec rapport
+    if _DB_AVAILABLE:
+        try:
+            conn = database.get_conn()
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT rapport_json FROM productions "
+                    "WHERE episode_id = %s AND rapport_json IS NOT NULL "
+                    "ORDER BY started_at DESC LIMIT 10",
+                    (episode_id,),
+                )
+                for row in cur.fetchall():
+                    rapport = row.get("rapport_json") if isinstance(row, dict) else row[0]
+                    if not rapport or not isinstance(rapport, dict):
+                        continue
+                    montage = rapport.get("etapes", {}).get("montage", {})
+                    if montage.get("chemin_hq"):
+                        return rapport
+        except Exception as e:
+            logger.debug("DB lookup rapports avec montage pour %s: %s", episode_id, e)
+
+    # 2. Fallback: charger_rapport classique (fichier JSON local / Object Storage)
     try:
         import dashboard_data as dd
         rapport = dd.charger_rapport(episode_id)
+        if rapport and rapport.get("etapes", {}).get("montage", {}).get("chemin_hq"):
+            return rapport
+    except Exception as e:
+        logger.debug("Fallback charger_rapport pour %s: %s", episode_id, e)
+
+    return None
+
+
+def _find_v1_montage(episode_id):
+    """Cherche un montage terminé dans le pipeline V1 (productions + fichiers_audio).
+
+    Parcourt les rapports de production du plus récent au plus ancien pour trouver
+    celui qui contient un montage avec chemin_hq (pas juste le rapport le plus récent,
+    qui pourrait être un script-only ou un echec).
+    """
+    try:
+        rapport = _find_v1_rapport_with_montage(episode_id)
         if not rapport:
             return None
         montage_data = rapport.get("etapes", {}).get("montage", {})
