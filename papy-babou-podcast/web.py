@@ -2702,8 +2702,8 @@ def api_launch_fresh(episode_id):
     segments_dir = config.OUTPUT_DIR / "segments" / episode_id
     if segments_dir.exists():
         shutil.rmtree(segments_dir, ignore_errors=True)
-    # Purger les anciens MP3 locaux
-    episodes_dir = config.OUTPUT_DIR / "episodes"
+    # Purger les anciens MP3 locaux (config.OUTPUT_DIR = output/episodes/)
+    episodes_dir = config.OUTPUT_DIR
     if episodes_dir.exists():
         slug = episode_id.lower()
         for f in episodes_dir.glob(f"{episode_id}*"):
@@ -4912,7 +4912,7 @@ def _job_montage(episode_id, montage_id):
 
     script = json.loads(script_path.read_text(encoding="utf-8"))
     segments_dir = config.OUTPUT_DIR / "segments" / episode_id
-    sortie_dir = config.OUTPUT_DIR / "audio" / "episodes"
+    sortie_dir = config.OUTPUT_DIR
     sortie_dir.mkdir(parents=True, exist_ok=True)
 
     # Compute script hash for coherence tracking
@@ -4978,6 +4978,28 @@ def api_v2_list_montages(episode_id):
 
     montages = MontageRepo.lister(episode_id)
 
+    # ── Auto-cleanup: marquer les montages V2 "processing" sans audio et > 2h comme "failed" ──
+    from datetime import datetime, timezone, timedelta
+    _now = datetime.now(timezone.utc)
+    for m in montages:
+        if m.get("status") == "processing" and not m.get("audio_path_hq"):
+            created = m.get("created_at", "")
+            if isinstance(created, str) and created:
+                try:
+                    _created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                    if (_now - _created_dt) > timedelta(hours=2):
+                        try:
+                            MontageRepo.echouer(m["id"], "Stale processing montage (no audio after 2h)")
+                            m["status"] = "failed"
+                            m["error_message"] = "Stale processing montage"
+                        except Exception:
+                            pass
+                except (ValueError, TypeError):
+                    pass
+
+    # Filter out failed montages from display
+    montages = [m for m in montages if m.get("status") != "failed"]
+
     # ── Injecter TOUS les montages V1 (pipeline classique) ──
     # L'utilisateur veut voir toutes les versions pour choisir sa préférée.
     # Déduplique par chemin_hq pour éviter les doublons avec les montages V2.
@@ -5037,7 +5059,7 @@ def api_v2_list_montages(episode_id):
             os_key = m.get("audio_os_key_hq")
             if os_key and ps and ps.is_available():
                 try:
-                    local_path = config.OUTPUT_DIR / "audio" / "episodes" / Path(os_key).name
+                    local_path = config.OUTPUT_DIR / Path(os_key).name
                     if not local_path.exists():
                         local_path.parent.mkdir(parents=True, exist_ok=True)
                         ps.download_file(os_key, str(local_path))
@@ -5124,8 +5146,8 @@ def _build_v1_montage_dict(episode_id, rapport, montage_data):
         hq_name = Path(chemin_hq).name
         preview_name = Path(chemin_preview).name if chemin_preview else hq_name
 
-        # Check local filesystem (V1 audio route serves from output/episodes/)
-        local_hq = config.OUTPUT_DIR / "episodes" / hq_name
+        # Check local filesystem (V1 audio route serves from config.OUTPUT_DIR = output/episodes/)
+        local_hq = config.OUTPUT_DIR / hq_name
         if not local_hq.exists():
             os_data = montage_data.get("object_storage", {})
             os_key_hq = os_data.get("hq")
@@ -5220,7 +5242,7 @@ def api_v2_montage_audio(montage_id):
     os_key = montage.get(os_key_field) or montage.get("audio_os_key_hq")
     if os_key and ps and ps.is_available():
         try:
-            local_path = config.OUTPUT_DIR / "audio" / "episodes" / Path(os_key).name
+            local_path = config.OUTPUT_DIR / Path(os_key).name
             local_path.parent.mkdir(parents=True, exist_ok=True)
             if not local_path.exists():
                 ps.download_file(os_key, str(local_path))
@@ -5258,7 +5280,7 @@ def api_v2_montage_download(montage_id):
     os_key = montage.get("audio_os_key_hq")
     if os_key and ps and ps.is_available():
         try:
-            local_path = config.OUTPUT_DIR / "audio" / "episodes" / Path(os_key).name
+            local_path = config.OUTPUT_DIR / Path(os_key).name
             local_path.parent.mkdir(parents=True, exist_ok=True)
             if not local_path.exists():
                 ps.download_file(os_key, str(local_path))
@@ -5326,7 +5348,7 @@ def api_v2_publish(montage_id):
     ep = script.get("episode", {}) if script else {}
 
     # P1-3 : Mettre à jour le flux RSS
-    dst = config.OUTPUT_DIR / "audio" / "episodes" / f"{episode_id}_192k.mp3"
+    dst = config.OUTPUT_DIR / f"{episode_id}_192k.mp3"
     if dst.exists():
         try:
             from agents.publisher import Publisher
