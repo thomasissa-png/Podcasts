@@ -4818,6 +4818,12 @@ def api_v2_saisons_episodes():
     return jsonify(result)
 
 
+@app.route("/admin/v2")
+@app.route("/admin/v2/")
+def admin_v2():
+    return render_template("admin_v2.html")
+
+
 # ── Lancement ────────────────────────────────────────────────────────────────
 
 
