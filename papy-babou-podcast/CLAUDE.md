@@ -44,7 +44,7 @@ papy-babou-podcast/
 
 ### Serial Production System
 - **Season Plans**: Generated via `planifier-saison`, stored as `saisons/saison_XX.json`
-- **Episode Types**: `ouverture` (15min/1600 words), `standard` (13min/1400), `mi-saison` (15/1600), `final` (18/1900), `bonus` (10/1000)
+- **Episode Types**: `ouverture` (15min/2800 words/165 voix/47 SFX), `standard` (13min/2800/165/47), `mi-saison` (15/2800/165/47), `final` (18/3200/185/55), `bonus` (10/1800/100/30)
 - **STRUCTURES_NARRATIVES**: Template dict in scripteur.py with previously-on, teasing, rituals per type
 - **Character Evolution**: arcs_personnages in season bible, tracked across episodes
 - **Dynamic Characters**: `config.ajouter_personnage()` + `config.personnages_valides()` (set-based)
@@ -416,6 +416,43 @@ Coordonne 4 audits spécialisés en 4 phases :
 - **`feu_vert`** : moyenne >= 9.0 ET audience >= 8.5 ET 0 axe < 8.0
 - **`ajustements_mineurs`** : moyenne >= 8.0 ET audience >= 7.5 ET 0 axe < 7.0
 - **`retravailler`** : moyenne < 8.0 OU un axe < 7.0 OU audience < 7.5
+
+## Prérequis de Scripting — Densité et Qualité (Session 9)
+
+### Cibles de densité (basées sur E02 — gold standard)
+Chaque épisode standard doit atteindre ces métriques de densité :
+
+| Métrique | Cible | Tolérance |
+|----------|-------|-----------|
+| Segments voix | ~165 | ±15 |
+| Segments SFX | ~47 | ±5 |
+| Mots dialogue | ~2800 | ±200 |
+| Segments totaux | ~210 | ±20 |
+| Mots/segment voix (moyenne) | ~17 | 10-25 |
+| Ratio overlay SFX | >=30% | — |
+| Ratio Papy | 55-70% | — |
+| Ratio enfants | 25-40% | — |
+| Tons distincts Papy | >=8 | — |
+| Tons distincts par enfant | >=5 | — |
+| Rythme non-normal | >=20% | — |
+| Tics de langage utilisés | >=6 total | — |
+| Interruptions enfants | >=5 | — |
+| Échanges Antoine↔Noémie | >=4 | — |
+
+### Règles SFX (40-55 par épisode)
+- **Overlays longs (15-25s)** pour chaque ambiance de lieu (salon, désert, palais, nuit...)
+- **Inserts courts (2-5s)** pour les moments ponctuels (tonnerre, harpe, cloche, tissu)
+- **Pas de trou >6 segments voix** sans SFX
+- **Cold open** : au moins 1 SFX dans les 15 premières secondes
+- **Transition salon↔récit** : toujours marquée par un SFX dédié
+- **Climax** : au moins 2-3 SFX superposés pour le moment le plus intense
+- **Intégration dialogue** : les personnages réagissent aux sons quand c'est pertinent
+
+### Structure segments voix
+- **Segments courts** : 10-25 mots en moyenne pour un rendu TTS naturel
+- **Max adulte** : 60 mots par segment
+- **Max enfant** : 40 mots par segment
+- **Interactions fréquentes** : enfants toutes les 60-90 secondes (~100-150 mots de Papy max)
 
 ## Rédaction de Script — Bonnes Pratiques (Session 8)
 
