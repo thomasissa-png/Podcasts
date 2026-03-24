@@ -5006,27 +5006,29 @@ def api_v2_list_montages(episode_id):
 
     montages = MontageRepo.lister(episode_id)
 
-    # ── Auto-cleanup: marquer les montages V2 "processing" sans audio et > 2h comme "failed" ──
-    from datetime import datetime, timezone, timedelta
-    _now = datetime.now(timezone.utc)
+    # ── Filter out ghost montages: "processing" with no audio and no active job ──
+    # These are created when a montage job crashes before producing any audio.
+    # Instead of trying to update DB (which may fail), just filter them out of the response.
+    active_montages = []
     for m in montages:
         if m.get("status") == "processing" and not m.get("audio_path_hq"):
-            created = m.get("created_at", "")
-            if isinstance(created, str) and created:
+            # Check if there's an active job for this montage
+            _has_active_job = False
+            for jid, jdata in _jobs.items():
+                if jdata.get("status") == "running" and jdata.get("episode_id") == episode_id:
+                    _has_active_job = True
+                    break
+            if not _has_active_job:
+                # Ghost montage — no active job, no audio. Skip it.
                 try:
-                    _created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
-                    if (_now - _created_dt) > timedelta(hours=2):
-                        try:
-                            MontageRepo.echouer(m["id"], "Stale processing montage (no audio after 2h)")
-                            m["status"] = "failed"
-                            m["error_message"] = "Stale processing montage"
-                        except Exception:
-                            pass
-                except (ValueError, TypeError):
+                    MontageRepo.echouer(m["id"], "Ghost montage — no active job")
+                except Exception:
                     pass
-
-    # Filter out failed montages from display
-    montages = [m for m in montages if m.get("status") != "failed"]
+                continue
+        if m.get("status") == "failed" or m.get("status") == "error":
+            continue
+        active_montages.append(m)
+    montages = active_montages
 
     # ── Injecter TOUS les montages V1 (pipeline classique) ──
     # L'utilisateur veut voir toutes les versions pour choisir sa préférée.
@@ -5073,15 +5075,15 @@ def api_v2_list_montages(episode_id):
             _prod_hash and _current_script_hash and _prod_hash != _current_script_hash
         )
 
-        if m.get("audio_path_hq") and Path(m["audio_path_hq"]).exists():
-            m["audio_url_hq"] = f"/api/v2/montage/{m['id']}/audio?quality=hq"
-            m["audio_url_preview"] = f"/api/v2/montage/{m['id']}/audio?quality=preview"
-            m["download_url"] = f"/api/v2/montage/{m['id']}/download"
-        elif m.get("_v1_audio_url_hq"):
-            # V1 virtual montage — use direct audio route
+        if m.get("_v1_audio_url_hq"):
+            # V1 virtual montage — use direct /audio/episodes/ route (has stale-detection + Object Storage restore)
             m["audio_url_hq"] = m.pop("_v1_audio_url_hq")
             m["audio_url_preview"] = m.pop("_v1_audio_url_preview", None)
             m["download_url"] = m.get("audio_url_hq")
+        elif m.get("audio_path_hq") and Path(m["audio_path_hq"]).exists():
+            m["audio_url_hq"] = f"/api/v2/montage/{m['id']}/audio?quality=hq"
+            m["audio_url_preview"] = f"/api/v2/montage/{m['id']}/audio?quality=preview"
+            m["download_url"] = f"/api/v2/montage/{m['id']}/download"
         else:
             # Try Object Storage restore for V2 montages
             os_key = m.get("audio_os_key_hq")
@@ -5246,13 +5248,48 @@ def _update_montage_from_v1(montage_id, v1_data):
         ))
 
 
-@app.route("/api/v2/montage/<int:montage_id>/audio")
-def api_v2_montage_audio(montage_id):
-    """Sert le fichier audio d'un montage."""
-    if not _DB_AVAILABLE or not MontageRepo:
-        return jsonify({"error": "DB non disponible"}), 503
+def _resolve_montage(montage_id):
+    """Resolve a montage by ID — supports both V2 DB IDs (int) and V1 virtual IDs (v1_xxx).
 
-    montage = MontageRepo.charger(montage_id)
+    For V1 IDs: searches all episodes' V1 montages to find the matching one.
+    For V2 IDs: loads from MontageRepo.
+    Returns montage dict or None.
+    """
+    montage_id_str = str(montage_id)
+
+    # V1 virtual montage (e.g. "v1_fa0f0e1c")
+    if montage_id_str.startswith("v1_"):
+        # Search all episodes' V1 montages
+        if _DB_AVAILABLE:
+            try:
+                from database import get_cursor
+                with get_cursor(commit=False) as cur:
+                    cur.execute(
+                        "SELECT DISTINCT episode_id FROM productions "
+                        "WHERE rapport_json IS NOT NULL ORDER BY started_at DESC LIMIT 50"
+                    )
+                    for row in cur.fetchall():
+                        eid = row[0] if isinstance(row, (list, tuple)) else row.get("episode_id")
+                        for vm in _find_all_v1_montages(eid):
+                            if vm.get("id") == montage_id_str:
+                                return vm
+            except Exception as e:
+                logger.debug("V1 montage lookup failed: %s", e)
+        return None
+
+    # V2 DB montage (integer ID)
+    if not _DB_AVAILABLE or not MontageRepo:
+        return None
+    try:
+        return MontageRepo.charger(int(montage_id_str))
+    except (ValueError, TypeError):
+        return None
+
+
+@app.route("/api/v2/montage/<montage_id>/audio")
+def api_v2_montage_audio(montage_id):
+    """Sert le fichier audio d'un montage (V2 DB ou V1 virtuel)."""
+    montage = _resolve_montage(montage_id)
     if not montage:
         return jsonify({"error": "Montage non trouvé"}), 404
 
@@ -5282,13 +5319,10 @@ def api_v2_montage_audio(montage_id):
     return jsonify({"error": "Fichier audio non trouvé"}), 404
 
 
-@app.route("/api/v2/montage/<int:montage_id>/download")
+@app.route("/api/v2/montage/<montage_id>/download")
 def api_v2_montage_download(montage_id):
     """Télécharge le montage en qualité HD."""
-    if not _DB_AVAILABLE or not MontageRepo:
-        return jsonify({"error": "DB non disponible"}), 503
-
-    montage = MontageRepo.charger(montage_id)
+    montage = _resolve_montage(montage_id)
     if not montage:
         return jsonify({"error": "Montage non trouvé"}), 404
 
@@ -5328,11 +5362,15 @@ def api_v2_montage_download(montage_id):
 # ── V2 : Publication ─────────────────────────────────────────────────────────
 
 
-@app.route("/api/v2/montage/<int:montage_id>/publish", methods=["POST"])
+@app.route("/api/v2/montage/<montage_id>/publish", methods=["POST"])
 def api_v2_publish(montage_id):
     """Publie un montage (le rend écoutable sur le front public)."""
     if not _DB_AVAILABLE or not MontageRepo:
         return jsonify({"error": "DB non disponible"}), 503
+    try:
+        montage_id = int(montage_id)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Publication V1 non supportée — utilisez publish-v1"}), 400
 
     montage = MontageRepo.charger(montage_id)
     if not montage:
@@ -5494,11 +5532,15 @@ def api_v2_publish_v1(episode_id):
     return jsonify({"ok": True, "episode_id": episode_id, "audio_path": str(dst)})
 
 
-@app.route("/api/v2/montage/<int:montage_id>/depublish", methods=["POST"])
+@app.route("/api/v2/montage/<montage_id>/depublish", methods=["POST"])
 def api_v2_depublish(montage_id):
     """Depublie un montage."""
     if not _DB_AVAILABLE or not MontageRepo:
         return jsonify({"error": "DB non disponible"}), 503
+    try:
+        montage_id = int(montage_id)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Depublication V1 non supportée"}), 400
 
     montage = MontageRepo.charger(montage_id)
     if not montage:
