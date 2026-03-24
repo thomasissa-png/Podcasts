@@ -319,10 +319,10 @@ _JOB_TTL_SECONDS = 3600  # Supprimer les jobs termines apres 1 heure
 
 # Timeouts par type de job (configurables via env, minimum 300s = 5 min)
 _TIMEOUT_MIN = 300  # Sécurité: empêcher les timeouts absurdement bas (ex: env var à "2")
-_TIMEOUT_PRODUIRE = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_PRODUIRE", "3600")))          # 1h
+_TIMEOUT_PRODUIRE = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_PRODUIRE", "7200")))          # 2h
 _TIMEOUT_PLANIFIER = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_PLANIFIER", "1800")))        # 30 min
 _TIMEOUT_PRODUIRE_SAISON = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_PRODUIRE_SAISON", "7200")))  # 2h
-_TIMEOUT_REPRENDRE = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_REPRENDRE", "3600")))        # 1h
+_TIMEOUT_REPRENDRE = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_REPRENDRE", "7200")))        # 2h
 _TIMEOUT_BATCH = max(_TIMEOUT_MIN, int(os.getenv("TIMEOUT_BATCH", "7200")))                # 2h
 
 # Avertir si un timeout env var était trop bas (cause fréquente de "timed out after 2 seconds")

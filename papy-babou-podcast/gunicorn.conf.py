@@ -38,7 +38,7 @@ threads = int(os.getenv("GUNICORN_THREADS", "8"))
 # Timeout élevé : les productions longues tournent en subprocess (via _run_cli),
 # mais le thread qui fait proc.communicate() bloque pendant la durée du timeout
 # du subprocess (jusqu'à 30min). Le worker ne doit pas être tué pendant ce temps.
-timeout = int(os.getenv("GUNICORN_TIMEOUT", "3900"))  # 65 min (doit être > _TIMEOUT_PRODUIRE + marge)
+timeout = int(os.getenv("GUNICORN_TIMEOUT", "7500"))  # 2h05 (doit être > _TIMEOUT_PRODUIRE + marge)
 
 # Graceful timeout pour laisser les subprocesses finir proprement.
 graceful_timeout = 60
