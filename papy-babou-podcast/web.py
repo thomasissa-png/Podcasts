@@ -4124,11 +4124,16 @@ def api_v2_push_script(episode_id):
         return jsonify({"error": "Script sans segments"}), 400
 
     # Sauvegarder le script sur le filesystem
+    # IMPORTANT: pipeline expects _valide.json (NOT _script_valide.json)
     script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
-    valide_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+    valide_path = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
     config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+    script_text = json.dumps(script, ensure_ascii=False, indent=2)
     for p in (script_path, valide_path):
-        p.write_text(json.dumps(script, ensure_ascii=False, indent=2), encoding="utf-8")
+        p.write_text(script_text, encoding="utf-8")
+    # Also write _script_valide.json for backward compat (CLAUDE.md sync rule)
+    compat_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+    compat_path.write_text(script_text, encoding="utf-8")
 
     # Upload Object Storage
     if ps and ps.is_available():
@@ -4171,12 +4176,53 @@ def api_v2_push_script(episode_id):
 
 @app.route("/api/v2/episode/<episode_id>/script")
 def api_v2_get_script(episode_id):
-    """Retourne le script avec stats."""
-    script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
-    if not script_path.exists():
-        return jsonify({"error": "Script non trouvé"}), 404
+    """Retourne le script avec stats.
 
-    script = json.loads(script_path.read_text(encoding="utf-8"))
+    Priority: filesystem -> DB (ScriptRepo) -> Object Storage -> 404.
+    """
+    script = None
+    script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+
+    # 1. Try filesystem
+    if script_path.exists():
+        try:
+            script = json.loads(script_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning("Erreur lecture script %s: %s", episode_id, e)
+
+    # 2. Fallback: DB (charger_valide returns the script dict directly, or {})
+    if script is None and _DB_AVAILABLE:
+        try:
+            from db_models import ScriptRepo
+            db_script = ScriptRepo.charger_valide(episode_id)
+            if not db_script or not db_script.get("episode"):
+                db_script = ScriptRepo.charger_derniere_version(episode_id)
+            if db_script and db_script.get("episode"):
+                script = db_script
+                # Restore to filesystem for next time
+                try:
+                    config.SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+                    script_path.write_text(
+                        json.dumps(script, ensure_ascii=False, indent=2),
+                        encoding="utf-8",
+                    )
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.warning("Erreur lecture script DB %s: %s", episode_id, e)
+
+    # 3. Fallback: Object Storage
+    if script is None:
+        try:
+            if ps and ps.is_available():
+                restored = ps.restore_script(episode_id, config.SCRIPTS_DIR)
+                if restored and script_path.exists():
+                    script = json.loads(script_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning("Erreur restore script OS %s: %s", episode_id, e)
+
+    if script is None:
+        return jsonify({"error": "Script non trouvé"}), 404
     segments = script.get("episode", {}).get("segments", [])
     voix = [s for s in segments if s.get("personnage") != "sfx"]
     sfx = [s for s in segments if s.get("personnage") == "sfx"]
@@ -4388,16 +4434,37 @@ def api_v2_segments(episode_id):
     if _DB_AVAILABLE and SegmentAudioRepo:
         try:
             segments = SegmentAudioRepo.lister(episode_id, segment_type=seg_type, status=status)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("SegmentAudioRepo.lister(%s) failed: %s", episode_id, e)
 
     # 2. Fallback: read from script JSON (covers pre-validation state)
     if not segments:
+        script = None
         script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
-        if not script_path.exists():
+
+        # 2a. Try filesystem
+        if script_path.exists():
+            try:
+                script = json.loads(script_path.read_text(encoding="utf-8"))
+            except Exception as e:
+                logger.warning("Script JSON read failed for %s: %s", episode_id, e)
+
+        # 2b. Fallback to DB script (charger_valide returns dict directly)
+        if script is None and _DB_AVAILABLE:
+            try:
+                from db_models import ScriptRepo
+                db_script = ScriptRepo.charger_valide(episode_id)
+                if not db_script or not db_script.get("episode"):
+                    db_script = ScriptRepo.charger_derniere_version(episode_id)
+                if db_script and db_script.get("episode"):
+                    script = db_script
+            except Exception as e:
+                logger.warning("ScriptRepo fallback for segments %s: %s", episode_id, e)
+
+        if script is None:
             return jsonify([])
+
         try:
-            script = json.loads(script_path.read_text(encoding="utf-8"))
             raw_segs = script.get("episode", {}).get("segments", [])
             for s in raw_segs:
                 seg_id = s.get("id", "")
@@ -4420,7 +4487,8 @@ def api_v2_segments(episode_id):
                     "duree_ms": s.get("duree_ms") or s.get("duree_secondes", 0) * 1000,
                     "source": "script_json",
                 })
-        except Exception:
+        except Exception as e:
+            logger.warning("Script segment parsing failed for %s: %s", episode_id, e)
             return jsonify([])
         return jsonify(segments)
 
