@@ -4885,26 +4885,160 @@ def _job_montage(episode_id, montage_id):
 
 @app.route("/api/v2/episode/<episode_id>/montages")
 def api_v2_list_montages(episode_id):
-    """Liste les montages d'un épisode."""
+    """Liste les montages d'un épisode. Fallback sur pipeline V1 si aucun montage V2 complet."""
     if not _DB_AVAILABLE or not MontageRepo:
         return jsonify({"error": "DB non disponible"}), 503
 
     montages = MontageRepo.lister(episode_id)
+
+    # ── Fallback V1: si aucun montage V2 completed, chercher dans le pipeline V1 ──
+    has_completed_v2 = any(m.get("status") == "completed" for m in montages)
+    if not has_completed_v2:
+        v1_montage = _find_v1_montage(episode_id)
+        if v1_montage:
+            # Update any stale "processing" row, or inject a virtual montage
+            stale = [m for m in montages if m.get("status") == "processing"]
+            if stale:
+                # Update the stale row in DB with V1 data
+                try:
+                    _update_montage_from_v1(stale[0]["id"], v1_montage)
+                    # Refresh from DB
+                    montages = MontageRepo.lister(episode_id)
+                except Exception as e:
+                    logger.warning("Impossible de mettre à jour montage V2 depuis V1: %s", e)
+            else:
+                # No V2 row at all — inject virtual montage from V1
+                montages.append(v1_montage)
+
     for m in montages:
         if m.get("audio_path_hq") and Path(m["audio_path_hq"]).exists():
             m["audio_url_hq"] = f"/api/v2/montage/{m['id']}/audio?quality=hq"
             m["audio_url_preview"] = f"/api/v2/montage/{m['id']}/audio?quality=preview"
             m["download_url"] = f"/api/v2/montage/{m['id']}/download"
+        elif m.get("_v1_audio_url_hq"):
+            # V1 virtual montage — use direct audio route
+            m["audio_url_hq"] = m.pop("_v1_audio_url_hq")
+            m["audio_url_preview"] = m.pop("_v1_audio_url_preview", None)
+            m["download_url"] = m.get("audio_url_hq")
         else:
-            m["audio_url_hq"] = None
-            m["audio_url_preview"] = None
-            m["download_url"] = None
+            # Try Object Storage restore for V2 montages
+            os_key = m.get("audio_os_key_hq")
+            if os_key and ps and ps.is_available():
+                try:
+                    local_path = config.OUTPUT_DIR / "audio" / "episodes" / Path(os_key).name
+                    if not local_path.exists():
+                        local_path.parent.mkdir(parents=True, exist_ok=True)
+                        ps.download_file(os_key, str(local_path))
+                    if local_path.exists():
+                        m["audio_path_hq"] = str(local_path)
+                        m["audio_url_hq"] = f"/api/v2/montage/{m['id']}/audio?quality=hq"
+                        m["audio_url_preview"] = f"/api/v2/montage/{m['id']}/audio?quality=preview"
+                        m["download_url"] = f"/api/v2/montage/{m['id']}/download"
+                except Exception as e:
+                    logger.warning("Restore audio OS échoué pour montage %s: %s", m.get("id"), e)
+            if "audio_url_hq" not in m or m["audio_url_hq"] is None:
+                m["audio_url_hq"] = None
+                m["audio_url_preview"] = None
+                m["download_url"] = None
         if m.get("created_at"):
             m["created_at"] = m["created_at"].isoformat() if hasattr(m["created_at"], "isoformat") else str(m["created_at"])
         if m.get("chapitres_json"):
             m["chapitres_json"] = m["chapitres_json"] if isinstance(m["chapitres_json"], list) else []
 
     return jsonify(montages)
+
+
+def _find_v1_montage(episode_id):
+    """Cherche un montage terminé dans le pipeline V1 (productions + fichiers_audio)."""
+    try:
+        import dashboard_data as dd
+        rapport = dd.charger_rapport(episode_id)
+        if not rapport:
+            return None
+        montage_data = rapport.get("etapes", {}).get("montage", {})
+        chemin_hq = montage_data.get("chemin_hq")
+        chemin_preview = montage_data.get("chemin_preview")
+        if not chemin_hq:
+            return None
+
+        # Try to find audio locally or via V1 audio route
+        hq_name = Path(chemin_hq).name
+        preview_name = Path(chemin_preview).name if chemin_preview else hq_name
+
+        # Check local filesystem (V1 audio route serves from output/episodes/)
+        local_hq = config.OUTPUT_DIR / "episodes" / hq_name
+        if not local_hq.exists():
+            # Try Object Storage restore via V1 keys
+            os_data = montage_data.get("object_storage", {})
+            os_key_hq = os_data.get("hq")
+            if os_key_hq and ps and ps.is_available():
+                try:
+                    local_hq.parent.mkdir(parents=True, exist_ok=True)
+                    ps.download_file(os_key_hq, str(local_hq))
+                except Exception:
+                    pass
+
+        duree = montage_data.get("duree_secondes", 0)
+        taille = montage_data.get("taille_mb", 0) * 1024 * 1024 if montage_data.get("taille_mb") else 0
+        if not taille and local_hq.exists():
+            taille = local_hq.stat().st_size
+        chapitres = montage_data.get("chapitres", [])
+
+        return {
+            "id": "v1",
+            "episode_id": episode_id,
+            "status": "completed",
+            "is_published": False,
+            "duree_secondes": duree,
+            "taille_bytes": int(taille),
+            "nb_segments": None,
+            "chapitres_json": chapitres,
+            "audio_path_hq": str(local_hq) if local_hq.exists() else None,
+            "audio_path_preview": None,
+            "audio_os_key_hq": montage_data.get("object_storage", {}).get("hq"),
+            "audio_os_key_preview": montage_data.get("object_storage", {}).get("preview"),
+            "created_at": rapport.get("debut", ""),
+            "error_message": None,
+            "_v1_audio_url_hq": f"/audio/episodes/{hq_name}",
+            "_v1_audio_url_preview": f"/audio/episodes/{preview_name}",
+        }
+    except Exception as e:
+        logger.warning("Erreur recherche montage V1 pour %s: %s", episode_id, e)
+        return None
+
+
+def _update_montage_from_v1(montage_id, v1_data):
+    """Met à jour une ligne montage V2 stale avec les données du pipeline V1."""
+    conn = database.get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE montages SET
+                    status = 'completed',
+                    audio_path_hq = %s,
+                    audio_path_preview = %s,
+                    duree_secondes = %s,
+                    taille_bytes = %s,
+                    chapitres_json = %s::jsonb,
+                    audio_os_key_hq = %s,
+                    audio_os_key_preview = %s
+                WHERE id = %s
+            """, (
+                v1_data.get("audio_path_hq"),
+                v1_data.get("audio_path_preview"),
+                v1_data.get("duree_secondes"),
+                v1_data.get("taille_bytes"),
+                json.dumps(v1_data.get("chapitres_json", [])),
+                v1_data.get("audio_os_key_hq"),
+                v1_data.get("audio_os_key_preview"),
+                montage_id,
+            ))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        database.release_conn(conn)
 
 
 @app.route("/api/v2/montage/<int:montage_id>/audio")
