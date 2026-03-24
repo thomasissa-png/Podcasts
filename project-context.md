@@ -70,6 +70,7 @@ Niveau technique de l'utilisateur : technique (gere le code, les API, le deploie
 | orchestrator | 2026-03-22 | docs/reviews/audit-59-prompts.md, docs/orchestration-plan.md | Audit des 59 prompts Gradient Agents (contexte framework, pas podcast) | Installation du framework Gradient Agents |
 | @design + @ux + @copywriter | 2026-03-22 | templates/public.html | 22 fixes UX/design/copy sur le site public (score 7.5/10) | Audit 3-agents du site public |
 | orchestrator (@design + @ux) | 2026-03-24 | templates/admin_v2.html, docs/reviews/admin-v2-mobile-audit.md | 16 fixes mobile (4 P0 + 12 P1), score 5.4 -> 8.3/10 | Audit UX+Design back-office V2 focus mobile : hamburger nav, touch targets 44px, card layout mobile, segment actions full-width |
+| @reviewer | 2026-03-24 | docs/reviews/cross-review-montage-workflow.md | NO-GO publication : 2 BLOQUANTS (chemin copie audio errone dans publish V1+V2), 3 MAJEURS (depublish sans suppression fichier, IDs V1 instables, publish-v1 sans RSS/historique), 3 HAUTS (path traversal, depublish V1 impossible, publish V1 sans flag DB). Score 4.5/10. | Revue croisee du workflow montages → publication → homepage. Bugs de chemin filesystem decouverts : les 2 endpoints publish copient vers output/episodes/audio/episodes/ au lieu de output/episodes/ |
 
 ## Performance des agents
 | Agent | Date | Critere 1 (Pertinence) | Critere 2 (Completude) | Critere 3 (Coherence) | Critere 4 (Actionnable) | Critere 5 (Format) | Moyenne |
