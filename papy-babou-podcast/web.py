@@ -1063,7 +1063,7 @@ def api_storage_status():
 @app.route("/")
 def public_index():
     """Page publique — Site vitrine du podcast."""
-    return render_template("public.html")
+    return render_template("public.html", umami_id=os.environ.get("UMAMI_WEBSITE_ID", ""))
 
 
 @app.route("/admin")
