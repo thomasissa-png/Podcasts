@@ -2556,6 +2556,37 @@ Après chaque projet terminé (ou phase majeure), l'orchestrateur DOIT mettre à
 
 **Pourquoi** : sans cette mémoire, chaque projet repart de zéro. Les patterns qui marchent ne sont pas capitalisés. Les erreurs sont répétées. Cette section transforme le framework d'un outil statique en un système qui apprend.
 
+## Segment Namespacing & Reviewer Audit (Session 23b)
+
+### Segment Namespacing — production_run_id
+Each production run now isolates its audio segments in a subdirectory `{episode_id}/{production_run_id}/` to prevent cross-contamination between successive productions of the same episode.
+
+- **`production_run_id`** format: `prod_YYYYMMDD_HHMMSS` — generated at pipeline start, persisted in checkpoint
+- **Segment paths**: `config.SEGMENTS_DIR / episode_id / production_run_id / seg_XXX.mp3`
+- **Object Storage keys**: `segments/{episode_id}/{production_run_id}/seg_XXX.mp3`
+- **Legacy fallback**: `main.py` tries to restore segments from old format (without production_run_id) and moves them to namespaced dir
+
+### When modifying web.py (Session 23b)
+- ALWAYS use `config.SEGMENTS_DIR` for segment paths — NEVER `config.OUTPUT_DIR / "segments"` (BUG caught by reviewer)
+- `ps.upload_file(storage_key, local_path)` — first arg is the Object Storage key, second is the local file path (BUG: was inverted at 3 locations)
+- V2 admin routes (`generate-audio`, `montage/run`, `regenerate-segment`) must use `config.SEGMENTS_DIR` consistently with `main.py`
+
+### @reviewer Cross-Review Results
+- Full report: `docs/reviews/cross-review-segment-namespacing.md`
+- Score: 6.5/10 → ~8.5/10 after bug fixes
+- 3 BLOQUANT/MAJEUR bugs found and fixed in `web.py`
+- GO for production via `launch-fresh` (main.py 9/10)
+
+### Remaining items for next session
+1. **0 tests for `production_run_id`** — need TestProductionRunIdGeneration, TestCheckpointPersistence, TestLegacyFallback, TestSegmentsNamespacedDir, TestUploadSegmentsNamespaced
+2. **13 pre-existing test failures** — not regressions from this session, but should be investigated
+3. **No garbage collection** for old `prod_YYYYMMDD/` directories after successful production
+4. **S01E01 & S01E02** ready for audio production via web dashboard (scripts validated, covers in place)
+
+### Git Workflow (Session 23b)
+- Branch: `claude/install-gradient-agents-23sK6`
+- Push: `git push -u origin claude/install-gradient-agents-23sK6`
+
 ## Journal de setup
 
 L'historique complet des sessions de setup est dans `CHANGELOG.md` à la racine. Consulter ce fichier pour les décisions de conception passées et les modifications apportées au framework.
