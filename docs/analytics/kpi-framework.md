@@ -118,6 +118,72 @@ Recommandation : mettre en place GA4 sur le site avant la distribution sur les p
 
 ---
 
+---
+
+## 3. KPIs par feature
+
+### 3.1 Mapping feature → KPI de succès
+
+| Story | KPI de succès | Mesurable via | Seuil |
+|-------|--------------|---------------|-------|
+| **E1-S1** Chemins audio publish | Taux de 404 sur `/audio/episodes/*.mp3` après publication | Logs serveur / GA4 | 0 erreur en prod |
+| **E1-S2** Arguments upload_file | % de segments restaurés avec succès après redeploy | Logs `restore_segments()` | ≥ 95% des reprise sans régénération |
+| **E1-S3** SEGMENTS_DIR routes V2 | % de jobs montage terminant sans `FileNotFoundError` | DB — `status='montage_done'` vs `'failed'` | ≥ 90% des jobs |
+| **E1-S4** Audit E03+E04 | Score @audit-episode ≥ 9.0/10 | Rapport audit | 4/4 auditeurs ≥ 9/10 |
+| **E1-S5** Audio E01 | Durée audio 28-32 min + seg_003 vérifié | DB `fichiers_audio.duree_secondes` | 1680-1920 s |
+| **E1-S6** Scripts E05-E10 | 6 scripts ≥ 9/10 avec checkpoints `waiting_script` | Dashboard + checkpoint files | 6/6 avant lancement audio |
+| **E2-S1** GA4 | Event `episode_complete` reçu dès premier épisode en ligne | GA4 Realtime | > 0 event dans 24h post-lancement |
+| **E2-S2** Apple Podcasts | Abonnés Apple dans les 30 jours post-soumission | Apple Podcasts Connect | [HYPOTHÈSE : ≥ 50 abonnés J+30] |
+| **E2-S3** Spotify | Écoutes Spotify dans les 30 jours | Spotify for Podcasters | [HYPOTHÈSE : ≥ 30 écoutes J+30] |
+| **E2-S4** Covers E03-E10 | Episodes avec cover visibles sur homepage (badge "À venir") | Site public | 10/10 épisodes visibles |
+| **E3-S1** Lecteur mobile | Taux de complétion mobile vs desktop (proxy qualité UX mobile) | GA4 — dimension `device_category` | Écart < 5 points entre mobile et desktop |
+| **E3-S2** Transcript | Taux d'ouverture modal → clic "Lire le texte" | GA4 — event `transcript_open` | [HYPOTHÈSE : ≥ 8% des vues modal] |
+| **E4-S1** Dashboard amélioration | Temps moyen pour identifier un épisode bloqué | Métrique interne (observationnelle) | < 30s pour diagnostiquer un épisode |
+| **E4-S2** Rapport production | Taux de réutilisation des corrections → préférences producteur | Nombre d'entrées `preferences_producteur.json` | Croissance ≥ 1 règle/2 épisodes |
+
+---
+
+### 3.2 Impact North Star — features P0/P1
+
+**North Star : 3 000 écoutes complètes/mois**
+
+| Feature | Impact sur la North Star | Chemin de causalité |
+|---------|--------------------------|---------------------|
+| **E1-S1/S2/S3** (bugs P0) | Déblocant absolu | Sans ces corrections : 0 épisode publiable → 0 écoute. Chaque jour de retard = 0 écoute possible. |
+| **E2-S1 GA4** (P1) | Mesure du North Star | Sans GA4, les 3 000 écoutes ne sont pas comptabilisées — l'objectif est atteint mais invisible. Instrumenter avant le lancement. |
+| **E1-S6 Scripts E05-E10** (P1) | Volume de catalogue | Apple Podcasts et Spotify valorisent les podcasts avec ≥ 5 épisodes au lancement. 10 épisodes = crédibilité série. [HYPOTHÈSE : +60% de conversions abonnement vs lancement avec 1-2 épisodes] |
+| **E2-S2 Apple Podcasts** (P2) | Canal acquisition principal | Sophie (40% du poids décision) découvre exclusivement sur Apple Podcasts. Noah aussi. Ce canal seul peut représenter 50-70% des écoutes. |
+| **E2-S3 Spotify** (P2) | Canal Camille | Spotify = audience non-confessionnelle (Camille). Levier de croissance vers marché 5x plus grand selon @creative-strategy. |
+
+---
+
+### 3.3 Features orphelines — sans KPI mesurable direct
+
+Ces features n'ont pas de KPI de succès directement mesurable au lancement :
+
+| Feature | Pourquoi orpheline | Recommandation |
+|---------|--------------------|----------------|
+| **E5-S1** Abstraction multi-tenant | Phase 2 — aucun utilisateur SaaS existant | Définir un KPI "temps de création d'un projet client" lors du design Phase 2 |
+| **E5-S2** Interface no-code | Phase 2 — idem | Instrumenter `project_created` event dès la conception |
+| **E5-S3** Billing Stripe | Phase 2 — idem | KPI naturel = MRR, mais 0 client actuel |
+| **E4-S2** Rapport production (JSON brut) | Usage interne, subjectif | Proxy : nombre de décisions modifiées après consultation du rapport |
+
+---
+
+### 3.4 Chemin critique KPI — ordre d'impact maximal
+
+```
+1. E1-S1/S2/S3 (bugs P0)  →  déblocage total, impact immédiat
+2. E2-S1 (GA4)             →  mesure de tout le reste, instrumenter en parallèle
+3. E1-S6 (scripts E05-E10) →  volume catalogue = crédibilité Apple/Spotify
+4. E2-S2 (Apple Podcasts)  →  canal Sophie+Noah = 70% des écoutes cibles
+5. E2-S3 (Spotify)         →  canal Camille = croissance long terme
+```
+
+Toute feature hors de ce chemin (E3-S2, E4-S1, E4-S2) contribue à la **rétention** (écoutes complètes), pas à l'**acquisition** (premiers auditeurs). À prioriser en Phase 1b, une fois les premiers 100 abonnés atteints.
+
+---
+
 **Handoff → @fullstack**
 - Fichiers produits : `docs/analytics/kpi-framework.md`
 - Décisions prises : North Star = 3 000 écoutes complètes/mois (≥ 80% de durée). 4 personas avec métriques de validation indirectes (Lina/Noah = comportements observables sur l'appareil parental). Outil recommandé : GA4 + Spotify for Podcasters + Apple Podcasts Connect (budget zéro). A/B testing classique non viable (trafic < 1 000/mois probable au lancement).

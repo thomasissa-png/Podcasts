@@ -41,8 +41,8 @@ Objectif : débloquer la chaîne publish→site avant de mettre en production le
 |-------|--------|
 | Script E01 La Création — script validé 9.2/10, checkpoint waiting_script | [FAIT] |
 | Script E02 Noé — script validé 9.0/10, checkpoint waiting_script | [FAIT] |
-| Script E03 Abraham — généré, non audité | [MANQUE] Audit @audit-episode requis |
-| Script E04 Joseph — généré, non audité | [MANQUE] Audit @audit-episode requis |
+| Script E03 Abraham — `_script_valide.json` présent, audit @audit-episode requis | [MANQUE] Audit + vérification checkpoint |
+| Script E04 Joseph — `_script_valide.json` présent, audit @audit-episode requis | [MANQUE] Audit + vérification checkpoint |
 | Scripts E05 à E10 — à générer, auditer, valider | [MANQUE] |
 | Workflow audit itératif (seuil 9/10 par auditeur) | [FAIT] — 5 agents d'audit opérationnels |
 | Préférences producteur (24 règles) injectées dans scripteur | [FAIT] |

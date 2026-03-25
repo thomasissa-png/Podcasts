@@ -39,11 +39,12 @@ puis transformer le pipeline de production en plateforme SaaS accessible à d'au
 **Ce qui existe déjà (ne pas reconstruire) :**
 - Pipeline complet Python (scripteur → reviewer → directeur_podcast → TTS → SFX → montage → métadonnées → publication)
 - 577 tests, checkpoint atomique, SIGTERM survival, Object Storage, auto-resume
-- 4 scripts validés (E01 9.2/10, E02 9.0/10, E03 et E04 non encore audités)
+- 4 scripts générés (E01 9.2/10 audité, E02 9.0/10 audité, E03 et E04 générés — audit en attente)
 - 5 agents d'audit (audit-sfx, audit-voix, audit-marc, audit-claire, audit-episode)
 - Site public fonctionnel avec lecteur audio, FAQ, newsletter
 - Admin dashboard V1 + V2 (V2 a des bugs bloquants identifiés par @reviewer)
 - API `launch-fresh` + `kill-productions` pour déclencher la production depuis Claude Code
+- 24 règles de qualité (preferences_producteur.json) injectées automatiquement dans le scripteur
 
 **Ce qui bloque (chemin critique Phase 1) :**
 - 0 épisode audio produit à ce jour
