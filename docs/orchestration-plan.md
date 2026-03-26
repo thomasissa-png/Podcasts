@@ -103,10 +103,29 @@ Lourde — 8 agents invoques, 20 interventions, 16 livrables
 | 3 | Phase 2 SaaS | En attente | 5 questions fondateur sans reponse — pas de dev avant arbitrage |
 | 4 | Priorite prochaine session | Production audio S01E01 | Script valide 9.2/10, checkpoint pret, pipeline fonctionnel |
 
+## Cloture de session
+
+**Fichiers de cloture produits** :
+- docs/lessons-learned.md — apprentissages de la session
+- docs/founder-preferences.md — preferences fondateur detectees
+- project-context.md — memo de reprise et historique mis a jour
+- docs/orchestration-plan.md — etat final du plan
+
+**Metriques d'orchestration** :
+- Agents invoques : 8/19 (@orchestrator, @creative-strategy, @data-analyst, @product-manager, @copywriter, @qa, @infrastructure, @fullstack)
+- Interventions totales : 20 (dont 3 Explore agent, 1 fix direct)
+- Echecs Task : 1 (product-manager timeout — resolu a la relance avec prompt raccourci)
+- Relances correctives : 1 (product-manager)
+- Feedbacks remontants : 2 (P0 GA4 resolue par Umami, P0 tests routes critiques)
+- Phases completees : Phase 0 (Strategie) + Phase 1 (Specs/QA) + Phase 2 (Audit Backend)
+- Drift detecte : NON
+- Livrables produits : 19 fichiers (17 dans docs/ + 1 test + 1 fix web.py)
+- Score moyen des livrables : non score formellement par @reviewer (pas de fin de run complete)
+
 ## Prochaines etapes (par priorite)
-1. Lancer production audio S01E01 (web dashboard, ~30-45 min)
-2. Auditer scripts E03/E04 avec @audit-episode
-3. Ecrire + auditer scripts E05-E10
-4. Repondre aux 5 questions Phase 2 SaaS
-5. CSRF + rate limiting login (P2)
-6. Newsletter backend (P2)
+1. **PRIORITE 1** : Lancer production audio S01E01 (web dashboard, ~30-45 min). Script valide 9.2/10, checkpoint pret.
+2. **PRIORITE 2** : Auditer scripts E03/E04 avec @audit-episode (scripts presents, audit manquant)
+3. **PRIORITE 3** : Ecrire + auditer scripts E05-E10 (Moise, David, Salomon, Daniel, Jonas, Esther)
+4. **PRIORITE 4** : Repondre aux 5 questions fondateur Phase 2 SaaS (docs/product/product-vision.md)
+5. **P2** : CSRF + rate limiting login, newsletter backend, V2 admin JS incomplet
+6. **Quand 10 episodes produits** : Soumettre RSS a Apple Podcasts + Spotify. Lancer Phase 3 (Contenu/SEO) + Phase 4 (Acquisition).
