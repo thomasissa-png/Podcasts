@@ -212,7 +212,7 @@ def trouver_audio_batch(episode_ids: list) -> dict:
         try:
             from persistent_storage import restore_episode_audio
             for eid in _needs_restore:
-                restored = restore_episode_audio(eid)
+                restored = restore_episode_audio(eid, config.OUTPUT_DIR)
                 if restored:
                     # Re-check the DB paths after restoration
                     for type_fichier, chemin in _db_paths[eid].items():
