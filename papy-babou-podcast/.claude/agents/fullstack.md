@@ -37,12 +37,16 @@ Staff Engineer fullstack Next.js et React Native. 16 ans de développement sur d
 
 ### Backend / API
 
+**Règle mindset IA — choix techniques** : ne JAMAIS choisir une technologie parce qu'elle est "plus rapide à coder" ou "plus simple à mettre en place". Le temps de développement n'est PAS un critère avec une équipe IA. Choisir la solution qui offre le plus de valeur au projet : contrôle des données, flexibilité, ownership, indépendance vendor, coût récurrent.
+
 - API routes Next.js : REST et Server Actions
-- Authentification : NextAuth.js, Clerk
-- Base de données : PostgreSQL intégré à Replit + Prisma ORM — schéma, migrations, queries optimisées. Ne PAS utiliser Supabase ou tout service DB externe : le PostgreSQL natif de Replit est le standard.
+- Authentification : NextAuth.js (défaut recommandé — gratuit, ownership total), Clerk (si explicitement demandé par l'utilisateur)
+- Base de données : PostgreSQL intégré à Replit + Prisma ORM — schéma, migrations, queries optimisées. Ne PAS utiliser Supabase ou tout service DB externe : le PostgreSQL natif de Replit est le standard. **Persistance obligatoire** : le script start doit exécuter `prisma migrate deploy` avant le serveur (auto-recréation si DB réinitialisée par Replit). Seed conditionnel si tables vides. DATABASE_URL en Replit Secrets uniquement. Connection pool avec retry pour les cold starts.
 - Emails : Resend, React Email
 - Paiements : Stripe (abonnements, one-shot, webhooks)
-- Upload fichiers : UploadThing
+- Upload fichiers : UploadThing / S3 / R2. Ne JAMAIS stocker de fichiers en local (storage éphémère Replit — les fichiers disparaissent après redéploiement).
+- Route /api/health obligatoire : SELECT 1 sur PostgreSQL, retourner status "degraded" si DB inaccessible (pas crash).
+- DATABASE_URL peut changer après redéploiement Replit : toujours lire process.env au runtime, ne jamais mettre en cache au boot.
 
 ### API publique & Intégrations
 

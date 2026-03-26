@@ -42,7 +42,7 @@ Champs critiques pour cet agent : Objectif principal à 6 mois, Persona principa
 
 1. Lire `docs/strategy/brand-platform.md` et `docs/strategy/personas.md` s'ils existent avant de rédiger les specs. **Si absents** : signaler et travailler avec les informations de `project-context.md` (comme @ux le fait déjà)
 2. Chaque feature doit être validée contre le persona principal
-3. WebSearch : rechercher 2-3 produits concurrents du secteur pour benchmarker leurs features, pricing et positionnement avant de définir le scope MVP
+3. WebSearch : rechercher 2-3 produits concurrents du secteur pour benchmarker leurs features, pricing et positionnement avant de définir le scope V1
 4. Lire `docs/analytics/kpi-framework.md` s'il existe — intégrer les contraintes de mesure dans les specs
 5. Lire `docs/growth/growth-strategy.md` s'il existe — aligner les features avec la stratégie d'acquisition
 6. Lire `docs/legal/legal-audit.md` ou `docs/legal/rgpd-checklist.md` s'ils existent — les contraintes juridiques (RGPD, suppression de compte, export de données, consentement) impactent les specs produit
@@ -50,7 +50,7 @@ Champs critiques pour cet agent : Objectif principal à 6 mois, Persona principa
 
 ## Gestion des timeouts
 
-Les règles anti-timeout standard s'appliquent (voir CLAUDE.md Règle n°3). Spécificités : prioriser vision, scope MVP et user stories critiques dans les premières sections écrites.
+Les règles anti-timeout standard s'appliquent (voir CLAUDE.md Règle n°3). Spécificités : prioriser vision, scope V1 et user stories critiques dans les premières sections écrites.
 
 **Stratégie de rédaction incrémentale :** pour tout livrable de plus de 80 lignes, commencer par écrire la structure complète (titres + résumés 1 ligne) via Write, puis remplir chaque section une par une via Edit. Ne jamais accumuler plus de 80 lignes de contenu en mémoire sans les sauvegarder. En cas de reprise après timeout, vérifier les fichiers existants (Glob + Read) et reprendre là où le travail s'est arrêté — ne pas repartir de zéro.
 
@@ -60,7 +60,7 @@ La règle anti-invention absolue s'applique (voir CLAUDE.md Règle n°2).
 
 - Si une feature est demandée sans lien avec l'objectif à 6 mois → challenger et demander justification
 - Si contradiction avec un livrable existant → signaler à @orchestrator
-- Si scope creep détecté → bloquer et revalider le périmètre MVP
+- Si scope creep détecté → bloquer et revalider le périmètre V1
 - Si projet non-SaaS (e-commerce, marketplace, média, hardware) → adapter les frameworks (AARRR peut ne pas s'appliquer tel quel, les concepts de sprint et vélocité sont inadaptés en contexte IA). Proposer les frameworks alternatifs adaptés au modèle
 
 ## Mode révision
@@ -73,7 +73,7 @@ Les questions génériques s'appliquent (voir _base-agent-protocol.md). Question
 
 □ Chaque user story a-t-elle des critères d'acceptance testables et des edge cases ?
 □ La priorisation est-elle chiffrée (RICE/ICE) et pas basée sur l'intuition ?
-□ Le scope MVP est-il complet — chaque feature retirée l'est-elle parce qu'elle n'apporte pas de valeur au persona (pas "trop longue à coder") ?
+□ Le scope V1 est-il complet — chaque feature retirée l'est-elle parce qu'elle n'apporte pas de valeur au persona (pas "trop longue à coder") ?
 □ Le plan de recherche utilisateur identifie-t-il les hypothèses critiques à valider en premier ?
 □ Le pricing est-il benchmarké et justifié par la valeur perçue, pas juste le coût ?
 
@@ -127,6 +127,6 @@ Format :
 ---
 **Handoff → @[agent-destinataire]**
 - Fichiers produits : liste avec chemins complets
-- Décisions prises : scope MVP, priorisation RICE, jalons roadmap
+- Décisions prises : scope V1, priorisation RICE, jalons roadmap
 - Points d'attention : features critiques, dépendances techniques, critères d'acceptance
 ---

@@ -40,7 +40,15 @@ Le déploiement est géré par Replit. L'agent @infrastructure doit :
 3. **Ne PAS configurer de pipeline de déploiement** : Replit gère le deploy. Le CI/CD GitHub Actions s'arrête à `build` (lint → test → build). Pas de step deploy.
 4. **Préparer un `.replit` si nécessaire** : run command, build command, port forwarding
 5. **Documenter les limites Replit** à connaître : cold starts, mémoire, storage éphémère, pas de cron natif
-6. **Base de données : PostgreSQL intégré à Replit obligatoire.** Ne PAS recommander Supabase, PlanetScale, Neon ou tout autre service externe pour la base de données. Utiliser le PostgreSQL natif de Replit (provisionné directement depuis le dashboard Replit). Prisma ORM pour la couche d'accès. Les backups et la gestion des connexions se font via les outils Replit.
+6. **Base de données : PostgreSQL intégré à Replit obligatoire.** Ne PAS recommander Supabase, PlanetScale, Neon ou tout autre service externe. Utiliser le PostgreSQL natif de Replit (provisionné depuis le dashboard Replit). Prisma ORM pour la couche d'accès.
+7. **Persistance PostgreSQL Replit — protections obligatoires** (problème connu : données qui disparaissent après mise à jour Replit) :
+   - DATABASE_URL DOIT être dans Replit Secrets, JAMAIS dans .env ou en dur. DATABASE_URL peut changer après un redéploiement Replit : le code doit toujours lire process.env au runtime, ne jamais mettre en cache au boot
+   - Le script npm start DOIT exécuter `prisma migrate deploy` AVANT de lancer le serveur (recréation auto des tables si DB réinitialisée)
+   - Seed conditionnel : si tables vides après migration, exécuter le seed automatiquement
+   - Client Prisma : configurer connection_limit et pool_timeout pour gérer les cold starts et reconnexions
+   - Route /api/health : vérifier la connexion DB (SELECT 1), retourner status "degraded" (pas crash) si DB inaccessible
+   - Ne JAMAIS stocker de fichiers en local (storage éphémère) — utiliser S3/R2/Cloudflare pour les uploads
+   - Backup régulier : pg_dump automatisé ou export JSON des données critiques, stocké hors de Replit
 
 ## Monitoring post-launch
 

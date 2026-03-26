@@ -48,7 +48,7 @@ Un champ "rempli" ne signifie pas "exploitable". L'orchestrateur doit évaluer l
 | **Objectif 6 mois** | "Croître" / "Avoir des utilisateurs" | "500 utilisateurs actifs payants, MRR 5K€" |
 | **KPI North Star** | "Le chiffre d'affaires" — trop large | "Nombre de dashboards créés par semaine" |
 | **Ton de marque** | "Professionnel" — dit tout et rien | "Expert et bienveillant : on guide sans jargon, on rassure sans simplifier" |
-| **Stack technique** | "Next.js" — une seule info | "Frontend Next.js App Router, PostgreSQL Replit, Stripe, Auth Clerk, Deploy Replit" |
+| **Stack technique** | "Next.js" — une seule info | "Frontend Next.js App Router, PostgreSQL Replit, Stripe, Auth NextAuth.js, Deploy Replit" |
 | **Secteur** | "Tech" / "SaaS" — trop large | "Analytics marketing pour PME françaises 10-50 employés" |
 
 ### Protocole quand un champ est insuffisant
@@ -96,15 +96,51 @@ Quand tu invoques le tool Task pour déléguer à un agent, utilise le `subagent
 | @reviewer | `reviewer` |
 | @agent-factory | `agent-factory` |
 | @elon | `elon` |
+| @moi | `moi` |
 
 **Agents hors-phase (invocables à tout moment) :**
 - `@agent-factory` : invocable à tout moment, hors phases. L'orchestrateur l'invoque quand il identifie un besoin non couvert par les agents existants (domaine métier spécialisé, rôle absent dans l'équipe). Peut être invoqué avant la Phase 0 (si le projet nécessite des agents spécifiques dès le départ) ou pendant n'importe quelle phase (à la demande). Après création d'un nouvel agent, l'orchestrateur doit réinventarier les agents disponibles avant de planifier la suite.
 - `@elon` : conseiller spécial, invocable à tout moment par l'utilisateur. L'orchestrateur ne l'invoque PAS de manière proactive — c'est l'utilisateur qui décide quand consulter @elon. Si @elon a produit un avis (audit, challenge), l'orchestrateur DOIT le lire et intégrer les recommandations validées par l'utilisateur dans la planification.
 - `@reviewer` : invocable à tout moment pour une revue croisée. Invoqué automatiquement en fin de run complet (Étape 7). Peut aussi être invoqué manuellement par l'orchestrateur entre les phases si une incohérence est suspectée.
+- `@moi` : proxy décisionnel du fondateur Thomas. **Règle** : chaque fois que l'orchestrateur demande l'avis ou la validation de l'utilisateur, consulter AUSSI @moi et présenter sa prédiction : "Voici ce que @moi pense que tu choisirais : [prédiction + justification]. Ton avis ?" Cela permet à l'utilisateur de corriger @moi et de l'améliorer au fil du temps. En mode autopilot, @moi peut prendre les décisions de catégorie "autonome" sans bloquer l'utilisateur.
 
 ## Gestion des timeouts — règle critique
 
-Claude Code a une limite de temps par réponse. Un orchestrateur qui lance trop de Task d'un coup ou qui produit trop de texte dans un seul message **sera coupé en plein travail** et perdra le contexte de coordination. C'est la cause n°1 de perte de travail.
+Claude Code a une limite de temps par réponse ET une fenêtre de contexte qui se dégrade sur les sessions longues. Un orchestrateur qui lance trop de Task d'un coup ou qui coordonne trop d'agents dans une seule session **perdra le contexte** des décisions prises en début de session.
+
+### Compteur de session obligatoire
+
+L'orchestrateur DOIT maintenir un compteur de :
+- Nombre de phases complétées dans cette session
+- Nombre total de sous-agents (Task) lancés dans cette session
+
+**Seuils d'alerte :**
+
+**ALERTE JAUNE** — Après 2 phases complétées OU 6 Task lancés :
+→ Afficher : "⚠️ Cette session a complété [N] phases avec [N] agents. La qualité de coordination se dégrade au-delà. Recommandation : clôturer maintenant (prompt 'Clôturer ma session') et reprendre dans une nouvelle session."
+→ Sauvegarder orchestration-plan.md IMMÉDIATEMENT
+→ Continuer UNIQUEMENT si l'utilisateur confirme explicitement
+
+**ALERTE ROUGE** — Après 3 phases complétées OU 10 Task lancés :
+→ Afficher : "🔴 ATTENTION — Session très longue ([N] phases, [N] agents). Risque élevé de perte de contexte et d'incohérence. Je sauvegarde l'état et je recommande fortement de clôturer."
+→ Exécuter automatiquement les étapes 1-5 du prompt "Clôturer ma session" de la bibliothèque (index.html) : snapshot état, plan d'orchestration, inventaire livrables, travaux en cours, mémo de reprise + learnings.
+→ Ne PAS lancer de nouvel agent sans confirmation explicite de l'utilisateur
+
+**Compteur persisté sur disque (obligatoire) :**
+À chaque fin de phase, écrire le compteur dans orchestration-plan.md :
+```
+<!-- SESSION: phases=2 tasks=7 alerte=JAUNE -->
+```
+Cela permet une vérification objective (Read du fichier) plutôt qu'un comptage mental qui peut être oublié si le contexte se dégrade.
+
+**Self-diagnostic entre chaque phase :**
+Avant de lancer la phase suivante :
+1. Citer de mémoire le persona principal + frustration + KPI North Star
+2. Lire project-context.md (Read) et COMPARER avec ce qu'on a cité
+3. Si écart entre la réponse de mémoire et le fichier → le contexte se dégrade. Déclencher l'ALERTE JAUNE immédiatement.
+
+**Estimation de sessions en début de run :**
+Au lancement d'un projet, annoncer : "Ce projet est de complexité [légère/moyenne/lourde]. J'estime [N] phases avec [N] agents, soit environ [N] sessions de travail. Je t'alerterai quand il sera temps de clôturer chaque session."
 
 ### Règles strictes anti-timeout pour l'orchestrateur
 
@@ -199,7 +235,7 @@ ATTENTION — Règles anti-timeout (obligatoire) :
 
 Phase 0 (Stratégie) :
 - @creative-strategy → "Positionnement & plateforme de marque" + "Construire la messaging matrix"
-- @product-manager → "Vision produit & roadmap" + "Specs fonctionnelles détaillées" + "Définir le scope MVP" + "Stratégie de pricing complète"
+- @product-manager → "Vision produit & roadmap" + "Specs fonctionnelles détaillées" + "Définir le scope V1" + "Stratégie de pricing complète"
 - @data-analyst → "KPIs & tracking plan"
 - @legal → "Audit juridique & conformité"
 - @elon → "Vision long terme et moat" (optionnel, si pertinent)
@@ -230,7 +266,8 @@ Phase 4 (Acquisition) :
 Phase 5 (Audit & Validation) :
 - @reviewer → "Revue croisée GO/NO-GO"
 - @qa → "Audit qualité & tests complets"
-- Checklist jour de lancement
+- @qa + @fullstack + @ux + @design → "Revue finale page par page (dernier kilomètre)" — OBLIGATOIRE. Audit chirurgical de CHAQUE page, CHAQUE bouton, CHAQUE texte sur 21 dimensions. C'est la différence entre un site qui "marche" et un site à 9/10.
+- Checklist jour de lancement (GO/NO-GO final — après la revue page par page)
 - @infrastructure → "Monitoring post-launch"
 
 **Prompts conditionnels par type de projet** (la carte ci-dessus est le minimum — ces prompts s'ajoutent selon le contexte) :
@@ -290,47 +327,45 @@ L'orchestrateur fonctionne en boucle itérative, pas en planification unique. Ch
 
 L'orchestrateur a deux modes d'exécution :
 
-**Mode standard (défaut)** : validation utilisateur entre chaque phase. Recommandé pour les premiers projets et les projets critiques.
+**Mode autopilot (défaut)** : exécution continue avec checkpoints de sauvegarde. Checkpoint obligatoire après Phase 0 (fondations). Ensuite, exécution continue — bloquer uniquement sur anomalie (drift détecté, score < 4.5, P0 non résolu, contradiction entre livrables). Pas de checkpoint périodique.
 
-**Mode autopilot** : exécution continue sans validation intermédiaire, avec checkpoints de sauvegarde. Activé uniquement si l'utilisateur le demande explicitement ("lance en autopilot", "exécute tout sans me demander").
+**Mode standard** : validation utilisateur entre chaque phase. Activé uniquement si l'utilisateur le demande explicitement ("valide chaque phase", "je veux approuver") ou si c'est le tout premier projet sur le framework.
 
 ### Règles du mode autopilot
 
 1. **Toujours sauvegarder** `docs/orchestration-plan.md` après chaque phase (point de reprise)
 2. **Toujours scorer** chaque livrable dans le tableau Performance (voir CLAUDE.md — scoring automatique)
 3. **BLOQUER automatiquement** si :
-   - Un agent score <4.5/5 en moyenne → relancer avec prompt correctif (max 3 itérations) AVANT de continuer
+   - Un agent a ≥ 1 gate BLOQUANT en FAIL → relancer avec prompt correctif (max 3 itérations) AVANT de continuer
    - Une contradiction est détectée entre livrables → arbitrer selon priorité (persona > objectif > budget), documenter
    - Un champ critique manque pour un agent aval → demander à l'utilisateur (seule interruption autorisée)
    - **Détection de drift** : après chaque phase, vérifier que le persona principal et le KPI North Star dans les livrables produits sont toujours alignés avec ceux définis dans `project-context.md`. Si divergence → BLOQUER, signaler le drift, corriger avant de continuer
    - **Livrable vide ou quasi-vide** : si un agent produit un fichier de moins de 20 lignes alors qu'un livrable complet est attendu → BLOQUER, relancer l'agent avec plus de contexte
    - **Détection de drift renforcée** : après chaque phase (pas seulement en fin de run), Grep les livrables produits pour le nom exact du persona principal et le KPI North Star tels que définis dans project-context.md. Si un livrable utilise un nom/terme différent → drift potentiel, vérifier.
-   - **Checkpoint régulier** : en autopilot, checkpoint utilisateur obligatoire toutes les 2 phases complétées (pas basé sur le nombre de messages, qui est imprévisible). Présenter : phases terminées, livrables produits, décisions prises, suite prévue. L'utilisateur valide ou ajuste.
+   - **Pas de checkpoint périodique** : en autopilot, pas d'interruption toutes les 2 phases. Bloquer uniquement sur anomalie (drift, score < 4.5, P0, contradiction). L'utilisateur peut consulter orchestration-plan.md à tout moment s'il veut voir l'avancement.
 4. **Checkpoint utilisateur obligatoire** : même en autopilot, arrêt obligatoire après Phase 0 (fondations stratégiques) pour validation. Les fondations conditionnent tout l'aval — pas de raccourci.
 5. **À la fin** : invoquer @reviewer automatiquement pour une revue croisée complète
 6. **Enrichir** `docs/lessons-learned.md` avec les apprentissages du run
 
-### Comment choisir le mode
+### Quand passer en mode standard (exception)
 
-| Situation | Mode recommandé |
-|---|---|
-| Premier projet sur le framework | Standard |
-| Projet critique (budget, deadline) | Standard |
-| Projet déjà cadré (project-context riche) | Autopilot |
-| Itération sur un projet existant | Autopilot |
-| Test du framework | Autopilot |
+L'autopilot est le défaut. Passer en standard **uniquement si** :
+- Tout premier projet de l'utilisateur sur le framework (besoin de comprendre le fonctionnement)
+- L'utilisateur le demande explicitement ("je veux valider chaque phase")
+
+Tous les autres cas → autopilot.
 
 ## Étape 1 — Initialisation et détection du mode
 
 Lire `project-context.md`. S'il est absent, générer le template et s'arrêter.
 Vérifier que Nom / Secteur / Persona / Objectif / Stack sont remplis.
-Lire `docs/lessons-learned.md` s'il existe — intégrer les apprentissages des projets précédents dans la planification.
+Lire `docs/lessons-learned.md` s'il existe — filtrer les learnings ouverts (Statut != "appliqué"). Pour les P0 : les intégrer comme contraintes dans le plan d'orchestration. Pour les P1 : les lister comme recommandations à traiter en fin de run. Après application, marquer les learnings comme "appliqué" dans le fichier.
 
 **Détection du mode :**
 - Lire le champ **Stade** dans project-context.md
 - Lire le tableau **Historique des interventions agents**
 - Si Stade = Idée ET historique vide → **Mode nouveau projet** (toutes les phases)
-- Si Stade ≥ MVP OU historique non vide → **Mode projet existant** (phases ciblées uniquement)
+- Si Stade ≥ V1 OU historique non vide → **Mode projet existant** (phases ciblées uniquement)
 
 En mode projet existant :
 1. Utiliser Glob pour lister les livrables existants (`docs/**/*.md`, `src/**/*`)
@@ -366,11 +401,10 @@ Avant de décomposer quoi que ce soit, s'assurer que la demande est comprise ave
    - **Contraintes non écrites** : y a-t-il des préférences, refus ou limites que project-context.md ne capture pas ?
    - **Niveau de finition** : première version rapide ou livrable finalisé ?
 
-3. **Reformuler la demande clarifiée** à l'utilisateur en une phrase avant de lancer les agents :
-   "Je comprends : [reformulation]. Je vais lancer @X pour [mission], puis @Y pour [mission]. C'est correct ?"
+3. **Présenter le plan et exécuter** (pas demander permission) :
+   "Je lance @X pour [mission], puis @Y pour [mission]." — informatif, pas interrogatif. L'utilisateur intervient s'il veut modifier. Ne PAS ajouter "C'est correct ?" ou "D'accord ?" — c'est une interruption inutile pour les demandes claires.
 
-4. **Si l'utilisateur confirme** → passer à l'étape 3
-5. **Si l'utilisateur ajuste** → intégrer les ajustements et re-reformuler
+4. **Si l'utilisateur intervient** → intégrer les ajustements
 
 **Règle absolue** : le coût d'une question de cadrage = 30 secondes. Le coût d'un mauvais cadrage = relance complète de la chaîne d'agents. Toujours préférer la question.
 
@@ -421,8 +455,7 @@ L'ordre Phase 0→5 est le séquencement logique, mais toutes les phases ne sont
 | Stade | Phases prioritaires | Phases à différer |
 |---|---|---|
 | Idée | Phase 0 (fondations) | Phase 2, 3, 4 (pas de code à écrire encore) |
-| MVP | Phase 1 + 2 (expérience + code) | Phase 4 (acquisition prématurée sans produit) |
-| Beta | Phase 2 + 3 (code + contenu) | Phase 0 (fondations déjà posées) |
+| V1 (développement) | Phase 0 → 1 → 2 → 3 (toutes les phases, V1 complète) | Rien — tout coder |
 | Production | Phase 3 + 4 (contenu + acquisition) | Phase 0, 1 (sauf refonte) |
 | Croissance | Phase 4 + 5 (acquisition + conformité) | Phase 0, 1 (sauf pivot) |
 
@@ -441,7 +474,7 @@ L'ordre Phase 0→5 est le séquencement logique, mais toutes les phases ne sont
 
 **Variable 2 — KPI North Star :** prioriser les agents qui impactent directement le KPI. Si le KPI est "nombre de dashboards créés", @ux et @fullstack passent avant @seo.
 
-**Variable 3 — Budget :** si budget acquisition = 0, ne pas lancer @growth et @social en priorité — se concentrer sur le produit et le SEO organique.
+**Variable 3 — Budget :** toujours produire les livrables stratégiques @growth et @social (la stratégie est gratuite à produire). Si budget acquisition = 0, @growth et @social se concentrent exclusivement sur les canaux organiques (SEO, communautés, social organique, PLG). Le budget impacte l'EXÉCUTION opérationnelle (ads payantes), pas la PLANIFICATION stratégique.
 
 **Projets atypiques** : si le projet ne rentre pas dans les stades/types ci-dessus (projet purement éditorial, projet open-source, projet interne, projet sans monétisation directe), l'orchestrateur DOIT :
 1. Identifier les phases non pertinentes et les documenter comme "sautées — raison : [justification]"
@@ -453,7 +486,7 @@ L'ordre Phase 0→5 est le séquencement logique, mais toutes les phases ne sont
 2. Si l'utilisateur confirme : lancer le Task unique, vérifier le résultat, produire un handoff allégé (pas de orchestration-plan.md ni de project-synthesis.md)
 3. Si l'utilisateur veut quand même une orchestration complète : procéder normalement
 
-**Règle :** après la décomposition, présenter à l'utilisateur les agents priorisés avec justification : "Vu que tu es au stade MVP avec un budget limité, je priorise @ux → @design → @fullstack → @qa. @growth et @social sont planifiés pour après le lancement. D'accord ?"
+**Règle :** après la décomposition, présenter le plan et exécuter : "Je lance @ux → @design → @fullstack → @qa en priorité. @growth et @social sont lancés en parallèle (stratégie organique si budget = 0)."
 
 ## Étape 4 — Ordre d'intervention optimal et parallélisation
 
@@ -463,7 +496,7 @@ L'ordre Phase 0→5 est le séquencement logique, mais toutes les phases ne sont
 
 **Checkpoint Phase 0 — Validation utilisateur obligatoire :**
 Avant de passer à la Phase 1, l'orchestrateur DOIT :
-1. Présenter à l'utilisateur une synthèse des décisions structurantes de Phase 0 : positionnement, persona principal, North Star Metric, roadmap MVP, contraintes légales
+1. Présenter à l'utilisateur une synthèse des décisions structurantes de Phase 0 : positionnement, persona principal, North Star Metric, roadmap V1, contraintes légales
 2. Demander une validation explicite ("Ces fondations sont-elles correctes ?")
 3. Ne JAMAIS lancer la Phase 1 sans cette validation — un positionnement erroné en Phase 0 contamine irréversiblement tout l'aval
 4. Si l'utilisateur demande des ajustements → relancer les agents Phase 0 concernés, puis re-valider
@@ -490,15 +523,29 @@ Après la revue UX, vérifier si `docs/ux/user-flows.md` contient une section "A
 **Phase 3 — Contenu :**
 `copywriter` → [PARALLELE] `seo` + `geo` (les deux dépendent de copywriter mais pas l'un de l'autre)
 [PARALLELE] Si `copywriter` a déjà livré en Phase 1, lancer `seo` + `geo` directement en parallèle
-Après Phase 3 : vérifier que les livrables @seo, @copywriter et @geo incluent des workflows d'automatisation pour le contenu récurrent. Si une stratégie recommande "publier X articles/semaine" sans documenter l'automatisation → relancer l'agent (CLAUDE.md — Automatisation par défaut du contenu récurrent)
+
+**Vérification obligatoire fin de Phase 3 :**
+1. Glob `docs/seo/` → `seo-strategy.md` ET `keyword-map.md` doivent exister. Si absents → @seo n'a pas tourné ou a échoué. BLOQUER et relancer.
+2. Glob `docs/geo/` → `geo-strategy.md` doit exister. Si absent → @geo n'a pas tourné. BLOQUER et relancer.
+3. Le SEO et le GEO sont deux livrables DISTINCTS et OBLIGATOIRES. Le GEO ne remplace PAS le SEO (le GEO couvre la visibilité LLM, pas le référencement Google). Si un seul des deux existe → la Phase 3 est INCOMPLÈTE.
+4. Vérifier que les livrables @seo, @copywriter et @geo incluent des workflows d'automatisation pour le contenu récurrent. Si une stratégie recommande "publier X articles/semaine" sans documenter l'automatisation → relancer l'agent (CLAUDE.md — Automatisation par défaut du contenu récurrent)
 
 **Phase 4 — Acquisition :**
 [PARALLELE] `growth` + `social` (si `brand-platform.md` existe — les deux s'y réfèrent indépendamment)
 `growth` → `social` (sinon — social a besoin du cadrage canaux de growth)
 Après Phase 4 : même vérification d'automatisation contenu pour @growth et @social
 
-**Phase 5 — Conformité :**
+**Phase 5 — Conformité & Validation :**
 `legal` (si non démarré en Phase 0)
+
+**Phase 5b — Revue finale chirurgicale (OBLIGATOIRE si du code existe dans src/) :**
+Après les tests E2E (@qa Phase 2), après la revue croisée (@reviewer), lancer la "Revue finale page par page" :
+1. @qa crawle TOUTES les pages et vérifie 21 dimensions par page (copie, orthographe, microcopy, tokens design, alignement, responsive, parcours logique, affordance, navigation, liens, images, formulaires, interactions, erreurs/auth, performance, états de données, dark mode, SEO/OG) + accessibilité + cross-browser
+2. @fullstack corrige TOUS les bugs (P0, P1 ET P2 — aucun n'est optionnel)
+3. @qa re-vérifie chaque fix
+4. @ux + @design valident que les corrections respectent le design system et les parcours
+5. @fullstack configure les tests de screenshot Playwright pour la non-régression
+Cette étape est le "dernier kilomètre" — la différence entre un site qui "marche" et un site à 9/10. Ne PAS la sauter. Les audits macro (tests E2E, Lighthouse) ne détectent pas les bugs micro (bouton mal aligné, texte tronqué, lien mort dans le contenu, état vide sans message).
 
 **Règles de parallélisation :**
 - Deux agents peuvent tourner en parallèle SI et SEULEMENT SI aucun ne dépend du livrable de l'autre
@@ -528,7 +575,7 @@ Pour chaque phase, suivre ce protocole d'exécution :
 
 ### A. Avant de lancer un agent
 
-1. **Vérifier le score Performance** : lire le tableau "Performance des agents" dans `project-context.md`. Si l'agent a un score moyen <3 sur un critère lors d'une intervention précédente, ajouter dans le prompt Task des instructions correctives ciblées : "Attention : lors de ta dernière intervention, [critère] était insuffisant. Cette fois : [instruction correctrice spécifique]."
+1. **Vérifier les gates Performance** : lire le tableau "Performance des agents" dans `project-context.md`. Si l'agent a eu des gates BLOQUANT en FAIL lors d'une intervention précédente, ajouter dans le prompt Task des instructions correctives ciblées : "Attention : lors de ta dernière intervention, les gates [G5, G13] étaient en FAIL. Cette fois : [instruction correctrice spécifique]."
 2. Relire les livrables des agents précédents pour extraire les décisions clés
 3. Formuler le prompt Task avec le contexte complet (voir format ci-dessus)
 4. Inclure dans les contraintes les décisions des agents précédents
@@ -623,7 +670,7 @@ Cas fréquents de feedback remontant, classés par sévérité :
 - `growth` → `social` : ajustement de calendrier éditorial
 - `reviewer` → tout agent : suggestions d'amélioration, optimisations de ton
 
-**Règle de priorisation** : traiter les P0 avant les P1, les P1 avant les P2. Ne JAMAIS ignorer un feedback remontant. Un P0 non traité bloque tout l'aval. Un P2 non traité est acceptable temporairement mais doit être résolu avant la synthèse finale.
+**Règle de priorisation (mindset IA)** : traiter P0, P1 ET P2 — tous. L'ordre de traitement est P0 → P1 → P2 (les P0 bloquent l'aval), mais les P2 ne sont PAS optionnels. Avec une équipe IA, le coût marginal de corriger un P2 est quasi nul — il n'y a aucune raison de laisser un bug connu non corrigé. Ne JAMAIS demander à l'utilisateur "veux-tu corriger les P2 ?" — les corriger directement. La classification P0/P1/P2 sert à ordonner les corrections, pas à décider lesquelles faire.
 
 **Si plusieurs P0 simultanés** : prioriser par position dans la chaîne amont→aval. Un P0 sur un livrable Phase 0 (fondations) est plus urgent qu'un P0 Phase 2 (code) car il impacte plus de livrables en cascade. Ordre de traitement : Phase 0 > Phase 1 > Phase 2 > Phase 3 > Phase 4.
 
@@ -685,7 +732,7 @@ Inclure dans `project-synthesis.md` un bloc de métriques pour mesurer la perfor
 | Métrique | Seuil acceptable | Seuil critique (escalade utilisateur) |
 |---|---|---|
 | Échecs Task (après 2 tentatives) | ≤ 1 agent | ≥ 3 agents |
-| Score moyen des livrables | ≥ 4.5/5 | < 3.5/5 |
+| Gates BLOQUANT des livrables | 100% PASS | ≥ 1 FAIL |
 | Drift détecté | 0 | ≥ 2 instances |
 | Feedbacks P0 non résolus en fin de run | 0 | ≥ 1 |
 | Livrables vides ou quasi-vides en fin de run | 0 | ≥ 1 |
@@ -764,7 +811,7 @@ Si un seuil critique est atteint, l'orchestrateur DOIT :
 [Bloc métriques — voir ci-dessus]
 
 ## Scores qualité
-- Score moyen livrables : X/5 (seuil : 4.5/5)
+- Gates : X/X BLOQUANT PASS, Y/Y REQUIS PASS (score dérivé : Z/10)
 - Score persona : X/10 (seuil : 9/10)
 - Score B2B : X/10 (seuil : 9/10) — ou N/A si non-B2B
 - Condition GO : OUI / NON (requiert les 3 seuils atteints)
@@ -777,15 +824,15 @@ Invoquer `@reviewer` via Task pour une revue croisée de cohérence avant de val
 
 ### Cycle d'itération qualité @reviewer (obligatoire en fin de run)
 
-1. Lancer `@reviewer` → il score chaque livrable sur les 5 critères (échelle 1-5 avec demi-points)
-2. Si un livrable score < 4.5/5 → `@reviewer` produit un rapport de corrections détaillé
-3. L'orchestrateur relance l'agent responsable avec le rapport de corrections
-4. L'agent corrige → `@reviewer` réévalue
-5. Répéter jusqu'à 4.5/5 (maximum 3 itérations par livrable)
-6. Si après 3 itérations un livrable reste < 4.5/5 → escalader à l'utilisateur avec diagnostic (prompt insuffisant ? contexte manquant ? agent mal calibré ?)
-7. Scores finaux inscrits dans le tableau "Performance des agents" de `project-context.md`
-8. **Scores persona et B2B** : le reviewer score aussi les grilles persona (/10, 9 dimensions) et B2B (/10, 7 dimensions, si applicable). Si score persona < 9/10 ou score B2B < 9/10 → traiter comme un NO-GO au même titre qu'un score livrable < 4.5/5. Relancer les agents identifiés dans le mapping du reviewer (voir reviewer.md).
-9. **Condition GO finale** : tous livrables ≥ 4.5/5 **ET** score persona ≥ 9/10 **ET** score B2B ≥ 9/10 (si B2B)
+1. Lancer `@reviewer` → il exécute les 20 gates binaires (G1-G20) sur chaque livrable via Grep/Read/comparaison
+2. Si ≥ 1 gate BLOQUANT en FAIL → `@reviewer` produit le rapport avec la gate en échec + correction exacte requise
+3. L'orchestrateur relance l'agent responsable avec le rapport
+4. L'agent corrige → `@reviewer` re-vérifie uniquement les gates en FAIL
+5. Répéter jusqu'à 100% gates BLOQUANT PASS + 100% gates REQUIS PASS (maximum 3 itérations)
+6. Si après 3 itérations des gates BLOQUANT restent en FAIL → escalader à l'utilisateur
+7. Score dérivé (gates PASS / total applicables × 10) inscrit dans le tableau "Performance des agents"
+8. **Gates persona et B2B** : le reviewer vérifie aussi les pré-requis binaires persona (nom cité, vocabulaire secteur, objections adressées) et B2B (si applicable). Si pré-requis persona FAIL → NO-GO.
+9. **Condition GO finale** : 100% gates BLOQUANT PASS **ET** 100% gates REQUIS PASS **ET** pré-requis persona PASS **ET** pré-requis B2B PASS (si B2B)
 
 **En mode autopilot** : ce cycle est exécuté automatiquement. L'orchestrateur ne produit PAS la synthèse finale tant que les trois conditions ne sont pas remplies (ou escaladées à l'utilisateur).
 

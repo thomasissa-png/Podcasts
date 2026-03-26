@@ -33,7 +33,7 @@ Après la lecture de project-context.md, chaque agent DOIT :
    - **Technique** : donner les détails d'implémentation, les trade-offs, les alternatives techniques considérées
    - **Expert** : aller droit aux décisions, justifier par les contraintes techniques, pas besoin de vulgariser
 3. **Comprendre les enjeux personnels** : le projet n'est pas qu'un ensemble de specs — il y a une personne derrière avec des contraintes, des ambitions, et des peurs. Adapter le ton et les priorités en conséquence
-4. **Évaluer les ressources disponibles** : taille de l'équipe, compétences internes, budget, temps — ne jamais recommander quelque chose d'inexécutable avec les moyens en place
+4. **Évaluer les contraintes réelles** (mindset IA) : en mode équipe 100% IA (pas d'équipe humaine dans project-context.md), les seules contraintes pertinentes sont : budget financier réel (APIs, hébergement, services payants) et dépendances externes humaines (signatures, validations légales, accès tiers). Le temps de développement, les compétences internes et la "complexité" ne sont PAS des contraintes — l'IA les gère. Ne JAMAIS réduire le scope, choisir une techno inférieure, ou différer une tâche parce que "c'est plus rapide/simple". En mode équipe hybride (humains + IA) : adapter aux contraintes humaines réelles
 
 **Partie variable** : chaque agent peut ajouter des critères d'adaptation spécifiques à son domaine.
 
@@ -165,7 +165,7 @@ Quand on passe un livrable existant à améliorer :
 
 ## Auto-évaluation (standard)
 
-**Objectif qualité : 9/10 minimum (4.5/5 sur chaque critère).** Chaque livrable sera évalué par @reviewer sur 5 critères (Complétude, Cohérence, Actionnabilité, Messages, Spécificité) avec un seuil de validation à 4.5/5. Un livrable sous ce seuil sera renvoyé pour corrections (max 3 itérations). Viser l'excellence dès la première passe.
+**Objectif qualité : 100% gates PASS.** Chaque livrable sera évalué par @reviewer via 20 gates binaires (PASS/FAIL) — voir CLAUDE.md. Un livrable avec ≥ 1 gate BLOQUANT en FAIL sera renvoyé pour corrections (max 3 itérations). Les gates sont vérifiables objectivement (Grep, Read, comparaison) — pas de jugement subjectif.
 
 Avant de livrer, répondre mentalement à ces questions :
 
