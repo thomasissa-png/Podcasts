@@ -64,6 +64,37 @@ Le pipeline de production est extremement sophistique (28 sessions de developpem
 
 Niveau technique de l'utilisateur : technique (gere le code, les API, le deploiement). Communication en mode technique acceptee.
 
+### Memo de reprise — Session du 2026-03-26
+
+**Etat global** : Phase 0 (Strategie) et Phase 1 partielle (Specs/QA) terminees. 16 livrables produits dans docs/. Pipeline de production audio pret mais aucun episode en production audio.
+
+**Travaux termines cette session** :
+- Brand platform, personas, benchmark concurrentiel, creative brief (@creative-strategy)
+- KPI framework avec mapping features (@data-analyst)
+- Product vision, roadmap, backlog, functional specs (@product-manager)
+- Value proposition, brand voice (@creative-strategy, @copywriter)
+- QA strategy + 19 tests routes critiques (@qa)
+- Backend audit (@infrastructure) — bugs P0 confirmes deja corriges
+- Umami tracking confirme operationnel (@fullstack)
+- Fix montage count mismatch dans web.py (6 lignes)
+- Protocole de cloture : docs/lessons-learned.md, docs/founder-preferences.md
+
+**Travaux en cours / a faire** :
+1. **PRIORITE 1** : Lancer production audio S01E01 via web dashboard (script valide 9.2/10, checkpoint pret)
+2. **PRIORITE 2** : Auditer scripts E03 (Abraham) et E04 (Joseph) — scripts presents mais non audites par @audit-episode
+3. **PRIORITE 3** : Ecrire scripts E05-E10 (Moise, David, Salomon, Daniel, Jonas, Esther)
+4. **PRIORITE 4** : 5 questions fondateur Phase 2 SaaS (docs/product/product-vision.md section Phase 2)
+5. **P2** : CSRF + rate limiting login, newsletter backend, V2 admin JS incomplet
+
+**Decisions a ne pas revenir dessus** :
+- Umami (pas GA4) pour le tracking
+- "catechisme" banni de toute communication publique
+- Camille (parent non-pratiquant) = persona de croissance prioritaire
+- 1 sujet biblique complet par episode, jamais de multi-part
+- Seuil 9/10 sur 4 auditeurs avant production audio
+
+**Branche git actuelle** : `claude/install-gradient-agents-23sK6`
+
 ## Historique des interventions agents
 | Agent | Date | Fichiers | Decisions cles | Pourquoi |
 |---|---|---|---|---|
@@ -80,6 +111,14 @@ Niveau technique de l'utilisateur : technique (gere le code, les API, le deploie
 | @qa | 2026-03-25 | docs/qa/qa-strategy.md | Audit 16 criteres d'acceptation (12 testables auto, 4 manuels). 5 tests prioritaires identifies (launch-fresh, seg_003, checkpoint fields, valide sync, GA4). F4#1 reformule (non testable tel quel). Pas de Playwright — tout pytest. | Scores LLM des auditeurs non testables automatiquement — seules les mecaniques (sync fichier, checkpoint, compteur) sont couvertes. Les 5 tests prioritaires ciblent les 4 bugs de production historiques. GA4 teste par inspection HTML, pas par navigateur headless. Trous critiques identifies : aucun test existant pour launch-fresh ni seg_003 verification. |
 | @creative-strategy | 2026-03-25 | docs/strategy/value-proposition.md | UVP en 2 formulations (courte 18 mots / longue 3 phrases). 7 criteres differenciants valides par test concurrentiel (Les Odyssees, Biblus, Encore une histoire). Double registre Sophie/Camille documente avec vocabulaire propre. Claim "premier podcast" juge verifiable (espace libre confirme par benchmark). | Traduction operationnelle du positionnement brand-platform en UVP actionnable pour @copywriter. Le mot "podcast" evite dans les accroches (designe le format, pas l'experience). "Fun facts scientifiques" identifie comme levier principal pour Noah et Camille. Toutes les hypotheses de chiffres marquees [HYPOTHESE]. |
 | @copywriter | 2026-03-25 | docs/copy/brand-voice.md | Double registre Sophie/Camille formalise avec vocabulaires distincts. 8 mots interdits listes avec alternatives. Univers lexical mission/equipage/aventure consolide. 3 variantes UVP calibrees par persona (hero landing, email Camille, bio social cold discovery). 20 formulations DO/DON'T sur 5 contextes. | Calibration sectorielle sur brand-platform.md + personas.md avant production. Le mot "catechisme" banni de la communication publique — ecarte Camille immediatement. Titre hero (9 mots) conserve "Bible" + "aventure" en position forte pour SEO. Variante email ouvre sur un fun fact chiffre (135 m arche Noe) — levier Camille et Noah documente dans les personas. |
+| @product-manager | 2026-03-26 | docs/product/functional-specs.md | 4 features specifiees en Given/When/Then (F1 audit E03/E04, F2 audio E01, F3 scripts E05-E10, F4 tracking). Seuil 9/10 bloquant. seg_003 non contournable. | P0 deja corriges — non respecifies. F2 conditionne F1. GA4 anonymize_ip=true = RGPD sans bandeau. |
+| @qa | 2026-03-26 | docs/qa/qa-strategy.md | Matrice 16 criteres (12 auto, 4 manuels). 5 tests prioritaires. F4#1 reformule. Pas de Playwright. | Scores LLM non testables auto. 5 tests ciblent les 4 bugs historiques. |
+| @infrastructure | 2026-03-26 | docs/infra/backend-audit.md | Audit routes web.py : F1-F3 couvertes, F4 GA4 = seul gap majeur (0%). Resilience checkpoints OK. | Audit parallele avec @qa. launch-fresh + kill-productions confirmes fonctionnels. |
+| @qa | 2026-03-26 | docs/qa/qa-strategy.md (enrichi), papy-babou-podcast/tests/test_web_routes_critiques.py | 19 tests ecrits et passes. Couverture launch-fresh, kill-productions, checkpoint fields, valide sync. | Tests de non-regression sur les routes critiques identifiees par @infrastructure. |
+| @fullstack | 2026-03-26 | (confirmation) | Umami deja implemente sur le site (tag JS present dans public.html). Pas de GA4 — choix fondateur Umami. | Agent confirme l'existant sans modifier le code. Fondateur prefere Umami a GA4. |
+| orchestrator | 2026-03-26 | docs/orchestration-plan.md (mis a jour), web.py (fix 6 lignes montage count) | Audit backend confirme : bugs P0 deja corriges, F4 resolue par Umami existant. Fix montage count mismatch (filter par episode_id dans requete SQL). | Session de cloture : diagnostic + fix rapide. 5 questions Phase 2 SaaS en attente. Production audio S01E01 prete mais pas encore lancee. |
+| orchestrator (explore) | 2026-03-26 | (documentation interne) | Workflow episode generation documente. Audit back-office V2 : template JS incomplet, routes V2 non prioritaires. Audit site public : episodes affiches correctement, cover + audio servis. Debug montage count mismatch : requete SQL ne filtrait pas par episode_id. Debug montage playback E01 : pas de bug, production audio pas encore lancee. | Exploration diagnostique sans agents — lecture directe du code pour comprendre l'etat reel du systeme. |
+| orchestrator | 2026-03-26 | .claude/agents/ (15 fichiers mis a jour) | Mise a jour Gradient Agents depuis Agent-Team (2 branches). Agents preserves : copywriter.md, designer.md, ux.md (specifiques au projet). | Mise a jour de routine du framework — pas d'impact sur les livrables projet. |
 
 ## Performance des agents
 | Agent | Date | Critere 1 (Pertinence) | Critere 2 (Completude) | Critere 3 (Coherence) | Critere 4 (Actionnable) | Critere 5 (Format) | Moyenne |
