@@ -5651,7 +5651,12 @@ def api_v2_saisons_episodes():
             if _DB_AVAILABLE and MontageRepo:
                 try:
                     montages = MontageRepo.lister(eid)
-                    montage_count = len(montages)
+                    active_montages = [
+                        m for m in montages
+                        if m.get("status") not in ("failed", "error")
+                        and not (m.get("status") == "processing" and not m.get("audio_path_hq"))
+                    ]
+                    montage_count = len(active_montages)
                     is_published = any(m.get("is_published") for m in montages)
                 except Exception:
                     pass
