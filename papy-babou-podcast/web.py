@@ -1163,6 +1163,7 @@ def api_public_episodes():
     _production_statuses = {}  # episode_id -> latest status
     _AUDIO_READY_STATUSES = {
         "completed", "montage_done", "metadonnees_done", "waiting_montage",
+        "interrupted",
     }
     if config._db_disponible():
         try:

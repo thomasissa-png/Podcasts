@@ -160,7 +160,7 @@ def trouver_audio_batch(episode_ids: list) -> dict:
 
     Lightweight alternative to trouver_fichier_audio() for the public API.
     Does ONE DB query + ONE filesystem glob instead of N individual lookups.
-    Does NOT trigger Object Storage restoration (read-only, no side effects).
+    Restores from Object Storage when files are missing locally (after redeploy).
 
     Returns: {episode_id: {"hq": filename_or_None, "preview": filename_or_None}}
     """
@@ -168,6 +168,9 @@ def trouver_audio_batch(episode_ids: list) -> dict:
         return {}
 
     result = {eid: {"hq": None, "preview": None} for eid in episode_ids}
+
+    # Track DB paths for Object Storage restoration
+    _db_paths = {}  # episode_id -> {type_fichier: chemin}
 
     # 1. Single DB query for all episodes at once
     if _db_disponible():
@@ -187,6 +190,11 @@ def trouver_audio_batch(episode_ids: list) -> dict:
                     if eid not in result:
                         continue
                     p = Path(row["chemin"])
+                    # Track DB path for later restoration
+                    if eid not in _db_paths:
+                        _db_paths[eid] = {}
+                    if row["type_fichier"] not in _db_paths[eid]:
+                        _db_paths[eid][row["type_fichier"]] = row["chemin"]
                     if p.exists():
                         if row["type_fichier"] == "episode_preview" and not result[eid]["preview"]:
                             result[eid]["preview"] = p.name
@@ -195,7 +203,29 @@ def trouver_audio_batch(episode_ids: list) -> dict:
         except Exception as e:
             logger.debug("DB batch audio lookup failed: %s", e)
 
-    # 2. Filesystem fallback for episodes still missing audio
+    # 2. Object Storage restoration for episodes with DB paths but missing files
+    _needs_restore = [
+        eid for eid in episode_ids
+        if not result[eid]["preview"] and not result[eid]["hq"] and eid in _db_paths
+    ]
+    if _needs_restore:
+        try:
+            from persistent_storage import restore_episode_audio
+            for eid in _needs_restore:
+                restored = restore_episode_audio(eid)
+                if restored:
+                    # Re-check the DB paths after restoration
+                    for type_fichier, chemin in _db_paths[eid].items():
+                        p = Path(chemin)
+                        if p.exists():
+                            if type_fichier == "episode_preview" and not result[eid]["preview"]:
+                                result[eid]["preview"] = p.name
+                            elif type_fichier == "episode_hq" and not result[eid]["hq"]:
+                                result[eid]["hq"] = p.name
+        except Exception as e:
+            logger.debug("Object Storage batch restore failed: %s", e)
+
+    # 3. Filesystem fallback for episodes still missing audio
     missing = [eid for eid in episode_ids if not result[eid]["preview"] and not result[eid]["hq"]]
     if missing and config.OUTPUT_DIR.exists():
         # Single glob for all mp3 files, then match to episodes
