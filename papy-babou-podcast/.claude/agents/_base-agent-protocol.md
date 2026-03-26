@@ -165,12 +165,17 @@ Quand on passe un livrable existant à améliorer :
 
 ## Auto-évaluation (standard)
 
+**Objectif qualité : 9/10 minimum (4.5/5 sur chaque critère).** Chaque livrable sera évalué par @reviewer sur 5 critères (Complétude, Cohérence, Actionnabilité, Messages, Spécificité) avec un seuil de validation à 4.5/5. Un livrable sous ce seuil sera renvoyé pour corrections (max 3 itérations). Viser l'excellence dès la première passe.
+
 Avant de livrer, répondre mentalement à ces questions :
 
 ### Questions génériques (obligatoires pour tous)
-□ Ce livrable est-il spécifique à CE projet ou pourrait-il s'appliquer à n'importe quel autre ?
-□ Résiste-t-il à la question "pourquoi pas l'inverse ?" sur chaque choix majeur ?
-□ Un concurrent direct lirait-il ça et serait-il préoccupé ?
+□ Ce livrable est-il spécifique à CE projet ou pourrait-il s'appliquer à n'importe quel autre ? (critère Spécificité)
+□ Résiste-t-il à la question "pourquoi pas l'inverse ?" sur chaque choix majeur ? (critère Actionnabilité)
+□ Un concurrent direct lirait-il ça et serait-il préoccupé ? (critère Complétude)
+□ Ai-je explicitement référencé les livrables amont et aligné mes décisions ? (critère Cohérence)
+□ Ai-je signalé toutes les données manquantes et marqué les hypothèses ? (critère Messages)
+□ Zéro placeholder résiduel : aucun `[PLACEHOLDER]`, `[À REMPLIR]`, `[TODO]`, `[NOM]`, `[EXEMPLE]`, `[XX]` ne subsiste dans le livrable ? (critère Anti-placeholder)
 
 **Partie variable** : chaque agent a ≥5 questions spécifiques à son domaine.
 
@@ -189,6 +194,27 @@ Quand un agent modifie un livrable existant (pas une première production — un
 ---
 
 ## Protocole de fin de livrable (standard)
+
+### Vérification anti-placeholder (obligatoire)
+
+Avant de considérer un livrable comme terminé, effectuer un Grep sur le fichier produit pour détecter les placeholders oubliés :
+- Patterns à rechercher : `[À REMPLIR`, `[PLACEHOLDER`, `[TODO`, `[NOM`, `[EXEMPLE`, `[XX`, `[VOTRE`, `[INSÉRER`, `[REMPLACER`
+- Si un placeholder est détecté → le remplacer par la donnée réelle (depuis project-context.md ou les livrables amont) ou le supprimer s'il n'est pas pertinent
+- Si la donnée réelle n'est pas disponible → convertir en hypothèse marquée `[HYPOTHÈSE : ...]` conformément à la règle anti-invention
+- **Un livrable avec un placeholder oublié n'est PAS terminé.**
+- **Exception** : les marqueurs `[HYPOTHÈSE : ...]` et `[PROVISOIRE — ...]` ne sont PAS des placeholders — ce sont des annotations volontaires conformes au protocole d'escalade.
+
+### Vérification par les vrais outputs (recommandée)
+
+Ne jamais valider un livrable uniquement sur sa rédaction — valider sur ses **résultats réels** quand c'est applicable :
+- **Agents contenu** (@copywriter, @seo, @geo, @social) : si le livrable contient des templates ou des prompts de génération, générer au moins 1 exemple réel avec le profil du persona de project-context.md et vérifier la qualité de l'output
+- **Agents code** (@fullstack, @infrastructure, @qa) : le code doit compiler/s'exécuter, les tests doivent passer
+- **Agents stratégie** (@creative-strategy, @product-manager, @growth) : vérifier que les recommandations sont directement actionnables en les projetant sur le projet réel ("si je suivais cette recommandation maintenant, que se passerait-il concrètement ?")
+- **Agents IA** (@ia) : si le livrable contient des prompts LLM, tester au moins 1 prompt avec un input réaliste et évaluer l'output
+
+Si les vrais outputs révèlent des problèmes (hallucinations, incohérences, placeholders non remplacés, ton inadapté), corriger le livrable AVANT de le finaliser.
+
+### Mise à jour de l'historique
 
 Après chaque livrable terminé, ajouter une ligne dans le tableau "Historique des interventions agents" de `project-context.md` :
 

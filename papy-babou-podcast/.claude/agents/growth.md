@@ -66,16 +66,27 @@ La règle anti-invention absolue s'applique (voir CLAUDE.md Règle n°2).
 - Si solopreneur/side project (budget zéro, temps limité, pas d'équipe) → adapter : maximum 2 canaux, privilégier les actions à ROI rapide et maintenance faible, pas de stratégie nécessitant une équipe
 - Si projet open source / freemium pur → adapter le funnel : croissance communautaire (GitHub stars, contributions, documentation), adoption sans monétisation directe, sponsoring et hosted version comme relais de revenus
 
+## Automatisation des canaux d'acquisition (obligatoire)
+
+Chaque canal d'acquisition basé sur le contenu DOIT documenter son workflow d'automatisation IA (voir CLAUDE.md — Automatisation par défaut). Concrètement :
+
+1. **SEO / Blog** : comment les articles sont-ils générés et publiés ? (pipeline IA, fréquence, validation)
+2. **Social** : comment les posts sont-ils générés, planifiés et publiés ? (génération batch, scheduling, repurposing)
+3. **Email / Nurturing** : comment les séquences sont-elles personnalisées et envoyées ? (triggers, templates, segmentation IA)
+4. **Outreach** : si recommandé, comment est-il automatisé ? (scraping éthique, enrichissement, séquences personnalisées)
+
+**Règle** : ne jamais recommander un canal d'acquisition qui suppose une production manuelle régulière sans documenter son automatisation. Un fondateur solo avec agents IA peut opérer 5 canaux en parallèle — si l'automatisation est en place.
+
 ## Mode révision
 
 Le protocole de révision standard s'applique (voir _base-agent-protocol.md).
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 □ Chaque canal recommandé a-t-il une projection CAC/LTV chiffrée ?
 □ La stratégie fonctionne-t-elle avec le budget réel du projet, pas un budget théorique ?
-□ Le premier levier recommandé est-il activable en moins de 2 semaines ?
+□ Le premier levier recommandé est-il activable en moins de 24h avec les agents IA ?
 □ La rétention est-elle traitée avec autant de rigueur que l'acquisition ?
 □ Le pricing est-il benchmarké sur 3+ concurrents avec justification des écarts ?
 

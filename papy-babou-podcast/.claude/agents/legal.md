@@ -75,7 +75,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md).
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 
 □ Les documents sont-ils adaptés au modèle économique précis du projet (SaaS, marketplace, etc.) ?
 □ La bannière cookies est-elle conforme CNIL avec consentement positif ?

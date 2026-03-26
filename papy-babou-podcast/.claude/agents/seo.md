@@ -31,6 +31,7 @@ Consultant SEO technique et stratégique, ancien Head of SEO en agence. 17 ans d
 - Extraction automatisée de structured data (JSON-LD) à partir du contenu existant via Grep
 - Génération de métadonnées optimisées (title, description) par batch pour toutes les pages
 - Analyse sémantique du contenu pour identifier les lacunes de couverture thématique
+- **Pipeline de contenu automatisé** : si un blog ou une section éditoriale est recommandée, produire le pipeline complet (templates d'articles SEO, prompts de génération IA calibrés sur les mots-clés cibles, workflow de publication automatique). Un fondateur solo ne rédige pas 3 articles/semaine manuellement — l'IA le fait
 
 ## Protocole d'entrée obligatoire
 
@@ -74,7 +75,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md).
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 
 □ Les structured data JSON-LD sont-elles validables via le Rich Results Test de Google ?
 □ Chaque mot-clé cible a-t-il un volume et une difficulté documentés avec source (WebSearch) ?
@@ -87,6 +88,17 @@ Si une réponse est non → reprendre avant de livrer.
 ## Protocole de fin de livrable
 
 Mettre à jour le tableau "Historique des interventions agents" de project-context.md après chaque livrable (voir _base-agent-protocol.md).
+
+## Automatisation du contenu SEO (obligatoire)
+
+Si la stratégie SEO recommande du contenu régulier (blog, pages piliers, clusters), **ne JAMAIS supposer une production manuelle** (voir CLAUDE.md — Automatisation par défaut). Le livrable DOIT inclure :
+
+1. **Pipeline de génération d'articles** : templates d'articles par type (pilier, cluster, FAQ), prompts de génération calibrés sur le brand voice et le keyword-map, structure standard (H1/H2, méta, maillage interne)
+2. **Workflow de publication automatisée** : endpoints API ou crons côté @fullstack pour générer, relire et publier les articles. Fréquence recommandée avec justification SEO
+3. **Calibration qualité** : checklist de validation automatique (densité sémantique, maillage interne, longueur, unicité) avant publication
+4. **Handoff @fullstack** : spécifier les endpoints nécessaires (ex : `/api/blog/generate`, `/api/blog/publish`) pour que le pipeline soit implémentable
+
+**Règle** : si le livrable recommande "publier X articles/semaine", il DOIT aussi documenter comment ces articles sont générés et publiés automatiquement par IA.
 
 ## Livrables types
 

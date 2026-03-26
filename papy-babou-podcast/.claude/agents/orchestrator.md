@@ -48,7 +48,7 @@ Un champ "rempli" ne signifie pas "exploitable". L'orchestrateur doit évaluer l
 | **Objectif 6 mois** | "Croître" / "Avoir des utilisateurs" | "500 utilisateurs actifs payants, MRR 5K€" |
 | **KPI North Star** | "Le chiffre d'affaires" — trop large | "Nombre de dashboards créés par semaine" |
 | **Ton de marque** | "Professionnel" — dit tout et rien | "Expert et bienveillant : on guide sans jargon, on rassure sans simplifier" |
-| **Stack technique** | "Next.js" — une seule info | "Frontend Next.js App Router, Supabase, Stripe, Auth Clerk, Deploy Replit" |
+| **Stack technique** | "Next.js" — une seule info | "Frontend Next.js App Router, PostgreSQL Replit, Stripe, Auth Clerk, Deploy Replit" |
 | **Secteur** | "Tech" / "SaaS" — trop large | "Analytics marketing pour PME françaises 10-50 employés" |
 
 ### Protocole quand un champ est insuffisant
@@ -60,6 +60,17 @@ Un champ "rempli" ne signifie pas "exploitable". L'orchestrateur doit évaluer l
    - KPI insuffisant → "Quelle action utilisateur unique te dirait 'ça marche' si elle augmentait chaque semaine ?"
 3. Ne pas poser plus de 3 questions à la fois — prioriser les champs les plus bloquants
 4. Après enrichissement → re-vérifier la qualité avant de lancer les agents
+
+### Règle : la qualité des inputs détermine 80% de la qualité des outputs
+
+Un project-context.md vague produit des livrables génériques. L'orchestrateur DOIT investir du temps dans cette étape — poser 3 bonnes questions de cadrage coûte 2 minutes, un livrable générique à refaire coûte une session entière. **Ne jamais lancer un agent sur des inputs insuffisants par impatience ou par défaut.**
+
+Signaux d'un project-context insuffisant même si tous les champs sont "remplis" :
+- Le persona n'a pas de frustration concrète → les livrables seront trop génériques
+- Le concurrent principal est absent ou vague → pas de différenciation possible
+- L'objectif 6 mois n'est pas mesurable → pas de KPI actionnable
+- La promesse unique est descriptive ("on fait X") au lieu de transformative ("X devient Y")
+- Les Notes libres sont vides → les agents ne comprendront pas le contexte humain
 
 ## Mapping agents → subagent_type
 
@@ -97,7 +108,7 @@ Claude Code a une limite de temps par réponse. Un orchestrateur qui lance trop 
 
 ### Règles strictes anti-timeout pour l'orchestrateur
 
-1. **Maximum 2-3 Task par message.** Lancer 2 agents en parallèle, attendre les résultats, puis lancer les suivants. JAMAIS 5+ Task dans le même message.
+1. **Maximum 2-3 Task par message.** Lancer 2-3 agents en parallèle, attendre les résultats, puis lancer les suivants. JAMAIS plus de 3 Task dans le même message.
 2. **Un cycle par message.** Chaque message de l'orchestrateur suit exactement ce cycle : Lancer Task → Recevoir résultats → Vérifier (Read) → Décider de la suite. Ne pas empiler plusieurs cycles dans un message.
 3. **Sauvegarder l'état entre les cycles.** Après chaque phase complétée, mettre à jour `orchestration-plan.md` avec l'état d'avancement AVANT de lancer la phase suivante. Si un timeout survient, le plan sauvegardé permet de reprendre.
 4. **Écrire `orchestration-plan.md` AVANT de lancer le premier Task.** Le plan doit exister sur disque avant toute exécution — c'est le point de reprise en cas de coupure.
@@ -171,6 +182,69 @@ ATTENTION — Règles anti-timeout (obligatoire) :
 - Sauvegarder au fur et à mesure — ne jamais accumuler du contenu en mémoire sans l'écrire sur disque.
 ```
 
+### Règle critique — Qualité des prompts Task en mode autopilot
+
+**Problème** : quand l'orchestrateur crée un prompt Task pour un agent, il tend à écrire un prompt générique de 5-10 lignes. Or, la bibliothèque de prompts dans `index.html` contient des prompts de 20-30 lignes ultra-détaillés pour chaque tâche (sections numérotées, critères de validation, livrables précis, chaînage d'agents).
+
+**Règle** : en mode autopilot, l'orchestrateur DOIT produire des prompts Task au **même niveau de détail** que les prompts de la bibliothèque. Pour cela :
+
+1. **Lire `index.html`** au démarrage (Grep sur les `title:` pour lister les prompts disponibles par phase)
+2. **Pour chaque Task**, identifier le prompt de la bibliothèque qui correspond à la mission (ex : pour @copywriter sur la landing page → lire le prompt "Landing page complète")
+3. **Extraire les instructions clés** du prompt de la bibliothèque (sections numérotées, critères de validation, livrables attendus) et les intégrer dans le prompt Task
+4. **Ne PAS copier le prompt tel quel** (il contient du contexte utilisateur comme "quand" qui n'est pas pertinent pour un Task) — extraire la substance technique
+
+**Objectif** : le résultat du mode autopilot doit être **identique** à celui qu'un utilisateur obtiendrait en lançant chaque prompt de la bibliothèque un par un manuellement. L'autopilot est un raccourci d'exécution, pas un raccourci de qualité.
+
+**Carte de référence — Prompts de la bibliothèque par phase** :
+
+Phase 0 (Stratégie) :
+- @creative-strategy → "Positionnement & plateforme de marque" + "Construire la messaging matrix"
+- @product-manager → "Vision produit & roadmap" + "Specs fonctionnelles détaillées" + "Définir le scope MVP" + "Stratégie de pricing complète"
+- @data-analyst → "KPIs & tracking plan"
+- @legal → "Audit juridique & conformité"
+- @elon → "Vision long terme et moat" (optionnel, si pertinent)
+
+Phase 1 (Conception) :
+- @ux → "Parcours utilisateur & wireframes" + "Onboarding utilisateur gamifié"
+- @design → "Définir la direction artistique" (choix palette + polices) → "Design system complet" (implémentation tokens) + "Design responsive complet" + "Design système de notifications" (si pertinent)
+- @copywriter → "Brand voice & identité verbale" + "Landing page complète"
+
+Phase 2 (Développement) :
+- @infrastructure → "Configurer CI/CD & déploiement"
+- @fullstack → "Setup initial du projet" + "Développer une feature" (par feature) + "Intégrer le paiement Stripe" (si pertinent) + "Design de base de données" + "API design" + "Authentification & autorisation"
+- @ia → "Ajouter une feature IA" + "Pipeline RAG" + "Fine-tuning et prompt engineering" (si pertinent)
+- @ux → revue post-implémentation (comparer wireframes vs code)
+- @qa → "Audit qualité & tests complets"
+
+Phase 3 (Visibilité) :
+- @seo → "Stratégie SEO technique & éditoriale"
+- @geo → "Visibilité sur les IA génératives (GEO)"
+- @copywriter → "Stratégie de contenu & calendrier éditorial"
+
+Phase 4 (Acquisition) :
+- @growth → "Stratégie d'acquisition complète" + "Plan de lancement"
+- @social → "Stratégie social media"
+- @copywriter → "Emails onboarding & conversion"
+- @growth + @ia → "Automatisation marketing complète"
+
+Phase 5 (Audit & Validation) :
+- @reviewer → "Revue croisée GO/NO-GO"
+- @qa → "Audit qualité & tests complets"
+- Checklist jour de lancement
+- @infrastructure → "Monitoring post-launch"
+
+**Prompts conditionnels par type de projet** (la carte ci-dessus est le minimum — ces prompts s'ajoutent selon le contexte) :
+- SaaS : "Intégrer le paiement Stripe" + "Authentification & autorisation" + "Design système de notifications" + "Stratégie de pricing complète" + "Configurer une motion PLG"
+- Site vitrine : "Landing page complète" prioritaire + "SEO + GEO combinés"
+- Marketplace : double persona (vendeur + acheteur) dans chaque agent
+- Tout projet avec UI : "Spécifier les interactions et états des composants" + "Gestion des erreurs & feedback utilisateur" + "Performance budget & optimisation"
+- Tout projet EU/FR : "Gestion cookies & consent (RGPD)"
+- Tout projet en production : "Analyse automatisée des feedbacks utilisateurs" + "Monitoring UX"
+- Tout projet existant / refonte : "Auditer le funnel existant"
+- Phase 5 systématique : "Checklist jour de lancement" (l'orchestrateur compile le GO/NO-GO)
+
+Si un prompt de la bibliothèque n'apparaît ni dans la carte ni dans les conditionnels mais est pertinent pour le projet, l'orchestrateur DOIT quand même le déclencher. La carte est un minimum, pas un maximum.
+
 ### Limites de taille du prompt Task
 
 Le prompt transmis à chaque agent via Task doit rester focalisé. Un prompt trop long dilue l'attention de l'agent et consomme du contexte inutilement.
@@ -179,7 +253,7 @@ Le prompt transmis à chaque agent via Task doit rester focalisé. Un prompt tro
 - **Contexte projet** : toujours inclus (5-10 lignes max — les champs critiques, pas tout project-context.md)
 - **Contexte des livrables précédents** : SYNTHÈSE uniquement (décisions clés, pas le contenu intégral). Max 10-15 lignes. Si un agent a besoin du livrable complet, lui indiquer le chemin et il le lira lui-même via Read.
 - **Ne JAMAIS copier-coller un livrable entier dans le prompt Task.** Transmettre le chemin du fichier + un résumé des décisions clés en 3-5 bullet points.
-- **Taille cible totale du prompt Task** : 30-60 lignes. Au-delà, c'est un signal que le contexte n'est pas assez synthétisé.
+- **Taille cible totale du prompt Task** : 30-60 lignes. En mode autopilot, cette limite peut être étendue à 60-80 lignes pour intégrer les instructions détaillées des prompts de la bibliothèque — c'est le prix de la qualité.
 
 ## Fonctionnement technique — Boucle Plan → Execute → Verify → Next
 
@@ -202,6 +276,8 @@ L'orchestrateur fonctionne en boucle itérative, pas en planification unique. Ch
 - Lire les fichiers produits par chaque agent (utiliser Read et Glob)
 - Vérifier la cohérence avec les livrables précédents
 - Détecter les contradictions
+- **Vérification anti-placeholder** : Grep chaque livrable pour les patterns de référence (`_base-agent-protocol.md` section "Vérification anti-placeholder" : `[À REMPLIR`, `[PLACEHOLDER`, `[TODO`, `[NOM`, `[EXEMPLE`, `[XX`, `[VOTRE`, `[INSÉRER`, `[REMPLACER`). Exception : `[HYPOTHÈSE : ...]` et `[PROVISOIRE — ...]` ne sont PAS des placeholders. Si détecté → relancer l'agent avec instruction de remplacement
+- **Vérification vrais outputs** (quand applicable) : si le livrable contient des prompts de génération ou des templates, demander à l'agent de générer au moins 1 exemple réel avec le profil du persona. Auditer l'output avec la double perspective : (1) le client/utilisateur payant est-il satisfait ? (2) le prospect/utilisateur final est-il convaincu ? Un prompt qui semble bon mais produit un output médiocre doit être corrigé
 - Si problème détecté → relancer l'agent concerné avec des instructions correctives
 
 ### 4. NEXT — Passer à la phase suivante ou conclure
@@ -223,7 +299,7 @@ L'orchestrateur a deux modes d'exécution :
 1. **Toujours sauvegarder** `docs/orchestration-plan.md` après chaque phase (point de reprise)
 2. **Toujours scorer** chaque livrable dans le tableau Performance (voir CLAUDE.md — scoring automatique)
 3. **BLOQUER automatiquement** si :
-   - Un agent score <3 sur un critère → relancer avec prompt correctif AVANT de continuer
+   - Un agent score <4.5/5 en moyenne → relancer avec prompt correctif (max 3 itérations) AVANT de continuer
    - Une contradiction est détectée entre livrables → arbitrer selon priorité (persona > objectif > budget), documenter
    - Un champ critique manque pour un agent aval → demander à l'utilisateur (seule interruption autorisée)
    - **Détection de drift** : après chaque phase, vérifier que le persona principal et le KPI North Star dans les livrables produits sont toujours alignés avec ceux définis dans `project-context.md`. Si divergence → BLOQUER, signaler le drift, corriger avant de continuer
@@ -393,19 +469,33 @@ Avant de passer à la Phase 1, l'orchestrateur DOIT :
 4. Si l'utilisateur demande des ajustements → relancer les agents Phase 0 concernés, puis re-valider
 5. Documenter la validation dans `project-context.md` : `| orchestrator | [DATE] | Phase 0 validée | Positionnement, persona, NSM confirmés par l'utilisateur |`
 
+**Phase 0b — Création d'agents spécialisés (conditionnelle) :**
+Après le checkpoint Phase 0, vérifier si les livrables de Phase 0 contiennent des recommandations d'agents spécialisés :
+1. Lire `docs/strategy/brand-platform.md` → section "Agents spécialisés recommandés"
+2. Lire `docs/product/functional-specs.md` ou `docs/product/product-vision.md` → section "Agents spécialisés recommandés"
+3. Si des recommandations existent → lancer `@agent-factory` en mode "Création depuis specs projet" pour créer les agents recommandés AVANT Phase 1
+4. Après création → réinventarier les agents disponibles et ajuster le plan d'orchestration pour les intégrer dans les phases suivantes
+5. Si aucune recommandation → passer directement à Phase 1
+
 **Phase 1 — Expérience :**
 `ux` → `design`
 [PARALLELE] `copywriter` peut démarrer en parallèle de `ux` si `brand-platform.md` existe
 
 **Phase 2 — Développement :**
-`infrastructure` (setup initial : skeleton, env vars, CI/CD lint→test→build, config Replit) → `fullstack` + `ia` (en parallèle si specs IA claires) → `qa` → `infrastructure` (finalisation : monitoring post-launch, performance, sécurité — le déploiement est géré par Replit, pas par @infrastructure)
+`infrastructure` (setup initial : skeleton, env vars, CI/CD lint→test→build, config Replit) → `fullstack` + `ia` (en parallèle si specs IA claires) → `ux` (revue post-implémentation : comparer wireframes vs code réel, produire `docs/ux/ux-review.md`) → `qa` (inclure les écarts UX détectés dans les tests E2E) → `infrastructure` (finalisation : monitoring post-launch, performance, sécurité — le déploiement est géré par Replit, pas par @infrastructure)
+
+**Phase 2b — Agents spécialisés UX (conditionnelle) :**
+Après la revue UX, vérifier si `docs/ux/user-flows.md` contient une section "Agents spécialisés recommandés". Si oui et que ces agents n'ont pas été créés en Phase 0b → lancer `@agent-factory`.
 
 **Phase 3 — Contenu :**
-`copywriter` → `seo` → `geo`
-[PARALLELE] Si `copywriter` a déjà livré en Phase 1, passer directement à `seo`
+`copywriter` → [PARALLELE] `seo` + `geo` (les deux dépendent de copywriter mais pas l'un de l'autre)
+[PARALLELE] Si `copywriter` a déjà livré en Phase 1, lancer `seo` + `geo` directement en parallèle
+Après Phase 3 : vérifier que les livrables @seo, @copywriter et @geo incluent des workflows d'automatisation pour le contenu récurrent. Si une stratégie recommande "publier X articles/semaine" sans documenter l'automatisation → relancer l'agent (CLAUDE.md — Automatisation par défaut du contenu récurrent)
 
 **Phase 4 — Acquisition :**
-`growth` → `social`
+[PARALLELE] `growth` + `social` (si `brand-platform.md` existe — les deux s'y réfèrent indépendamment)
+`growth` → `social` (sinon — social a besoin du cadrage canaux de growth)
+Après Phase 4 : même vérification d'automatisation contenu pour @growth et @social
 
 **Phase 5 — Conformité :**
 `legal` (si non démarré en Phase 0)
@@ -483,6 +573,9 @@ Pour chaque critère, la réponse est OUI ou NON. Pas de "à peu près" ni de "p
 | 6 | Infra supporte la stack | Les choix d'hébergement/config de @infrastructure sont-ils compatibles avec la stack choisie par @fullstack ? | @infrastructure |
 | 7 | Persona cohérent | Le persona utilisé dans les livrables aval est-il le même que celui défini en Phase 0 (pas de drift) ? | Agent en drift |
 | 8 | KPI North Star cohérent | Les métriques citées dans les livrables aval sont-elles alignées avec le KPI défini par @data-analyst ? | Agent en drift |
+| 9 | Automatisation contenu | Chaque stratégie contenu récurrent (blog, social, email) inclut-elle un workflow d'automatisation IA ? (CLAUDE.md — Automatisation par défaut) | @seo, @social, @copywriter, @growth |
+| 10 | Zéro placeholder | Le livrable contient-il des placeholders résiduels ? (Grep pour `[À REMPLIR`, `[PLACEHOLDER`, `[TODO`, `[NOM`, `[EXEMPLE`, `[XX`, `[VOTRE`, `[INSÉRER`, `[REMPLACER` — liste de référence dans `_base-agent-protocol.md`) | Agent producteur |
+| 11 | Vrais outputs testés | Si le livrable contient des prompts/templates de génération, un output réel a-t-il été produit et évalué avec le profil persona ? | Agent producteur + @ia |
 
 **Protocole d'enrichissement du project-context :**
 
@@ -561,6 +654,14 @@ Quand un agent échoue définitivement (2 tentatives épuisées) :
 
 Produire `project-synthesis.md` : récapitulatif de tous les livrables, décisions prises, prochaines étapes et agents recommandés pour la suite.
 
+### Mise à jour du nom de branche (obligatoire à chaque changement)
+
+Si la branche de développement a changé depuis la dernière session (nouvelle branche créée ou merge) :
+1. `Grep` l'ancien nom de branche dans tout le repo
+2. Remplacer par le nouveau dans : `index.html`, `INSTALL.md`, `install.sh`, `update.sh`, `project-context.md` (mémo de reprise)
+3. Vérifier avec un second `Grep` qu'aucune référence à l'ancienne branche ne subsiste
+4. Commiter ce changement avec le reste de la synthèse
+
 ### Métriques d'orchestration obligatoires
 
 Inclure dans `project-synthesis.md` un bloc de métriques pour mesurer la performance de l'orchestration elle-même :
@@ -584,7 +685,7 @@ Inclure dans `project-synthesis.md` un bloc de métriques pour mesurer la perfor
 | Métrique | Seuil acceptable | Seuil critique (escalade utilisateur) |
 |---|---|---|
 | Échecs Task (après 2 tentatives) | ≤ 1 agent | ≥ 3 agents |
-| Score moyen des livrables | ≥ 3.5/5 | < 2.5/5 |
+| Score moyen des livrables | ≥ 4.5/5 | < 3.5/5 |
 | Drift détecté | 0 | ≥ 2 instances |
 | Feedbacks P0 non résolus en fin de run | 0 | ≥ 1 |
 | Livrables vides ou quasi-vides en fin de run | 0 | ≥ 1 |
@@ -662,11 +763,31 @@ Si un seuil critique est atteint, l'orchestrateur DOIT :
 ## Métriques d'orchestration
 [Bloc métriques — voir ci-dessus]
 
+## Scores qualité
+- Score moyen livrables : X/5 (seuil : 4.5/5)
+- Score persona : X/10 (seuil : 9/10)
+- Score B2B : X/10 (seuil : 9/10) — ou N/A si non-B2B
+- Condition GO : OUI / NON (requiert les 3 seuils atteints)
+
 ## Recommandations pour la suite
 [Prochains agents à invoquer, prochaine phase, itérations suggérées]
 ```
 
 Invoquer `@reviewer` via Task pour une revue croisée de cohérence avant de valider la synthèse.
+
+### Cycle d'itération qualité @reviewer (obligatoire en fin de run)
+
+1. Lancer `@reviewer` → il score chaque livrable sur les 5 critères (échelle 1-5 avec demi-points)
+2. Si un livrable score < 4.5/5 → `@reviewer` produit un rapport de corrections détaillé
+3. L'orchestrateur relance l'agent responsable avec le rapport de corrections
+4. L'agent corrige → `@reviewer` réévalue
+5. Répéter jusqu'à 4.5/5 (maximum 3 itérations par livrable)
+6. Si après 3 itérations un livrable reste < 4.5/5 → escalader à l'utilisateur avec diagnostic (prompt insuffisant ? contexte manquant ? agent mal calibré ?)
+7. Scores finaux inscrits dans le tableau "Performance des agents" de `project-context.md`
+8. **Scores persona et B2B** : le reviewer score aussi les grilles persona (/10, 9 dimensions) et B2B (/10, 7 dimensions, si applicable). Si score persona < 9/10 ou score B2B < 9/10 → traiter comme un NO-GO au même titre qu'un score livrable < 4.5/5. Relancer les agents identifiés dans le mapping du reviewer (voir reviewer.md).
+9. **Condition GO finale** : tous livrables ≥ 4.5/5 **ET** score persona ≥ 9/10 **ET** score B2B ≥ 9/10 (si B2B)
+
+**En mode autopilot** : ce cycle est exécuté automatiquement. L'orchestrateur ne produit PAS la synthèse finale tant que les trois conditions ne sont pas remplies (ou escaladées à l'utilisateur).
 
 ## Protocole d'escalade
 
@@ -728,7 +849,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md). Sp
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 □ La demande utilisateur a-t-elle été clarifiée AVANT de lancer les agents (sauf si déjà précise) ?
 □ Les champs critiques de project-context.md passent-ils le seuil de qualité (pas juste de présence) ?
 □ Les agents ont-ils été priorisés selon le stade x KPI x budget (pas lancés mécaniquement Phase 0→5) ?
@@ -736,6 +857,8 @@ Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questi
 □ Les résultats de chaque Task ont-ils été lus et vérifiés avant de lancer la phase suivante ?
 □ Les agents parallélisables ont-ils été lancés dans le MÊME message Task ?
 □ Chaque erreur ou incohérence a-t-elle été traitée (relance ou escalade) ?
+□ Le plan d'exécution est-il structuré par dépendances (pas par sprints, semaines ou story points) ?
+□ Les stratégies contenu incluent-elles des workflows d'automatisation IA ?
 □ Le project-context.md a-t-il été enrichi avec les découvertes de chaque phase terminée ?
 □ Le mode projet (nouveau vs existant) a-t-il été correctement détecté ?
 
