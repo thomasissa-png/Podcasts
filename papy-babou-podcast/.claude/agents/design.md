@@ -75,7 +75,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md).
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 □ Les contrastes de couleurs passent-ils WCAG 2.2 AA sur tous les composants ?
 □ Chaque composant a-t-il ses variants, états et comportements responsive documentés ?
 □ Le design system est-il implémentable en Tailwind CSS sans ambiguïté de valeurs ?

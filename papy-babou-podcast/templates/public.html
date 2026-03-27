@@ -23,6 +23,9 @@
   <link rel="canonical" href="https://papybabou.fr">
   <link rel="alternate" hreflang="fr" href="https://papybabou.fr">
   <meta name="theme-color" content="#5B9BD5">
+  {% if umami_id %}
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="{{ umami_id }}"></script>
+  {% endif %}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -2567,10 +2570,29 @@
     });
 
     // ── Audio Player ──
+    // ── Umami tracking — anti-double-comptage ──
+    var _trackedPlays = new Set();
+    var _trackedComplete = new Set();
+
+    function _trackEvent(name, data) {
+      if (typeof umami !== 'undefined') {
+        try { umami.track(name, data); } catch(e) {}
+      }
+    }
+
     function playEpisode(ep) {
       if (currentEpisodeId === ep.episode_id && isPlaying) {
         audio.pause();
         return;
+      }
+      // Track play_episode — once per episode per session
+      if (!_trackedPlays.has(ep.episode_id)) {
+        _trackedPlays.add(ep.episode_id);
+        _trackEvent('play_episode', {
+          episode_id: ep.episode_id,
+          titre: ep.titre,
+          saison: ep.saison
+        });
       }
       if (currentEpisodeId !== ep.episode_id) {
         audio.src = ep.audio_url;
@@ -2662,6 +2684,15 @@
       if (currentEpisodeId && audio.duration > 0) {
         var progress = audio.currentTime / audio.duration;
         if (progress > 0.1) markAsListened(currentEpisodeId, progress);
+        // Track episode_complete at >= 80% — once per episode per session
+        if (progress >= 0.8 && !_trackedComplete.has(currentEpisodeId)) {
+          _trackedComplete.add(currentEpisodeId);
+          _trackEvent('episode_complete', {
+            episode_id: currentEpisodeId,
+            titre: currentEpisodeData ? currentEpisodeData.titre : '',
+            duree_pct: Math.round(progress * 100)
+          });
+        }
       }
     });
 
@@ -2772,6 +2803,7 @@
           body: JSON.stringify({ email: email })
         }).then(function(resp) {
           if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          _trackEvent('newsletter_subscribe', { source: 'public_site' });
           subForm.style.display = 'none';
           subSuccess.style.display = 'block';
         }).catch(function() {

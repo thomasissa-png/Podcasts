@@ -96,7 +96,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md). Sp
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 □ Chaque claim est-il vérifiable, sourcé, et score ≥2/3 sur la grille de scoring ?
 □ Le contenu restructuré conserve-t-il les mots-clés cibles identifiés dans keyword-map.md (compatibilité SEO) ?
 □ Les entités nommées et définitions sont-elles en format directement extractible (Q&A, liste, définition) ?

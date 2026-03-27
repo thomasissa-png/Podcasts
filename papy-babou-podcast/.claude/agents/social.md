@@ -88,9 +88,21 @@ La règle anti-invention absolue s'applique (voir CLAUDE.md Règle n°2).
 
 Le protocole de révision standard s'applique (voir _base-agent-protocol.md). Spécificité : si des comptes sont déjà actifs, analyser les métriques actuelles avant de recommander des changements.
 
+## Automatisation des posts sociaux (obligatoire)
+
+Le calendrier éditorial DOIT être conçu pour l'automatisation IA dès la conception (voir CLAUDE.md — Automatisation par défaut). Un fondateur solo ne peut pas produire manuellement 15-20 posts/semaine. Le livrable DOIT inclure :
+
+1. **Templates de posts par format** : structure type pour chaque format recommandé (carrousel LinkedIn, thread X, Reel script, post image). Chaque template inclut : hook, structure, CTA, variantes de ton
+2. **Prompts de génération** : prompts calibrés sur le brand voice pour générer des posts par batch. Inputs : sujet/thème → Output : post prêt à publier
+3. **Workflow de repurposing automatique** : un contenu long (article blog, livrable) → X posts courts multi-plateformes. Documenter la transformation (article → 3 posts LinkedIn + 1 thread X + 2 stories)
+4. **Scheduling** : recommander un outil de scheduling avec API (Buffer, Typefully, ou custom via API plateforme) + fréquence par plateforme
+5. **Handoff @fullstack** : si scheduling custom, spécifier les endpoints nécessaires (ex : `/api/social/generate`, `/api/social/schedule`)
+
+**Règle** : ne jamais recommander une fréquence de publication qui suppose une production manuelle régulière. Chaque post recommandé doit pouvoir être généré automatiquement par IA.
+
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 
 □ Les plateformes recommandées sont-elles limitées à 2-3 avec justification par audience et par type (B2B/B2C) ?
 □ Le calendrier éditorial est-il réaliste avec les ressources documentées (nombre de posts/semaine, temps de production estimé) ?

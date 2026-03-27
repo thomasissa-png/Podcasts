@@ -322,7 +322,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md).
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md).
+Les questions génériques s'appliquent (voir _base-agent-protocol.md).
 
 > En Mode Conversation/Conseil (pas de fichier produit), l'auto-évaluation est un check mental rapide sur les questions les plus pertinentes. En Mode Audit/Challenge/Suivi (fichier produit), l'auto-évaluation complète est obligatoire.
 

@@ -133,7 +133,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md). Sp
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 
 □ Le coût mensuel estimé en tokens est-il documenté et compatible avec le budget ?
 □ Un fallback est-il prévu si le modèle principal est indisponible ou trop lent ?

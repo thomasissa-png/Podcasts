@@ -33,7 +33,7 @@ Après la lecture de project-context.md, chaque agent DOIT :
    - **Technique** : donner les détails d'implémentation, les trade-offs, les alternatives techniques considérées
    - **Expert** : aller droit aux décisions, justifier par les contraintes techniques, pas besoin de vulgariser
 3. **Comprendre les enjeux personnels** : le projet n'est pas qu'un ensemble de specs — il y a une personne derrière avec des contraintes, des ambitions, et des peurs. Adapter le ton et les priorités en conséquence
-4. **Évaluer les ressources disponibles** : taille de l'équipe, compétences internes, budget, temps — ne jamais recommander quelque chose d'inexécutable avec les moyens en place
+4. **Évaluer les contraintes réelles** (mindset IA) : en mode équipe 100% IA (pas d'équipe humaine dans project-context.md), les seules contraintes pertinentes sont : budget financier réel (APIs, hébergement, services payants) et dépendances externes humaines (signatures, validations légales, accès tiers). Le temps de développement, les compétences internes et la "complexité" ne sont PAS des contraintes — l'IA les gère. Ne JAMAIS réduire le scope, choisir une techno inférieure, ou différer une tâche parce que "c'est plus rapide/simple". En mode équipe hybride (humains + IA) : adapter aux contraintes humaines réelles
 
 **Partie variable** : chaque agent peut ajouter des critères d'adaptation spécifiques à son domaine.
 
@@ -165,12 +165,17 @@ Quand on passe un livrable existant à améliorer :
 
 ## Auto-évaluation (standard)
 
+**Objectif qualité : 100% gates PASS.** Chaque livrable sera évalué par @reviewer via 20 gates binaires (PASS/FAIL) — voir CLAUDE.md. Un livrable avec ≥ 1 gate BLOQUANT en FAIL sera renvoyé pour corrections (max 3 itérations). Les gates sont vérifiables objectivement (Grep, Read, comparaison) — pas de jugement subjectif.
+
 Avant de livrer, répondre mentalement à ces questions :
 
 ### Questions génériques (obligatoires pour tous)
-□ Ce livrable est-il spécifique à CE projet ou pourrait-il s'appliquer à n'importe quel autre ?
-□ Résiste-t-il à la question "pourquoi pas l'inverse ?" sur chaque choix majeur ?
-□ Un concurrent direct lirait-il ça et serait-il préoccupé ?
+□ Ce livrable est-il spécifique à CE projet ou pourrait-il s'appliquer à n'importe quel autre ? (critère Spécificité)
+□ Résiste-t-il à la question "pourquoi pas l'inverse ?" sur chaque choix majeur ? (critère Actionnabilité)
+□ Un concurrent direct lirait-il ça et serait-il préoccupé ? (critère Complétude)
+□ Ai-je explicitement référencé les livrables amont et aligné mes décisions ? (critère Cohérence)
+□ Ai-je signalé toutes les données manquantes et marqué les hypothèses ? (critère Messages)
+□ Zéro placeholder résiduel : aucun `[PLACEHOLDER]`, `[À REMPLIR]`, `[TODO]`, `[NOM]`, `[EXEMPLE]`, `[XX]` ne subsiste dans le livrable ? (critère Anti-placeholder)
 
 **Partie variable** : chaque agent a ≥5 questions spécifiques à son domaine.
 
@@ -189,6 +194,27 @@ Quand un agent modifie un livrable existant (pas une première production — un
 ---
 
 ## Protocole de fin de livrable (standard)
+
+### Vérification anti-placeholder (obligatoire)
+
+Avant de considérer un livrable comme terminé, effectuer un Grep sur le fichier produit pour détecter les placeholders oubliés :
+- Patterns à rechercher : `[À REMPLIR`, `[PLACEHOLDER`, `[TODO`, `[NOM`, `[EXEMPLE`, `[XX`, `[VOTRE`, `[INSÉRER`, `[REMPLACER`
+- Si un placeholder est détecté → le remplacer par la donnée réelle (depuis project-context.md ou les livrables amont) ou le supprimer s'il n'est pas pertinent
+- Si la donnée réelle n'est pas disponible → convertir en hypothèse marquée `[HYPOTHÈSE : ...]` conformément à la règle anti-invention
+- **Un livrable avec un placeholder oublié n'est PAS terminé.**
+- **Exception** : les marqueurs `[HYPOTHÈSE : ...]` et `[PROVISOIRE — ...]` ne sont PAS des placeholders — ce sont des annotations volontaires conformes au protocole d'escalade.
+
+### Vérification par les vrais outputs (recommandée)
+
+Ne jamais valider un livrable uniquement sur sa rédaction — valider sur ses **résultats réels** quand c'est applicable :
+- **Agents contenu** (@copywriter, @seo, @geo, @social) : si le livrable contient des templates ou des prompts de génération, générer au moins 1 exemple réel avec le profil du persona de project-context.md et vérifier la qualité de l'output
+- **Agents code** (@fullstack, @infrastructure, @qa) : le code doit compiler/s'exécuter, les tests doivent passer
+- **Agents stratégie** (@creative-strategy, @product-manager, @growth) : vérifier que les recommandations sont directement actionnables en les projetant sur le projet réel ("si je suivais cette recommandation maintenant, que se passerait-il concrètement ?")
+- **Agents IA** (@ia) : si le livrable contient des prompts LLM, tester au moins 1 prompt avec un input réaliste et évaluer l'output
+
+Si les vrais outputs révèlent des problèmes (hallucinations, incohérences, placeholders non remplacés, ton inadapté), corriger le livrable AVANT de le finaliser.
+
+### Mise à jour de l'historique
 
 Après chaque livrable terminé, ajouter une ligne dans le tableau "Historique des interventions agents" de `project-context.md` :
 

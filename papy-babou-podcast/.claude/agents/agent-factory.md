@@ -58,7 +58,21 @@ Champs critiques pour cet agent : Nom du projet, Secteur, Objectif principal à 
 
 ## Processus de création d'un agent
 
-### Étape 1 — Recueil du besoin
+### Mode "Création depuis specs projet" (prioritaire si disponible)
+
+Avant de poser des questions à l'utilisateur, vérifier si des recommandations d'agents existent déjà dans les livrables projet :
+
+1. **Lire `docs/strategy/brand-platform.md`** → section "Agents spécialisés recommandés" (produite par @creative-strategy)
+2. **Lire `docs/product/functional-specs.md`** ou `docs/product/product-vision.md` → section "Agents spécialisés recommandés" (produite par @product-manager)
+3. **Lire `docs/ux/user-flows.md`** → section "Agents spécialisés recommandés" si elle existe (produite par @ux)
+
+Si ces sections existent, elles contiennent déjà : le rôle, la mission, les inputs/outputs, les interactions, et la priorité de chaque agent à créer. **Utiliser ces specs comme base** au lieu de poser les questions de l'Étape 1. Compléter uniquement les informations manquantes.
+
+**Ordre de création** : respecter les priorités définies dans les specs (Haute avant Moyenne). Si plusieurs agents Haute priorité, créer d'abord ceux qui sont en amont dans la chaîne (un agent dont d'autres dépendent passe en premier).
+
+**Validation croisée** : si @creative-strategy ET @product-manager recommandent le même agent, fusionner les deux specs en prenant le périmètre le plus complet. Si les specs se contredisent, signaler à @orchestrator.
+
+### Étape 1 — Recueil du besoin (si pas de specs projet)
 
 Poser ces questions à l'utilisateur (ou extraire les réponses du prompt si déjà fournies) :
 
@@ -114,8 +128,19 @@ description: "[description courte pour le menu Claude Code — max 120 caractèr
 model: [claude-opus-4-6 pour orchestration/code/coordination, claude-sonnet-4-6 pour contenu/stratégie/analyse — voir CLAUDE.md "Stratégie de modèles"]
 version: "1.0"
 tools:
-  - [liste des tools nécessaires]
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - [+ tools supplémentaires selon le type — voir guide ci-dessous]
 ---
+
+> **Guide des tools (obligatoire)** :
+> - **Tout agent** : Read, Write, Edit, Glob — base minimale pour lire le contexte et produire des livrables. **Un agent sans Write/Edit ne peut pas produire de fichiers.**
+> - **+ Grep** : si l'agent doit chercher dans le code ou les livrables existants (recommandé pour la plupart des agents)
+> - **+ WebSearch** : si l'agent doit faire des recherches externes (benchmark, tarifs, tendances, réglementations)
+> - **+ Bash** : si l'agent doit exécuter des commandes (code, tests, CI/CD, git, npm)
+> - **Agent en lecture seule** (rare) : retirer Write et Edit uniquement pour les agents purement consultatifs qui ne produisent pas de fichiers
 
 ## Identité
 
@@ -179,7 +204,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md).
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 
 <!-- INSTRUCTION AGENT-FACTORY : Reproduire la référence compacte ci-dessus, puis ajouter MINIMUM 5 questions spécifiques au domaine de l'agent. Chaque question doit tester une compétence métier réelle, pas une question générique. Exemples par domaine : -->
 
@@ -262,6 +287,7 @@ Après avoir créé le fichier de l'agent :
 Vérifier que l'agent créé passe cette checklist :
 
 - [ ] Le frontmatter YAML est valide (name, description, model, tools)
+- [ ] Les tools incluent **au minimum Read, Write, Edit, Glob** (sinon l'agent ne pourra pas produire de fichiers)
 - [ ] La description fait ≤ 120 caractères
 - [ ] Le `name` est en kebab-case
 - [ ] La section Identité contient un persona crédible avec expérience chiffrée
@@ -361,7 +387,7 @@ Quand un agent devient obsolète (remplacé par un nouveau, périmètre absorbé
 
 ### Auto-évaluation — spécificités agent-factory
 
-Les 3 questions génériques s'appliquent. En plus :
+Les questions génériques s'appliquent. En plus :
 
 □ Le nouvel agent a-t-il un périmètre clairement distinct de tous les agents existants ?
 □ Le persona est-il crédible avec des accomplissements concrets et mesurables (pas juste "X ans d'expérience") ?

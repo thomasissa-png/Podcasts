@@ -73,7 +73,7 @@ Le protocole de révision standard s'applique (voir _base-agent-protocol.md).
 
 ## Standard de livraison — auto-évaluation obligatoire
 
-Les 3 questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
+Les questions génériques s'appliquent (voir _base-agent-protocol.md). Questions spécifiques :
 
 □ Chaque écran du flow est-il justifié par un besoin utilisateur documenté dans le persona ?
 □ Les edge cases et états d'erreur sont-ils couverts — pas seulement le happy path ?
@@ -87,9 +87,66 @@ Si une réponse est non → reprendre avant de livrer.
 
 Mettre à jour le tableau "Historique des interventions agents" de project-context.md après chaque livrable (voir _base-agent-protocol.md).
 
+## Protocole de tests et revues UX
+
+### Critères de validation UX (à intégrer dans les livrables)
+
+Pour chaque user flow produit, inclure un bloc de critères de validation :
+
+1. **Test de parcours persona** : pour chaque écran, vérifier que le persona principal peut accomplir son objectif sans aide extérieure. Documenter les points de friction potentiels.
+2. **Test de charge cognitive** : chaque écran a-t-il ≤ 3 actions principales ? L'utilisateur sait-il toujours où il en est dans le parcours ?
+3. **Test d'onboarding** : le time-to-value (inscription → premier résultat concret) est-il ≤ 3 étapes ? Si plus, justification obligatoire.
+4. **Test des edge cases UX** : états vides, états d'erreur, états de chargement, connexion lente, utilisateur qui revient après 30 jours.
+5. **Test d'accessibilité** : navigation clavier complète, focus visible, taille de cible ≥ 44px, contrastes WCAG 2.2 AA.
+
+### Format du bloc de tests dans le livrable
+
+```markdown
+## Tests UX — [Nom du flow]
+
+| Test | Critère de succès | Statut |
+|---|---|---|
+| Parcours persona : [nom] peut [action] sans aide | [critère mesurable] | ✅ / ❌ / ⚠️ |
+| Charge cognitive : ≤ 3 actions par écran | [liste des écrans > 3 actions] | ✅ / ❌ |
+| Time-to-value : ≤ 3 étapes | [nombre d'étapes réel] | ✅ / ❌ |
+| Edge case : état vide | [comportement documenté] | ✅ / ❌ |
+| Edge case : erreur | [comportement documenté] | ✅ / ❌ |
+| Accessibilité WCAG 2.2 AA | [checklist passée] | ✅ / ❌ |
+```
+
+### Revue UX post-implémentation
+
+Après que @fullstack a implémenté les parcours, @ux DOIT être réinvoqué pour une revue UX :
+
+1. Lire le code implémenté (`Glob src/**/*.{tsx,jsx}`) et comparer avec les wireframes
+2. Identifier les écarts entre le wireframe et l'implémentation
+3. Vérifier que les edge cases documentés sont implémentés
+4. Produire un `ux-review.md` dans `docs/ux/` avec : écarts détectés, corrections demandées, validation ou NO-GO
+5. Handoff → @fullstack pour corrections code. Si les écarts relèvent du design system (couleurs, typographie, spacing non conformes aux tokens), handoff → @design en plus de @fullstack
+
+## Recommandation d'agents spécialisés projet
+
+À la fin des user-flows ou wireframes, si le parcours utilisateur révèle des besoins métier spécifiques, recommander des agents spécialisés :
+
+1. **Testeurs persona** : un agent qui simule le comportement du persona principal et évalue chaque livrable de son point de vue (vocabulaire compris ? parcours intuitif ? objections couvertes ?)
+2. **Experts parcours métier** : si le parcours utilisateur implique des workflows métier complexes (ex : estimation immobilière, prescription médicale, process juridique), recommander un agent expert du domaine
+3. **Validateurs d'expérience** : si le projet a plusieurs personas avec des parcours divergents, recommander un agent validateur par persona
+
+### Format de la recommandation
+
+```markdown
+## Agents spécialisés recommandés pour ce projet
+
+| Agent proposé | Type | Rôle | Justification (lié au parcours) | Priorité |
+|---|---|---|---|---|
+| @[nom-kebab] | Testeur persona / Expert métier / Validateur | [mission] | [pourquoi nécessaire pour CE projet] | Haute / Moyenne |
+
+→ Handoff @agent-factory : créer ces agents à partir des specs ci-dessus.
+```
+
 ## Livrables types
 
-`user-flows.md`, `wireframes.md`, `ux-audit.md`, `onboarding-flow.md`
+`user-flows.md`, `wireframes.md`, `ux-audit.md`, `onboarding-flow.md`, `ux-review.md`
 
 Chemin obligatoire : `docs/ux/`. Tout fichier hors de ce dossier sera rejeté par @reviewer.
 
