@@ -3721,6 +3721,81 @@ def _auto_resume_interrupted():
 threading.Thread(target=_auto_resume_interrupted, daemon=True, name="auto-resume").start()
 
 
+def _auto_resume_montages_v2():
+    """Relance les montages V2 'processing' après un redéploiement Replit.
+
+    Le système V2 utilise des threads in-memory (_jobs dict) qui sont perdus
+    au redéploiement. Les montages restent 'processing' en DB sans job actif.
+    Ce thread les détecte et relance le montage automatiquement.
+    """
+    time.sleep(10)  # Attendre que le serveur et la DB soient prêts
+    if not config._db_disponible():
+        return
+    try:
+        from db_models import MontageRepo as _MR
+        if not _MR:
+            return
+        from database import get_cursor
+        with get_cursor(commit=False) as cur:
+            cur.execute(
+                "SELECT id, episode_id FROM montages "
+                "WHERE status = 'processing' "
+                "ORDER BY created_at DESC"
+            )
+            processing = cur.fetchall()
+        if not processing:
+            return
+
+        logger.info("[auto-resume-montages] %d montage(s) 'processing' trouvé(s)", len(processing))
+
+        # Dédupliquer par episode_id (ne relancer que le plus récent par épisode)
+        seen_episodes = set()
+        for row in processing:
+            eid = row["episode_id"]
+            mid = row["id"]
+            if eid in seen_episodes:
+                # Marquer les anciens montages du même épisode comme erreur
+                try:
+                    _MR.echouer(mid, "Supplanté par un montage plus récent (auto-resume)")
+                except Exception:
+                    pass
+                continue
+            seen_episodes.add(eid)
+
+            # Vérifier qu'il n'y a pas déjà un job actif pour cet épisode
+            _has_job = False
+            with _jobs_lock:
+                for jdata in _jobs.values():
+                    if jdata.get("episode_id") == eid and jdata["status"] == "running":
+                        _has_job = True
+                        break
+            if _has_job:
+                continue
+
+            logger.info("[auto-resume-montages] Relance montage #%d pour %s", mid, eid)
+            try:
+                def _make_job(ep_id=eid, montage_id=mid):
+                    def _job():
+                        return _job_montage(ep_id, montage_id)
+                    return _job
+
+                _start_fn_job(_make_job(), episode_id=eid)
+            except ValueError as e:
+                logger.warning("[auto-resume-montages] %s: %s", eid, e)
+            except Exception as e:
+                logger.error("[auto-resume-montages] Échec relance %s: %s", eid, e)
+                try:
+                    _MR.echouer(mid, f"Auto-resume failed: {e}")
+                except Exception:
+                    pass
+
+    except Exception as e:
+        logger.error("[auto-resume-montages] Erreur: %s", e)
+
+
+threading.Thread(target=_auto_resume_montages_v2, daemon=True, name="auto-resume-montages").start()
+
+
 # ── API Claude Code (accès DB distant via Bearer token) ─────────────────────
 
 _CLAUDE_ALLOWED_TABLES = frozenset({
@@ -4979,6 +5054,15 @@ def _job_montage(episode_id, montage_id):
     if not script_path.exists():
         script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
 
+    # Restaurer le script si absent (post-redeploy Replit)
+    if not script_path.exists():
+        _restore_valide_script(episode_id)
+        script_path = config.SCRIPTS_DIR / f"{episode_id}_script_valide.json"
+        if not script_path.exists():
+            script_path = config.SCRIPTS_DIR / f"{episode_id}_script.json"
+        if not script_path.exists():
+            raise FileNotFoundError(f"Script introuvable pour {episode_id} après restauration Object Storage + DB")
+
     script = json.loads(script_path.read_text(encoding="utf-8"))
 
     # Résoudre le production_run_id depuis le checkpoint (si disponible)
@@ -5063,19 +5147,37 @@ def api_v2_list_montages(episode_id):
     montages = MontageRepo.lister(episode_id)
 
     # ── Filter out ghost montages: "processing" with no audio and no active job ──
-    # These are created when a montage job crashes before producing any audio.
-    # Instead of trying to update DB (which may fail), just filter them out of the response.
+    # A montage is "ghost" only if it's been processing for >5 min with no active job.
+    # The auto-resume thread needs time to relaunch montages after a redeploy.
     active_montages = []
     for m in montages:
         if m.get("status") == "processing" and not m.get("audio_path_hq"):
             # Check if there's an active job for this montage
             _has_active_job = False
-            for jid, jdata in _jobs.items():
-                if jdata.get("status") == "running" and jdata.get("episode_id") == episode_id:
-                    _has_active_job = True
-                    break
+            with _jobs_lock:
+                for jid, jdata in _jobs.items():
+                    if jdata.get("status") == "running" and jdata.get("episode_id") == episode_id:
+                        _has_active_job = True
+                        break
             if not _has_active_job:
-                # Ghost montage — no active job, no audio. Skip it.
+                # Check age — don't kill if < 5 min (auto-resume thread may not have run yet)
+                _created = m.get("created_at", "")
+                _is_recent = False
+                if _created:
+                    try:
+                        from datetime import datetime, timezone, timedelta
+                        if isinstance(_created, str):
+                            _created_dt = datetime.fromisoformat(_created.replace("Z", "+00:00"))
+                        else:
+                            _created_dt = _created
+                        _is_recent = (datetime.now(timezone.utc) - _created_dt) < timedelta(minutes=5)
+                    except Exception:
+                        pass
+                if _is_recent:
+                    # Still young — keep it, auto-resume will pick it up
+                    active_montages.append(m)
+                    continue
+                # Ghost montage — old, no active job, no audio. Mark error and skip.
                 try:
                     MontageRepo.echouer(m["id"], "Ghost montage — no active job")
                 except Exception:
