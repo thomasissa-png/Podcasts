@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Papy Babou — Studio</title>
+  <link rel="icon" href="/assets/artwork/favicon2.png">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bleu: #5B9BD5; --bleu-doux: #8ECFF5; --dore: #E8A020; --dore-light: #FFD234;
+      --rouge: #E04040; --jaune: #E8B040; --corail: #F26B5E; --vert: #5DBD72;
+      --sable: #FFF8ED; --blanc: #FFFFFF; --gris: #6B7280; --gris-clair: #E5E7EB;
+      --font-body: 'Nunito', sans-serif; --font-display: 'Baloo 2', cursive;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { background: var(--sable); font-family: var(--font-body); margin: 0; color: #1f2937; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--blanc); box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .nav-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; }
+    .nav-logo img { width: 36px; height: 36px; border-radius: 8px; }
+    .nav-logo span { font-family: var(--font-display); font-size: 1.2rem; color: var(--bleu); }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { text-decoration: none; color: var(--gris); font-weight: 600; font-size: 0.9rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--dore); }
+    main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    .card { background: var(--blanc); border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 1rem; }
+    .btn { padding: 0.6rem 1.2rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; font-family: var(--font-body); transition: opacity .2s, transform .1s; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--dore); color: var(--blanc); }
+    .btn-danger { background: var(--corail); color: var(--blanc); }
+    .btn-success { background: var(--vert); color: var(--blanc); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--gris-clair); color: var(--gris); }
+    .btn-outline:hover { border-color: var(--bleu); color: var(--bleu); }
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-vert { background: #dcfce7; color: #166534; }
+    .badge-orange { background: #fef3c7; color: #92400e; }
+    .badge-rouge { background: #fee2e2; color: #991b1b; }
+    .badge-gris { background: #f3f4f6; color: #6b7280; }
+    .badge-bleu { background: #dbeafe; color: #1e40af; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 0.75rem; border-bottom: 2px solid var(--gris-clair); font-size: 0.8rem; text-transform: uppercase; color: var(--gris); letter-spacing: 0.03em; }
+    td { padding: 0.75rem; border-bottom: 1px solid var(--gris-clair); }
+    tr:hover { background: #f9fafb; }
+    .progress-bar { height: 8px; background: var(--gris-clair); border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--vert); border-radius: 4px; transition: width 0.3s; }
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--gris-clair); margin-bottom: 1.5rem; }
+    .tab { padding: 0.75rem 1.5rem; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 600; color: var(--gris); transition: color .2s, border-color .2s; user-select: none; }
+    .tab:hover { color: var(--dore); }
+    .tab.active { border-bottom-color: var(--dore); color: var(--dore); }
+    .segment-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem; border-bottom: 1px solid var(--gris-clair); transition: background .15s; }
+    .segment-row:hover { background: #f9fafb; }
+    .segment-personnage { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--blanc); font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
+    .segment-texte { flex: 1; font-size: 0.9rem; line-height: 1.5; }
+    .segment-texte-edit { border: 1.5px solid var(--bleu); border-radius: 6px; padding: 4px 8px; outline: none; font-family: var(--font-body); font-size: 0.9rem; width: 100%; min-height: 2.5rem; resize: vertical; }
+    .segment-meta { font-size: 0.75rem; color: var(--gris); display: flex; gap: 0.75rem; margin-top: 0.25rem; }
+    .segment-actions { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; }
+    audio.mini { height: 32px; width: 180px; }
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--gris-clair); border-top-color: var(--dore); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .sticky-bottom { position: sticky; bottom: 0; background: var(--blanc); padding: 1rem; border-top: 1px solid var(--gris-clair); text-align: center; box-shadow: 0 -2px 8px rgba(0,0,0,.06); z-index: 10; display: flex; justify-content: center; gap: 1rem; align-items: center; }
+    .breadcrumb { font-size: 0.85rem; color: var(--gris); margin-bottom: 1rem; }
+    .breadcrumb a { color: var(--bleu); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .section-title { font-family: var(--font-display); font-size: 1.4rem; margin: 0 0 1rem 0; }
+    .empty-state { text-align: center; padding: 3rem; color: var(--gris); }
+    .filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .stat-box { text-align: center; }
+    .stat-box .stat-val { font-family: var(--font-display); font-size: 1.6rem; color: var(--bleu); }
+    .stat-box .stat-label { font-size: 0.75rem; color: var(--gris); text-transform: uppercase; }
+    .montage-item { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--gris-clair); flex-wrap: wrap; }
+    .montage-item:last-child { border-bottom: none; }
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: 0.75rem 1.25rem; border-radius: 8px; color: var(--blanc); font-weight: 600; font-size: 0.9rem; z-index: 999; animation: fadeUp .3s ease; }
+    .toast-ok { background: var(--vert); }
+    .toast-err { background: var(--corail); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .diff-panel { margin-top: 0.5rem; border: 1px solid var(--gris-clair); border-radius: 6px; padding: 0.5rem; background: #f9fafb; }
+    .diff-before { background: #fee2e2; padding: 4px 8px; border-radius: 4px; text-decoration: line-through; font-size: 0.85rem; margin: 4px 0; display: block; }
+    .diff-after { background: #dcfce7; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; margin: 4px 0; display: block; }
+    .segment-check { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; accent-color: var(--dore); }
+    .script-inline .seg-mini { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.3rem 0.5rem; border-bottom: 1px solid #f3f4f6; font-size: 0.85rem; line-height: 1.4; }
+    .script-inline .seg-mini:last-child { border-bottom: none; }
+    .script-inline .seg-sfx { color: var(--gris); font-style: italic; }
+    mark { background: #fef08a; padding: 0 2px; border-radius: 2px; }
+    .search-input { font-size: 0.85rem; padding: 0.4rem 0.8rem; border: 1.5px solid var(--gris-clair); border-radius: 8px; flex: 1; min-width: 200px; font-family: var(--font-body); outline: none; transition: border-color 0.2s; }
+    .search-input:focus { border-color: var(--bleu); }
+    .bulk-bar { display: flex; gap: 0.75rem; align-items: center; }
+    .bulk-bar .bulk-count { font-size: 0.85rem; color: var(--gris); font-weight: 600; }
+    .diff-actions { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+    .version-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .version-card { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; border: 2px solid var(--gris-clair); border-radius: 10px; cursor: pointer; transition: border-color .2s, background .15s; flex-wrap: wrap; }
+    .version-card:hover { border-color: var(--bleu-doux); background: #f0f7ff; }
+    .version-card.selected { border-color: var(--dore); background: #fffbeb; }
+    .version-card.validated { border-color: var(--vert); }
+    .version-card .v-num { font-family: var(--font-display); font-size: 1.1rem; color: var(--bleu); min-width: 40px; }
+    .version-card .v-meta { font-size: 0.8rem; color: var(--gris); display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .version-card .v-score { font-weight: 700; color: var(--dore); }
+    .montage-card { display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 2px solid var(--gris-clair); border-radius: 10px; transition: border-color .2s, background .15s; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .montage-card:hover { border-color: var(--bleu-doux); }
+    .montage-card.selected { border-color: var(--dore); background: #fffbeb; }
+    .montage-card.published { border-color: var(--vert); background: #f0fdf4; }
+    .montage-card .m-check { font-size: 1.2rem; color: var(--vert); margin-left: auto; }
+    /* ── P2-1: View transitions (slide-in) ── */
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .view-enter { animation: slideInRight 0.25s ease-out; }
+    .view-enter-back { animation: slideInLeft 0.25s ease-out; }
+    .view-fade { animation: fadeIn 0.2s ease-out; }
+
+    /* ── P2-4: Skeleton loading ── */
+    .skeleton { background: linear-gradient(90deg, var(--gris-clair) 25%, #f0f0f0 50%, var(--gris-clair) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+    .skeleton-text { height: 1rem; margin-bottom: 0.5rem; }
+    .skeleton-title { height: 1.6rem; width: 60%; margin-bottom: 1rem; }
+    .skeleton-stat { height: 3rem; border-radius: 8px; }
+    .skeleton-row { display: flex; gap: 1rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--gris-clair); }
+    .skeleton-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+    .skeleton-bar { height: 8px; border-radius: 4px; flex: 1; }
+
+    /* ── P2-5: Dark mode ── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --sable: #1a1a2e; --blanc: #16213e; --gris: #a0aec0; --gris-clair: #2d3748;
+      }
+      body { color: #e2e8f0; }
+      nav { background: #16213e; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+      .card { background: #16213e; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+      tr:hover { background: #1e2d4a; }
+      .segment-row:hover { background: #1e2d4a; }
+      .search-input { background: #1a1a2e; color: #e2e8f0; border-color: #2d3748; }
+      .search-input:focus { border-color: var(--bleu); }
+      .segment-texte-edit { background: #1a1a2e; color: #e2e8f0; }
+      .diff-panel { background: #1e2d4a; }
+      .diff-before { background: #4a1c1c; color: #fca5a5; }
+      .diff-after { background: #1c4a2e; color: #86efac; }
+      .sticky-bottom { background: #16213e; border-top-color: #2d3748; box-shadow: 0 -2px 8px rgba(0,0,0,.3); }
+      .toast-ok { background: #166534; }
+      .toast-err { background: #991b1b; }
+      .episode-card-mobile { border-bottom-color: #2d3748; }
+      .nav-hamburger { color: #a0aec0; }
+      .nav-links { background: #16213e; }
+      .badge-gris { background: #2d3748; color: #a0aec0; }
+      .badge-vert { background: #1c4a2e; color: #86efac; }
+      .badge-orange { background: #4a3c1c; color: #fcd34d; }
+      .badge-rouge { background: #4a1c1c; color: #fca5a5; }
+      .badge-bleu { background: #1c2e4a; color: #93c5fd; }
+      .version-card { border-color: #2d3748; }
+      .version-card:hover { background: #1e2d4a; border-color: var(--bleu-doux); }
+      .version-card.selected { background: #2d2a1c; border-color: var(--dore); }
+      .version-card.validated { border-color: var(--vert); }
+      .montage-card { border-color: #2d3748; }
+      .montage-card:hover { border-color: var(--bleu-doux); }
+      .montage-card.published { border-color: var(--vert); background: #1c4a2e; }
+      mark { background: #854d0e; color: #fef08a; }
+      .skeleton { background: linear-gradient(90deg, #2d3748 25%, #374151 50%, #2d3748 75%); background-size: 200% 100%; }
+      a { color: var(--bleu-doux); }
+      .breadcrumb a { color: var(--bleu-doux); }
+      .btn-outline { border-color: #2d3748; color: #a0aec0; }
+      .btn-outline:hover { border-color: var(--bleu); color: var(--bleu-doux); }
+      th { color: #a0aec0; border-bottom-color: #2d3748; }
+      td { border-bottom-color: #2d3748; }
+      .progress-bar { background: #2d3748; }
+    }
+
+    /* ── Mobile: hamburger menu ── */
+    .nav-hamburger { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; line-height: 1; font-size: 1.5rem; color: var(--gris); min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+
+    /* ── Mobile: back button (visible only on mobile in episode/segment views) ── */
+    .back-btn { display: none; }
+
+    /* ── Tablet: 768px ── */
+    @media (max-width: 768px) {
+      nav { padding: 0.75rem 1rem; }
+      .nav-hamburger { display: inline-flex; }
+      .nav-links { display: none; position: absolute; top: 100%; right: 0; background: var(--blanc); box-shadow: 0 4px 16px rgba(0,0,0,.12); border-radius: 0 0 12px 12px; flex-direction: column; padding: 1rem 1.5rem; gap: 0.75rem; min-width: 200px; z-index: 101; }
+      .nav-links.open { display: flex; }
+      .nav-links a { min-height: 44px; display: flex; align-items: center; font-size: 1rem; }
+      main { padding: 0.75rem; }
+
+      /* ── Back button ── */
+      .back-btn { display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none; color: var(--bleu); font-weight: 600; font-size: 0.95rem; min-height: 44px; padding: 0.5rem 0; margin-bottom: 0.5rem; }
+
+      /* ── Tables ── */
+      table { font-size: 0.85rem; }
+      th, td { padding: 0.5rem 0.4rem; }
+      .hide-mobile { display: none; }
+
+      /* ── Cards ── */
+      .card { padding: 1rem; border-radius: 10px; }
+
+      /* ── Tabs: horizontal scroll ── */
+      .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab { padding: 0.75rem 1rem; min-height: 44px; white-space: nowrap; font-size: 0.9rem; }
+
+      /* ── Buttons: touch targets ── */
+      .btn { min-height: 44px; }
+      .btn-sm { padding: 0.5rem 0.8rem; font-size: 0.85rem; min-height: 44px; }
+
+      /* ── Stats ── */
+      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+      .stat-box .stat-val { font-size: 1.3rem; }
+
+      /* ── Breadcrumb ── */
+      .breadcrumb { font-size: 0.9rem; padding: 0.25rem 0; }
+
+      /* ── Segments page ── */
+      .segment-row { flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 0.5rem; }
+      .segment-personnage { width: 30px; height: 30px; font-size: 0.6rem; }
+      .segment-meta { flex-wrap: wrap; gap: 0.4rem; }
+      .segment-meta select { font-size: 0.8rem; min-height: 32px; padding: 4px 6px; }
+      .segment-actions { width: 100%; justify-content: flex-start; gap: 0.75rem; padding-top: 0.25rem; border-top: 1px solid var(--gris-clair); margin-top: 0.25rem; }
+      .segment-actions .btn-sm { min-width: 44px; min-height: 44px; justify-content: center; }
+      audio.mini { width: 100%; height: 40px; }
+      .segment-check { width: 22px; height: 22px; }
+
+      /* ── Search input: prevent iOS zoom ── */
+      .search-input { font-size: 1rem; min-height: 44px; min-width: 0; }
+
+      /* ── Filter bar ── */
+      .filter-bar { gap: 0.4rem; }
+      .filter-bar .btn-sm { font-size: 0.8rem; padding: 0.4rem 0.65rem; }
+      .filter-bar .search-input { order: -1; width: 100%; flex: none; margin-bottom: 0.25rem; }
+
+      /* ── Sticky bottom ── */
+      .sticky-bottom { flex-wrap: wrap; padding: 0.75rem; gap: 0.5rem; }
+      .sticky-bottom .btn { flex: 1; min-width: 0; justify-content: center; }
+      .bulk-bar { flex-wrap: wrap; gap: 0.5rem; width: 100%; justify-content: center; }
+
+      /* ── Version cards ── */
+      .version-card { padding: 0.75rem; gap: 0.5rem; }
+      .version-card .v-meta { gap: 0.4rem; font-size: 0.75rem; }
+
+      /* ── Montage cards ── */
+      .montage-card { flex-direction: column; align-items: stretch; gap: 0.75rem; padding: 0.75rem; }
+      .montage-card > div { flex-direction: column; gap: 0.5rem; }
+      .montage-card audio { width: 100%; height: 40px; }
+      .montage-card .btn-sm { min-height: 44px; width: 100%; justify-content: center; }
+      .montage-card .m-check { margin-left: 0; text-align: center; }
+
+      /* ── Episode detail: stack script actions ── */
+      #script-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      #script-actions .btn { flex: 1; min-width: 140px; justify-content: center; }
+
+      /* ── Section title ── */
+      .section-title { font-size: 1.2rem; }
+
+      /* ── Toast: centered on mobile ── */
+      .toast { left: 1rem; right: 1rem; bottom: 1rem; text-align: center; }
+
+      /* ── Diff panel ── */
+      .diff-panel { padding: 0.5rem; }
+      .diff-before, .diff-after { font-size: 0.8rem; word-break: break-word; }
+      .diff-actions { flex-wrap: wrap; }
+      .diff-actions .btn { flex: 1; min-width: 100px; justify-content: center; }
+
+      /* ── Episode page audio section ── */
+      #audio-progress-live { flex-wrap: wrap; }
+    }
+
+    /* ── Small phone: 480px ── */
+    @media (max-width: 480px) {
+      main { padding: 0.5rem; }
+      .card { padding: 0.75rem; }
+      .section-title { font-size: 1.1rem; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+      .stat-box .stat-val { font-size: 1.1rem; }
+      .stat-box .stat-label { font-size: 0.65rem; }
+      .segment-row { padding: 0.5rem 0.25rem; }
+      .segment-personnage { width: 26px; height: 26px; font-size: 0.55rem; }
+      .filter-bar .btn-sm { font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+      .version-card .v-num { font-size: 0.95rem; min-width: 30px; }
+      .nav-logo span { font-size: 1rem; }
+
+      /* ── Hub table: card layout on very small screens ── */
+      .episode-table-mobile { display: flex; flex-direction: column; gap: 0.5rem; }
+      .episode-card-mobile { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-bottom: 1px solid var(--gris-clair); }
+      .episode-card-mobile:last-child { border-bottom: none; }
+      .episode-card-mobile .ep-num { font-weight: 700; font-size: 0.9rem; color: var(--bleu); min-width: 36px; }
+      .episode-card-mobile .ep-info { flex: 1; min-width: 0; }
+      .episode-card-mobile .ep-title { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .episode-card-mobile .ep-badges { display: flex; gap: 0.35rem; margin-top: 0.25rem; flex-wrap: wrap; }
+      .episode-card-mobile .ep-action { flex-shrink: 0; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="#/" class="nav-logo">
+      <img src="/assets/artwork/favicon2.png" alt="">
+      <span>Papy Babou Studio</span>
+    </a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">&#9776;</button>
+    <div class="nav-links" id="nav-links">
+      <a href="#/">Episodes</a>
+      <a href="/" target="_blank">Site public</a>
+      <a href="/dashboard" target="_blank">Dashboard v1</a>
+    </div>
+  </nav>
+  <main id="app"></main>
+
+  <script>
+    const TOKEN = new URLSearchParams(location.search).get('token') || sessionStorage.getItem('api_token') || 'allezpsg';
+    sessionStorage.setItem('api_token', TOKEN);
+
+    async function api(url, opts = {}) {
+      const h = { 'Authorization': `Bearer ${TOKEN}`, ...(opts.headers || {}) };
+      if (opts.body && typeof opts.body === 'object') {
+        h['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(opts.body);
+      }
+      const r = await fetch(url, { ...opts, headers: h });
+      if (!r.ok) { const t = await r.text(); throw new Error(t); }
+      return r.json();
+    }
+
+    const $ = s => document.querySelector(s);
+    const app = document.getElementById('app');
+    let pollTimer = null;
+
+    // ── Helpers ──
+    function formatSize(b) { if (!b) return '—'; const mb = b / 1048576; return mb >= 1 ? mb.toFixed(1) + ' Mo' : (b / 1024).toFixed(0) + ' Ko'; }
+    function formatDuration(s) { if (!s && s !== 0) return '—'; const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return m + ':' + String(sec).padStart(2, '0'); }
+    const PERSO_COLORS = { papy_babou: '#5B9BD5', antoine: '#E04040', noemie: '#E8B040', mamie_sonia: '#F26B5E' };
+    function personnageColor(p) { return PERSO_COLORS[p] || '#6B7280'; }
+    function personnageInitial(p) { return { papy_babou: 'PB', antoine: 'AN', noemie: 'NO', mamie_sonia: 'MS' }[p] || (p === 'sfx' ? 'SFX' : (p || '?').substring(0, 2).toUpperCase()); }
+    function badgeHtml(text, type) { return `<span class="badge badge-${type}">${esc(text)}</span>`; }
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function toast(msg, ok = true) {
+      const el = document.createElement('div');
+      el.className = 'toast ' + (ok ? 'toast-ok' : 'toast-err');
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // ── Hamburger menu ──
+    const navHamburger = document.getElementById('nav-hamburger');
+    const navLinks = document.getElementById('nav-links');
+    if (navHamburger && navLinks) {
+      navHamburger.addEventListener('click', (e) => { e.stopPropagation(); navLinks.classList.toggle('open'); });
+      document.addEventListener('click', (e) => { if (!navLinks.contains(e.target) && e.target !== navHamburger) navLinks.classList.remove('open'); });
+    }
+
+    // ── P2-4: Skeleton loading helpers ──
+    function skeletonHub() {
+      return `<h1 class="section-title"><div class="skeleton skeleton-title"></div></h1>
+        <div class="card">
+          ${Array.from({length: 6}, () => `<div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-bar"></div><div class="skeleton" style="width:60px;height:1.2rem;"></div></div>`).join('')}
+        </div>`;
+    }
+    function skeletonEpisode() {
+      return `<div class="skeleton skeleton-title" style="margin-bottom:1.5rem;"></div>
+        <div class="card"><div class="skeleton skeleton-title" style="width:40%;"></div>
+          <div class="stat-grid">${Array.from({length: 4}, () => '<div class="skeleton skeleton-stat"></div>').join('')}</div>
+          <div class="skeleton" style="height:2.5rem;width:180px;"></div>
+        </div>
+        <div class="card"><div class="skeleton skeleton-title" style="width:30%;"></div>
+          <div class="skeleton skeleton-bar" style="height:8px;margin-bottom:1rem;"></div>
+        </div>`;
+    }
+
+    // ── P2-1: View transition tracking ──
+    let _prevView = '/';
+    function _viewClass(newView) {
+      const depth = { '/': 0, 'episode': 1, 'segments': 2 };
+      const prev = _prevView.includes('segments') ? 2 : _prevView.includes('episode') ? 1 : 0;
+      const next = newView.includes('segments') ? 2 : newView.includes('episode') ? 1 : 0;
+      _prevView = newView;
+      if (next > prev) return 'view-enter';
+      if (next < prev) return 'view-enter-back';
+      return 'view-fade';
+    }
+    function _animateView(viewName) {
+      const cls = _viewClass(viewName);
+      app.classList.remove('view-enter', 'view-enter-back', 'view-fade');
+      void app.offsetWidth; // force reflow
+      app.classList.add(cls);
+    }
+
+    // ── P2-2: Pull-to-refresh (mobile only) ──
+    let _pullStartY = 0; let _pulling = false;
+    document.addEventListener('touchstart', (e) => {
+      if (window.scrollY === 0 && e.touches.length === 1) { _pullStartY = e.touches[0].clientY; _pulling = true; }
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      if (!_pulling) return;
+      const dy = (e.changedTouches[0]?.clientY || 0) - _pullStartY;
+      _pulling = false;
+      if (dy > 100 && window.scrollY === 0) { route(); toast('Actualise', true); }
+    }, { passive: true });
+
+    // ── Router ──
+    window.addEventListener('hashchange', route);
+    window.addEventListener('load', route);
+    function route() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (window._segKeyHandler) { document.removeEventListener('keydown', window._segKeyHandler); window._segKeyHandler = null; }
+      const h = location.hash.slice(1) || '/';
+      if (h === '/') return renderHub();
+      const m1 = h.match(/^\/episode\/(\w+)\/segments$/);
+      if (m1) return renderSegments(m1[1]);
+      const m2 = h.match(/^\/episode\/(\w+)$/);
+      if (m2) return renderEpisode(m2[1]);
+      renderHub();
+    }
+
+    // ── Polling ──
+    function pollJob(jobId, cb) {
+      pollTimer = setInterval(async () => {
+        try {
+          const r = await api(`/api/job-status/${jobId}`);
+          if (r.status === 'done') { clearInterval(pollTimer); pollTimer = null; cb(r.result); }
+        } catch (e) { console.error('poll error', e); }
+      }, 3000);
+    }
+
+    // ══════════════════════════════════════════
+    // ── HUB ──
+    // ══════════════════════════════════════════
+    async function renderHub() {
+      app.innerHTML = skeletonHub();
+      _animateView('/');
+      try {
+        const eps = await api('/api/v2/saisons/episodes');
+        const saisons = {};
+        eps.forEach(e => { (saisons[e.saison] = saisons[e.saison] || []).push(e); });
+        const saisonNums = Object.keys(saisons).sort((a, b) => a - b);
+        const activeSaison = saisonNums[0] || '1';
+
+        let tabsHtml = '<div class="tabs" id="hub-tabs">';
+        saisonNums.forEach(s => {
+          tabsHtml += `<div class="tab${s === activeSaison ? ' active' : ''}" data-saison="${s}">Saison ${s}</div>`;
+        });
+        tabsHtml += '</div>';
+
+        app.innerHTML = `
+          <h1 class="section-title">Episodes</h1>
+          ${tabsHtml}
+          <div class="card" id="hub-table"></div>
+        `;
+
+        function renderTable(sNum) {
+          const list = saisons[sNum] || [];
+          if (!list.length) { $('#hub-table').innerHTML = '<div class="empty-state">Aucun episode pour cette saison.</div>'; return; }
+          const isMobile = window.innerWidth <= 480;
+          if (isMobile) {
+            let html = '<div class="episode-table-mobile">';
+            list.sort((a, b) => a.numero - b.numero).forEach(e => {
+              const ap = e.audio_progress || {};
+              const scriptBadge = e.has_script ? badgeHtml('Script', 'vert') : '';
+              let audioBadge = '';
+              if (ap.percent === 100) audioBadge = badgeHtml('Audio', 'vert');
+              else if (ap.percent > 0) audioBadge = badgeHtml(ap.percent + '%', 'orange');
+              const pubBadge = e.is_published ? badgeHtml('Publie', 'vert') : '';
+              html += `<a href="#/episode/${e.episode_id}" class="episode-card-mobile" style="text-decoration:none;color:inherit;">
+                <span class="ep-num">E${String(e.numero).padStart(2, '0')}</span>
+                <div class="ep-info">
+                  <div class="ep-title">${esc(e.titre)}</div>
+                  <div class="ep-badges">${scriptBadge}${audioBadge}${pubBadge}</div>
+                </div>
+                <span class="ep-action" style="color:var(--bleu);font-size:1.2rem;">&#8250;</span>
+              </a>`;
+            });
+            html += '</div>';
+            $('#hub-table').innerHTML = html;
+          } else {
+            let html = '<table><thead><tr><th>#</th><th>Titre</th><th class="hide-mobile">Type</th><th>Script</th><th>Audio</th><th class="hide-mobile">Montage</th><th class="hide-mobile">Publie</th><th></th></tr></thead><tbody>';
+            list.sort((a, b) => a.numero - b.numero).forEach(e => {
+              const ap = e.audio_progress || {};
+              const scriptBadge = e.has_script ? badgeHtml('Valide', 'vert') : badgeHtml('\u2014', 'gris');
+              let audioBadge;
+              if (ap.percent === 100) audioBadge = badgeHtml(ap.validated + '/' + ap.total, 'vert');
+              else if (ap.percent > 0) audioBadge = badgeHtml(ap.generated + '/' + ap.total, 'orange');
+              else audioBadge = badgeHtml('\u2014', 'gris');
+              const montageBadge = e.montage_count > 0 ? badgeHtml(e.montage_count + ' montage' + (e.montage_count > 1 ? 's' : ''), 'bleu') : badgeHtml('\u2014', 'gris');
+              const pubBadge = e.is_published ? badgeHtml('\u2713', 'vert') : '';
+              html += `<tr>
+                <td><strong>E${String(e.numero).padStart(2, '0')}</strong></td>
+                <td>${esc(e.titre)}</td>
+                <td class="hide-mobile">${badgeHtml(e.type || 'standard', 'gris')}</td>
+                <td>${scriptBadge}</td>
+                <td>${audioBadge}</td>
+                <td class="hide-mobile">${montageBadge}</td>
+                <td class="hide-mobile">${pubBadge}</td>
+                <td><a href="#/episode/${e.episode_id}" class="btn btn-outline btn-sm">Ouvrir &rarr;</a></td>
+              </tr>`;
+            });
+            html += '</tbody></table>';
+            $('#hub-table').innerHTML = html;
+          }
+        }
+
+        renderTable(activeSaison);
+        document.querySelectorAll('#hub-tabs .tab').forEach(t => {
+          t.addEventListener('click', () => {
+            document.querySelectorAll('#hub-tabs .tab').forEach(x => x.classList.remove('active'));
+            t.classList.add('active');
+            renderTable(t.dataset.saison);
+          });
+        });
+      } catch (e) {
+        app.innerHTML = `<div class="card"><p style="color:var(--corail)">Erreur : ${esc(e.message)}</p></div>`;
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // ── EPISODE ──
+    // ══════════════════════════════════════════
+    async function renderEpisode(eid) {
+      app.innerHTML = skeletonEpisode();
+      _animateView('episode/' + eid);
+      try {
+        const [scriptData, progress, montages, scriptVersions] = await Promise.allSettled([
+          api(`/api/v2/episode/${eid}/script`),
+          api(`/api/v2/episode/${eid}/audio-progress`),
+          api(`/api/v2/episode/${eid}/montages`),
+          api(`/api/v2/episode/${eid}/scripts`)
+        ]);
+        const sc = scriptData.status === 'fulfilled' ? scriptData.value : null;
+        const pr = progress.status === 'fulfilled' ? progress.value : {};
+        const mt = montages.status === 'fulfilled' ? montages.value : [];
+        const versions = scriptVersions.status === 'fulfilled' ? scriptVersions.value : [];
+
+        const stats = sc?.stats || {};
+        const pct = pr.percent || 0;
+        const hasMultipleVersions = versions.length > 1;
+        const validatedVersion = versions.find(v => v.is_validated);
+
+        let scriptSection;
+        if (!sc || !sc.script) {
+          scriptSection = '<div class="card"><h2 class="section-title">Script</h2><div class="empty-state">Aucun script disponible.</div></div>';
+        } else {
+          // Version selector (shown when multiple versions exist)
+          let versionSelector = '';
+          if (hasMultipleVersions) {
+            versionSelector = `<div style="margin-bottom:1rem;">
+              <h3 style="font-size:0.95rem;font-weight:700;margin:0 0 0.5rem 0;color:var(--gris);">Versions du script</h3>
+              <div class="version-list" id="version-list">
+                ${versions.map(v => {
+                  const isValidated = v.is_validated;
+                  const date = v.created_at ? new Date(v.created_at).toLocaleDateString('fr-FR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+                  return `<div class="version-card${isValidated ? ' validated selected' : ''}" data-version="${v.version}">
+                    <span class="v-num">v${v.version}</span>
+                    <div class="v-meta">
+                      <span>${v.nb_segments || 0} seg</span>
+                      <span>${v.nb_mots || 0} mots</span>
+                      ${v.score_review ? `<span class="v-score">${v.score_review.toFixed(1)}/10</span>` : ''}
+                      <span>${date}</span>
+                      <span>${esc(v.source || '')}</span>
+                    </div>
+                    ${isValidated ? '<span class="badge badge-vert">Active</span>' : ''}
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>`;
+          }
+
+          scriptSection = `<div class="card">
+            <h2 class="section-title">Script</h2>
+            ${versionSelector}
+            <div class="stat-grid">
+              <div class="stat-box"><div class="stat-val">${stats.nb_segments || 0}</div><div class="stat-label">Segments</div></div>
+              <div class="stat-box"><div class="stat-val">${stats.nb_voix || 0}</div><div class="stat-label">Voix</div></div>
+              <div class="stat-box"><div class="stat-val">${stats.nb_sfx || 0}</div><div class="stat-label">SFX</div></div>
+              <div class="stat-box"><div class="stat-val">${stats.nb_mots || 0}</div><div class="stat-label">Mots</div></div>
+            </div>
+            <div id="script-actions">
+              ${sc.validated ? badgeHtml('Script valide', 'vert') : `<button class="btn btn-primary" id="btn-validate-script">Valider le script</button>`}
+              <a href="#/episode/${eid}/segments" class="btn btn-outline" style="margin-left:0.5rem;">Voir les segments</a>
+            </div>
+            <details class="script-inline" style="margin-top:1rem;" id="script-details">
+              <summary style="cursor:pointer;font-weight:600;font-size:0.9rem;color:var(--bleu);user-select:none;">Voir le script complet</summary>
+              <div id="script-inline-content" style="margin-top:0.5rem;max-height:500px;overflow-y:auto;border:1px solid var(--gris-clair);border-radius:8px;padding:0.25rem 0;"><div class="empty-state" style="padding:1rem;"><span class="spinner"></span> Chargement...</div></div>
+            </details>
+          </div>`;
+        }
+
+        let audioSection = `<div class="card">
+          <h2 class="section-title">Audio</h2>
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+            <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <span style="font-weight:700;font-size:0.9rem;">${pct}%</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;font-size:0.85rem;color:var(--gris);margin-bottom:1rem;">
+            <span>Total: ${pr.total || 0}</span>
+            <span>Generes: ${pr.generated || 0}</span>
+            <span>Valides: ${pr.validated || 0}</span>
+            ${pr.errors ? `<span style="color:var(--corail)">Erreurs: ${pr.errors}</span>` : ''}
+          </div>
+          <button class="btn btn-primary" id="btn-gen-audio"${!sc?.validated ? ' disabled title="Validez le script d\'abord"' : ''}>Generer l'audio</button>
+          <span id="audio-job-status"></span>
+        </div>`;
+
+        let montageSection = `<div class="card">
+          <h2 class="section-title">Montages</h2>`;
+        if (!mt.length) {
+          montageSection += '<div class="empty-state">Aucun montage.</div>';
+        } else {
+          mt.forEach((m, idx) => {
+            const isPublished = m.is_published;
+            const isCompleted = m.status === 'completed';
+            const isProcessing = m.status === 'processing';
+            const isV1 = String(m.id).startsWith('v1');
+            const mismatchWarning = m.script_mismatch
+              ? `<div style="background:var(--dore-light,#FFD234);color:#333;padding:0.5rem 0.75rem;border-radius:8px;font-size:0.85rem;width:100%;margin-bottom:0.5rem;">&#9888; L'audio a ete produit avec une version anterieure du script. Relancez le montage pour mettre a jour.</div>`
+              : '';
+            const statusBadge = isPublished ? 'vert' : isCompleted ? 'bleu' : m.status === 'error' ? 'rouge' : isProcessing ? 'orange' : 'gris';
+            const statusLabel = isV1 ? 'pipeline v1' : m.status;
+            const dateStr = m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+            const canPublish = isCompleted && !isPublished;
+            montageSection += `<div class="montage-card${isPublished ? ' published' : isCompleted ? ' selected' : ''}" data-mid="${m.id}">
+              ${mismatchWarning}
+              <div style="display:flex;align-items:center;gap:1rem;flex:1;flex-wrap:wrap;">
+                <span style="font-weight:700;color:var(--bleu);min-width:24px;">#${mt.length - idx}</span>
+                ${m.audio_url_hq ? `<audio controls preload="none" src="${m.audio_url_hq}" style="height:40px;"></audio>` : isProcessing ? '<span class="badge badge-orange"><span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> En cours...</span>' : '<span class="badge badge-gris">Pas d\'audio</span>'}
+                ${m.duree_secondes ? `<span>${formatDuration(m.duree_secondes)}</span>` : ''}
+                ${m.taille_bytes ? `<span>${formatSize(m.taille_bytes)}</span>` : ''}
+                ${dateStr ? `<span style="font-size:0.8rem;color:var(--gris);">${dateStr}</span>` : ''}
+                <span>${badgeHtml(statusLabel, statusBadge)}</span>
+                ${m.download_url ? `<a href="${m.download_url}" class="btn btn-outline btn-sm" download>Telecharger</a>` : ''}
+                ${m.audio_url_hq && !m.download_url ? `<a href="${m.audio_url_hq}" class="btn btn-outline btn-sm" download>Telecharger</a>` : ''}
+                ${canPublish && !isV1 ? `<button class="btn btn-success btn-sm btn-publish-montage" data-mid="${m.id}">Publier</button>` : ''}
+                ${canPublish && isV1 ? `<button class="btn btn-success btn-sm btn-publish-v1" data-audio-url="${esc(m.audio_url_hq || '')}" data-duree="${m.duree_secondes || 0}">Publier</button>` : ''}
+                ${isPublished ? `<button class="btn btn-outline btn-sm btn-depublish-montage" data-mid="${m.id}" style="color:var(--corail);border-color:var(--corail);">Depublier</button>` : ''}
+              </div>
+              ${isPublished ? '<span class="m-check">&#10004;</span>' : isCompleted ? '<span class="m-check" style="color:var(--bleu);">&#9654;</span>' : ''}
+            </div>`;
+          });
+        }
+        montageSection += `<div style="margin-top:1rem;">
+          <button class="btn btn-primary" id="btn-montage"${pct < 100 ? ' disabled title="Generez tous les audios d\'abord"' : ''}>Lancer un montage</button>
+          <span id="montage-job-status"></span>
+        </div></div>`;
+
+        app.innerHTML = `
+          <a href="#/" class="back-btn">&#8592; Episodes</a>
+          <div class="breadcrumb"><a href="#/">Episodes</a> &rsaquo; <strong>${esc(eid)}</strong></div>
+          <h1 class="section-title">${esc(sc?.script?.episode?.titre || eid)}</h1>
+          ${scriptSection}
+          ${audioSection}
+          ${montageSection}
+        `;
+
+        // ── Event listeners ──
+
+        // ── Version cards: click to select + validate ──
+        const versionList = $('#version-list');
+        if (versionList) {
+          versionList.querySelectorAll('.version-card').forEach(card => {
+            card.addEventListener('click', async () => {
+              const ver = parseInt(card.dataset.version);
+              if (card.classList.contains('validated')) return; // Already active
+              if (!confirm(`Activer la version ${ver} du script ? Cela la designera comme version de production.`)) return;
+              card.style.opacity = '0.5';
+              try {
+                await api(`/api/v2/episode/${eid}/script/${ver}/validate`, { method: 'POST' });
+                toast(`Version ${ver} activee`);
+                renderEpisode(eid);
+              } catch (e) {
+                toast(e.message, false);
+                card.style.opacity = '1';
+              }
+            });
+          });
+        }
+
+        // ── Inline script view (P2-2) ──
+        const scriptDetails = $('#script-details');
+        if (scriptDetails) {
+          let scriptLoaded = false;
+          scriptDetails.addEventListener('toggle', async () => {
+            if (!scriptDetails.open || scriptLoaded) return;
+            scriptLoaded = true;
+            try {
+              const segs = await api(`/api/v2/episode/${eid}/segments`);
+              let html = '';
+              segs.forEach(s => {
+                if (s.segment_type === 'sfx') {
+                  html += `<div class="seg-mini seg-sfx"><span style="flex-shrink:0;">&#128266;</span><span>${esc(s.texte)}</span></div>`;
+                } else {
+                  const color = personnageColor(s.personnage);
+                  const initials = personnageInitial(s.personnage);
+                  html += `<div class="seg-mini">
+                    <div class="segment-personnage" style="background:${color};width:24px;height:24px;font-size:0.55rem;flex-shrink:0;">${initials}</div>
+                    <span style="flex:1;">${esc(s.texte)}</span>
+                    ${s.ton ? `<span class="badge badge-gris" style="font-size:0.65rem;">${esc(s.ton)}</span>` : ''}
+                  </div>`;
+                }
+              });
+              $('#script-inline-content').innerHTML = html || '<div class="empty-state">Aucun segment.</div>';
+            } catch (e) {
+              $('#script-inline-content').innerHTML = `<div class="empty-state" style="color:var(--corail);">Erreur : ${esc(e.message)}</div>`;
+            }
+          });
+        }
+
+        const btnValScript = $('#btn-validate-script');
+        if (btnValScript) {
+          btnValScript.addEventListener('click', async () => {
+            btnValScript.disabled = true;
+            try { await api(`/api/v2/episode/${eid}/validate-script`, { method: 'POST' }); toast('Script valide'); renderEpisode(eid); } catch (e) { toast(e.message, false); btnValScript.disabled = false; }
+          });
+        }
+
+        const btnGenAudio = $('#btn-gen-audio');
+        if (btnGenAudio) {
+          btnGenAudio.addEventListener('click', async () => {
+            btnGenAudio.disabled = true;
+            $('#audio-job-status').innerHTML = ' <span class="spinner"></span> Generation en cours...';
+            try {
+              const { job_id } = await api(`/api/v2/episode/${eid}/generate-audio`, { method: 'POST' });
+              // P1-2 : Progress polling temps réel
+              let progressTimer = setInterval(async () => {
+                try {
+                  const prog = await api(`/api/v2/episode/${eid}/audio-progress`);
+                  const pBar = document.querySelector('#audio-progress-live');
+                  if (pBar) {
+                    pBar.querySelector('.progress-fill').style.width = prog.percent + '%';
+                    pBar.querySelector('.progress-pct').textContent = prog.percent + '%';
+                    pBar.querySelector('.progress-detail').textContent = `${prog.generated || 0}/${prog.total || 0} generes${prog.errors ? `, ${prog.errors} erreurs` : ''}`;
+                  }
+                  if (prog.percent >= 100) { clearInterval(progressTimer); progressTimer = null; }
+                } catch (e) { /* ignore progress poll errors */ }
+              }, 3000);
+              $('#audio-job-status').innerHTML = `
+                <div id="audio-progress-live" style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">
+                  <span class="spinner"></span>
+                  <div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:${pct}%"></div></div>
+                  <span class="progress-pct" style="font-weight:700;font-size:0.9rem;">${pct}%</span>
+                  <span class="progress-detail" style="font-size:0.8rem;color:var(--gris);">0/${pr.total || 0} generes</span>
+                </div>`;
+              pollJob(job_id, (result) => {
+                if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+                $('#audio-job-status').innerHTML = result.status === 'ok'
+                  ? ' <span class="badge badge-vert">Termine</span>'
+                  : ` <span class="badge badge-rouge">Erreur</span>`;
+                setTimeout(() => renderEpisode(eid), 1000);
+              });
+            } catch (e) { toast(e.message, false); btnGenAudio.disabled = false; $('#audio-job-status').innerHTML = ''; }
+          });
+        }
+
+        const btnMontage = $('#btn-montage');
+        if (btnMontage) {
+          btnMontage.addEventListener('click', async () => {
+            btnMontage.disabled = true;
+            $('#montage-job-status').innerHTML = ' <span class="spinner"></span> Montage en cours...';
+            try {
+              const { job_id } = await api(`/api/v2/episode/${eid}/montage`, { method: 'POST' });
+              pollJob(job_id, (result) => {
+                $('#montage-job-status').innerHTML = result.status === 'ok'
+                  ? ' <span class="badge badge-vert">Termine</span>'
+                  : ` <span class="badge badge-rouge">Erreur</span>`;
+                setTimeout(() => renderEpisode(eid), 1000);
+              });
+            } catch (e) { toast(e.message, false); btnMontage.disabled = false; $('#montage-job-status').innerHTML = ''; }
+          });
+        }
+
+        document.querySelectorAll('.btn-publish-montage').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try { await api(`/api/v2/montage/${btn.dataset.mid}/publish`, { method: 'POST' }); toast('Montage publie'); renderEpisode(eid); } catch (e) { toast(e.message, false); btn.disabled = false; }
+          });
+        });
+
+        // V1 publish: uses a dedicated endpoint that copies the audio file
+        document.querySelectorAll('.btn-publish-v1').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+              await api(`/api/v2/episode/${eid}/publish-v1`, { method: 'POST', body: { audio_url: btn.dataset.audioUrl, duree_secondes: parseFloat(btn.dataset.duree) || 0 } });
+              toast('Montage V1 publie'); renderEpisode(eid);
+            } catch (e) { toast(e.message, false); btn.disabled = false; }
+          });
+        });
+
+        document.querySelectorAll('.btn-depublish-montage').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Depublier ce montage ?')) return;
+            btn.disabled = true;
+            try { await api(`/api/v2/montage/${btn.dataset.mid}/depublish`, { method: 'POST' }); toast('Montage depublie'); renderEpisode(eid); } catch (e) { toast(e.message, false); btn.disabled = false; }
+          });
+        });
+
+      } catch (e) {
+        app.innerHTML = `<div class="card"><p style="color:var(--corail)">Erreur : ${esc(e.message)}</p></div>`;
+      }
+    }
+
+    // ══════════════════════════════════════════
+    // ── SEGMENTS ──
+    // ══════════════════════════════════════════
+    async function renderSegments(eid) {
+      app.innerHTML = `<div class="card">${Array.from({length: 10}, () => `<div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton skeleton-text" style="width:80%;"></div><div class="skeleton skeleton-text" style="width:50%;"></div></div></div>`).join('')}</div>`;
+      _animateView('segments/' + eid);
+      try {
+        const segments = await api(`/api/v2/episode/${eid}/segments`);
+        let filter = 'all';
+        let searchTerm = '';
+        const selectedIds = new Set();
+        let editingSegId = null;
+        const voixCount = segments.filter(s => s.segment_type !== 'sfx').length;
+        const sfxCount = segments.filter(s => s.segment_type === 'sfx').length;
+        const errCount = segments.filter(s => s.status === 'error').length;
+        const validCount = segments.filter(s => s.status === 'validated').length;
+        const genCount = segments.filter(s => s.status === 'generated' || s.status === 'validated').length;
+        const pct = segments.length ? Math.round(genCount / segments.length * 100) : 0;
+
+        function highlightText(text, term) {
+          if (!term) return esc(text);
+          const escaped = esc(text);
+          const termEsc = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          return escaped.replace(new RegExp(`(${termEsc})`, 'gi'), '<mark>$1</mark>');
+        }
+
+        function getFiltered() {
+          let list = segments;
+          if (searchTerm) {
+            const lower = searchTerm.toLowerCase();
+            list = list.filter(s => (s.texte || '').toLowerCase().includes(lower));
+          }
+          if (filter === 'voix') list = list.filter(s => s.segment_type !== 'sfx');
+          else if (filter === 'sfx') list = list.filter(s => s.segment_type === 'sfx');
+          else if (filter === 'errors') list = list.filter(s => s.status === 'error');
+          return list;
+        }
+
+        function renderList() {
+          const filtered = getFiltered();
+
+          let html = '';
+          filtered.forEach((s, i) => {
+            const color = s.segment_type === 'sfx' ? '#6B7280' : personnageColor(s.personnage);
+            const initials = s.segment_type === 'sfx' ? 'SFX' : personnageInitial(s.personnage);
+            const statusBadge = s.status === 'validated' ? badgeHtml('OK', 'vert')
+              : s.status === 'generated' ? badgeHtml('Gen', 'bleu')
+              : s.status === 'error' ? badgeHtml('Err', 'rouge')
+              : s.status === 'generating' ? '<span class="spinner"></span>'
+              : badgeHtml('\u2014', 'gris');
+            const checked = selectedIds.has(s.segment_id) ? ' checked' : '';
+
+            html += `<div class="segment-row" data-idx="${i}" data-sid="${s.segment_id}">
+              <input type="checkbox" class="segment-check seg-cb" data-sid="${s.segment_id}"${checked}>
+              <div class="segment-personnage" style="background:${color}">${initials}</div>
+              <div style="flex:1;">
+                <div class="segment-texte" id="txt-${s.segment_id}">${highlightText(s.texte, searchTerm)}</div>
+                <div class="segment-meta">
+                  <span>${esc(s.segment_id)}</span>
+                  ${s.segment_type !== 'sfx' ? `<select class="sel-ton" data-sid="${s.segment_id}" style="font-size:0.75rem;border:1px solid var(--gris-clair);border-radius:4px;padding:1px 4px;background:var(--blanc);">
+                    ${['','narratif','joyeux','mystérieux','dramatique','tendre','solennel','humoristique','curieux','émerveillé','inquiet','rassurant','complice','triste','épique','malicieux','calme'].map(t => `<option value="${t}"${s.ton === t ? ' selected' : ''}>${t || '—'}</option>`).join('')}
+                  </select>` : (s.ton ? `<span>${esc(s.ton)}</span>` : '')}
+                  ${s.segment_type !== 'sfx' ? `<select class="sel-rythme" data-sid="${s.segment_id}" style="font-size:0.75rem;border:1px solid var(--gris-clair);border-radius:4px;padding:1px 4px;background:var(--blanc);">
+                    ${['','lent','normal','rapide'].map(r => `<option value="${r}"${s.rythme === r ? ' selected' : ''}>${r || '—'}</option>`).join('')}
+                  </select>` : (s.rythme ? `<span>${esc(s.rythme)}</span>` : '')}
+                  ${s.duree_ms ? `<span>${(s.duree_ms / 1000).toFixed(1)}s</span>` : ''}
+                </div>
+              </div>
+              <div class="segment-actions">
+                ${statusBadge}
+                ${s.audio_url ? `<audio class="mini" controls preload="none" src="${s.audio_url}"></audio>` : ''}
+                <button class="btn btn-outline btn-sm btn-edit-seg" data-sid="${s.segment_id}" data-idx="${i}" title="Editer">&#9998;</button>
+                <button class="btn btn-outline btn-sm btn-regen-seg" data-sid="${s.segment_id}" title="Regenerer">&#8635;</button>
+                ${s.status === 'generated' ? `<button class="btn btn-success btn-sm btn-val-seg" data-sid="${s.segment_id}" title="Valider">&#10003;</button>` : ''}
+              </div>
+            </div>`;
+          });
+          return html;
+        }
+
+        app.innerHTML = `
+          <a href="#/episode/${eid}" class="back-btn">&#8592; ${esc(eid)}</a>
+          <div class="breadcrumb"><a href="#/">Episodes</a> &rsaquo; <a href="#/episode/${eid}">${esc(eid)}</a> &rsaquo; <strong>Segments</strong></div>
+          <h1 class="section-title">Segments</h1>
+          <div class="card" style="padding:1rem 1.5rem;">
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+              <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${pct}%"></div></div>
+              <span style="font-weight:700;">${pct}%</span>
+              <span style="font-size:0.85rem;color:var(--gris);">${genCount}/${segments.length}</span>
+            </div>
+          </div>
+          <div class="filter-bar" id="seg-filters">
+            <button class="btn btn-sm ${filter === 'all' ? 'btn-primary' : 'btn-outline'}" data-f="all">Tous (${segments.length})</button>
+            <button class="btn btn-sm ${filter === 'voix' ? 'btn-primary' : 'btn-outline'}" data-f="voix">Voix (${voixCount})</button>
+            <button class="btn btn-sm ${filter === 'sfx' ? 'btn-primary' : 'btn-outline'}" data-f="sfx">SFX (${sfxCount})</button>
+            ${errCount > 0 ? `<button class="btn btn-sm ${filter === 'errors' ? 'btn-danger' : 'btn-outline'}" data-f="errors">Erreurs (${errCount})</button>` : ''}
+            ${errCount > 0 ? `<button class="btn btn-sm btn-danger" id="btn-regen-errors">Regenerer les erreurs (${errCount})</button>` : ''}
+            <input type="text" placeholder="Rechercher... (/)" id="seg-search" class="search-input">
+          </div>
+          <div style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
+            <input type="checkbox" class="segment-check" id="seg-select-all" title="Tout selectionner (a)">
+            <label for="seg-select-all" style="font-size:0.8rem;color:var(--gris);cursor:pointer;user-select:none;">Tout selectionner</label>
+          </div>
+          <div class="card" style="padding:0.5rem;" id="seg-list">${renderList()}</div>
+          <div class="sticky-bottom" id="seg-bottom">
+            <button class="btn btn-success" id="btn-validate-all">Tout valider (${genCount - validCount} en attente)</button>
+            <div class="bulk-bar" id="bulk-bar" style="display:none;">
+              <span class="bulk-count" id="bulk-count"></span>
+              <button class="btn btn-success btn-sm" id="bulk-validate">Valider</button>
+              <button class="btn btn-primary btn-sm" id="bulk-regenerate">Regenerer</button>
+              <a href="#" id="bulk-deselect" style="font-size:0.8rem;color:var(--gris);">Deselectionner</a>
+            </div>
+          </div>
+        `;
+
+        // ── Filter ──
+        document.querySelectorAll('#seg-filters .btn').forEach(b => {
+          b.addEventListener('click', () => {
+            filter = b.dataset.f;
+            document.querySelectorAll('#seg-filters .btn').forEach(x => { x.className = `btn btn-sm ${x.dataset.f === filter ? (filter === 'errors' ? 'btn-danger' : 'btn-primary') : 'btn-outline'}`; });
+            $('#seg-list').innerHTML = renderList();
+            attachSegEvents();
+          });
+        });
+
+        function attachSegEvents() {
+          // Edit
+          document.querySelectorAll('.btn-edit-seg').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const sid = btn.dataset.sid;
+              const seg = segments.find(s => s.segment_id === sid);
+              const el = document.getElementById('txt-' + sid);
+              if (el.querySelector('textarea')) return;
+              const ta = document.createElement('textarea');
+              ta.className = 'segment-texte-edit';
+              ta.value = seg.texte;
+              el.innerHTML = '';
+              el.appendChild(ta);
+              ta.focus();
+              function showDiff(newText) {
+                const existing = el.querySelector('.diff-panel');
+                if (existing) existing.remove();
+                const dp = document.createElement('div');
+                dp.className = 'diff-panel';
+                dp.innerHTML = `<div style="font-size:0.75rem;color:var(--gris);margin-bottom:4px;font-weight:600;">Avant / Apres</div>
+                  <span class="diff-before">${esc(seg.texte)}</span>
+                  <span class="diff-after">${esc(newText)}</span>
+                  <div class="diff-actions">
+                    <button class="btn btn-success btn-sm diff-confirm">Confirmer</button>
+                    <button class="btn btn-outline btn-sm diff-cancel">Annuler</button>
+                  </div>`;
+                el.appendChild(dp);
+                dp.querySelector('.diff-confirm').addEventListener('click', async () => {
+                  dp.querySelector('.diff-confirm').disabled = true;
+                  try {
+                    await api(`/api/v2/segment/${eid}/${sid}/edit`, { method: 'POST', body: { texte: newText } });
+                    seg.texte = newText;
+                    seg.status = 'pending';
+                    el.innerHTML = '';
+                    el.textContent = newText;
+                    toast('Segment modifie');
+                  } catch (e) { toast(e.message, false); el.innerHTML = ''; el.textContent = seg.texte; }
+                });
+                dp.querySelector('.diff-cancel').addEventListener('click', () => {
+                  el.innerHTML = '';
+                  el.textContent = seg.texte;
+                });
+              }
+              ta.addEventListener('keydown', async (ev) => {
+                if ((ev.key === 'Enter' && !ev.shiftKey) || (ev.key === 'Enter' && ev.ctrlKey)) {
+                  ev.preventDefault();
+                  const newText = ta.value.trim();
+                  if (!newText || newText === seg.texte) { el.innerHTML = ''; el.textContent = seg.texte; return; }
+                  showDiff(newText);
+                }
+                if (ev.key === 'Escape') { el.innerHTML = ''; el.textContent = seg.texte; }
+              });
+            });
+          });
+
+          // Regenerate
+          document.querySelectorAll('.btn-regen-seg').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const sid = btn.dataset.sid;
+              btn.disabled = true;
+              btn.innerHTML = '<span class="spinner"></span>';
+              try {
+                const { job_id } = await api(`/api/v2/segment/${eid}/${sid}/regenerate`, { method: 'POST' });
+                pollJob(job_id, () => { toast('Segment regenere'); renderSegments(eid); });
+              } catch (e) { toast(e.message, false); btn.disabled = false; btn.innerHTML = '&#8635;'; }
+            });
+          });
+
+          // Ton/rythme change
+          document.querySelectorAll('.sel-ton').forEach(sel => {
+            sel.addEventListener('change', async () => {
+              const sid = sel.dataset.sid;
+              try {
+                await api(`/api/v2/segment/${eid}/${sid}/edit`, { method: 'POST', body: { ton: sel.value } });
+                const seg = segments.find(s => s.segment_id === sid);
+                if (seg) seg.ton = sel.value;
+                toast('Ton mis a jour');
+              } catch (e) { toast(e.message, false); }
+            });
+          });
+          document.querySelectorAll('.sel-rythme').forEach(sel => {
+            sel.addEventListener('change', async () => {
+              const sid = sel.dataset.sid;
+              try {
+                await api(`/api/v2/segment/${eid}/${sid}/edit`, { method: 'POST', body: { rythme: sel.value } });
+                const seg = segments.find(s => s.segment_id === sid);
+                if (seg) seg.rythme = sel.value;
+                toast('Rythme mis a jour');
+              } catch (e) { toast(e.message, false); }
+            });
+          });
+
+          // Validate single
+          document.querySelectorAll('.btn-val-seg').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const sid = btn.dataset.sid;
+              btn.disabled = true;
+              try {
+                await api(`/api/v2/segment/${eid}/${sid}/validate`, { method: 'POST' });
+                const seg = segments.find(s => s.segment_id === sid);
+                if (seg) seg.status = 'validated';
+                toast('Segment valide');
+                $('#seg-list').innerHTML = renderList();
+                attachSegEvents();
+              } catch (e) { toast(e.message, false); btn.disabled = false; }
+            });
+          });
+        }
+
+        attachSegEvents();
+
+        // ── Search ──
+        const segSearch = $('#seg-search');
+        if (segSearch) {
+          segSearch.addEventListener('input', () => {
+            searchTerm = segSearch.value.trim();
+            $('#seg-list').innerHTML = renderList();
+            attachSegEvents();
+            updateBulkBar();
+          });
+        }
+
+        // ── Select All ──
+        const segSelectAll = $('#seg-select-all');
+        if (segSelectAll) {
+          segSelectAll.addEventListener('change', () => {
+            const filtered = getFiltered();
+            if (segSelectAll.checked) {
+              filtered.forEach(s => selectedIds.add(s.segment_id));
+            } else {
+              filtered.forEach(s => selectedIds.delete(s.segment_id));
+            }
+            document.querySelectorAll('.seg-cb').forEach(cb => {
+              cb.checked = selectedIds.has(cb.dataset.sid);
+            });
+            updateBulkBar();
+          });
+        }
+
+        // ── Checkbox change (delegated) ──
+        document.getElementById('seg-list').addEventListener('change', (ev) => {
+          if (ev.target.classList.contains('seg-cb')) {
+            const sid = ev.target.dataset.sid;
+            if (ev.target.checked) selectedIds.add(sid);
+            else selectedIds.delete(sid);
+            updateBulkBar();
+          }
+        });
+
+        // ── Bulk bar ──
+        function updateBulkBar() {
+          const bar = $('#bulk-bar');
+          const n = selectedIds.size;
+          if (n > 0) {
+            bar.style.display = 'flex';
+            $('#bulk-count').textContent = n + ' selectionne' + (n > 1 ? 's' : '');
+          } else {
+            bar.style.display = 'none';
+          }
+        }
+
+        $('#bulk-validate')?.addEventListener('click', async () => {
+          const ids = Array.from(selectedIds);
+          if (!ids.length) return;
+          const btn = $('#bulk-validate');
+          btn.disabled = true;
+          try {
+            const { count } = await api(`/api/v2/episode/${eid}/segments/bulk-action`, { method: 'POST', body: { action: 'validate', segment_ids: ids } });
+            toast(`${count} segments valides`);
+            selectedIds.clear();
+            renderSegments(eid);
+          } catch (e) { toast(e.message, false); btn.disabled = false; }
+        });
+
+        $('#bulk-regenerate')?.addEventListener('click', async () => {
+          const ids = Array.from(selectedIds);
+          if (!ids.length) return;
+          const btn = $('#bulk-regenerate');
+          btn.disabled = true;
+          try {
+            const { job_id, count } = await api(`/api/v2/episode/${eid}/segments/bulk-action`, { method: 'POST', body: { action: 'regenerate', segment_ids: ids } });
+            toast(`Regeneration de ${count} segments lancee`);
+            pollJob(job_id, () => { toast('Regeneration terminee'); renderSegments(eid); });
+          } catch (e) { toast(e.message, false); btn.disabled = false; }
+        });
+
+        $('#bulk-deselect')?.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          selectedIds.clear();
+          document.querySelectorAll('.seg-cb').forEach(cb => cb.checked = false);
+          if (segSelectAll) segSelectAll.checked = false;
+          updateBulkBar();
+        });
+
+        // ── Keyboard shortcuts (P2-5) ──
+        function _segKeyHandler(ev) {
+          const tag = ev.target.tagName;
+          const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+          if (ev.key === '/' && !isInput) {
+            ev.preventDefault();
+            const si = document.getElementById('seg-search');
+            if (si) si.focus();
+          }
+          if (ev.key === 'a' && !isInput) {
+            ev.preventDefault();
+            const sa = document.getElementById('seg-select-all');
+            if (sa) { sa.checked = !sa.checked; sa.dispatchEvent(new Event('change')); }
+          }
+        }
+        document.addEventListener('keydown', _segKeyHandler);
+        // Clean up on route change (store ref for removal)
+        if (window._segKeyHandler) document.removeEventListener('keydown', window._segKeyHandler);
+        window._segKeyHandler = _segKeyHandler;
+
+        // Regenerate all errors
+        const btnRegenErrors = $('#btn-regen-errors');
+        if (btnRegenErrors) {
+          btnRegenErrors.addEventListener('click', async () => {
+            btnRegenErrors.disabled = true;
+            btnRegenErrors.innerHTML = '<span class="spinner"></span> Regeneration...';
+            try {
+              const { job_id, count } = await api(`/api/v2/episode/${eid}/segments/regenerate-errors`, { method: 'POST' });
+              toast(`Regeneration de ${count} segments lancee`);
+              pollJob(job_id, (result) => {
+                if (result.status === 'ok') {
+                  toast(`${result.regenerated} segments regeneres`);
+                } else {
+                  toast('Erreur lors de la regeneration', false);
+                }
+                renderSegments(eid);
+              });
+            } catch (e) {
+              toast(e.message, false);
+              btnRegenErrors.disabled = false;
+              btnRegenErrors.textContent = `Regenerer les erreurs (${errCount})`;
+            }
+          });
+        }
+
+        // Validate all
+        $('#btn-validate-all').addEventListener('click', async () => {
+          const btn = $('#btn-validate-all');
+          btn.disabled = true;
+          try {
+            const { count } = await api(`/api/v2/episode/${eid}/validate-all-segments`, { method: 'POST' });
+            toast(`${count} segments valides`);
+            renderSegments(eid);
+          } catch (e) { toast(e.message, false); btn.disabled = false; }
+        });
+
+      } catch (e) {
+        app.innerHTML = `<div class="card"><p style="color:var(--corail)">Erreur : ${esc(e.message)}</p></div>`;
+      }
+    }
+  </script>
+</body>
+</html>

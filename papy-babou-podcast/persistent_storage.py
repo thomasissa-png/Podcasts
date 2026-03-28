@@ -361,24 +361,38 @@ PREFIX_CHAPTERS = "chapters/"
 PREFIX_COVERS = "covers/"
 
 
-def upload_segments(episode_id: str, segments_dir: Path) -> int:
+def upload_segments(
+    episode_id: str,
+    segments_dir: Path,
+    production_run_id: str | None = None,
+) -> int:
     """Upload tous les segments audio d'un épisode vers Object Storage.
 
-    Parcourt {segments_dir}/{episode_id}/ et uploade chaque fichier MP3.
+    Parcourt le dossier de segments et uploade chaque fichier MP3.
 
     Args:
         episode_id: Identifiant de l'épisode (ex: S01E01).
         segments_dir: Répertoire racine des segments (config.SEGMENTS_DIR).
+        production_run_id: Identifiant de la production (ex: prod_20260324_153042).
+            Quand fourni, uploade depuis {segments_dir}/{episode_id}/{production_run_id}/
+            vers segments/{episode_id}/{production_run_id}/.
+            Quand absent, comportement legacy : {segments_dir}/{episode_id}/ vers
+            segments/{episode_id}/.
 
     Returns:
         Nombre de fichiers uploadés.
     """
-    episode_dir = segments_dir / episode_id
+    if production_run_id:
+        episode_dir = segments_dir / episode_id / production_run_id
+        key_prefix = f"{episode_id}/{production_run_id}"
+    else:
+        episode_dir = segments_dir / episode_id
+        key_prefix = episode_id
     if not episode_dir.is_dir():
         return 0
     count = 0
     for mp3_file in episode_dir.glob("*.mp3"):
-        key = _storage_key(PREFIX_SEGMENTS, f"{episode_id}/{mp3_file.name}")
+        key = _storage_key(PREFIX_SEGMENTS, f"{key_prefix}/{mp3_file.name}")
         if upload_file(key, mp3_file):
             count += 1
     if count > 0:
@@ -386,28 +400,37 @@ def upload_segments(episode_id: str, segments_dir: Path) -> int:
     return count
 
 
-def restore_segments(episode_id: str, segments_dir: Path) -> int:
+def restore_segments(
+    episode_id: str,
+    segments_dir: Path,
+    production_run_id: str | None = None,
+) -> int:
     """Restaure les segments audio d'un épisode depuis Object Storage.
-
-    Télécharge tous les fichiers segments/{episode_id}/*.mp3 vers
-    {segments_dir}/{episode_id}/.
 
     Args:
         episode_id: Identifiant de l'épisode.
         segments_dir: Répertoire racine des segments (config.SEGMENTS_DIR).
+        production_run_id: Identifiant de la production (ex: prod_20260324_153042).
+            Quand fourni, télécharge depuis segments/{episode_id}/{production_run_id}/
+            vers {segments_dir}/{episode_id}/{production_run_id}/.
+            Quand absent, comportement legacy.
 
     Returns:
         Nombre de fichiers restaurés.
     """
-    prefix = _storage_key(PREFIX_SEGMENTS, f"{episode_id}/")
+    if production_run_id:
+        prefix = _storage_key(PREFIX_SEGMENTS, f"{episode_id}/{production_run_id}/")
+        dest_dir = segments_dir / episode_id / production_run_id
+    else:
+        prefix = _storage_key(PREFIX_SEGMENTS, f"{episode_id}/")
+        dest_dir = segments_dir / episode_id
     keys = list_files(prefix)
     if not keys:
         return 0
-    dest_dir = segments_dir / episode_id
     dest_dir.mkdir(parents=True, exist_ok=True)
     count = 0
     for key in keys:
-        filename = key.split("/")[-1]  # segments/S01E01/seg_001.mp3 → seg_001.mp3
+        filename = key.split("/")[-1]  # segments/S01E01/prod_xxx/seg_001.mp3 → seg_001.mp3
         dest = dest_dir / filename
         if dest.exists():
             count += 1

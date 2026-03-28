@@ -63,18 +63,27 @@ class SfxProvider:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.stats: dict[str, str] = {}  # segment_id → source utilisée
 
-    def produire_sfx(self, script: dict) -> list[Path]:
+    def produire_sfx(
+        self,
+        script: dict,
+        dossier_sortie: Path | None = None,
+    ) -> list[Path]:
         """Produit tous les fichiers SFX pour les segments 'sfx' du script.
 
         Args:
             script: Script JSON validé.
+            dossier_sortie: Dossier de sortie complet (ex: segments/S01E01/prod_xxx).
+                Quand fourni, utilisé directement au lieu de config.SEGMENTS_DIR / episode_id.
 
         Returns:
             Liste des chemins vers les fichiers SFX générés.
         """
         episode = script["episode"]
         episode_id = f"S{episode['saison']:02d}E{episode['numero']:02d}"
-        dossier = config.SEGMENTS_DIR / episode_id
+        if dossier_sortie is not None:
+            dossier = dossier_sortie
+        else:
+            dossier = config.SEGMENTS_DIR / episode_id
         dossier.mkdir(parents=True, exist_ok=True)
 
         fichiers = []
@@ -497,6 +506,71 @@ class SfxProvider:
                 meilleur_match = desc_curatee
 
         return meilleur_match
+
+    def generer_segment(self, description: str, chemin_sortie: Path) -> bool:
+        """Genere UN seul fichier SFX a partir d'une description.
+
+        Encapsule la chaine complete : local -> cache -> ElevenLabs -> Freesound -> silence.
+
+        Args:
+            description: Description textuelle du son a generer (en anglais de preference).
+            chemin_sortie: Chemin du fichier MP3 de sortie.
+
+        Returns:
+            True si la generation a reussi (meme si fallback silence).
+        """
+        chemin_sortie.parent.mkdir(parents=True, exist_ok=True)
+
+        # Construire un pseudo-segment pour reutiliser les methodes internes
+        pseudo_segment = {
+            "id": chemin_sortie.stem,
+            "personnage": "sfx",
+            "texte": description,
+            "duree_sfx_secondes": 5.0,
+        }
+
+        # 1. Verifier le cache local (assets/sfx/)
+        chemin_local = config.SFX_DIR / f"{description}.mp3"
+        if not str(chemin_local.resolve()).startswith(str(config.SFX_DIR.resolve())):
+            chemin_local = config.SFX_DIR / "nonexistent.mp3"
+        if chemin_local.exists():
+            _copier_fichier(chemin_local, chemin_sortie)
+            logger.info("SFX '%s' trouve en local", description)
+            return True
+
+        # 2. Verifier le cache de generation
+        chemin_cache = self.cache_dir / f"{_slug_sfx(description)}.mp3"
+        if chemin_cache.exists():
+            _copier_fichier(chemin_cache, chemin_sortie)
+            logger.info("SFX '%s' trouve en cache", description)
+            return True
+
+        # 3. Verifier la bibliotheque curatee
+        description_curatee = self._chercher_sfx_curatee(description)
+        if description_curatee:
+            segment_curate = dict(pseudo_segment)
+            segment_curate["texte"] = description_curatee
+            if self.elevenlabs_api_key:
+                ok = self._generer_elevenlabs(segment_curate, chemin_sortie, chemin_cache)
+                if ok:
+                    return True
+
+        # 4. Essayer ElevenLabs SFX
+        if self.elevenlabs_api_key:
+            ok = self._generer_elevenlabs(pseudo_segment, chemin_sortie, chemin_cache)
+            if ok:
+                return True
+
+        # 5. Fallback Freesound
+        if self.freesound_api_key:
+            ok = self._telecharger_freesound(pseudo_segment, chemin_sortie, chemin_cache)
+            if ok:
+                return True
+
+        # 6. Dernier recours : silence
+        logger.warning("SFX '%s' introuvable — remplacement par du silence.", description)
+        self._generer_silence(pseudo_segment, chemin_sortie)
+        return True
 
     def _logger_stats(self, episode_id: str) -> None:
         """Affiche un résumé des sources SFX utilisées."""
