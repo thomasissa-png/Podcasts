@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="i192bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5B9BD5"/>
+      <stop offset="100%" stop-color="#4A88C2"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="38" fill="url(#i192bg)"/>
+  <circle cx="96" cy="82" r="40" fill="#F5D6B0"/>
+  <path d="M60 70 Q56 52 70 44 Q64 60 67 70" fill="#C0C0C0"/>
+  <path d="M132 70 Q136 52 122 44 Q128 60 125 70" fill="#C0C0C0"/>
+  <rect x="72" y="75" width="19" height="14" rx="3.5" fill="none" stroke="#2D2D2D" stroke-width="2.8"/>
+  <rect x="101" y="75" width="19" height="14" rx="3.5" fill="none" stroke="#2D2D2D" stroke-width="2.8"/>
+  <line x1="91" y1="82" x2="101" y2="82" stroke="#2D2D2D" stroke-width="2"/>
+  <circle cx="81.5" cy="82" r="2.8" fill="#2D2D2D"/>
+  <circle cx="110.5" cy="82" r="2.8" fill="#2D2D2D"/>
+  <path d="M84 96 Q96 104 108 96" fill="none" stroke="#2D2D2D" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M64 128 Q68 118 78 114 Q96 108 114 114 Q124 118 128 128 Q132 145 132 160 L60 160 Q60 145 64 128" fill="#3A4E7A"/>
+  <polygon points="155,30 158,40 168,40 160,46 163,56 155,50 147,56 150,46 142,40 152,40" fill="#FFD234" opacity="0.9"/>
+  <polygon points="140,50 142,55 147,55 143,58 145,63 140,60 135,63 137,58 133,55 138,55" fill="#FFD234" opacity="0.5"/>
+  <text x="96" y="182" text-anchor="middle" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#FFD234" letter-spacing="3">PB</text>
+</svg>

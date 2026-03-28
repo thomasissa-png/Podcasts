@@ -1,0 +1,32 @@
+{
+  "episode_id": "S01E01",
+  "etape": "waiting_script",
+  "timestamp": "2026-03-20T06:46:39.946976",
+  "data": {
+    "episode_id": "S01E01",
+    "titre": "La création du monde — quand Dieu a tout inventé",
+    "resume": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
+    "saison": 1,
+    "numero": 1,
+    "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
+    "type_episode": "ouverture",
+    "dry_run": false,
+    "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01E01_script.json",
+    "stop_after": "script",
+    "rapport": {
+      "episode_id": "S01E01",
+      "titre": "La création du monde — quand Dieu a tout inventé",
+      "dry_run": false,
+      "debut": "2026-03-20T06:46:39.946689",
+      "etapes": {
+        "script": {
+          "status": "waiting_script",
+          "script_path": "/home/user/Podcasts/papy-babou-podcast/output/scripts/S01E01_script.json",
+          "score_review": 9.2,
+          "validation_humaine": false
+        }
+      },
+      "decisions_humaines": []
+    }
+  }
+}

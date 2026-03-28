@@ -10,6 +10,7 @@ Stratégie de persistance :
 
 import json
 import logging
+import time
 from pathlib import Path
 
 import config
@@ -33,48 +34,118 @@ def _db_disponible() -> bool:
 # ── Historique ─────────────────────────────────────────────────────────────────
 
 def charger_historique_complet() -> list[dict]:
-    """Charge tout l'historique des épisodes (DB prioritaire, JSON fallback)."""
-    try:
-        from database import DATABASE_URL
-        if DATABASE_URL:
-            from db_models import HistoriqueRepo
-            rows = HistoriqueRepo.charger_tout()
-            if rows:
-                return rows
-    except Exception:
-        pass
+    """Charge tout l'historique des épisodes (fusion DB + JSON).
 
+    Fusionne les deux sources pour ne jamais perdre d'épisodes :
+    - DB peut avoir des entrées absentes du JSON (épisodes produits via web)
+    - JSON peut avoir des entrées absentes de la DB (sync DB échouée)
+
+    En cas de doublon (même episode_id), l'entrée la plus récente gagne.
+    Retente une fois la connexion DB en cas d'échec (Neon scale-to-zero).
+    """
+    historique_db: list[dict] = []
+    for attempt in range(2):
+        try:
+            from database import DATABASE_URL
+            if DATABASE_URL:
+                from db_models import HistoriqueRepo
+                rows = HistoriqueRepo.charger_tout()
+                if rows is not None:
+                    historique_db = rows
+                    break
+        except Exception as e:
+            logger.warning(
+                "Échec chargement historique DB (tentative %d/2) : %s",
+                attempt + 1, e,
+            )
+            if attempt == 0:
+                time.sleep(1)  # Laisser Neon se réveiller
+
+    # Charger aussi le JSON (toujours, pas seulement en fallback)
+    historique_json: list[dict] = []
     historique_path = config.HISTORIQUE_DIR / "historique_episodes.json"
     if historique_path.exists():
-        with open(historique_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+        try:
+            with open(historique_path, "r", encoding="utf-8") as f:
+                historique_json = json.load(f)
+        except Exception as e:
+            logger.warning("Échec chargement historique JSON : %s", e)
+
+    # Si une seule source, retourner directement
+    if not historique_db:
+        return historique_json
+    if not historique_json:
+        return historique_db
+
+    # Fusionner : indexer par episode_id, préférer l'entrée la plus récente
+    merged: dict[str, dict] = {}
+    for ep in historique_db:
+        eid = ep.get("episode_id", "")
+        if eid:
+            merged[eid] = ep
+
+    for ep in historique_json:
+        eid = ep.get("episode_id", "")
+        if not eid:
+            continue
+        if eid not in merged:
+            # Épisode absent de la DB → l'ajouter
+            merged[eid] = ep
+        else:
+            # Doublon : comparer les dates de production
+            db_date = merged[eid].get("date_production", "")
+            json_date = ep.get("date_production", "")
+            # Convertir en string pour comparaison
+            if hasattr(db_date, "isoformat"):
+                db_date = db_date.isoformat()
+            if hasattr(json_date, "isoformat"):
+                json_date = json_date.isoformat()
+            # L'entrée JSON plus récente remplace la DB
+            if json_date and json_date > str(db_date):
+                merged[eid] = ep
+
+    # Trier par date de production DESCENDANT (plus récent en premier)
+    result = list(merged.values())
+    result.sort(key=lambda x: str(x.get("date_production", "")), reverse=True)
+    return result
 
 
 # ── Rapports de production ─────────────────────────────────────────────────────
 
 def charger_rapport(episode_id: str) -> dict | None:
-    """Charge le rapport de production d'un épisode (DB prioritaire, JSON fallback)."""
-    # 1. Essayer la DB
+    """Charge le rapport de production d'un épisode (DB prioritaire, JSON fallback).
+
+    Retourne le rapport de la production LA PLUS RÉCENTE, quel que soit son statut.
+    C'est crucial quand un épisode est re-produit après un nouveau plan de saison :
+    la nouvelle production (waiting_script) doit primer sur l'ancienne (completed).
+    """
+    # 1. Essayer la DB — production la plus récente avec rapport
     if _db_disponible():
         try:
-            from db_models import ProductionRepo
             from database import get_cursor
             with get_cursor(commit=False) as cur:
+                # Prendre la production la plus récente, tous statuts confondus
                 cur.execute(
                     "SELECT rapport_json FROM productions "
-                    "WHERE episode_id = %s AND status = 'completed' "
-                    "ORDER BY completed_at DESC LIMIT 1",
+                    "WHERE episode_id = %s AND rapport_json IS NOT NULL "
+                    "ORDER BY started_at DESC LIMIT 1",
                     (episode_id,),
                 )
                 row = cur.fetchone()
-            if row and row["rapport_json"]:
-                return row["rapport_json"]
+                if row and row["rapport_json"]:
+                    return row["rapport_json"]
         except Exception as e:
             logger.debug("DB indisponible pour rapport %s : %s", episode_id, e)
 
-    # 2. Fallback fichier JSON
+    # 2. Fallback fichier JSON (local puis Object Storage)
     rapport_path = config.LOGS_DIR / f"{episode_id}_rapport.json"
+    if not rapport_path.exists():
+        # Tenter de restaurer depuis Object Storage
+        try:
+            import persistent_storage
+            persistent_storage.restore_rapport(episode_id, config.LOGS_DIR)
+        except Exception:
+            pass
     if rapport_path.exists():
         try:
             with open(rapport_path, "r", encoding="utf-8") as f:
@@ -108,6 +179,10 @@ def trouver_fichier_audio(episode_id: str) -> dict:
                     p = Path(chemin)
                     if p.exists():
                         result[key] = p.name
+                    else:
+                        # Fichier absent (re-deploy Replit) — stocker le nom pour info
+                        # mais marquer comme manquant pour affichage dans le dashboard
+                        result[f"{key}_missing"] = p.name
 
         # Validation info
         etapes = rapport.get("etapes", {})
@@ -130,16 +205,21 @@ def trouver_fichier_audio(episode_id: str) -> dict:
                 rows = cur.fetchall()
             for row in rows:
                 p = Path(row["chemin"])
-                if row["type_fichier"] == "episode_preview":
-                    result["preview"] = p.name
-                    if not result["duree_secondes"] and row["duree_secondes"]:
-                        result["duree_secondes"] = row["duree_secondes"]
-                elif row["type_fichier"] == "episode_hq":
-                    result["hq"] = p.name
-                    if not result["duree_secondes"] and row["duree_secondes"]:
-                        result["duree_secondes"] = row["duree_secondes"]
+                if not result["duree_secondes"] and row["duree_secondes"]:
+                    result["duree_secondes"] = row["duree_secondes"]
+                if row["type_fichier"] == "episode_hq":
                     if not result["taille_mb"] and row["taille_bytes"]:
                         result["taille_mb"] = round(row["taille_bytes"] / (1024 * 1024), 2)
+                # N'assigner que si le fichier existe réellement sur le filesystem
+                # sinon stocker comme missing et laisser step 4 (Object Storage) restaurer
+                if p.exists():
+                    if row["type_fichier"] == "episode_preview":
+                        result["preview"] = p.name
+                    elif row["type_fichier"] == "episode_hq":
+                        result["hq"] = p.name
+                else:
+                    key = "preview" if row["type_fichier"] == "episode_preview" else "hq"
+                    result[f"{key}_missing"] = p.name
         except Exception as e:
             logger.debug("DB indisponible pour fichiers audio %s : %s", episode_id, e)
 
@@ -151,6 +231,28 @@ def trouver_fichier_audio(episode_id: str) -> dict:
                 candidates = list(episodes_dir.glob(f"{episode_id}*{suffix}"))
                 if candidates:
                     result[key] = candidates[0].name
+
+    # 4. Object Storage: restaurer les fichiers audio manquants
+    if not result["preview"] and not result["hq"]:
+        try:
+            import persistent_storage
+            if persistent_storage.is_available():
+                restored = persistent_storage.restore_episode_audio(
+                    episode_id, config.OUTPUT_DIR,
+                )
+                if restored.get("hq"):
+                    result["hq"] = restored["hq"].name
+                    # Effacer le flag missing puisque le fichier est restauré
+                    result.pop("hq_missing", None)
+                if restored.get("preview"):
+                    result["preview"] = restored["preview"].name
+                    result.pop("preview_missing", None)
+                if restored.get("hq") or restored.get("preview"):
+                    logger.info(
+                        "Audio %s restauré depuis Object Storage.", episode_id,
+                    )
+        except Exception as e:
+            logger.debug("Object Storage indisponible pour audio %s : %s", episode_id, e)
 
     return result
 
@@ -442,6 +544,7 @@ def get_dashboard_data(saison: int = 0) -> dict:
             "taille_mb": audio_info.get("taille_mb"),
             "validation_script": audio_info.get("validation_script", False),
             "validation_montage": audio_info.get("validation_montage", False),
+            "audio_missing": bool(audio_info.get("hq_missing") or audio_info.get("preview_missing")),
         })
 
     # Statistiques
@@ -538,6 +641,21 @@ def get_dashboard_data(saison: int = 0) -> dict:
     # Publications
     publications = charger_publications()
 
+    # Vérifier la persistance
+    persistence_warning = None
+    has_db = _db_disponible()
+    has_os = False
+    try:
+        import persistent_storage
+        has_os = persistent_storage.is_available()
+    except Exception:
+        pass
+    if not has_db and not has_os:
+        persistence_warning = (
+            "Aucun système de persistance actif (ni PostgreSQL ni Object Storage). "
+            "Les données seront perdues au prochain redéploiement !"
+        )
+
     return {
         "saison_filtre": saison,
         "episodes": episodes,
@@ -551,4 +669,5 @@ def get_dashboard_data(saison: int = 0) -> dict:
         "couts": couts,
         "checkpoints": checkpoints,
         "publications": publications,
+        "persistence_warning": persistence_warning,
     }

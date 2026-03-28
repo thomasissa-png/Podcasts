@@ -41,6 +41,7 @@ class TestHistorique:
         import main
         chemin = tmp_path / "historique.json"
         monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+        monkeypatch.setattr(main, "_use_db", lambda: False)
 
         historique = [
             {"episode_id": "S01E01", "titre": "Le buisson ardent", "morale": "Confiance"},
@@ -56,6 +57,7 @@ class TestHistorique:
         import main
         chemin = tmp_path / "historique.json"
         monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+        monkeypatch.setattr(main, "_use_db", lambda: False)
 
         rapport = {
             "episode_id": "S01E01",
@@ -87,6 +89,7 @@ class TestHistorique:
         import main
         chemin = tmp_path / "historique.json"
         monkeypatch.setattr(main, "HISTORIQUE_PATH", chemin)
+        monkeypatch.setattr(main, "_use_db", lambda: False)
 
         rapport = {
             "episode_id": "S01E01",
@@ -358,7 +361,7 @@ class TestValidationPublication:
         assert rapport["decisions_humaines"][0]["action"] == "saute"
 
     def test_abandonner_publication(self, monkeypatch):
-        """L'option 'a' leve ProductionAbandonnee."""
+        """L'option 'a' retourne False (ne publie pas) mais continue vers le rapport."""
         import main
         meta = {"titre": "Test"}
         rapport = self._rapport_avec_prerequis()
@@ -367,8 +370,10 @@ class TestValidationPublication:
         monkeypatch.setattr(main.console, "input", lambda _: next(inputs))
         monkeypatch.setattr(main.console, "print", lambda *a, **kw: None)
 
-        with pytest.raises(ProductionAbandonnee):
-            _validation_publication(meta, "S01E01", rapport=rapport)
+        result = _validation_publication(meta, "S01E01", rapport=rapport)
+        assert result is False
+        decisions = rapport.get("decisions_humaines", [])
+        assert any(d.get("action") == "abandonne" for d in decisions)
 
     def test_publication_bloquee_sans_relecture(self, monkeypatch):
         """Publication bloquée si le script n'a pas été relu."""

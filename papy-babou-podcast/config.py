@@ -7,6 +7,7 @@ import shutil
 import sys
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -141,10 +142,14 @@ if _PLACEHOLDERS_CONFIG:
 
 # ── Voix ElevenLabs ───────────────────────────────────────────────────────────
 
+# Verrou pour les modifications dynamiques des dicts globaux (thread-safety Gunicorn)
+_voice_config_lock = threading.Lock()
+
 VOICE_IDS = {
     "papy_babou": os.getenv("ELEVENLABS_VOICE_PAPY", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
     "antoine": os.getenv("ELEVENLABS_VOICE_ANTOINE", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
     "noemie": os.getenv("ELEVENLABS_VOICE_NOEMIE", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
+    "mamie_sonia": os.getenv("ELEVENLABS_VOICE_MAMIE_SONIA", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
     "narrateur": os.getenv("ELEVENLABS_VOICE_NARRATEUR", "À_REMPLACER_PAR_ELEVENLABS_VOICE_ID"),
 }
 
@@ -165,6 +170,11 @@ VOICE_SETTINGS = {
         "similarity_boost": 0.80,
         "style": 0.35,
     },
+    "mamie_sonia": {
+        "stability": 0.75,
+        "similarity_boost": 0.85,
+        "style": 0.25,
+    },
     "narrateur": {
         "stability": 0.85,
         "similarity_boost": 0.75,
@@ -174,29 +184,106 @@ VOICE_SETTINGS = {
 
 # Ordre de fallback quand un personnage n'a pas de voice_id configuré.
 # Le premier voice_id valide trouvé dans cette liste sera utilisé.
-VOICE_FALLBACK_CHAIN = ["narrateur", "papy_babou", "antoine", "noemie"]
+VOICE_FALLBACK_CHAIN = ["narrateur", "papy_babou", "antoine", "noemie", "mamie_sonia"]
 
 # ── Panoramique stéréo par personnage ────────────────────────────────────────
 # Valeurs de -1.0 (gauche) à 1.0 (droite), 0.0 = centre
 
 STEREO_PAN = {
     "papy_babou": 0.0,
-    "antoine": -0.3,
-    "noemie": 0.3,
+    "antoine": -0.2,
+    "noemie": 0.2,
+    "mamie_sonia": 0.15,
     "narrateur": 0.0,
     "sfx": 0.0,
+}
+
+# ── Gain de normalisation par personnage (dB) ─────────────────────────────────
+# Compense les différences de volume entre voix ElevenLabs pour un rendu homogène.
+VOICE_GAIN_DB = {
+    "papy_babou": 0.0,
+    "antoine": 1.5,
+    "noemie": 2.0,
+    "mamie_sonia": 1.0,
+    "narrateur": 0.0,
+    "sfx": 0.0,
+}
+
+# ── Vitesse vocale par personnage ──────────────────────────────────────────────
+# Facteur de vitesse pour ElevenLabs TTS (0.7 = lent, 1.0 = normal, 1.3 = rapide)
+# Un grand-père parle plus lentement que des enfants excités.
+VOICE_SPEED = {
+    "papy_babou": 0.92,    # Grand-père de 66 ans — rythme posé et chaleureux
+    "antoine": 1.05,        # Garçon de 9 ans — dynamique
+    "noemie": 1.08,         # Fille de 6 ans — enthousiaste et rapide
+    "mamie_sonia": 0.95,    # Grand-mère — calme et douce
+    "narrateur": 1.0,       # Vitesse standard
+}
+
+# ── Voice cloning — IDs des voix clonées (Professional Voice Cloning) ────────
+# Si configuré, ces voix sont utilisées à la place des voix standard.
+# Pour cloner : utiliser l'API ElevenLabs /v1/voices/add avec des échantillons
+# audio d'un comédien professionnel.
+VOICE_CLONED_IDS = {
+    "papy_babou": os.getenv("ELEVENLABS_CLONED_PAPY", ""),
+    "antoine": os.getenv("ELEVENLABS_CLONED_ANTOINE", ""),
+    "noemie": os.getenv("ELEVENLABS_CLONED_NOEMIE", ""),
+    "mamie_sonia": os.getenv("ELEVENLABS_CLONED_MAMIE_SONIA", ""),
+    "narrateur": os.getenv("ELEVENLABS_CLONED_NARRATEUR", ""),
+}
+
+# ── Speech Marks (timestamps ElevenLabs) ─────────────────────────────────────
+# Active l'endpoint with-timestamps pour obtenir les timestamps mot-par-mot.
+# Utile pour : sync SFX, sous-titres, format vidéo/YouTube.
+SPEECH_MARKS_ENABLED = os.getenv("SPEECH_MARKS_ENABLED", "false").lower() == "true"
+
+# ── Limites de longueur de segment (mots) pour voix IA ────────────────────────
+SEGMENT_MAX_MOTS_ENFANT = 40   # Antoine, Noémie
+SEGMENT_MAX_MOTS_ADULTE = 60   # Papy Babou, Mamie Sonia
+PERSONNAGES_ENFANTS = {"antoine", "noemie"}
+
+# ── Dictionnaire de prononciation pour noms bibliques ─────────────────────────
+# Format : "orthographe" → "prononciation phonétique pour ElevenLabs"
+PRONONCIATION_BIBLIQUE = {
+    "Nebuchadnezzar": "Né-bu-cad-né-tsar",
+    "Nabuchodonosor": "Na-bu-co-do-no-zor",
+    "Melchisédech": "Mel-ki-zé-dèk",
+    "Béershéba": "Bé-èr-ché-ba",
+    "Bethléem": "Bèt-lé-em",
+    "Nazareth": "Na-za-rèt",
+    "Gethsémani": "Guèt-sé-ma-ni",
+    "Golgotha": "Gol-go-ta",
+    "Capharnaüm": "Ka-far-na-om",
+    "Pharaon": "Fa-ra-on",
+    "Moïse": "Mo-ize",
+    "Noé": "No-é",
+    "Josué": "Jo-zu-é",
+    "Ézéchiel": "É-zé-ki-èl",
+    "Jéricho": "Jé-ri-ko",
+    "Isaïe": "I-za-i",
+    "Éphèse": "É-fèze",
+    "Canaan": "Ka-na-an",
+    "Sinaï": "Si-na-i",
+    "Goliath": "Go-li-at",
+    "Zachée": "Za-ché",
+    "Lazare": "La-zar",
+    "Bartimée": "Bar-ti-mé",
+    "Caïn": "Ka-in",
+    "Abel": "A-bèl",
+    "Samson": "Sam-son",
+    "Dalila": "Da-li-la",
 }
 
 # ── Paramètres de production ──────────────────────────────────────────────────
 
 PRODUCTION = {
-    "duree_cible_minutes": 13,
-    "mots_cible": 1400,
+    "duree_cible_minutes": 18,
+    "mots_cible": 2100,
     "mots_par_minute_enfant": 100,
     "mots_par_minute_adulte": 120,
     "intro_jingle_duree_ms": 10_000,
     "outro_jingle_duree_ms": 8_000,
-    "musique_fond_db": -20,
+    "musique_fond_db": -15,
     "lufs_cible": -16,
     "mp3_bitrate_final": "192k",
     "mp3_bitrate_preview": "128k",
@@ -225,6 +312,31 @@ JINGLES_PAR_TYPE = {
     },
 }
 
+
+def jingles_saison(numero_saison: int) -> dict[str, Path]:
+    """Retourne les chemins des jingles custom d'une saison (si définis).
+
+    Cherche dans le plan de saison le champ ``jingles_custom`` qui contient
+    les chemins absolus vers les fichiers audio choisis par le producteur.
+
+    Returns:
+        Dict ``{"intro_saison": Path, "outro_saison": Path}`` ou dict vide.
+    """
+    plan = charger_saison(numero_saison)
+    custom = plan.get("saison", {}).get("jingles_custom", {})
+    result: dict[str, Path] = {}
+    for key in ("intro_saison", "outro_saison"):
+        chemin_str = custom.get(key)
+        if chemin_str:
+            chemin = Path(chemin_str)
+            if chemin.exists():
+                result[key] = chemin
+            else:
+                _config_logger.warning(
+                    "Jingle custom '%s' introuvable : %s", key, chemin,
+                )
+    return result
+
 # ── Multi-ambiances musicales ────────────────────────────────────────────────
 # Le scripteur choisit l'ambiance dans le champ "ambiance" du script.
 # Si l'asset n'existe pas, on fallback sur "fond_doux".
@@ -247,32 +359,100 @@ AMBIANCES_VALIDES = tuple(k for k in AMBIANCES_MUSICALES if k != "fond_doux")
 # ── Configuration SFX (bruitages) ────────────────────────────────────────────
 
 SFX_CONFIG = {
-    "sfx_volume_db": -6,
+    "sfx_volume_db": -6,  # Legacy — monteur utilise SFX_VOLUME_PAR_TON (contextuel)
     "sfx_duree_defaut_secondes": 5.0,
     "sfx_duree_max_secondes": 22.0,
     "sfx_fade_ms": 300,
 }
 
+# ── Bibliothèque SFX curatée ────────────────────────────────────────────────
+# Descriptions pré-validées (en anglais pour ElevenLabs) pour les bruitages
+# récurrents. Le sfx_provider cherche ici AVANT de générer via l'API.
+# Clé = mot-clé français que le scripteur utilise, Valeur = description anglaise.
+SFX_CURATES = {
+    # ── Maison de Papy Babou ──
+    "cheminee": "warm crackling fireplace with occasional wood pops, cozy atmosphere",
+    "horloge": "antique grandfather clock ticking slowly, gentle and rhythmic",
+    "chat_ronronne": "cat purring softly and contentedly, warm and soothing",
+    "pas_bois": "gentle footsteps on old wooden floor, warm creaking",
+    "porte_bois": "old wooden door creaking open slowly, warm hinges",
+    "pluie_fenetre": "gentle rain on window panes, cozy indoor atmosphere",
+    "escalier_bois": "footsteps going up old wooden stairs, gentle creaking",
+    "fenetre_ouvre": "window opening to let fresh air in, birds outside",
+    "clochette_porte": "small door bell jingling as someone enters",
+    "chaise_bois": "wooden chair creaking as someone sits down",
+    "bouilloire": "kettle whistling softly, warm kitchen sounds",
+    "cuillere_tasse": "spoon stirring in ceramic cup, gentle clinking",
+    "bol_pose": "ceramic bowl being placed on wooden table gently",
+    "tissu_froisse": "fabric rustling softly, someone adjusting clothes",
+    "bruit_cuisine": "gentle kitchen sounds, pots and pans quietly clinking",
+    # ── Nature et campagne normande ──
+    "oiseaux_jardin": "garden birds singing in the morning, French countryside",
+    "vent_arbres": "soft wind through leaves and branches, peaceful",
+    "tonnerre_lointain": "distant thunder rumbling softly, not scary",
+    "eau_ruisseau": "gentle stream flowing over pebbles, peaceful nature",
+    "grillons_nuit": "crickets chirping at night, peaceful summer evening",
+    "pluie_douce": "light rain falling on leaves, gentle and calming",
+    "orage_lointain": "distant storm with soft thunder, safe indoors feeling",
+    # ── Moments familiaux ──
+    "rire_enfant": "child laughing happily and warmly, genuine joy",
+    "bisou": "gentle kiss on the cheek, sweet and warm",
+    "soupir_content": "contented sigh, relaxed and happy",
+    "applaudissements": "warm applause from a small family group",
+    "gateau_four": "oven door opening with warm bakery atmosphere",
+    "bougies_souffle": "birthday candles being blown out with soft cheers",
+    "emballage_cadeau": "gift wrapping paper being torn open excitedly",
+    "berceuse_fredonnee": "grandmother humming a gentle lullaby quietly",
+    "bebe_pleure": "baby crying softly then gradually calming down",
+    # ── Bruitages bibliques ──
+    "feu_camp": "campfire crackling under the stars, desert night",
+    "chevaux_galop": "horses galloping on a dirt road, distant",
+    "vagues_douces": "gentle ocean waves lapping on a sandy shore",
+    "trompettes_fanfare": "triumphant trumpet fanfare, heroic and bright",
+    "epee_metal": "sword being drawn from a sheath, metallic ring",
+    "marche_desert": "footsteps trudging through sand in hot desert",
+    "foule_marche": "crowd murmuring in an ancient marketplace",
+    "ane_brait": "donkey braying in the distance, rural",
+    "moutons_bele": "sheep bleating softly in a green field",
+    "harpe_celeste": "ethereal harp glissando, heavenly and magical",
+    "corne_berger": "shepherd horn echoing across rolling hills",
+    "pierres_tombent": "stones falling and tumbling down a rocky cliff",
+    "porte_temple": "massive stone temple door opening with reverb",
+    "chorale_lointaine": "distant choir singing softly, sacred atmosphere",
+    "eclair": "lightning crack followed by distant rolling thunder",
+    "puits_eau": "drawing water from a stone well with rope and bucket",
+    "chameau": "camel groaning and walking on sand, caravan",
+    "marteau_forgeron": "blacksmith hammer hitting metal rhythmically",
+    "cloches_eglise": "church bells ringing in the distance, French village",
+    "pages_livre": "turning pages of an old book carefully, paper rustling",
+}
+
 # ── Mots interdits (vocabulaire inapproprié pour 6-10 ans) ───────────────────
 
 MOTS_INTERDITS = [
-    "tuer", "massacre", "massacrer", "égorger", "assassiner", "meurtre",
-    "sang", "sanglant", "ensanglante", "cadavre", "dépouille",
+    # Violence graphique (contexte violent interdit, pas le concept factuel)
+    "massacre", "massacrer", "égorger", "assassiner", "meurtre",
+    "sanglant", "ensanglante", "cadavre", "dépouille",
     "enfer", "damnation", "damné", "châtiment éternel",
     "horreur", "horrible", "terrifiant", "terrifier", "cauchemar",
-    "mourir", "mort", "mortelle", "agoniser", "agonie",
-    "vengeance", "venger", "punition", "punir sévèrement",
-    "haine", "haïr", "détester",
+    "agoniser", "agonie",
+    # NOTE : "mourir", "mort" sont AUTORISÉS en contexte factuel biblique
+    # ("Abraham est mort à 175 ans", "Moïse est mort sur le mont Nébo")
+    # Cruauté et vengeance
+    "vengeance", "venger", "haine", "haïr",
+    # Insultes
     "idiot", "stupide", "imbécile", "crétin",
+    # Thèmes adultes
     "sexuel", "sexualité", "prostitution",
     "alcool", "ivre", "soûl",
-    "esclave", "esclavage",
+    # Violence physique graphique
     "torturer", "torture", "supplicier", "supplice",
     "décapiter", "mutiler", "amputer",
-    # Variantes et mots bibliques violents
-    "crever", "lapider", "brûler vif", "abomination",
-    "exterminer", "anéantir", "fléau", "peste",
+    "crever", "lapider", "brûler vif",
+    "exterminer", "anéantir",
     "concubine", "fornication",
+    # Mots méta interdits dans les dialogues (cassent l'immersion)
+    "saison", "épisode", "podcast", "série", "émission",
 ]
 
 # ── Bible des personnages ────────────────────────────────────────────────────
@@ -281,13 +461,26 @@ PERSONNAGES_JSON_PATH = ASSETS_DIR / "bible" / "personnages.json"
 
 
 def _db_disponible() -> bool:
-    """Vérifie si PostgreSQL est disponible (sans crash si non configuré)."""
+    """Vérifie si PostgreSQL est disponible (sans crash si non configuré).
+
+    Retente une fois après 1s en cas d'échec (Neon scale-to-zero peut
+    mettre quelques secondes à se réveiller après une période d'inactivité).
+    """
+    import time as _time
     try:
         from database import DATABASE_URL, verifier_connexion
         if not DATABASE_URL:
             return False
-        return verifier_connexion()
-    except Exception:
+        for attempt in range(2):
+            try:
+                if verifier_connexion():
+                    return True
+            except Exception:
+                pass
+            if attempt == 0:
+                _time.sleep(1)
+        return False
+    except ImportError:
         return False
 
 
@@ -350,16 +543,17 @@ def ajouter_personnage(
     with open(PERSONNAGES_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(bible, f, ensure_ascii=False, indent=2)
 
-    # Enregistrer la voix et le pan dynamiquement
-    if voice_id:
-        VOICE_IDS[personnage_id] = voice_id
-    if personnage_id not in VOICE_SETTINGS:
-        VOICE_SETTINGS[personnage_id] = {
-            "stability": 0.70,
-            "similarity_boost": 0.80,
-            "style": 0.2,
-        }
-    STEREO_PAN[personnage_id] = pan
+    # Enregistrer la voix et le pan dynamiquement (thread-safe)
+    with _voice_config_lock:
+        if voice_id:
+            VOICE_IDS[personnage_id] = voice_id
+        if personnage_id not in VOICE_SETTINGS:
+            VOICE_SETTINGS[personnage_id] = {
+                "stability": 0.70,
+                "similarity_boost": 0.80,
+                "style": 0.2,
+            }
+        STEREO_PAN[personnage_id] = pan
 
 
 def configurer_voix(
@@ -383,24 +577,25 @@ def configurer_voix(
         similarity_boost: Paramètre TTS similarity_boost (0.0–1.0).
         style: Paramètre TTS style (0.0–1.0).
     """
-    if voice_id:
-        VOICE_IDS[personnage_id] = voice_id
-    if pan is not None:
-        STEREO_PAN[personnage_id] = pan
+    with _voice_config_lock:
+        if voice_id:
+            VOICE_IDS[personnage_id] = voice_id
+        if pan is not None:
+            STEREO_PAN[personnage_id] = pan
 
-    # Mettre à jour les VOICE_SETTINGS si des paramètres TTS sont fournis
-    if any(v is not None for v in (stability, similarity_boost, style)):
-        settings = VOICE_SETTINGS.setdefault(personnage_id, {
-            "stability": 0.70,
-            "similarity_boost": 0.80,
-            "style": 0.2,
-        })
-        if stability is not None:
-            settings["stability"] = stability
-        if similarity_boost is not None:
-            settings["similarity_boost"] = similarity_boost
-        if style is not None:
-            settings["style"] = style
+        # Mettre à jour les VOICE_SETTINGS si des paramètres TTS sont fournis
+        if any(v is not None for v in (stability, similarity_boost, style)):
+            settings = VOICE_SETTINGS.setdefault(personnage_id, {
+                "stability": 0.70,
+                "similarity_boost": 0.80,
+                "style": 0.2,
+            })
+            if stability is not None:
+                settings["stability"] = stability
+            if similarity_boost is not None:
+                settings["similarity_boost"] = similarity_boost
+            if style is not None:
+                settings["style"] = style
 
     # Persister dans le JSON de la bible des personnages
     bible = {}
@@ -443,11 +638,46 @@ def personnages_valides() -> set[str]:
     return base
 
 
+def age_personnage(personnage_id: str, saison: int) -> int | None:
+    """Retourne l'âge d'un personnage pour une saison donnée.
+
+    Utilise ``age_par_saison`` si défini, sinon extrapole depuis ``age``
+    (âge de base = saison 1) et ajoute automatiquement l'entrée manquante.
+
+    Args:
+        personnage_id: Identifiant du personnage.
+        saison: Numéro de la saison.
+
+    Returns:
+        Âge du personnage pour cette saison, ou None si inconnu.
+    """
+    bible = charger_personnages()
+    perso = bible.get("personnages", {}).get(personnage_id)
+    if not perso:
+        return None
+
+    ages = perso.get("age_par_saison", {})
+    saison_str = str(saison)
+    if saison_str in ages:
+        return ages[saison_str]
+
+    # Extrapoler : chaque 2 saisons = +1 an (production ~6 mois/saison)
+    age_base = perso.get("age")
+    if age_base is None:
+        return None
+    age_calcule = age_base + (saison - 1) // 2
+    return age_calcule
+
+
 # ── Gestion des saisons ──────────────────────────────────────────────────────
 
 
 def charger_saison(numero: int) -> dict:
-    """Charge le plan d'une saison (PostgreSQL prioritaire, JSON fallback).
+    """Charge le plan d'une saison (le plus récent entre DB et fichier JSON).
+
+    Vérifie les deux sources et retourne la plus récente pour éviter que des
+    données stale en DB ne masquent un plan fraîchement créé sur le filesystem
+    (ou inversement).
 
     Args:
         numero: Numéro de la saison.
@@ -455,21 +685,67 @@ def charger_saison(numero: int) -> dict:
     Returns:
         Plan de saison ou dictionnaire vide si inexistant.
     """
+    plan_db = {}
+    db_updated_at = None
+
     if _db_disponible():
         try:
             from db_models import SaisonRepo
-            plan = SaisonRepo.charger(numero)
-            if plan:
-                return plan
+            from database import get_cursor
+            # Charger plan + timestamp de la dernière version
+            with get_cursor(commit=False) as cur:
+                cur.execute(
+                    "SELECT plan_json, updated_at FROM saisons "
+                    "WHERE numero = %s AND deleted_at IS NULL "
+                    "ORDER BY version DESC LIMIT 1",
+                    (numero,),
+                )
+                row = cur.fetchone()
+            if row and row["plan_json"]:
+                plan_db = row["plan_json"]
+                db_updated_at = row["updated_at"]
         except Exception as e:
             _config_logger.warning("DB indisponible pour saison %d : %s", numero, e)
 
-    # Fallback fichier JSON
+    # Fichier JSON (restaurer depuis Object Storage si absent)
+    plan_fichier = {}
+    fichier_mtime = None
     chemin = SAISONS_DIR / f"saison_{numero:02d}.json"
+    if not chemin.exists():
+        try:
+            import persistent_storage
+            persistent_storage.restore_saison(numero, SAISONS_DIR)
+        except Exception:
+            pass
     if chemin.exists():
-        with open(chemin, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+        try:
+            import os
+            fichier_mtime = datetime.fromtimestamp(
+                os.path.getmtime(chemin),
+                tz=datetime.now().astimezone().tzinfo,
+            )
+            with open(chemin, "r", encoding="utf-8") as f:
+                plan_fichier = json.load(f)
+        except Exception as e:
+            _config_logger.warning("Erreur lecture fichier saison %d : %s", numero, e)
+
+    # Si les deux sources existent, retourner la plus récente
+    if plan_db and plan_fichier:
+        if db_updated_at and fichier_mtime:
+            # Comparer les timestamps — fichier plus récent = fraîchement régénéré
+            try:
+                if fichier_mtime > db_updated_at:
+                    _config_logger.info(
+                        "Saison %d : fichier JSON plus récent que DB, utilisation du fichier",
+                        numero,
+                    )
+                    return plan_fichier
+            except TypeError:
+                pass  # Comparaison impossible (timezone mismatch) → DB par défaut
+        return plan_db
+
+    # Une seule source disponible
+    return plan_db or plan_fichier or {}
 
 
 def charger_episode_saison(saison: int, numero: int) -> dict:
@@ -492,59 +768,229 @@ def charger_episode_saison(saison: int, numero: int) -> dict:
 
 
 def liste_saisons() -> list[int]:
-    """Retourne la liste des numéros de saisons existantes."""
+    """Retourne la liste des numéros de saisons existantes.
+
+    Fusionne les saisons trouvées en DB ET sur le filesystem pour ne jamais
+    perdre une saison créée localement mais pas encore synchronisée en DB.
+    """
+    numeros: set[int] = set()
+
+    # 1. DB
     if _db_disponible():
         try:
             from db_models import SaisonRepo
             nums = SaisonRepo.liste_saisons()
             if nums:
-                return nums
+                numeros.update(nums)
         except Exception as e:
             _config_logger.warning("DB indisponible pour liste saisons : %s", e)
 
-    # Fallback fichier JSON
-    numeros = []
+    # 2. Object Storage (restaure les fichiers perdus après redéploiement Replit)
+    try:
+        import persistent_storage
+        if persistent_storage.is_available():
+            persistent_storage.restore_all_saisons(SAISONS_DIR)
+    except Exception as e:
+        _config_logger.debug("Object Storage indisponible pour saisons : %s", e)
+
+    # 3. Fichiers JSON (toujours vérifiés, inclut ceux restaurés depuis Object Storage)
     for f in SAISONS_DIR.glob("saison_*.json"):
         try:
             num = int(f.stem.split("_")[1])
-            numeros.append(num)
+            numeros.add(num)
         except (IndexError, ValueError):
             pass
+
     return sorted(numeros)
 
 
 # ── Formats d'épisodes ───────────────────────────────────────────────────────
 
+# ── Périmètre biblique par saison ─────────────────────────────────────────
+# Définit le corpus d'histoires autorisées pour chaque saison.
+# Injecté automatiquement dans le prompt du planificateur.
+PERIMETRES_SAISONS: dict[int, dict[str, str]] = {
+    1: {
+        "perimetre": "Ancien Testament uniquement — ordre chronologique IMPOSÉ — 10 histoires FIXES",
+        "description": (
+            "Histoires de l'Ancien Testament exclusivement. "
+            "Les 10 épisodes sont IMPOSÉS dans cet ordre EXACT — NE PAS CHANGER :\n"
+            "  Épisode 1 : La création du monde\n"
+            "  Épisode 2 : Noé et le déluge\n"
+            "  Épisode 3 : Abraham — quitter tout par confiance\n"
+            "  Épisode 4 : Joseph et la tunique de couleurs\n"
+            "  Épisode 5 : Moïse — l'enfant du Nil et la mer qui s'ouvre\n"
+            "  Épisode 6 : David et Goliath\n"
+            "  Épisode 7 : Salomon — le roi sage\n"
+            "  Épisode 8 : Daniel dans la fosse aux lions\n"
+            "  Épisode 9 : Jonas — avalé par une baleine\n"
+            "  Épisode 10 : Esther — la reine qui sauve son peuple\n"
+            "NOTE : Adam et Ève est couvert dans l'épisode 1 (Création). "
+            "Tu DOIS utiliser EXACTEMENT ces histoire_biblique pour chaque épisode, "
+            "dans cet ordre. Tu peux choisir les titres, résumés, morales et prétextes "
+            "librement, mais l'histoire_biblique de chaque épisode est FIXÉE. "
+            "AUCUNE histoire du Nouveau Testament. "
+            "INTERDIT : changer l'ordre, remplacer une histoire, ou ajouter des histoires."
+        ),
+        "episodes_imposes": [
+            "La création du monde",
+            "Noé et le déluge",
+            "Abraham — quitter tout par confiance",
+            "Joseph et la tunique de couleurs",
+            "Moïse — l'enfant du Nil et la mer qui s'ouvre",
+            "David et Goliath",
+            "Salomon — le roi sage",
+            "Daniel dans la fosse aux lions",
+            "Jonas — avalé par une baleine",
+            "Esther — la reine qui sauve son peuple",
+        ],
+    },
+    2: {
+        "perimetre": "La vie de Jésus — ordre chronologique IMPOSÉ — 10 histoires FIXES",
+        "description": (
+            "La vie de Jésus-Christ dans l'ORDRE CHRONOLOGIQUE. "
+            "Les 10 épisodes sont IMPOSÉS dans cet ordre EXACT — NE PAS CHANGER :\n"
+            "  Épisode 1 : L'annonce à Marie — l'ange Gabriel\n"
+            "  Épisode 2 : La naissance à Bethléem\n"
+            "  Épisode 3 : Les rois mages et l'étoile\n"
+            "  Épisode 4 : Jésus enfant au Temple\n"
+            "  Épisode 5 : Le baptême dans le Jourdain\n"
+            "  Épisode 6 : Les noces de Cana — l'eau changée en vin\n"
+            "  Épisode 7 : Le sermon sur la montagne\n"
+            "  Épisode 8 : La multiplication des pains\n"
+            "  Épisode 9 : Lazare — le miracle de la résurrection\n"
+            "  Épisode 10 : La Passion, la mort et la résurrection de Jésus\n"
+            "Tu DOIS utiliser EXACTEMENT ces histoire_biblique pour chaque épisode, "
+            "dans cet ordre. Tu peux choisir les titres, résumés, morales et prétextes "
+            "librement, mais l'histoire_biblique de chaque épisode est FIXÉE. "
+            "AUCUNE histoire de l'Ancien Testament. "
+            "INTERDIT : changer l'ordre, remplacer une histoire, ou ajouter des histoires."
+        ),
+        "episodes_imposes": [
+            "L'annonce à Marie — l'ange Gabriel",
+            "La naissance à Bethléem",
+            "Les rois mages et l'étoile",
+            "Jésus enfant au Temple",
+            "Le baptême dans le Jourdain",
+            "Les noces de Cana — l'eau changée en vin",
+            "Le sermon sur la montagne",
+            "La multiplication des pains",
+            "Lazare — le miracle de la résurrection",
+            "La Passion, la mort et la résurrection de Jésus",
+        ],
+    },
+    3: {
+        "perimetre": "Apôtres et grands saints — ordre chronologique IMPOSÉ — 10 histoires FIXES",
+        "description": (
+            "Les apôtres, premiers chrétiens et grands saints dans l'ORDRE CHRONOLOGIQUE. "
+            "Les 10 épisodes sont IMPOSÉS dans cet ordre EXACT — NE PAS CHANGER :\n"
+            "  Épisode 1 : Pierre — le pêcheur devenu chef des apôtres\n"
+            "  Épisode 2 : Paul — le persécuteur foudroyé sur le chemin de Damas\n"
+            "  Épisode 3 : Étienne — le premier martyr chrétien\n"
+            "  Épisode 4 : Marie-Madeleine — la première témoin de la résurrection\n"
+            "  Épisode 5 : Jean — l'apôtre qui écrit l'Apocalypse à Patmos\n"
+            "  Épisode 6 : François d'Assise — le riche qui choisit la pauvreté\n"
+            "  Épisode 7 : Jeanne d'Arc — la bergère qui entend des voix\n"
+            "  Épisode 8 : Nicolas de Myre — le saint qui donne en secret\n"
+            "  Épisode 9 : Thérèse de Lisieux — la petite voie vers Dieu\n"
+            "  Épisode 10 : Mère Teresa — servir Dieu dans les rues de Calcutta\n"
+            "Tu DOIS utiliser EXACTEMENT ces histoire_biblique pour chaque épisode, "
+            "dans cet ordre. Tu peux choisir les titres, résumés, morales et prétextes "
+            "librement, mais l'histoire_biblique de chaque épisode est FIXÉE. "
+            "INTERDIT : changer l'ordre, remplacer une histoire, ou ajouter des histoires."
+        ),
+        "episodes_imposes": [
+            "Pierre — le pêcheur devenu chef des apôtres",
+            "Paul — le persécuteur foudroyé sur le chemin de Damas",
+            "Étienne — le premier martyr chrétien",
+            "Marie-Madeleine — la première témoin de la résurrection",
+            "Jean — l'apôtre qui écrit l'Apocalypse à Patmos",
+            "François d'Assise — le riche qui choisit la pauvreté",
+            "Jeanne d'Arc — la bergère qui entend des voix",
+            "Nicolas de Myre — le saint qui donne en secret",
+            "Thérèse de Lisieux — la petite voie vers Dieu",
+            "Mère Teresa — servir Dieu dans les rues de Calcutta",
+        ],
+    },
+}
+
+
+# ── Événements spéciaux par saison/épisode ────────────────────────────────
+# Clé : (saison, numéro_épisode) → événement spécial à intégrer dans le script
+EVENEMENTS_SPECIAUX = {
+    (1, 6): {
+        "type": "anniversaire",
+        "personnage": "noemie",
+        "details": (
+            "C'est l'anniversaire de Noémie ! Elle a 6 ans aujourd'hui. "
+            "Elle demande à Babou une histoire spéciale pour son anniversaire. "
+            "Intègre la fête d'anniversaire comme prétexte naturel de l'épisode : "
+            "gâteau fait par mamie Sonia, bougies, cadeaux, et Noémie qui demande "
+            "une histoire comme cadeau d'anniversaire. Les enfants sont surexcités."
+        ),
+    },
+    (2, 4): {
+        "type": "anniversaire",
+        "personnage": "antoine",
+        "details": (
+            "C'est l'anniversaire d'Antoine ! Il a 10 ans aujourd'hui. "
+            "Il se sent grand et veut une histoire de 'grand' pour son anniversaire. "
+            "Intègre la fête comme prétexte naturel : Antoine est fier d'avoir 10 ans, "
+            "il veut une histoire plus épique que d'habitude. Gâteau de mamie Sonia."
+        ),
+    },
+    (1, 10): {
+        "type": "naissance",
+        "personnage": "lucas",
+        "details": (
+            "Lucas est né ! C'est le dernier épisode de la saison 1. "
+            "Le prénom de Lucas est enfin révélé. Les enfants sont surexcités "
+            "d'avoir un petit frère. Papy Babou est ému. C'est un moment "
+            "de grande joie familiale qui clôture la saison."
+        ),
+    },
+}
+
 FORMATS_EPISODES = {
     "ouverture": {
-        "duree_cible_minutes": 15,
-        "mots_cible": 1600,
+        "duree_cible_minutes": 20,
+        "mots_cible": 2400,
         "description": "Premier épisode de saison — présentation du thème et des enjeux",
     },
     "standard": {
-        "duree_cible_minutes": 13,
-        "mots_cible": 1400,
+        "duree_cible_minutes": 18,
+        "mots_cible": 2100,
         "description": "Épisode classique de la saison",
     },
     "mi-saison": {
-        "duree_cible_minutes": 15,
-        "mots_cible": 1600,
+        "duree_cible_minutes": 20,
+        "mots_cible": 2400,
         "description": "Épisode pivot — tournant dramatique ou récapitulatif",
     },
     "final": {
-        "duree_cible_minutes": 18,
-        "mots_cible": 1900,
+        "duree_cible_minutes": 20,
+        "mots_cible": 2400,
         "description": "Dernier épisode — conclusion de l'arc de saison",
     },
     "bonus": {
-        "duree_cible_minutes": 10,
-        "mots_cible": 1000,
+        "duree_cible_minutes": 15,
+        "mots_cible": 1800,
         "description": "Épisode bonus — Q&R, coulisses, ou récap",
     },
 }
 
 
 # ── Modèle Claude ─────────────────────────────────────────────────────────────
+
+# ── Seuils de validation post-génération ───────────────────────────────────
+RATIO_BIBLIQUE_MINIMUM = 0.60   # Papy Babou doit avoir ≥60% des mots
+RATIO_ENFANTS_MIN = 0.25        # Les enfants doivent intervenir dans ≥25% des segments
+RATIO_ENFANTS_MAX = 0.45        # Les enfants ne doivent pas dépasser 45% des segments
+MAX_PAUSES_EXCESSIVES = 3       # Maximum de pauses > 3s par épisode
+
+# ── Archives de saison ──────────────────────────────────────────────────────
+ARCHIVES_DIR = HISTORIQUE_DIR / "archives"
+ARCHIVES_DIR.mkdir(parents=True, exist_ok=True)
 
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 
@@ -567,15 +1013,17 @@ COVER_ART_CONFIG = {
     "size": "1024x1024",
     "quality": "standard",
     "style_prefix": (
-        "Flat design illustration for children ages 6-10. "
-        "Clean geometric shapes with soft rounded corners. "
-        "Warm pastel color palette: golden ochre (#D4A054), sky blue (#7BAFD4), "
-        "powder pink (#D4869A), olive green (#8BAF6E), warm beige (#F5E6D0), "
-        "lavender (#9B8EC4), terracotta (#C47A5A). "
-        "Provence countryside atmosphere with golden light. "
-        "Minimalist style with bold outlines and flat color fills, no gradients. "
-        "Inspired by modern children's book illustrations (Oliver Jeffers, Jon Klassen). "
-        "Include a subtle golden frame border evoking an old storybook. "
+        "Colorful cartoon adventure illustration for children ages 6-10, "
+        "chibi/super-deformed style with big heads and small bodies. "
+        "Bold black outlines, vibrant saturated colors, dynamic poses. "
+        "Inspired by 'Quelle Histoire' and 'Les aventures de Tina' (France Inter). "
+        "Bright vivid palette: sky blue (#4A9FE5), deep blue (#2D5B9E), "
+        "golden sand (#E8C97A), coral (#F26B5E), adventure purple (#7B5EA7), "
+        "sun yellow (#FFD234). "
+        "Characters in foreground with heroic/dynamic poses, expressive cartoon faces. "
+        "Detailed biblical/historical scenery in background with softer colors. "
+        "Bright luminous sky, epic and playful atmosphere. "
+        "Thick colorful cartoon title text, slightly tilted. "
     ),
 }
 

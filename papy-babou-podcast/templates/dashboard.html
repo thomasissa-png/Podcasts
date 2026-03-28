@@ -5,36 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Les Histoires de Papy Babou</title>
     <link rel="icon" type="image/svg+xml" href="/assets/artwork/favicon.svg">
+    <link rel="icon" type="image/svg+xml" sizes="32x32" href="/assets/artwork/favicon_32.svg">
     <link rel="icon" type="image/svg+xml" sizes="16x16" href="/assets/artwork/favicon_16.svg">
+    <link rel="apple-touch-icon" href="/assets/artwork/apple-touch-icon.svg">
+    <meta name="theme-color" content="#5B9BD5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════════════════════════
            PALETTE PAPY BABOU — Chaud & Enfantin (inspiré Minilek)
            ═══════════════════════════════════════════════════════════════ */
         :root {
-            --soleil: #F9B233;
-            --corail: #FF6B6B;
+            --soleil: #E8C84A;
+            --corail: #D94452;
             --turquoise: #13A69C;
-            --bleu-doux: #5B9BD5;
-            --rose-tendre: #F2A7B3;
-            --vert-prairie: #7BC67E;
+            --bleu-doux: #7BCBF5;
+            --rose-tendre: #E895A8;
+            --vert-prairie: #5DBD72;
             --violet-doux: #A78BDB;
-            --orange-chaud: #F28B50;
-            --sable: #FFF5E6;
+            --orange-chaud: #5B9BD5;
+            --sable: #FFF8ED;
             --blanc: #FFFFFF;
-            --fond: #FFF9F0;
+            --fond: #FFFAF2;
             --fond-carte: #FFFFFF;
-            --texte: #3D3225;
-            --texte-dim: #8B7D6B;
-            --texte-light: #B8A99A;
-            --border: #F0E4D4;
-            --border-hover: #E8D5BF;
-            --ombre: 0 2px 12px rgba(60, 40, 20, 0.08);
-            --ombre-hover: 0 4px 20px rgba(60, 40, 20, 0.14);
-            --radius: 16px;
-            --radius-sm: 10px;
-            --radius-xs: 6px;
+            --texte: #2D2D2D;
+            --texte-dim: #5A6B78;
+            --texte-light: #8A9AAE;
+            --border: #EDE4D4;
+            --border-hover: #D4CFC0;
+            --ombre: 0 2px 12px rgba(74, 159, 229, 0.08);
+            --ombre-hover: 0 4px 20px rgba(74, 159, 229, 0.14);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --radius-xs: 8px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -49,14 +52,14 @@
 
         /* ── Header ──────────────────────────────────────────────── */
         .header {
-            background: linear-gradient(135deg, var(--soleil) 0%, var(--orange-chaud) 100%);
+            background: linear-gradient(135deg, #4A9FE5 0%, #7BCBF5 100%);
             padding: 1.25rem 2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 1rem;
-            box-shadow: 0 4px 20px rgba(242, 139, 80, 0.25);
+            box-shadow: 0 4px 20px rgba(74, 159, 229, 0.3);
         }
 
         .header-title {
@@ -154,6 +157,7 @@
 
         @media (max-width: 900px) {
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .main { padding: 1rem; }
         }
 
         /* ── Cartes ──────────────────────────────────────────────── */
@@ -501,7 +505,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--soleil), var(--orange-chaud));
+            background: linear-gradient(135deg, var(--bleu-doux), var(--orange-chaud));
             color: var(--blanc);
             border: none;
             box-shadow: 0 3px 12px rgba(249, 178, 51, 0.35);
@@ -865,6 +869,143 @@
             color: var(--texte-dim);
             font-weight: 600;
         }
+
+        /* ═══════════════════════════════════════════════════════════════
+           MOBILE — Navigation, tables, validation, touch targets
+           ═══════════════════════════════════════════════════════════════ */
+
+        /* Hide elements on mobile */
+        @media (max-width: 768px) {
+            .hide-mobile { display: none !important; }
+        }
+
+        /* Navigation mobile : onglets compacts, scrollable, touch-friendly */
+        @media (max-width: 768px) {
+            .header { padding: 0.85rem 1rem; }
+            .header-title h1 { font-size: 1.1rem; }
+            .header-title .subtitle { font-size: 0.7rem; }
+            .header-title .logo { width: 36px; height: 36px; font-size: 1.2rem; }
+
+            .nav-bar {
+                padding: 0 0.5rem;
+                gap: 0;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .nav-bar::-webkit-scrollbar { display: none; }
+
+            .nav-tab {
+                padding: 0.7rem 0.65rem;
+                font-size: 0.72rem;
+                min-height: 44px;
+            }
+            .nav-tab .tab-icon { font-size: 1rem; }
+
+            /* Cacher le texte long des onglets, garder numéro + icône */
+            .nav-tab { white-space: nowrap; }
+
+            /* Boutons : touch targets minimum 44px */
+            .btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.85rem;
+                min-height: 44px;
+            }
+
+            /* Tables episode : cacher colonnes secondaires sur mobile */
+            .table-wrap { margin: 0 -0.5rem; }
+            table { font-size: 0.8rem; }
+            thead th, td { padding: 0.5rem 0.5rem; }
+
+            /* Dashboard episode table: hide audio, durée, date on mobile */
+            .table-wrap th:nth-child(6),
+            .table-wrap td:nth-child(6),
+            .table-wrap th:nth-child(7),
+            .table-wrap td:nth-child(7),
+            .table-wrap th:nth-child(9),
+            .table-wrap td:nth-child(9) {
+                display: none;
+            }
+
+            /* Score bar plus compact */
+            .score-track { min-width: 40px; }
+            .score-num { font-size: 0.78rem; min-width: 2rem; }
+
+            /* Titre tronqué */
+            .ep-titre { max-width: 120px; }
+
+            /* Stats KPI */
+            .stat-value { font-size: 1.5rem; }
+            .stat-card { padding: 0.85rem; }
+
+            /* Formulaires */
+            .form-input, .form-textarea, .form-select {
+                padding: 0.85rem 1rem;
+                font-size: 1rem; /* Empêche le zoom sur iOS */
+            }
+
+            /* Page header */
+            .page-header h2 { font-size: 1.2rem; }
+            .page-header p { font-size: 0.82rem; }
+
+            .section-title { font-size: 1rem; }
+
+            /* Validation page: stacked buttons */
+            .val-actions-grid {
+                flex-direction: column !important;
+            }
+            .val-actions-grid .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 480px) {
+            .nav-tab {
+                padding: 0.65rem 0.5rem;
+                font-size: 0.68rem;
+            }
+
+            .main { padding: 0.75rem; }
+            .card-header { padding: 0.7rem 0.85rem; font-size: 0.82rem; }
+            .card-body { padding: 0.85rem; }
+
+            /* Stats: full width */
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+            /* Ep titre encore plus court */
+            .ep-titre { max-width: 90px; }
+
+            /* Cacher aussi checkmark et type sur très petit écran */
+            .table-wrap th:nth-child(1),
+            .table-wrap td:nth-child(1),
+            .table-wrap th:nth-child(4),
+            .table-wrap td:nth-child(4) {
+                display: none;
+            }
+        }
+
+        /* ── Delete episode ──────────────────────────────────────────── */
+        .btn-danger {
+            background: #DC3545;
+            color: var(--blanc);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #C82333;
+        }
+
+        .delete-confirm-zone {
+            background: rgba(255, 107, 107, 0.08);
+            border: 2px solid rgba(255, 107, 107, 0.25);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .delete-confirm-zone.show { display: block; }
     </style>
 </head>
 <body>
@@ -887,6 +1028,10 @@
             <div class="subtitle">Studio de production podcast — Créez des histoires bibliques pour enfants</div>
         </div>
     </div>
+    <div style="display:flex;gap:0.8rem;align-items:center;">
+        <a href="/" style="color:#fff;font-size:0.85rem;opacity:0.85;text-decoration:none;" title="Voir le site public">Site public</a>
+        <a href="/admin/logout" style="color:#fff;font-size:0.85rem;opacity:0.85;text-decoration:none;background:rgba(255,255,255,0.2);padding:0.3rem 0.8rem;border-radius:8px;" title="Se déconnecter">Déconnexion</a>
+    </div>
 </header>
 
 <!-- ═══ NAVIGATION ═════════════════════════════════════════════════════════ -->
@@ -895,35 +1040,52 @@
      → 5. Reprendre → 6. Valider → 7. Publication → 8. Dashboard (suivi) → Configuration -->
 <nav class="nav-bar">
     <button class="nav-tab" data-page="planifier" onclick="showPage('planifier', this)">
-        <span class="tab-icon">&#128197;</span> 1. Planifier une saison
+        <span class="tab-icon">&#128197;</span> 1. Planifier
     </button>
     <button class="nav-tab" data-page="produire-saison" onclick="showPage('produire-saison', this)">
-        <span class="tab-icon">&#127916;</span> 2. Lancer la saison
-    </button>
-    <button class="nav-tab" data-page="produire" onclick="showPage('produire', this)">
-        <span class="tab-icon">&#127908;</span> 3. Un épisode
-    </button>
-    <button class="nav-tab" data-page="batch" onclick="showPage('batch', this)">
-        <span class="tab-icon">&#128230;</span> 4. Plusieurs épisodes (batch)
-    </button>
-    <button class="nav-tab" data-page="reprendre" onclick="showPage('reprendre', this)">
-        <span class="tab-icon">&#9654;</span> 5. Reprendre
-    </button>
-    <button class="nav-tab" data-page="validation" onclick="showPage('validation', this)">
-        <span class="tab-icon">&#9989;</span> 6. Valider
-    </button>
-    <button class="nav-tab" data-page="publication" onclick="showPage('publication', this)">
-        <span class="tab-icon">&#128225;</span> 7. Publication
+        <span class="tab-icon">&#127916;</span> 2. Produire
     </button>
     <button class="nav-tab" data-page="dashboard" onclick="showPage('dashboard', this)">
-        <span class="tab-icon">&#127968;</span> 8. Suivi &amp; résultats
+        <span class="tab-icon">&#127968;</span> 3. Suivi
     </button>
     <button class="nav-tab" data-page="config" onclick="showPage('config', this)">
-        <span class="tab-icon">&#9881;</span> Configuration
+        <span class="tab-icon">&#9881;</span> Config
+    </button>
+    <!-- Onglets avancés (pour utilisateurs experts) -->
+    <span style="border-left: 1px solid var(--border); margin: 0 0.25rem; height: 24px; align-self: center;"></span>
+    <button class="nav-tab" data-page="produire" onclick="showPage('produire', this)" style="opacity: 0.6; font-size: 0.82rem;">
+        <span class="tab-icon">&#127908;</span> Un épisode
+    </button>
+    <button class="nav-tab" data-page="batch" onclick="showPage('batch', this)" style="opacity: 0.6; font-size: 0.82rem;">
+        <span class="tab-icon">&#128230;</span> Batch
+    </button>
+    <button class="nav-tab" data-page="reprendre" onclick="showPage('reprendre', this)" style="opacity: 0.6; font-size: 0.82rem;">
+        <span class="tab-icon">&#9654;</span> Reprendre
+    </button>
+    <button class="nav-tab" data-page="validation" onclick="showPage('validation', this)" style="opacity: 0.6; font-size: 0.82rem;">
+        <span class="tab-icon">&#9989;</span> Valider
+    </button>
+    <button class="nav-tab" data-page="publication" onclick="showPage('publication', this)" style="opacity: 0.6; font-size: 0.82rem;">
+        <span class="tab-icon">&#128225;</span> Publication
     </button>
 </nav>
 
 <main class="main">
+
+{% if persistence_warning %}
+<div style="background: #ff4444; color: white; padding: 12px 20px; text-align: center; font-weight: bold; border-radius: 8px; margin: 10px 20px;">
+    &#9888; {{ persistence_warning }}
+</div>
+{% endif %}
+
+<!-- Bandeau production en cours (affiché par JS si un job est actif) -->
+<div id="running-job-banner" style="display:none; background: var(--fond-card); border: 2px solid var(--turquoise); padding: 14px 20px; border-radius: 10px; margin: 10px 20px; display: none;">
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <span class="spinner" style="width:20px;height:20px;"></span>
+        <span id="running-job-text" style="font-weight:600; color: var(--texte);">Production en cours...</span>
+        <span id="running-job-episode" style="font-size:0.85rem; color: var(--texte-light);"></span>
+    </div>
+</div>
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
      ║  1. PLANIFIER UNE SAISON                                              ║
@@ -955,7 +1117,7 @@
                 Cliquez sur une saison pour voir son avancement dans l'onglet Suivi.
             </p>
             <div class="perso-grid">
-                {% for s in saisons_dispo %}
+                {% for s in saisons_dispo|reverse %}
                 <div class="perso-chip" style="cursor: pointer;" onclick="loadPlanDetail({{ s }})">
                     <span class="name" style="color: var(--orange-chaud);">Saison {{ s }}</span>
                     <span class="count" style="font-size: 0.7rem;">{% if s in saisons_info %}{{ saisons_info[s].theme[:30] }} ({{ saisons_info[s].nb_episodes }} ép.){% else %}Voir le plan{% endif %}</span>
@@ -1030,21 +1192,21 @@
 </div>
 
 <!-- ╔════════════════════════════════════════════════════════════════════════╗
-     ║  2. PRODUIRE UNE SAISON                                               ║
+     ║  2. PRODUIRE UNE SAISON (épisode par épisode)                         ║
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-produire-saison">
     <div class="page-header">
-        <h2>&#127916; Étape 2 — Lancer la production d'une saison</h2>
+        <h2>&#127916; Étape 2 — Production de saison</h2>
         {% if saisons_dispo %}
         <p>
-            Sélectionnez une saison planifiée ci-dessous pour voir son contenu,
-            puis lancez la <strong>production automatique</strong> de tous ses épisodes
-            (ou seulement ceux de votre choix).
+            La production se fait <strong>épisode par épisode</strong>, dans l'ordre.
+            Chaque épisode doit être validé (script + audio) avant de passer au suivant,
+            pour que le scripteur puisse lire les scripts précédents et assurer la continuité.
         </p>
         {% else %}
         <p>
             Aucune saison planifiée pour le moment.
-            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Commencez par planifier une saison →</a>
+            <a href="javascript:void(0)" onclick="showPage('planifier', document.querySelector('[data-page=planifier]'))" style="color: var(--turquoise); font-weight: 700;">Commencez par planifier une saison &rarr;</a>
         </p>
         {% endif %}
     </div>
@@ -1052,53 +1214,175 @@
     {% if saisons_dispo %}
     <div class="card">
         <div class="card-header">
-            <span class="icon">&#127916;</span> Choisir et lancer une saison
+            <span class="icon">&#127916;</span> Progression de la saison
         </div>
         <div class="card-body">
             <div id="alert-produire-saison" class="alert"></div>
 
-            <form id="form-produire-saison" onsubmit="return submitProduireSaison(event)">
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="ps-saison">Saison à produire *</label>
-                    <select id="ps-saison" class="form-input" required style="max-width: 500px;">
-                        {% for num in saisons_dispo %}
-                        <option value="{{ num }}" {% if num == saisons_dispo[-1] %}selected{% endif %}>
-                            Saison {{ num }}{% if num in saisons_info %} — {{ saisons_info[num].theme }} ({{ saisons_info[num].nb_episodes }} ép.){% endif %}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="ps-saison">Saison</label>
+                <select id="ps-saison" class="form-input" required style="max-width: 500px;" onchange="loadSaisonProgress()">
+                    {% for num in saisons_dispo|reverse %}
+                    <option value="{{ num }}" {% if num == saisons_dispo[-1] %}selected{% endif %}>
+                        Saison {{ num }}{% if num in saisons_info %} — {{ saisons_info[num].theme }} ({{ saisons_info[num].nb_episodes }} ép.){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <!-- Apercu du plan de saison -->
-                <div id="ps-plan-preview" class="card" style="margin-bottom: 1rem; border: 1px solid var(--border); box-shadow: none;">
-                    <div class="card-header" style="padding: 0.6rem 1rem; font-size: 0.85rem;">
-                        <span class="icon">&#128214;</span> <span id="ps-plan-titre">Aperçu du plan</span>
+            <!-- Progression de la saison -->
+            <div id="ps-progress-zone" style="margin-bottom: 1.5rem;">
+                <em style="color: var(--texte-light);">Chargement de la progression...</em>
+            </div>
+
+            <!-- Prochain épisode -->
+            <div id="ps-next-episode-zone" style="display: none;">
+                <div class="card" style="border: 2px solid var(--turquoise); box-shadow: none; margin-bottom: 1rem;">
+                    <div class="card-header" style="background: var(--turquoise); color: white; padding: 0.6rem 1rem;">
+                        <span class="icon">&#127908;</span> <span id="ps-next-titre">Prochain épisode</span>
                     </div>
-                    <div class="card-body" id="ps-plan-body" style="padding: 0.8rem 1rem; font-size: 0.85rem;">
-                        <em style="color: var(--texte-light);">Chargement...</em>
+                    <div class="card-body" style="padding: 1rem;">
+                        <div id="ps-next-details"></div>
+                        <div style="margin-top: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <div class="form-check">
+                                <input type="checkbox" id="ps-dryrun">
+                                <label for="ps-dryrun">Mode test (sans audio)</label>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btn-produire-saison" onclick="produireProchainEpisode()">
+                                &#127908; Lancer le script
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="form-row-3">
-                    <div class="form-group">
-                        <label for="ps-episodes">Quels épisodes ?</label>
-                        <input type="text" id="ps-episodes" class="form-input" placeholder="Vide = tous les épisodes">
-                        <div class="hint">Laissez vide pour tout produire, ou indiquez les numéros : 1,3,5</div>
+            <!-- ── Zone de validation inline (script / audio / publication) ─── -->
+            <div id="ps-inline-validation" style="display: none; margin-bottom: 1.5rem;">
+                <!-- Étapes visuelles -->
+                <div id="ps-iv-steps" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; font-size: 0.85rem; font-weight: 700;"></div>
+
+                <!-- Script : lecture + validation -->
+                <div id="ps-iv-script-zone" style="display: none;">
+                    <div class="card" style="margin-bottom: 1rem; border: 2px solid var(--orange-chaud);">
+                        <div class="card-header" style="cursor: pointer; background: rgba(242,139,80,0.08);" onclick="toggleSection('ps-iv-script-body')">
+                            <span class="icon">&#128220;</span> Lire le script
+                            <span style="margin-left: auto; font-size: 0.8rem; color: var(--texte-dim);">cliquer pour ouvrir/fermer</span>
+                        </div>
+                        <div class="card-body" id="ps-iv-script-body" style="display: block; max-height: 500px; overflow-y: auto;">
+                            <p style="color: var(--texte-light);">Chargement...</p>
+                        </div>
                     </div>
-                    <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; padding-top: 1.2rem;">
-                        <div class="form-check">
-                            <input type="checkbox" id="ps-dryrun">
-                            <label for="ps-dryrun">Mode test (sans audio)</label>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <button class="btn btn-turquoise" id="ps-iv-btn-val-script" onclick="psInlineValidate('script', 'validate')">
+                            &#10003; Approuver le script
+                        </button>
+                        <button class="btn btn-secondary" id="ps-iv-btn-mod-script" onclick="psInlineToggleModify('script')" style="border: 2px solid var(--orange-chaud); color: var(--orange-chaud); background: transparent;">
+                            &#9998; Modifier le script
+                        </button>
+                        <button class="btn btn-corail" onclick="psInlineValidate('script', 'reject')" style="font-size: 0.82rem;">
+                            &#10007; Refuser
+                        </button>
+                    </div>
+                    <div id="ps-iv-modify-script" style="display: none; margin-bottom: 1rem; padding: 1rem; background: rgba(27,58,92,0.06); border-radius: 8px; border: 1px solid var(--orange-chaud);">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: var(--orange-chaud); display: block; margin-bottom: 0.4rem;">
+                            Instructions de modification
+                        </label>
+                        <textarea class="form-textarea" id="ps-iv-instructions-script" rows="3"
+                            placeholder="Ex: Rends le dialogue plus drôle, ajoute un moment de suspense..."></textarea>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                            <button class="btn btn-primary" onclick="psInlineRegenerate('script')">
+                                &#128260; Relancer le script
+                            </button>
+                            <button class="btn btn-secondary" onclick="psInlineToggleModify('script')">Annuler</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" id="btn-produire-saison">
-                        &#127916; Lancer la production de la saison
-                    </button>
+                <!-- Lancer audio (après validation script) -->
+                <div id="ps-iv-launch-audio" style="display: none; margin-bottom: 1rem;">
+                    <div class="alert alert-info" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <span>&#127911; Script validé ! Prêt pour la production audio.</span>
+                        <button class="btn btn-primary" id="ps-iv-btn-launch-audio" onclick="psInlineLaunchAudio()">
+                            &#127911; Lancer l'audio + montage
+                        </button>
+                    </div>
                 </div>
-            </form>
+
+                <!-- Audio : écoute + validation -->
+                <div id="ps-iv-audio-zone" style="display: none;">
+                    <div class="card" style="margin-bottom: 1rem; border: 2px solid var(--bleu-doux);">
+                        <div class="card-header" style="background: rgba(91,155,213,0.08);">
+                            <span class="icon">&#127911;</span> Écouter l'épisode
+                        </div>
+                        <div class="card-body" id="ps-iv-audio-body">
+                            <p style="color: var(--texte-light);">Pas d'audio disponible.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <button class="btn btn-turquoise" id="ps-iv-btn-val-montage" onclick="psInlineValidate('montage', 'validate')">
+                            &#10003; Approuver le montage
+                        </button>
+                        <button class="btn btn-secondary" id="ps-iv-btn-mod-montage" onclick="psInlineToggleModify('montage')" style="border: 2px solid var(--orange-chaud); color: var(--orange-chaud); background: transparent;">
+                            &#9998; Modifier le montage
+                        </button>
+                        <button class="btn btn-corail" onclick="psInlineValidate('montage', 'reject')" style="font-size: 0.82rem;">
+                            &#10007; Refuser
+                        </button>
+                    </div>
+                    <div id="ps-iv-modify-montage" style="display: none; margin-bottom: 1rem; padding: 1rem; background: rgba(27,58,92,0.06); border-radius: 8px; border: 1px solid var(--orange-chaud);">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: var(--orange-chaud); display: block; margin-bottom: 0.4rem;">
+                            Instructions de modification
+                        </label>
+                        <textarea class="form-textarea" id="ps-iv-instructions-montage" rows="3"
+                            placeholder="Ex: Le volume est trop bas, les bruitages couvrent les voix..."></textarea>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                            <button class="btn btn-primary" onclick="psInlineRegenerate('montage')">
+                                &#128260; Relancer audio + montage
+                            </button>
+                            <button class="btn btn-secondary" onclick="psInlineToggleModify('montage')">Annuler</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Publication (après validation script + montage) -->
+                <div id="ps-iv-publish-zone" style="display: none; margin-bottom: 1rem;">
+                    <div class="alert alert-success" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <span>&#128225; Script et montage validés ! L'épisode est prêt.</span>
+                        <button class="btn btn-primary" id="ps-iv-btn-publish" onclick="psInlinePublish()">
+                            &#128225; Publier l'épisode
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Couverture + Métadonnées (collapsible) -->
+                <div id="ps-iv-extras" style="display: none;">
+                    <div class="card" style="margin-bottom: 1rem; display: none;" id="ps-iv-cover-card">
+                        <div class="card-header"><span class="icon">&#127912;</span> Couverture</div>
+                        <div class="card-body" id="ps-iv-cover-body"></div>
+                    </div>
+                    <div class="card" style="margin-bottom: 1rem; display: none;" id="ps-iv-meta-card">
+                        <div class="card-header" style="cursor: pointer;" onclick="toggleSection('ps-iv-meta-body')">
+                            <span class="icon">&#128196;</span> Métadonnées
+                            <span style="margin-left: auto; font-size: 0.8rem; color: var(--texte-dim);">ouvrir/fermer</span>
+                        </div>
+                        <div class="card-body" id="ps-iv-meta-body" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bloqué par épisode précédent -->
+            <div id="ps-blocked-zone" style="display: none;">
+                <div class="alert alert-warning" style="display: block;">
+                    <strong>Production bloquée :</strong> <span id="ps-blocked-msg"></span>
+                </div>
+            </div>
+
+            <!-- Saison terminée -->
+            <div id="ps-complete-zone" style="display: none;">
+                <div class="alert alert-success" style="display: block;">
+                    <strong>Saison terminée !</strong> Tous les épisodes ont été produits et validés.
+                </div>
+            </div>
 
             <div class="console-output" id="console-produire-saison"></div>
         </div>
@@ -1319,7 +1603,7 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-validation">
     <div class="page-header">
-        <h2>&#9989; Étape 6 — Écouter et valider</h2>
+        <h2>&#9989; Écouter et valider</h2>
         <p>
             C'est ici que vous <strong>écoutez</strong> les épisodes produits, <strong>lisez</strong>
             le script, et <strong>validez</strong> (ou rejetez) chaque étape avant publication.
@@ -1329,10 +1613,22 @@
 
     <div id="alert-validation" class="alert"></div>
 
+    <!-- Filtre par saison (validation) -->
+    {% if saisons_dispo %}
+    <div class="btn-group" style="margin-bottom: 1rem;">
+        <button class="btn btn-saison-filter active" onclick="filterValidationSaison(0, this)">Tout</button>
+        {% for s in saisons_dispo|reverse %}
+        <button class="btn btn-saison-filter" onclick="filterValidationSaison({{ s }}, this)">
+            Saison {{ s }}
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Liste des épisodes à valider -->
     <div class="card" style="margin-bottom: 1.25rem;">
         <div class="card-header">
-            <span class="icon">&#128221;</span> Épisodes produits
+            <span class="icon">&#128221;</span> Épisodes
             <span class="count" id="val-count">...</span>
         </div>
         <div class="card-body" id="val-episodes-list">
@@ -1390,7 +1686,7 @@
         </div>
 
         <!-- Cover art -->
-        <div class="card" style="margin-bottom: 1.25rem;" id="val-cover-card" style="display: none;">
+        <div class="card" style="margin-bottom: 1.25rem; display: none;" id="val-cover-card">
             <div class="card-header">
                 <span class="icon">&#127912;</span> Couverture
             </div>
@@ -1399,40 +1695,97 @@
             </div>
         </div>
 
+        <!-- Métadonnées -->
+        <div class="card" style="margin-bottom: 1.25rem; display: none;" id="val-meta-card">
+            <div class="card-header" style="cursor: pointer;" onclick="toggleSection('val-meta-body')">
+                <span class="icon">&#128196;</span> Métadonnées
+                <span style="margin-left: auto; font-size: 0.8rem; color: var(--texte-dim);">cliquer pour ouvrir/fermer</span>
+            </div>
+            <div class="card-body" id="val-meta-body" style="max-height: 400px; overflow-y: auto;">
+                <p style="color: var(--texte-light);">Pas de métadonnées disponibles.</p>
+            </div>
+        </div>
+
+        <!-- Zone de continuation (affichée après validation d'une étape) -->
+        <div id="continue-production-zone" style="display:none; margin-bottom: 1.25rem;"></div>
+
         <!-- Actions de validation -->
         <div class="card" style="margin-bottom: 1.25rem;">
             <div class="card-header">
                 <span class="icon">&#9989;</span> Actions de validation
             </div>
             <div class="card-body">
-                <div class="form-group">
-                    <label>Commentaire (optionnel)</label>
-                    <textarea class="form-textarea" id="val-comment" rows="2" placeholder="Remarques, corrections, retours..."></textarea>
+                <textarea class="form-textarea" id="val-comment" rows="1" style="display:none;"></textarea>
+                <!-- ── Validation du script ─────────────────────── -->
+                <div id="val-section-script" class="val-step-section" style="margin-top: 1rem;">
+                    <h4 style="margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--texte);">&#9998; Script</h4>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn btn-turquoise" onclick="validateStep('script', 'validate')" id="btn-val-script">
+                            &#10003; Approuver le script
+                        </button>
+                        <button class="btn btn-secondary" onclick="toggleModifyZone('script')" id="btn-mod-script" style="border: 2px solid var(--orange-chaud); color: var(--orange-chaud); background: transparent;">
+                            &#9998; Modifier le script
+                        </button>
+                        <button class="btn btn-corail" onclick="rejectAndArchive('script')" id="btn-rej-script" style="font-size: 0.82rem;">
+                            &#10007; Refuser et archiver
+                        </button>
+                    </div>
+                    <div id="modify-zone-script" style="display: none; margin-top: 0.75rem; padding: 1rem; background: rgba(27,58,92,0.06); border-radius: 8px; border: 1px solid var(--orange-chaud);">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: var(--orange-chaud); display: block; margin-bottom: 0.4rem;">
+                            Instructions de modification
+                        </label>
+                        <textarea class="form-textarea" id="modify-instructions-script" rows="3"
+                            placeholder="Ex: Rends le dialogue plus drôle, ajoute un moment de suspense avant la morale..."></textarea>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                            <button class="btn btn-primary" onclick="regenerateStep('script')">
+                                &#128260; Relancer le script
+                            </button>
+                            <button class="btn btn-secondary" onclick="toggleModifyZone('script')">
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
-                    <button class="btn btn-turquoise" onclick="validateStep('script', 'validate')" id="btn-val-script">
-                        &#10003; Valider le script
-                    </button>
-                    <button class="btn btn-turquoise" onclick="validateStep('montage', 'validate')" id="btn-val-montage">
-                        &#10003; Valider le montage
-                    </button>
-                    <button class="btn btn-turquoise" onclick="validateStep('metadonnees', 'validate')" id="btn-val-meta">
-                        &#10003; Valider les métadonnées
-                    </button>
-                    <button class="btn btn-corail" onclick="validateStep('script', 'reject')" id="btn-rej-script" style="font-size: 0.8rem;">
-                        &#10007; Rejeter le script
-                    </button>
-                    <button class="btn btn-corail" onclick="validateStep('montage', 'reject')" id="btn-rej-montage" style="font-size: 0.8rem;">
-                        &#10007; Rejeter le montage
-                    </button>
+
+                <!-- ── Validation du montage ──────────────────────── -->
+                <div id="val-section-montage" class="val-step-section" style="margin-top: 1.25rem;">
+                    <h4 style="margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--texte);">&#127911; Montage audio</h4>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn btn-turquoise" onclick="validateStep('montage', 'validate')" id="btn-val-montage">
+                            &#10003; Approuver le montage
+                        </button>
+                        <button class="btn btn-secondary" onclick="toggleModifyZone('montage')" id="btn-mod-montage" style="border: 2px solid var(--orange-chaud); color: var(--orange-chaud); background: transparent;">
+                            &#9998; Modifier le montage
+                        </button>
+                        <button class="btn btn-corail" onclick="rejectAndArchive('montage')" id="btn-rej-montage" style="font-size: 0.82rem;">
+                            &#10007; Refuser et archiver
+                        </button>
+                    </div>
+                    <div id="modify-zone-montage" style="display: none; margin-top: 0.75rem; padding: 1rem; background: rgba(27,58,92,0.06); border-radius: 8px; border: 1px solid var(--orange-chaud);">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: var(--orange-chaud); display: block; margin-bottom: 0.4rem;">
+                            Instructions de modification
+                        </label>
+                        <textarea class="form-textarea" id="modify-instructions-montage" rows="3"
+                            placeholder="Ex: Le volume du narrateur est trop bas, les bruitages couvrent les voix..."></textarea>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                            <button class="btn btn-primary" onclick="regenerateStep('montage')">
+                                &#128260; Relancer audio + montage
+                            </button>
+                            <button class="btn btn-secondary" onclick="toggleModifyZone('montage')">
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- ── Publication ─────────────────────────────────── -->
                 <hr style="border: none; border-top: 2px solid var(--border); margin: 1.5rem 0;">
                 <div>
                     <p style="font-size: 0.82rem; color: var(--texte-dim); margin-bottom: 0.75rem;">
-                        La publication n'est possible que si le <strong>script</strong> ET le <strong>montage</strong> sont validés.
+                        La publication n'est possible que si le <strong>script</strong> ET le <strong>montage</strong> sont approuvés.
                     </p>
                     <button class="btn btn-primary" onclick="validateStep('publication', 'publish')" id="btn-val-publish" disabled>
-                        &#128225; Autoriser la publication
+                        &#128225; Publier l'épisode
                     </button>
                 </div>
             </div>
@@ -1445,7 +1798,7 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-publication">
     <div class="page-header">
-        <h2>&#128225; Étape 7 — Publication</h2>
+        <h2>&#128225; Publication</h2>
         <p>
             La publication est l'étape finale : vos épisodes sont envoyés vers Buzzsprout,
             le flux RSS est mis à jour, et les plateformes (Apple Podcasts, Spotify, Deezer...)
@@ -1522,7 +1875,7 @@
      ╚════════════════════════════════════════════════════════════════════════╝ -->
 <div class="page" id="page-dashboard">
     <div class="page-header">
-        <h2>&#127968; Étape 8 — Suivi &amp; résultats</h2>
+        <h2>&#127968; Étape 3 — Suivi &amp; résultats</h2>
         <p>
             Retrouvez ici tout ce qui a été produit : épisodes, scores de qualité,
             progression des saisons, budget et personnages. Filtrez par saison pour
@@ -1533,7 +1886,7 @@
     <!-- Filtre par saison -->
     <div class="btn-group">
         <a href="/" class="btn btn-saison-filter {{ 'active' if saison_filtre == 0 }}">Tout</a>
-        {% for s in saisons_dispo %}
+        {% for s in saisons_dispo|reverse %}
         <a href="/?saison={{ s }}" class="btn btn-saison-filter {{ 'active' if saison_filtre == s }}">
             Saison {{ s }}
         </a>
@@ -1907,6 +2260,64 @@
             <p style="color: var(--texte-dim);">Chargement...</p>
         </div>
     </div>
+
+    <!-- ── Section Purge / Nettoyage ──────────────────────────────────── -->
+    <div class="card" style="margin-top: 1.25rem; border: 1px solid var(--corail);">
+        <div class="card-header" style="background: rgba(231, 76, 60, 0.08);">
+            <span class="icon">&#128465;</span> Nettoyage des données de production
+        </div>
+        <div class="card-body">
+            <p style="color: var(--texte-dim); margin-bottom: 1rem; font-size: 0.9rem;">
+                Supprimer les données de production (historique, scripts, audio, rapports, DB).
+                Les fichiers sont archivés dans <code>output/archive/</code> — récupérables si besoin.
+            </p>
+
+            <!-- Purge saison -->
+            <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+                <label style="font-weight: 600; min-width: 120px;">Purger une saison :</label>
+                <input type="number" id="purge-saison-num" min="1" max="99" value="1"
+                       style="width: 60px; padding: 0.4rem 0.5rem; border-radius: 6px; border: 1px solid var(--bordure); background: var(--fond-carte); color: var(--texte); font-size: 0.95rem;">
+                <label style="font-size: 0.85rem; color: var(--texte-dim);">
+                    <input type="checkbox" id="purge-garder-plan"> Garder le plan de saison
+                </label>
+                <button class="btn" onclick="purgeSaison()" id="btn-purge-saison"
+                        style="background: var(--corail); color: white; font-size: 0.85rem; padding: 0.4rem 1rem;">
+                    Purger la saison
+                </button>
+            </div>
+
+            <!-- Purge tout -->
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid var(--bordure);">
+                <label style="font-weight: 600; min-width: 120px; color: var(--corail);">Reset complet :</label>
+                <span style="font-size: 0.85rem; color: var(--texte-dim);">
+                    Supprime TOUT : historique, scripts, audio, plans, DB. Irréversible.
+                </span>
+                <button class="btn" onclick="purgeTout()" id="btn-purge-tout"
+                        style="background: #8b0000; color: white; font-size: 0.85rem; padding: 0.4rem 1rem;">
+                    Tout supprimer
+                </button>
+            </div>
+
+            <!-- Zone de confirmation -->
+            <div id="purge-confirm-zone" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 8px; background: rgba(231, 76, 60, 0.08); border: 1px solid var(--corail);">
+                <p id="purge-confirm-msg" style="font-weight: 600; margin-bottom: 0.75rem;"></p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn" id="purge-confirm-btn" onclick="purgeConfirm()"
+                            style="background: var(--corail); color: white;">
+                        Confirmer la suppression
+                    </button>
+                    <button class="btn" onclick="purgeCancel()"
+                            style="background: var(--fond-carte); color: var(--texte); border: 1px solid var(--bordure);">
+                        Annuler
+                    </button>
+                </div>
+            </div>
+
+            <!-- Résultat -->
+            <div id="purge-result" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
 </div>
 
 </main>
@@ -1938,7 +2349,7 @@ function showPage(pageId, tabEl) {
 
 /* ── Helper : naviguer vers le suivi d'une saison ──────────────────────── */
 function goToSuivi(saison) {
-    window.location.href = '/?saison=' + saison;
+    window.location.href = '/?saison=' + encodeURIComponent(saison);
 }
 
 /* ── Helper : echapper le HTML (anti-XSS) ──────────────────────────────── */
@@ -2014,9 +2425,39 @@ async function apiCall(url, body) {
 /* ── Helper : polling d'un job asynchrone ──────────────────────────────── */
 var _activePollTimer = null; /* timer courant pour permettre l'annulation */
 
+/* Sauvegarde/restore de job actif dans sessionStorage pour survivre aux rechargements */
+function _saveActiveJob(jobId, episodeId, url) {
+    try {
+        sessionStorage.setItem('_activeJob', JSON.stringify({
+            job_id: jobId, episode_id: episodeId || null,
+            url: url || null, started_at: Date.now()
+        }));
+    } catch(e) { /* sessionStorage indisponible */ }
+}
+function _clearActiveJob() {
+    try { sessionStorage.removeItem('_activeJob'); } catch(e) {}
+    var banner = document.getElementById('running-job-banner');
+    if (banner) banner.style.display = 'none';
+}
+function _getActiveJob() {
+    try {
+        var s = sessionStorage.getItem('_activeJob');
+        return s ? JSON.parse(s) : null;
+    } catch(e) { return null; }
+}
+
+function _showRunningBanner(episodeId) {
+    var banner = document.getElementById('running-job-banner');
+    if (!banner) return;
+    banner.style.display = 'block';
+    var epEl = document.getElementById('running-job-episode');
+    if (epEl && episodeId) epEl.textContent = episodeId;
+}
+
 function pollJob(jobId, maxTimeoutSec) {
-    maxTimeoutSec = maxTimeoutSec || 1920; /* 32 min par defaut (> backend 1800s) */
-    var transientRetries = 3; /* tentatives sur erreurs reseau transitoires */
+    maxTimeoutSec = maxTimeoutSec || 3720; /* 62 min par defaut (> backend 3600s) */
+    /* 30 tentatives réseau = ~5 min de coupure tolérée (polling toutes les 10s) */
+    var transientRetries = 30;
     return new Promise(function(resolve, reject) {
         var elapsedMs = 0;
         var consecutiveErrors = 0;
@@ -2038,29 +2479,41 @@ function pollJob(jobId, maxTimeoutSec) {
             elapsedMs += interval;
             if (elapsedMs > maxTimeoutSec * 1000) {
                 _activePollTimer = null;
+                _clearActiveJob(); /* timeout réel — le job a dépassé sa durée max */
                 reject(new Error('Timeout : le job n\u0027a pas terminé après ' + maxTimeoutSec + 's'));
                 return;
             }
             try {
                 const resp = await fetch('/api/job-status/' + jobId);
                 const data = await resp.json().catch(() => null);
-                consecutiveErrors = 0; /* reset sur succes reseau */
                 if (!resp.ok) {
-                    _activePollTimer = null;
-                    reject(new Error(data && data.error ? data.error : 'Job introuvable'));
+                    /* 404 = job peut avoir été perdu (redémarrage serveur).
+                       Retrier quelques fois avant d'abandonner. */
+                    consecutiveErrors++;
+                    if (consecutiveErrors >= transientRetries) {
+                        _activePollTimer = null;
+                        /* NE PAS effacer sessionStorage — le job tourne peut-être
+                           encore côté serveur. Un rechargement pourra retenter. */
+                        reject(new Error(data && data.error ? data.error : 'Job introuvable'));
+                        return;
+                    }
+                    schedule();
                     return;
                 }
+                consecutiveErrors = 0; /* reset sur succes */
                 if (data.status === 'running') {
                     schedule(); /* continuer le polling */
                     return;
                 }
-                /* Job termine */
+                /* Job termine — OK pour effacer sessionStorage */
                 _activePollTimer = null;
+                _clearActiveJob();
                 resolve(data);
             } catch (err) {
                 consecutiveErrors++;
                 if (consecutiveErrors >= transientRetries) {
                     _activePollTimer = null;
+                    /* NE PAS effacer sessionStorage — erreur réseau, pas échec du job */
                     reject(new Error('Erreur réseau persistante après ' + transientRetries + ' tentatives : ' + err.message));
                     return;
                 }
@@ -2075,12 +2528,22 @@ function pollJob(jobId, maxTimeoutSec) {
 
 /* Timeouts de polling par endpoint (alignes sur les timeouts backend + marge) */
 var _POLL_TIMEOUTS = {
-    '/api/produire': 1920,          /* backend 1800s + 2min marge */
-    '/api/planifier-saison': 1920,  /* backend 1800s + 2min marge */
-    '/api/produire-saison': 7320,   /* backend 7200s + 2min marge */
-    '/api/reprendre': 1920,         /* backend 1800s + 2min marge */
-    '/api/batch': 7320              /* backend 7200s + 2min marge */
+    '/api/produire': 3720,              /* backend 3600s + 2min marge */
+    '/api/planifier-saison': 1920,      /* backend 1800s + 2min marge */
+    '/api/produire-saison': 7320,       /* backend 7200s + 2min marge */
+    '/api/reprendre': 3720,             /* backend 3600s + 2min marge */
+    '/api/batch': 7320,                 /* backend 7200s + 2min marge */
+    '/api/episode/': 3720               /* continue-production, backend 3600s + 2min marge */
 };
+
+function _getPollTimeout(url) {
+    /* Correspondance exacte d'abord, puis par préfixe pour les URLs dynamiques */
+    if (_POLL_TIMEOUTS[url]) return _POLL_TIMEOUTS[url];
+    for (var prefix in _POLL_TIMEOUTS) {
+        if (url.indexOf(prefix) === 0) return _POLL_TIMEOUTS[prefix];
+    }
+    return 3720; /* fallback = timeout production standard */
+}
 
 /* ── Helper : lancer un job async et poller le resultat ────────────────── */
 async function apiCallAsync(url, body) {
@@ -2089,8 +2552,30 @@ async function apiCallAsync(url, body) {
         /* Pas un job async (erreur de validation par ex) */
         return launch;
     }
-    var timeout = _POLL_TIMEOUTS[url] || 1920;
-    return await pollJob(launch.job_id, timeout);
+    var episodeId = null;
+    if (body) {
+        episodeId = body.episode_id || body.fichier || null;
+        /* Construire episode_id depuis saison/numero (ex: /api/produire) */
+        if (!episodeId && body.saison && body.numero) {
+            episodeId = 'S' + String(body.saison).padStart(2, '0') + 'E' + String(body.numero).padStart(2, '0');
+        }
+    }
+    /* Extraire l'episode_id de l'URL pour continue-production / regenerate */
+    if (!episodeId && url.indexOf('/api/episode/') === 0) {
+        var m = url.match(/\/api\/episode\/([^/]+)\//);
+        if (m) episodeId = m[1];
+    }
+    _saveActiveJob(launch.job_id, episodeId, url);
+    _showRunningBanner(episodeId);
+    var timeout = _getPollTimeout(url);
+    try {
+        var result = await pollJob(launch.job_id, timeout);
+        return result;
+    } catch(err) {
+        /* Le job a peut-être terminé en arrière-plan — ne pas effacer le sessionStorage
+           si c'est une erreur réseau (le job tourne toujours côté serveur) */
+        throw err;
+    }
 }
 
 /* ── Helper : traiter la reponse d'une action CLI ───────────────────────── */
@@ -2192,20 +2677,14 @@ async function submitProduire(e) {
         });
 
         if (data.status === 'ok') {
-            let msg = epId + ' — <strong>' + escapeHtml(titre) + '</strong> produit avec succès !';
+            let msg = epId + ' — <strong>' + escapeHtml(titre) + '</strong> : script généré !';
             /* Extraire les infos du stdout si disponible */
             const stdout = data.stdout || '';
             const scoreMatch = stdout.match(/score\s+(\d+)\/10/i);
-            const dureeMatch = stdout.match(/(\d+(?:\.\d+)?)\s*s,\s*(\d+(?:\.\d+)?)\s*MB/i);
-            const coutMatch = stdout.match(/\$(\d+\.\d+)/);
-            if (scoreMatch || dureeMatch || coutMatch) {
-                msg += '<br><small style="font-weight: 400;">';
-                if (scoreMatch) msg += 'Score : ' + scoreMatch[1] + '/10';
-                if (dureeMatch) msg += (scoreMatch ? ' • ' : '') + 'Durée : ' + dureeMatch[1] + 's (' + dureeMatch[2] + ' MB)';
-                if (coutMatch) msg += ' • Coût : ' + coutMatch[0];
-                msg += '</small>';
+            if (scoreMatch) {
+                msg += '<br><small style="font-weight: 400;">Score : ' + scoreMatch[1] + '/10</small>';
             }
-            msg += '<br><a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>';
+            msg += '<br><a href="javascript:void(0)" onclick="showPage(\'validation\', document.querySelector(\'[data-page=validation]\')); loadEpisodeDetail(\'' + epId + '\')" class="btn btn-turquoise" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#9997; Valider le script avant de lancer l\'audio &rarr;</a>';
             showAlert('alert-produire', 'success', msg);
             _dashboardDirty = true;
         } else {
@@ -2330,8 +2809,9 @@ async function submitPlanifier(e) {
             saison, theme, description, personnages, nb_episodes
         });
         handleCliResponse(data, 'alert-planifier', 'console-planifier',
-            'Saison ' + saison + ' planifiée ! <a href="javascript:void(0)" onclick="loadPlanDetail(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le plan détaillé &rarr;</a>'
-            + ' &bull; <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Suivi &rarr;</a>');
+            'Saison ' + saison + ' planifiée !'
+            + '<br><a href="javascript:void(0)" onclick="loadPlanDetail(' + saison + ')" class="btn btn-secondary" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#128214; Voir le plan détaillé</a>'
+            + ' <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" class="btn btn-turquoise" style="margin-top: 0.5rem; display: inline-block; font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">&#127916; Lancer la production &rarr;</a>');
         if (data.status === 'ok') {
             loadPlanDetail(saison);
         }
@@ -2416,45 +2896,522 @@ async function loadPsPreview(numero) {
     }
 }
 
-/* Charger l apercu au changement de saison et au chargement initial */
+/* Charger la progression au changement de saison et au chargement initial */
 document.getElementById('ps-saison').addEventListener('change', function() {
-    loadPsPreview(parseInt(this.value));
+    loadSaisonProgress();
 });
 /* Chargement initial */
 (function() {
     const sel = document.getElementById('ps-saison');
-    if (sel && sel.value) loadPsPreview(parseInt(sel.value));
+    if (sel && sel.value) loadSaisonProgress();
 })();
 
-/* ── Produire une saison ────────────────────────────────────────────────── */
-async function submitProduireSaison(e) {
-    e.preventDefault();
-    hideAlert('alert-produire-saison');
+/* ── Progression de la saison (épisode par épisode) ───────────────────── */
+var _saisonProgressData = null;
 
+async function loadSaisonProgress() {
     const saison = parseInt(document.getElementById('ps-saison').value);
-    const episodes = document.getElementById('ps-episodes').value.trim();
-    const dryRun = document.getElementById('ps-dryrun').checked;
+    const zone = document.getElementById('ps-progress-zone');
+    const nextZone = document.getElementById('ps-next-episode-zone');
+    const blockedZone = document.getElementById('ps-blocked-zone');
+    const completeZone = document.getElementById('ps-complete-zone');
 
-    const btn = document.getElementById('btn-produire-saison');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Production en cours...';
-    showLoading('Production de la saison ' + saison + '...');
+    nextZone.style.display = 'none';
+    blockedZone.style.display = 'none';
+    completeZone.style.display = 'none';
+    document.getElementById('ps-inline-validation').style.display = 'none';
+    zone.innerHTML = '<em style="color: var(--texte-light);"><span class="spinner"></span> Chargement...</em>';
 
     try {
-        const data = await apiCallAsync('/api/produire-saison', {
-            saison, episodes, dry_run: dryRun
-        });
-        handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
-            'Saison ' + saison + ' terminée ! <a href="javascript:void(0)" onclick="goToSuivi(' + saison + ')" style="color: inherit; text-decoration: underline;">Voir le suivi &rarr;</a>');
+        const resp = await fetch('/api/saison/' + saison + '/prochain-episode');
+        const data = await resp.json();
+        if (!resp.ok) {
+            zone.innerHTML = '<em style="color: var(--rouge-doux);">' + escapeHtml(data.error || 'Erreur') + '</em>';
+            return;
+        }
+        _saisonProgressData = data;
+
+        /* Barre de progression */
+        var statusLabels = {
+            'termine': 'Terminé',
+            'montage_valide': 'Montage validé',
+            'attente_validation_montage': 'Audio prêt',
+            'script_valide': 'Script validé',
+            'attente_validation_script': 'Script prêt',
+            'en_cours': 'En cours',
+            'a_faire': 'À faire'
+        };
+        var statusColors = {
+            'termine': 'var(--vert-doux)',
+            'montage_valide': 'var(--turquoise)',
+            'attente_validation_montage': 'var(--orange-chaud)',
+            'script_valide': 'var(--turquoise)',
+            'attente_validation_script': 'var(--orange-chaud)',
+            'en_cours': 'var(--miel)',
+            'a_faire': 'var(--border)'
+        };
+
+        var html = '<div style="margin-bottom: 0.75rem;">';
+        if (data.theme) html += '<strong>Thème :</strong> ' + escapeHtml(data.theme) + ' — ';
+        html += '<strong>' + data.termines + '/' + data.total + '</strong> épisodes terminés</div>';
+
+        /* Grille des épisodes */
+        html += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">';
+        for (var i = 0; i < data.episodes.length; i++) {
+            var ep = data.episodes[i];
+            var color = statusColors[ep.status] || 'var(--border)';
+            var label = statusLabels[ep.status] || ep.status;
+            var isNext = data.prochain && ep.episode_id === data.prochain.episode_id;
+            var border = isNext ? '3px solid var(--turquoise)' : '1px solid ' + color;
+            html += '<div style="border: ' + border + '; border-radius: 8px; padding: 0.5rem 0.75rem; min-width: 120px; background: var(--fond-sidebar); text-align: center;">';
+            html += '<div style="font-weight: 700; font-size: 0.9rem;">' + escapeHtml(ep.episode_id) + '</div>';
+            html += '<div style="font-size: 0.78rem; color: var(--texte-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" title="' + escapeHtml(ep.titre) + '">' + escapeHtml(ep.titre) + '</div>';
+            html += '<div style="font-size: 0.72rem; margin-top: 0.25rem; color: ' + color + '; font-weight: 600;">' + label + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        zone.innerHTML = html;
+
+        /* Afficher le prochain épisode ou le message */
+        if (!data.prochain) {
+            /* Tous terminés */
+            completeZone.style.display = 'block';
+        } else if (data.bloque_par) {
+            /* Bloqué par un épisode précédent — afficher la validation inline
+               pour l'épisode bloquant directement */
+            var blocker = data.bloque_par;
+            var needsInlineBlocker = (blocker.status.includes('attente_validation') || blocker.status.includes('valide'));
+            if (needsInlineBlocker) {
+                /* Afficher la validation inline pour l'épisode bloquant */
+                nextZone.style.display = 'block';
+                document.getElementById('ps-next-titre').textContent = blocker.episode_id + ' — en attente de validation';
+                document.getElementById('ps-next-details').innerHTML =
+                    '<span style="font-size: 0.85rem; color: var(--orange-chaud);">' + escapeHtml(statusLabels[blocker.status] || blocker.status) + '</span>'
+                    + ' <span style="font-size: 0.82rem; color: var(--texte-dim);">(puis ' + escapeHtml(data.prochain.episode_id) + ')</span>';
+                document.getElementById('btn-produire-saison').style.display = 'none';
+                psInlineLoadEpisode(blocker.episode_id);
+            } else {
+                blockedZone.style.display = 'block';
+                var msg = 'L\'épisode <strong>' + escapeHtml(blocker.episode_id)
+                    + '</strong> (' + escapeHtml(statusLabels[blocker.status] || blocker.status) + ') '
+                    + 'doit être terminé avant de produire <strong>' + escapeHtml(data.prochain.episode_id) + '</strong>.';
+                document.getElementById('ps-blocked-msg').innerHTML = msg;
+                nextZone.style.display = 'block';
+                document.getElementById('ps-next-titre').textContent = 'Prochain : ' + data.prochain.episode_id + ' — ' + data.prochain.titre;
+                document.getElementById('ps-next-details').innerHTML =
+                    '<span style="font-size: 0.85rem; color: var(--texte-dim);">Type : ' + escapeHtml(data.prochain.type) + '</span>';
+                document.getElementById('btn-produire-saison').disabled = true;
+                document.getElementById('btn-produire-saison').style.display = '';
+            }
+        } else {
+            /* Prêt à produire */
+            var ep = data.prochain;
+            nextZone.style.display = 'block';
+            document.getElementById('ps-next-titre').textContent = 'Prochain : ' + ep.episode_id + ' — ' + ep.titre;
+            var details = '<span style="font-size: 0.85rem;">Type : <strong>' + escapeHtml(ep.type) + '</strong></span>';
+            if (ep.status !== 'a_faire') {
+                details += ' &mdash; <span style="color: var(--orange-chaud);">' + escapeHtml(statusLabels[ep.status] || ep.status) + '</span>';
+            }
+            document.getElementById('ps-next-details').innerHTML = details;
+            var btn = document.getElementById('btn-produire-saison');
+
+            /* Si l'épisode est en attente de validation ou a des étapes intermédiaires,
+               afficher la zone de validation inline (pas de navigation vers Section 6) */
+            var needsInline = (ep.status === 'attente_validation_script'
+                || ep.status === 'script_valide'
+                || ep.status === 'attente_validation_montage'
+                || ep.status === 'montage_valide');
+
+            if (needsInline) {
+                btn.style.display = 'none';
+                psInlineLoadEpisode(ep.episode_id);
+            } else {
+                btn.style.display = '';
+                btn.disabled = false;
+                btn.innerHTML = '&#127908; Lancer le script';
+                /* Masquer la zone inline si elle était visible d'un épisode précédent */
+                document.getElementById('ps-inline-validation').style.display = 'none';
+            }
+        }
     } catch (err) {
-        showAlert('alert-produire-saison', 'error', 'Erreur : ' + err.message);
+        zone.innerHTML = '<em style="color: var(--rouge-doux);">Erreur : ' + escapeHtml(err.message) + '</em>';
+    }
+}
+
+async function produireProchainEpisode() {
+    if (!_saisonProgressData || !_saisonProgressData.prochain) return;
+    hideAlert('alert-produire-saison');
+
+    var saison = _saisonProgressData.saison;
+    var ep = _saisonProgressData.prochain;
+    var dryRun = document.getElementById('ps-dryrun').checked;
+
+    var btn = document.getElementById('btn-produire-saison');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Production en cours...';
+    showLoading('Production de ' + ep.episode_id + '...');
+
+    try {
+        /* Premier lancement : produire le script uniquement */
+        var data = await apiCallAsync('/api/produire-saison', {
+            saison: saison, numero: ep.numero, dry_run: dryRun
+        });
+
+        if (data.status === 'ok') {
+            showAlert('alert-produire-saison', 'success',
+                '&#9989; ' + ep.episode_id + ' : script généré !');
+        } else if (data.error) {
+            showAlert('alert-produire-saison', 'error', escapeHtml(data.error));
+        } else {
+            handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
+                ep.episode_id + ' traité.');
+        }
+    } catch (err) {
+        showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(err.message));
     } finally {
         hideLoading();
+        /* Recharger la progression — affichera la zone de validation inline */
+        await loadSaisonProgress();
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VALIDATION INLINE — Tout le cycle dans la Section 2
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var _psInlineEpisodeId = null;
+var _psInlineRunning = false;
+
+/* Charger les détails d'un épisode et afficher la zone de validation inline */
+async function psInlineLoadEpisode(episodeId) {
+    _psInlineEpisodeId = episodeId;
+    var zone = document.getElementById('ps-inline-validation');
+    zone.style.display = 'block';
+
+    try {
+        const resp = await fetch('/api/episode/' + episodeId);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const ep = await resp.json();
+
+        var scriptOk = ep.validation_script;
+        var montageOk = ep.validation_montage;
+        var hasScript = !!(ep.script);
+        var hasAudio = !!(ep.audio_preview || ep.audio_hq);
+
+        /* ── Étapes visuelles ── */
+        var stepsHtml = '';
+        var stepDef = [
+            {label: 'Script', done: scriptOk, active: hasScript && !scriptOk},
+            {label: 'Audio', done: hasAudio && montageOk, active: scriptOk && !hasAudio},
+            {label: 'Montage', done: montageOk, active: hasAudio && !montageOk},
+            {label: 'Publication', done: false, active: scriptOk && montageOk},
+        ];
+        for (var i = 0; i < stepDef.length; i++) {
+            var s = stepDef[i];
+            var color = s.done ? 'var(--vert-prairie)' : (s.active ? 'var(--orange-chaud)' : 'var(--texte-dim)');
+            var icon = s.done ? '&#10003;' : (s.active ? '&#9654;' : '&#9675;');
+            stepsHtml += '<span style="color: ' + color + '; padding: 0.25rem 0.6rem; border-radius: 6px; background: rgba(0,0,0,0.04);">' + icon + ' ' + s.label + '</span>';
+            if (i < stepDef.length - 1) stepsHtml += '<span style="color: var(--texte-dim);">→</span>';
+        }
+        document.getElementById('ps-iv-steps').innerHTML = stepsHtml;
+
+        /* ── Script ── */
+        var scriptZone = document.getElementById('ps-iv-script-zone');
+        var launchAudioZone = document.getElementById('ps-iv-launch-audio');
+        var audioZone = document.getElementById('ps-iv-audio-zone');
+        var publishZone = document.getElementById('ps-iv-publish-zone');
+        var extrasZone = document.getElementById('ps-iv-extras');
+
+        scriptZone.style.display = 'none';
+        launchAudioZone.style.display = 'none';
+        audioZone.style.display = 'none';
+        publishZone.style.display = 'none';
+        extrasZone.style.display = 'none';
+
+        if (hasScript && !scriptOk) {
+            /* Montrer le script à valider */
+            scriptZone.style.display = 'block';
+            _renderScriptInline(ep.script, 'ps-iv-script-body');
+        } else if (scriptOk && !hasAudio) {
+            /* Script validé, proposer de lancer l'audio */
+            launchAudioZone.style.display = 'block';
+        } else if (hasAudio && !montageOk) {
+            /* Audio prêt, montrer le player */
+            audioZone.style.display = 'block';
+            _renderAudioInline(ep, 'ps-iv-audio-body');
+        } else if (scriptOk && montageOk) {
+            /* Tout validé, proposer la publication */
+            publishZone.style.display = 'block';
+        }
+
+        /* Extras : cover art + métadonnées */
+        if (ep.cover_art || (ep.metadonnees && Object.keys(ep.metadonnees).length > 0)) {
+            extrasZone.style.display = 'block';
+            var coverCard = document.getElementById('ps-iv-cover-card');
+            if (ep.cover_art) {
+                coverCard.style.display = 'block';
+                document.getElementById('ps-iv-cover-body').innerHTML =
+                    '<img src="/audio/covers/' + escapeHtml(ep.cover_art) + '" alt="Couverture" style="max-width: 250px; border-radius: var(--radius-sm);">';
+            } else { coverCard.style.display = 'none'; }
+
+            var metaCard = document.getElementById('ps-iv-meta-card');
+            var meta = ep.metadonnees;
+            if (meta && Object.keys(meta).length > 0) {
+                metaCard.style.display = 'block';
+                _renderMetaInline(meta, 'ps-iv-meta-body');
+            } else { metaCard.style.display = 'none'; }
+        }
+
+    } catch (err) {
+        zone.innerHTML = '<div class="alert alert-error" style="display:block;">Erreur chargement : ' + escapeHtml(err.message) + '</div>';
+    }
+}
+
+function _renderScriptInline(script, containerId) {
+    var el = document.getElementById(containerId);
+    if (!script) { el.innerHTML = '<p style="color: var(--texte-light);">Script non disponible.</p>'; return; }
+    var episode = script.episode || script;
+    var segments = episode.segments || [];
+    if (segments.length === 0) { el.innerHTML = '<p style="color: var(--texte-light);">Script vide.</p>'; return; }
+    var persoColors = {
+        'papy_babou': 'var(--orange-chaud)', 'antoine': 'var(--bleu-doux)',
+        'noemie': 'var(--rose-tendre)', 'narrateur': 'var(--texte-dim)',
+    };
+    var html = '<div style="font-size: 0.85rem; line-height: 1.8;">';
+    for (var i = 0; i < segments.length; i++) {
+        var seg = segments[i];
+        var perso = seg.personnage || 'narrateur';
+        var nom = perso.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+        var color = persoColors[perso] || 'var(--violet-doux)';
+        html += '<div style="margin-bottom: 0.6rem; padding: 0.4rem 0.6rem; border-left: 3px solid ' + color + '; background: rgba(0,0,0,0.02); border-radius: 0 6px 6px 0;">';
+        html += '<strong style="color: ' + color + ';">' + escapeHtml(nom) + '</strong>';
+        if (seg.ton) html += ' <em style="color: var(--texte-light); font-size: 0.78rem;">(' + escapeHtml(seg.ton) + ')</em>';
+        if (seg.didascalie) html += ' <span style="color: var(--violet-doux); font-size: 0.78rem;">[' + escapeHtml(seg.didascalie) + ']</span>';
+        html += '<br>' + escapeHtml(seg.texte || '');
+        if (seg.sfx) html += '<br><span style="color: var(--turquoise); font-size: 0.78rem;">&#127925; SFX : ' + escapeHtml(seg.sfx) + '</span>';
+        html += '</div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+function _renderAudioInline(ep, containerId) {
+    var el = document.getElementById(containerId);
+    var audioFile = ep.audio_preview || ep.audio_hq;
+    if (!audioFile) { el.innerHTML = '<p style="color: var(--texte-light);">Pas d\'audio disponible.</p>'; return; }
+    var cacheBust = '?v=' + Date.now();
+    var html = '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
+        + '<source src="/audio/episodes/' + escapeHtml(audioFile) + cacheBust + '" type="audio/mpeg"></audio>';
+    if (ep.duree_secondes) {
+        var min = Math.floor(ep.duree_secondes / 60);
+        var sec = Math.round(ep.duree_secondes % 60);
+        html += '<p style="font-size: 0.82rem; color: var(--texte-dim);">Durée : ' + min + ':' + String(sec).padStart(2, '0');
+        if (ep.taille_mb) html += ' — ' + ep.taille_mb + ' MB';
+        html += '</p>';
+    }
+    if (ep.audio_hq) {
+        html += '<p style="margin-top: 0.3rem;"><a href="/audio/episodes/' + escapeHtml(ep.audio_hq) + '" download style="color: var(--turquoise); font-weight: 700; text-decoration: none; font-size: 0.85rem;">&#11015; Télécharger HQ</a></p>';
+    }
+    el.innerHTML = html;
+}
+
+function _renderMetaInline(meta, containerId) {
+    var el = document.getElementById(containerId);
+    var metaFields = [
+        {key: 'titre', label: 'Titre', icon: '&#127908;'},
+        {key: 'description_courte', label: 'Description courte', icon: '&#128196;'},
+        {key: 'source_biblique', label: 'Source biblique', icon: '&#128214;'},
+        {key: 'mots_cles', label: 'Mots-clés', icon: '&#127991;'},
+    ];
+    var html = '<div style="font-size: 0.85rem; line-height: 1.7;">';
+    for (var i = 0; i < metaFields.length; i++) {
+        var f = metaFields[i];
+        var val = meta[f.key];
+        if (val === undefined || val === null || val === '') continue;
+        if (Array.isArray(val)) val = val.join(', ');
+        html += '<div style="margin-bottom: 0.4rem;"><strong style="color: var(--turquoise);">' + f.icon + ' ' + f.label + ' :</strong> ' + escapeHtml(String(val)) + '</div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+/* ── Validation inline : approuver/refuser une étape ── */
+async function psInlineValidate(step, action) {
+    if (!_psInlineEpisodeId || _psInlineRunning) return;
+
+    var stepLabel = step === 'script' ? 'Script' : 'Montage';
+
+    /* UX-2: Confirmation avant rejet */
+    if (action === 'reject') {
+        if (!confirm('Refuser le ' + stepLabel.toLowerCase() + ' de ' + _psInlineEpisodeId + ' ?\n\nVous pourrez ensuite le relancer avec des instructions de modification.')) {
+            return;
+        }
     }
 
-    btn.disabled = false;
-    btn.innerHTML = '&#127916; Lancer la production';
-    return false;
+    _psInlineRunning = true;
+
+    /* UX-4: Loading state sur le bouton */
+    var btnId = 'ps-iv-btn-val-' + step;
+    var btn = document.getElementById(btnId);
+    var btnOriginal = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Validation...';
+    }
+
+    try {
+        var resp = await fetch('/api/episode/' + _psInlineEpisodeId + '/validate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ step: step, action: action, comment: '' })
+        });
+        var data = await resp.json();
+        if (!resp.ok) {
+            showAlert('alert-produire-saison', 'error', data.error || 'Erreur validation');
+            return;
+        }
+
+        if (action === 'validate') {
+            showAlert('alert-produire-saison', 'success', '&#9989; ' + stepLabel + ' validé !');
+        } else {
+            /* UX-2: Message persistant après rejet avec guidance */
+            showAlert('alert-produire-saison', 'info',
+                '&#10007; ' + stepLabel + ' refusé. Cliquez sur <strong>Modifier le ' + stepLabel.toLowerCase() + '</strong> pour saisir vos instructions, puis relancez.');
+        }
+
+        /* Recharger pour afficher l'étape suivante */
+        await loadSaisonProgress();
+        _dashboardDirty = true;
+    } catch (err) {
+        showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(err.message));
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = btnOriginal;
+        }
+        _psInlineRunning = false;
+    }
+}
+
+/* ── Lancer l'audio depuis la zone inline ── */
+async function psInlineLaunchAudio() {
+    if (!_psInlineEpisodeId || _psInlineRunning) return;
+    _psInlineRunning = true;
+
+    var btn = document.getElementById('ps-iv-btn-launch-audio');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Production audio en cours...';
+    showLoading('Production audio de ' + _psInlineEpisodeId + '...');
+
+    try {
+        var data = await apiCallAsync('/api/episode/' + _psInlineEpisodeId + '/continue-production', { phase: 'audio' });
+        if (data.status === 'ok') {
+            showAlert('alert-produire-saison', 'success', '&#127911; Audio produit pour ' + _psInlineEpisodeId + ' !');
+        } else if (data.error) {
+            showAlert('alert-produire-saison', 'error', escapeHtml(data.error));
+        } else {
+            handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
+                _psInlineEpisodeId + ' audio terminé.');
+        }
+    } catch (err) {
+        showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(err.message));
+    } finally {
+        hideLoading();
+        _psInlineRunning = false;
+        await loadSaisonProgress();
+    }
+}
+
+/* ── Publication inline ── */
+async function psInlinePublish() {
+    if (!_psInlineEpisodeId || _psInlineRunning) return;
+    _psInlineRunning = true;
+
+    var btn = document.getElementById('ps-iv-btn-publish');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Publication en cours...';
+    showLoading('Publication de ' + _psInlineEpisodeId + '...');
+
+    try {
+        var data = await apiCallAsync('/api/episode/' + _psInlineEpisodeId + '/continue-production', { phase: 'publication' });
+        if (data.status === 'ok') {
+            showAlert('alert-produire-saison', 'success', '&#128225; ' + _psInlineEpisodeId + ' publié !');
+        } else if (data.error) {
+            showAlert('alert-produire-saison', 'error', escapeHtml(data.error));
+        } else {
+            handleCliResponse(data, 'alert-produire-saison', 'console-produire-saison',
+                _psInlineEpisodeId + ' publié.');
+        }
+    } catch (err) {
+        showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(err.message));
+    } finally {
+        hideLoading();
+        _psInlineRunning = false;
+        await loadSaisonProgress();
+    }
+}
+
+/* ── Toggle zone de modification inline ── */
+function psInlineToggleModify(step) {
+    var zone = document.getElementById('ps-iv-modify-' + step);
+    if (zone) zone.style.display = zone.style.display === 'none' ? 'block' : 'none';
+}
+
+/* ── Régénérer un step inline ── */
+async function psInlineRegenerate(step) {
+    if (!_psInlineEpisodeId || _psInlineRunning) return;
+
+    var instructions = document.getElementById('ps-iv-instructions-' + step).value.trim();
+    if (!instructions) {
+        showAlert('alert-produire-saison', 'warning', 'Veuillez saisir des instructions de modification.');
+        return;
+    }
+
+    /* UX-3: Confirmation avant régénération (opération destructive) */
+    var stepLabel = step === 'script' ? 'script' : 'montage';
+    if (!confirm('Relancer le ' + stepLabel + ' de ' + _psInlineEpisodeId + ' ?\n\nLe ' + stepLabel + ' actuel sera remplacé.\n\nInstructions :\n' + instructions.substring(0, 200))) {
+        return;
+    }
+
+    _psInlineRunning = true;
+    showLoading('Régénération du ' + step + '...');
+    try {
+        var resp = await fetch('/api/episode/' + _psInlineEpisodeId + '/regenerate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ step: step, instructions: instructions })
+        });
+        var data = await resp.json();
+        if (resp.ok && (data.status === 'ok' || data.status === 'accepted')) {
+            showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' en cours de régénération...');
+            /* Si c'est un job async, attendre la fin */
+            if (data.job_id) {
+                _saveActiveJob(data.job_id, _psInlineEpisodeId, '/api/episode/' + _psInlineEpisodeId + '/regenerate');
+                _showRunningBanner(_psInlineEpisodeId);
+                try {
+                    var result = await pollJob(data.job_id, 3720);
+                    if (result.status === 'ok') {
+                        showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' régénéré !');
+                    } else {
+                        showAlert('alert-produire-saison', 'error', result.error || 'Erreur régénération');
+                    }
+                } catch (pollErr) {
+                    showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(pollErr.message));
+                }
+            } else {
+                showAlert('alert-produire-saison', 'success', '&#128260; ' + step + ' régénéré !');
+            }
+        } else {
+            showAlert('alert-produire-saison', 'error', data.error || 'Erreur régénération');
+        }
+    } catch (err) {
+        showAlert('alert-produire-saison', 'error', 'Erreur : ' + escapeHtml(err.message));
+    } finally {
+        hideLoading();
+        _psInlineRunning = false;
+        psInlineToggleModify(step);
+        await loadSaisonProgress();
+    }
 }
 
 /* ── Reprendre un checkpoint ────────────────────────────────────────────── */
@@ -2703,66 +3660,119 @@ async function loadConfig() {
 /* ── Validation : chargement et interactions ───────────────────────────── */
 let _currentEpisodeId = null;
 let _valLoaded = false;
+let _valSaisonFilter = 0;  /* 0 = toutes les saisons */
+let _allValEpisodes = [];   /* Cache de tous les épisodes pour le filtre client-side */
 
 function toggleSection(id) {
     const el = document.getElementById(id);
     if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+function filterValidationSaison(saison, btnEl) {
+    _valSaisonFilter = saison;
+    /* Mettre à jour les boutons actifs */
+    document.querySelectorAll('#page-validation .btn-saison-filter').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    /* Re-render avec le filtre */
+    _renderValidationEpisodes(_allValEpisodes);
+}
+
 async function loadValidationEpisodes() {
     try {
         const resp = await fetch('/api/episodes-a-valider');
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const episodes = await resp.json();
-
-        document.getElementById('val-count').textContent = episodes.length;
-
-        if (episodes.length === 0) {
-            document.getElementById('val-episodes-list').innerHTML =
-                '<div class="empty"><div class="icon">&#9989;</div>'
-                + '<p>Aucun épisode produit pour le moment.</p>'
-                + '<p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">'
-                + 'Produisez un épisode dans l\'onglet "Un épisode" ou "Lancer la saison" pour commencer.</p></div>';
-            return;
-        }
-
-        let html = '<table><thead><tr>'
-            + '<th>ID</th><th>Titre</th><th>Type</th><th>Audio</th>'
-            + '<th>Script</th><th>Montage</th><th>Action</th>'
-            + '</tr></thead><tbody>';
-
-        for (const ep of episodes) {
-            const hasAudio = ep.has_audio;
-            const audioBadge = hasAudio
-                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Oui</span>'
-                : '<span style="color: var(--corail); font-weight: 800;">&#10007; Non</span>';
-            const scriptBadge = ep.validation_script
-                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
-                : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
-            const montageBadge = ep.validation_montage
-                ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003; Validé</span>'
-                : '<span style="color: var(--texte-light);">&#9675; En attente</span>';
-
-            const rowStyle = (ep.validation_script && ep.validation_montage)
-                ? ' style="opacity: 0.6;"' : '';
-
-            html += '<tr' + rowStyle + '>'
-                + '<td class="ep-id">' + escapeHtml(ep.episode_id) + '</td>'
-                + '<td class="ep-titre">' + escapeHtml(ep.titre) + '</td>'
-                + '<td><span class="ep-type type-' + (ep.type_episode || 'standard') + '">' + escapeHtml(ep.type_episode || 'standard') + '</span></td>'
-                + '<td>' + audioBadge + '</td>'
-                + '<td>' + scriptBadge + '</td>'
-                + '<td>' + montageBadge + '</td>'
-                + '<td><button class="btn btn-secondary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')">&#128269; Voir / Valider</button></td>'
-                + '</tr>';
-        }
-        html += '</tbody></table>';
-        document.getElementById('val-episodes-list').innerHTML = html;
+        _allValEpisodes = await resp.json();
+        _renderValidationEpisodes(_allValEpisodes);
         _valLoaded = true;
     } catch (err) {
         document.getElementById('val-episodes-list').innerHTML =
             '<div class="empty"><p>Erreur : ' + escapeHtml(err.message) + '</p></div>';
     }
+}
+
+function _renderValidationEpisodes(allEpisodes) {
+    /* Appliquer le filtre de saison */
+    let episodes = allEpisodes;
+    if (_valSaisonFilter > 0) {
+        const prefix = 'S' + String(_valSaisonFilter).padStart(2, '0');
+        episodes = allEpisodes.filter(e => e.episode_id && e.episode_id.startsWith(prefix));
+    }
+
+    const nbProduits = episodes.filter(e => e.status !== 'planned').length;
+    const nbPlanifies = episodes.filter(e => e.status === 'planned').length;
+    const nbEnCours = episodes.filter(e => e.status === 'in_production').length;
+    let countParts = [];
+    if (nbProduits > 0) countParts.push(nbProduits + ' produit' + (nbProduits > 1 ? 's' : ''));
+    if (nbEnCours > 0) countParts.push(nbEnCours + ' en cours');
+    if (nbPlanifies > 0) countParts.push(nbPlanifies + ' planifié' + (nbPlanifies > 1 ? 's' : ''));
+    document.getElementById('val-count').textContent = countParts.join(' + ') || '0';
+
+    if (episodes.length === 0) {
+            document.getElementById('val-episodes-list').innerHTML =
+                '<div class="empty"><div class="icon">&#9989;</div>'
+                + '<p>Aucun épisode produit ou planifié' + (_valSaisonFilter > 0 ? ' pour la saison ' + _valSaisonFilter : '') + '.</p>'
+                + '<p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texte-light);">'
+                + 'Planifiez une saison ou produisez un épisode pour commencer.</p></div>';
+            return;
+        }
+
+        let html = '<table class="val-table"><thead><tr>'
+            + '<th>ID</th><th>Titre</th><th class="hide-mobile">Type</th><th class="hide-mobile">Statut</th>'
+            + '<th class="hide-mobile">Script</th><th class="hide-mobile">Montage</th><th>Action</th>'
+            + '</tr></thead><tbody>';
+
+        for (const ep of episodes) {
+            const isPlanned = (ep.status === 'planned');
+            const isInProd = (ep.status === 'in_production');
+            const hasAudio = ep.has_audio;
+
+            /* Badge de statut global */
+            let statusBadge;
+            if (isPlanned) {
+                statusBadge = '<span style="color: var(--texte-dim); font-size: 0.78rem;">&#128203; Planifié</span>';
+            } else if (isInProd) {
+                const etape = ep.etape_courante || 'script';
+                statusBadge = '<span style="color: var(--orange-chaud); font-weight: 700; font-size: 0.78rem;">&#9881; ' + escapeHtml(etape) + '</span>';
+            } else if (ep.validation_script && ep.validation_montage) {
+                statusBadge = '<span style="color: var(--vert-prairie); font-weight: 800; font-size: 0.78rem;">&#10003; Prêt</span>';
+            } else if (hasAudio) {
+                statusBadge = '<span style="color: var(--turquoise); font-size: 0.78rem;">&#127911; Audio prêt</span>';
+            } else {
+                statusBadge = '<span style="color: var(--texte-light); font-size: 0.78rem;">&#9675; En attente</span>';
+            }
+
+            const scriptBadge = (isPlanned || isInProd)
+                ? '<span style="color: var(--texte-dim);">—</span>'
+                : ep.validation_script
+                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003;</span>'
+                    : '<span style="color: var(--texte-light);">&#9675;</span>';
+            const montageBadge = (isPlanned || isInProd)
+                ? '<span style="color: var(--texte-dim);">—</span>'
+                : ep.validation_montage
+                    ? '<span style="color: var(--vert-prairie); font-weight: 800;">&#10003;</span>'
+                    : '<span style="color: var(--texte-light);">&#9675;</span>';
+
+            const rowStyle = isPlanned
+                ? ' style="opacity: 0.5; font-style: italic;"'
+                : (ep.validation_script && ep.validation_montage)
+                    ? ' style="opacity: 0.6;"' : '';
+
+            const actionBtn = isPlanned
+                ? ''
+                : '<button class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; min-height: 44px;" onclick="loadEpisodeDetail(\'' + escapeHtml(ep.episode_id) + '\')">&#128269; Voir</button>';
+
+            html += '<tr' + rowStyle + '>'
+                + '<td class="ep-id">' + escapeHtml(ep.episode_id) + '</td>'
+                + '<td class="ep-titre">' + escapeHtml(ep.titre) + '</td>'
+                + '<td class="hide-mobile"><span class="ep-type type-' + (ep.type_episode || 'standard') + '">' + escapeHtml(ep.type_episode || 'standard') + '</span></td>'
+                + '<td class="hide-mobile">' + statusBadge + '</td>'
+                + '<td class="hide-mobile">' + scriptBadge + '</td>'
+                + '<td class="hide-mobile">' + montageBadge + '</td>'
+                + '<td>' + actionBtn + '</td>'
+                + '</tr>';
+        }
+        html += '</tbody></table>';
+        document.getElementById('val-episodes-list').innerHTML = html;
 }
 
 async function loadEpisodeDetail(episodeId) {
@@ -2783,22 +3793,103 @@ async function loadEpisodeDetail(episodeId) {
         document.getElementById('val-detail-date').textContent = ep.date ? ep.date.substring(0, 10) : '—';
         document.getElementById('val-detail-morale').textContent = ep.morale || '—';
 
-        /* Statut de validation */
+        /* Statut de validation — workflow en étapes */
         const scriptOk = ep.validation_script;
         const montageOk = ep.validation_montage;
-        let statusHtml = '<div style="display: flex; gap: 1rem; flex-wrap: wrap;">';
-        statusHtml += '<span style="color: ' + (scriptOk ? 'var(--vert-prairie)' : 'var(--corail)') + '; font-weight: 800;">'
-            + (scriptOk ? '&#10003;' : '&#9675;') + ' Script</span>';
-        statusHtml += '<span style="color: ' + (montageOk ? 'var(--vert-prairie)' : 'var(--corail)') + '; font-weight: 800;">'
-            + (montageOk ? '&#10003;' : '&#9675;') + ' Montage</span>';
+        const hasScript = !!(ep.script);
+        const hasAudio = !!(ep.audio_preview || ep.audio_hq);
+        let statusHtml = '<div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; font-size: 0.85rem;">';
+        /* Étape 1: Script */
+        const scriptColor = scriptOk ? 'var(--vert-prairie)' : (hasScript ? 'var(--orange-chaud)' : 'var(--texte-dim)');
+        const scriptIcon = scriptOk ? '&#10003;' : (hasScript ? '&#9998;' : '&#9675;');
+        const scriptLabel = scriptOk ? 'Script validé' : (hasScript ? 'Script à valider' : 'Script en attente');
+        statusHtml += '<span style="color: ' + scriptColor + '; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.04);">' + scriptIcon + ' ' + scriptLabel + '</span>';
+        statusHtml += '<span style="color: var(--texte-dim);">→</span>';
+        /* Étape 2: Audio/Montage */
+        const montageColor = montageOk ? 'var(--vert-prairie)' : (hasAudio ? 'var(--orange-chaud)' : 'var(--texte-dim)');
+        const montageIcon = montageOk ? '&#10003;' : (hasAudio ? '&#127911;' : '&#9675;');
+        const montageLabel = montageOk ? 'Montage validé' : (hasAudio ? 'Montage à valider' : 'Audio en attente');
+        statusHtml += '<span style="color: ' + montageColor + '; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.04);">' + montageIcon + ' ' + montageLabel + '</span>';
+        statusHtml += '<span style="color: var(--texte-dim);">→</span>';
+        /* Étape 3: Publication */
+        const pubOk = scriptOk && montageOk;
+        statusHtml += '<span style="color: ' + (pubOk ? 'var(--vert-prairie)' : 'var(--texte-dim)') + '; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.04);">' + (pubOk ? '&#128225;' : '&#9675;') + ' Publication</span>';
         statusHtml += '</div>';
+
+        /* Message d'aide contextuel */
+        if (hasScript && !scriptOk) {
+            statusHtml += '<p style="font-size: 0.82rem; color: var(--orange-chaud); margin-top: 0.5rem; font-weight: 600;">&#9998; Lisez le script ci-dessous puis validez-le pour lancer la production audio.</p>';
+        } else if (scriptOk && !hasAudio) {
+            statusHtml += '<p style="font-size: 0.82rem; color: var(--bleu-doux); margin-top: 0.5rem; font-weight: 600;">&#127911; Script validé — lancez la production audio depuis l\'onglet "Produire".</p>';
+        } else if (hasAudio && !montageOk) {
+            statusHtml += '<p style="font-size: 0.82rem; color: var(--orange-chaud); margin-top: 0.5rem; font-weight: 600;">&#127911; Écoutez l\'audio puis validez le montage pour finaliser.</p>';
+        }
+
         document.getElementById('val-detail-status').innerHTML = statusHtml;
 
-        /* Audio player */
+        /* Masquer la zone de continuation quand on charge un nouvel épisode */
+        var contZone = document.getElementById('continue-production-zone');
+        if (contZone) contZone.style.display = 'none';
+
+        /* Zone de continuation nettoyée — la validation inline est dans Section 2 */
+
+        /* Activer/désactiver les boutons selon l'état du workflow */
         const audioFile = ep.audio_preview || ep.audio_hq;
+        const btnValScript = document.getElementById('btn-val-script');
+        const btnModScript = document.getElementById('btn-mod-script');
+        const btnRejScript = document.getElementById('btn-rej-script');
+        const btnValMontage = document.getElementById('btn-val-montage');
+        const btnModMontage = document.getElementById('btn-mod-montage');
+        const btnRejMontage = document.getElementById('btn-rej-montage');
+        const btnValPublish = document.getElementById('btn-val-publish');
+        const sectionScript = document.getElementById('val-section-script');
+        const sectionMontage = document.getElementById('val-section-montage');
+
+        /* Masquer les zones de modification quand on charge un épisode */
+        var modZoneScript = document.getElementById('modify-zone-script');
+        var modZoneMontage = document.getElementById('modify-zone-montage');
+        if (modZoneScript) modZoneScript.style.display = 'none';
+        if (modZoneMontage) modZoneMontage.style.display = 'none';
+
+        /* Section script: visible seulement si un script existe */
+        if (sectionScript) sectionScript.style.display = hasScript ? 'block' : 'none';
+
+        /* Script: actif si script présent et pas encore validé */
+        if (btnValScript) {
+            btnValScript.disabled = !hasScript || scriptOk;
+            btnValScript.title = scriptOk ? 'Script déjà validé' : '';
+        }
+        if (btnModScript) {
+            btnModScript.disabled = !hasScript;
+            btnModScript.style.display = scriptOk ? 'none' : '';
+        }
+        if (btnRejScript) {
+            btnRejScript.disabled = !hasScript;
+            btnRejScript.style.display = scriptOk ? 'none' : '';
+        }
+
+        /* Section montage: visible seulement si audio existe */
+        if (sectionMontage) sectionMontage.style.display = audioFile ? 'block' : 'none';
+
+        /* Montage: actif seulement si audio présent et script validé */
+        if (!audioFile || !scriptOk) {
+            if (btnValMontage) { btnValMontage.disabled = true; }
+            if (btnModMontage) { btnModMontage.disabled = true; }
+            if (btnRejMontage) { btnRejMontage.disabled = true; }
+        } else {
+            if (btnValMontage) { btnValMontage.disabled = montageOk; }
+            if (btnModMontage) { btnModMontage.style.display = montageOk ? 'none' : ''; btnModMontage.disabled = false; }
+            if (btnRejMontage) { btnRejMontage.style.display = montageOk ? 'none' : ''; btnRejMontage.disabled = false; }
+        }
+
+        /* Publication: actif seulement si script ET montage validés */
+        if (btnValPublish) { btnValPublish.disabled = !(scriptOk && montageOk); }
+
+        /* Audio player */
         if (audioFile) {
+            let audioCacheBust = '?v=' + Date.now();
             let audioHtml = '<audio controls preload="metadata" style="width: 100%; margin-bottom: 0.5rem;">'
-                + '<source src="/audio/episodes/' + escapeHtml(audioFile) + '" type="audio/mpeg">'
+                + '<source src="/audio/episodes/' + escapeHtml(audioFile) + audioCacheBust + '" type="audio/mpeg">'
                 + '</audio>';
             if (ep.duree_secondes) {
                 const min = Math.floor(ep.duree_secondes / 60);
@@ -2808,9 +3899,24 @@ async function loadEpisodeDetail(episodeId) {
                 audioHtml += '</p>';
             }
             if (ep.audio_hq) {
-                audioHtml += '<p style="margin-top: 0.3rem;"><a href="/audio/episodes/' + escapeHtml(ep.audio_hq) + '" download style="color: var(--turquoise); font-weight: 700; text-decoration: none; font-size: 0.85rem;">&#11015; Télécharger HQ</a></p>';
+                audioHtml += '<p style="margin-top: 0.3rem;"><a href="/audio/episodes/' + escapeHtml(ep.audio_hq) + audioCacheBust + '" download style="color: var(--turquoise); font-weight: 700; text-decoration: none; font-size: 0.85rem;">&#11015; Télécharger HQ</a></p>';
             }
             document.getElementById('val-audio-section').innerHTML = audioHtml;
+        } else if (ep.audio_missing) {
+            /* Audio was produced but files are missing (e.g. after Replit re-deploy) */
+            let missingHtml = '<div style="padding: 1.5rem; text-align: center; color: var(--orange-chaud); font-weight: 700;">'
+                + '&#128260; Les fichiers audio ont été produits mais ne sont plus disponibles sur le serveur.';
+            if (ep.duree_secondes) {
+                const min = Math.floor(ep.duree_secondes / 60);
+                const sec = Math.round(ep.duree_secondes % 60);
+                missingHtml += '<p style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--texte-dim); font-weight: 400;">'
+                    + 'Durée originale : ' + min + ':' + String(sec).padStart(2, '0');
+                if (ep.taille_mb) missingHtml += ' — ' + ep.taille_mb + ' MB';
+                missingHtml += '</p>';
+            }
+            missingHtml += '<p style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--texte-dim); font-weight: 400;">'
+                + 'Relancez la production pour régénérer les fichiers audio.</p></div>';
+            document.getElementById('val-audio-section').innerHTML = missingHtml;
         } else {
             document.getElementById('val-audio-section').innerHTML =
                 '<div style="padding: 1.5rem; text-align: center; color: var(--corail); font-weight: 700;">'
@@ -2864,6 +3970,36 @@ async function loadEpisodeDetail(episodeId) {
             coverCard.style.display = 'none';
         }
 
+        /* Métadonnées */
+        const metaCard = document.getElementById('val-meta-card');
+        const meta = ep.metadonnees;
+        if (meta && Object.keys(meta).length > 0) {
+            metaCard.style.display = 'block';
+            let metaHtml = '<div style="font-size: 0.85rem; line-height: 1.7;">';
+            const metaFields = [
+                {key: 'titre', label: 'Titre', icon: '&#127908;'},
+                {key: 'description_courte', label: 'Description courte', icon: '&#128196;'},
+                {key: 'description_longue', label: 'Description longue', icon: '&#128221;'},
+                {key: 'source_biblique', label: 'Source biblique', icon: '&#128214;'},
+                {key: 'ambiance', label: 'Ambiance', icon: '&#127926;'},
+                {key: 'mots_cles', label: 'Mots-clés', icon: '&#127991;'},
+                {key: 'public_cible', label: 'Public cible', icon: '&#128118;'},
+            ];
+            for (const f of metaFields) {
+                let val = meta[f.key];
+                if (val === undefined || val === null || val === '') continue;
+                if (Array.isArray(val)) val = val.join(', ');
+                metaHtml += '<div style="margin-bottom: 0.5rem; padding: 0.4rem 0.6rem; border-left: 3px solid var(--turquoise); background: rgba(0,0,0,0.02); border-radius: 0 6px 6px 0;">';
+                metaHtml += '<strong style="color: var(--turquoise);">' + f.icon + ' ' + escapeHtml(f.label) + ' :</strong> ';
+                metaHtml += escapeHtml(String(val));
+                metaHtml += '</div>';
+            }
+            metaHtml += '</div>';
+            document.getElementById('val-meta-body').innerHTML = metaHtml;
+        } else {
+            metaCard.style.display = 'none';
+        }
+
         /* Update buttons state */
         updateValidationButtons(scriptOk, montageOk);
 
@@ -2902,8 +4038,12 @@ function updateValidationButtons(scriptOk, montageOk) {
     btnPublish.disabled = !(scriptOk && montageOk);
 }
 
+var _validationRunning = false;  /* B6: anti double-clic validation */
+
 async function validateStep(step, action) {
     if (!_currentEpisodeId) return;
+    if (_validationRunning) return;
+    _validationRunning = true;
 
     const comment = document.getElementById('val-comment').value.trim();
 
@@ -2926,6 +4066,202 @@ async function validateStep(step, action) {
 
         /* Recharger le détail et la liste */
         await loadEpisodeDetail(_currentEpisodeId);
+        await loadValidationEpisodes();
+        _dashboardDirty = true;
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+    } finally {
+        _validationRunning = false;
+    }
+}
+
+function showContinueProduction(episodeId, phase, message, btnLabel) {
+    /* Affiche un bandeau d'action pour continuer la production */
+    var zone = document.getElementById('continue-production-zone');
+    if (!zone) return;
+    var phaseEmoji = (phase === 'audio') ? '&#127911;' : '&#128225;';
+    zone.innerHTML =
+        '<div class="alert alert-info" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">' +
+        '<span>' + phaseEmoji + ' ' + escapeHtml(message) + '</span>' +
+        '<button class="btn btn-primary" onclick="continueProduction(\'' +
+        escapeHtml(episodeId) + '\', \'' + escapeHtml(phase) + '\')">' +
+        phaseEmoji + ' ' + escapeHtml(btnLabel) + '</button>' +
+        '</div>';
+    zone.style.display = 'block';
+}
+
+var _productionRunning = false;  /* W5: empêcher les doubles-clics */
+
+async function continueProduction(episodeId, phase) {
+    if (_productionRunning) return;
+    _productionRunning = true;
+
+    var zone = document.getElementById('continue-production-zone');
+    if (zone) {
+        zone.innerHTML = '<div class="alert alert-info"><span class="spinner"></span> Production en cours...</div>';
+    }
+    var phaseLabel = (phase === 'audio') ? 'Audio + montage' : 'Métadonnées + publication';
+
+    try {
+        const launch = await apiCall('/api/episode/' + episodeId + '/continue-production', { phase: phase });
+        if (!launch.job_id) {
+            showAlert('alert-validation', 'error', launch.error || 'Erreur inconnue');
+            if (zone) zone.style.display = 'none';
+            return;
+        }
+        _saveActiveJob(launch.job_id, episodeId, '/api/episode/' + episodeId + '/continue-production');
+        _showRunningBanner(episodeId);
+        const result = await pollJob(launch.job_id, 3720);
+
+        if (result.status === 'ok') {
+            showAlert('alert-validation', 'success', phaseLabel + ' terminé avec succès pour ' + episodeId + '.');
+        } else {
+            var errMsg = result.error || result.stderr || 'Erreur inconnue';
+            showAlert('alert-validation', 'error', phaseLabel + ' échoué : ' + errMsg);
+        }
+
+        if (zone) zone.style.display = 'none';
+        await loadEpisodeDetail(episodeId);
+        await loadValidationEpisodes();
+        _dashboardDirty = true;
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+        if (zone) zone.style.display = 'none';
+    } finally {
+        _productionRunning = false;
+    }
+}
+
+function toggleModifyZone(step) {
+    var zone = document.getElementById('modify-zone-' + step);
+    if (!zone) return;
+    zone.style.display = (zone.style.display === 'none') ? 'block' : 'none';
+}
+
+var _regenerationRunning = false;  /* B6: anti double-clic régénération */
+
+async function regenerateStep(step) {
+    if (!_currentEpisodeId) return;
+    if (_regenerationRunning) return;
+    var textarea = document.getElementById('modify-instructions-' + step);
+    var instructions = textarea ? textarea.value.trim() : '';
+    if (!instructions) {
+        showAlert('alert-validation', 'error', 'Veuillez entrer vos instructions de modification.');
+        return;
+    }
+    _regenerationRunning = true;
+
+    /* Masquer la zone de modification */
+    toggleModifyZone(step);
+    showLoading('Régénération du ' + step + ' en cours...');
+
+    try {
+        var launch = await apiCall('/api/episode/' + _currentEpisodeId + '/regenerate', {
+            step: step, instructions: instructions
+        });
+        if (!launch.job_id) {
+            hideLoading();
+            showAlert('alert-validation', 'error', launch.error || 'Erreur inconnue');
+            return;
+        }
+        _saveActiveJob(launch.job_id, _currentEpisodeId, '/api/episode/' + _currentEpisodeId + '/regenerate');
+        _showRunningBanner(_currentEpisodeId);
+        var result = await pollJob(launch.job_id, 3720);
+
+        if (result.status === 'ok') {
+            var label = (step === 'script') ? 'Script' : 'Audio + montage';
+            showAlert('alert-validation', 'success', label + ' régénéré avec vos instructions. Vérifiez le résultat.');
+            if (textarea) textarea.value = '';
+        } else {
+            showAlert('alert-validation', 'error', 'Erreur : ' + (result.error || result.stderr || 'inconnue'));
+        }
+
+        await loadEpisodeDetail(_currentEpisodeId);
+        await loadValidationEpisodes();
+        _dashboardDirty = true;
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+    } finally {
+        hideLoading();
+        _regenerationRunning = false;
+    }
+}
+
+async function rejectAndArchive(step) {
+    if (!_currentEpisodeId) return;
+    var label = (step === 'script') ? 'le script' : 'le montage';
+    if (!confirm('Refuser ' + label + ' et archiver l\'épisode ' + _currentEpisodeId + ' ?\n\nLes fichiers seront déplacés dans output/archive/ (récupérable).')) {
+        return;
+    }
+
+    var comment = document.getElementById('val-comment').value.trim();
+    try {
+        /* 1. Marquer comme rejeté dans le rapport (B7: vérifier le résultat) */
+        var rejectResp = await fetch('/api/episode/' + _currentEpisodeId + '/validate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ step: step, action: 'reject', comment: comment || 'Refusé par le producteur' })
+        });
+        if (!rejectResp.ok) {
+            var rejectData = await rejectResp.json();
+            showAlert('alert-validation', 'error', 'Erreur rejet : ' + (rejectData.error || 'inconnue'));
+            return;
+        }
+
+        /* 2. Archiver l'épisode */
+        var resp = await fetch('/api/episode/' + _currentEpisodeId + '/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ raison: comment || 'Refusé à l\'étape ' + step })
+        });
+        var data = await resp.json();
+
+        if (resp.ok) {
+            showAlert('alert-validation', 'warning', 'Épisode ' + _currentEpisodeId + ' refusé et archivé.');
+            document.getElementById('val-detail').style.display = 'none';
+            _currentEpisodeId = null;
+            await loadValidationEpisodes();
+            _dashboardDirty = true;
+        } else {
+            showAlert('alert-validation', 'error', data.error || 'Erreur lors de l\'archivage.');
+        }
+    } catch (err) {
+        showAlert('alert-validation', 'error', 'Erreur : ' + escapeHtml(err.message));
+    }
+}
+
+function toggleDeleteConfirm() {
+    const zone = document.getElementById('delete-confirm-zone');
+    zone.classList.toggle('show');
+    if (!zone.classList.contains('show')) {
+        document.getElementById('delete-raison').value = '';
+    }
+}
+
+async function deleteEpisode() {
+    if (!_currentEpisodeId) return;
+
+    const raison = document.getElementById('delete-raison').value.trim();
+
+    try {
+        const resp = await fetch('/api/episode/' + _currentEpisodeId + '/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ raison })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            showAlert('alert-validation', 'error', data.error || 'Erreur lors de la suppression');
+            return;
+        }
+
+        showAlert('alert-validation', 'success', data.message);
+
+        /* Masquer le détail et recharger la liste */
+        document.getElementById('val-detail').style.display = 'none';
+        document.getElementById('delete-confirm-zone').classList.remove('show');
+        _currentEpisodeId = null;
         await loadValidationEpisodes();
         _dashboardDirty = true;
     } catch (err) {
@@ -2965,7 +4301,222 @@ async function validateStep(step, action) {
     if (prodSaisonInput && prodSaisonInput.value) {
         prodSaisonInput.dispatchEvent(new Event('change'));
     }
+
+    /* ── Reconnexion automatique après perte réseau / rechargement ─────── */
+    _reconnectActiveJob();
 })();
+
+/**
+ * Vérifie s'il y a un job actif (sessionStorage ou DB) et reprend le polling.
+ * Appelé au chargement de la page.
+ */
+async function _reconnectActiveJob() {
+    /* 1. Vérifier sessionStorage */
+    var saved = _getActiveJob();
+
+    /* 2. Vérifier le serveur pour les jobs en cours.
+       Après un redéploiement Replit, le serveur relance automatiquement
+       les productions interrompues (thread auto-resume, ~5s après démarrage).
+       On fait jusqu'à 3 tentatives espacées de 3s pour laisser le temps
+       au thread de reprendre le job. */
+    var serverJob = null;
+    for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+            var resp = await fetch('/api/running-jobs');
+            if (resp.ok) {
+                var data = await resp.json();
+                if (data.jobs && data.jobs.length > 0) {
+                    serverJob = data.jobs[0];
+                    break;
+                }
+            }
+        } catch(e) { /* serveur pas joignable */ }
+        /* Si on a un job en sessionStorage et que le serveur n'en a pas encore,
+           attendre un peu (le thread auto-resume peut être en train de démarrer) */
+        if (saved && attempt < 2) {
+            await new Promise(r => setTimeout(r, 3000));
+        } else {
+            break;
+        }
+    }
+
+    if (serverJob) {
+        if (!saved || saved.job_id !== serverJob.job_id) {
+            saved = {
+                job_id: serverJob.job_id,
+                episode_id: serverJob.episode_id,
+                url: null,
+                started_at: Date.now()
+            };
+            _saveActiveJob(saved.job_id, saved.episode_id, null);
+        }
+    }
+
+    if (!saved) return;
+
+    /* 3. Vérifier que le job est encore running */
+    try {
+        var checkResp = await fetch('/api/job-status/' + saved.job_id);
+        if (!checkResp.ok) {
+            /* Job terminé/introuvable — nettoyer */
+            _clearActiveJob();
+            return;
+        }
+        var checkData = await checkResp.json();
+        if (checkData.status !== 'running') {
+            /* Job déjà terminé — afficher le résultat */
+            _clearActiveJob();
+            var banner = document.getElementById('running-job-banner');
+            if (checkData.status === 'ok') {
+                _dashboardDirty = true;
+                if (banner) {
+                    banner.style.display = 'block';
+                    banner.style.borderColor = '#4ade80';
+                    banner.innerHTML = '<div style="padding:6px;color:#4ade80;font-weight:600;">' +
+                        '&#9989; Production terminée avec succès' +
+                        (saved.episode_id ? ' (' + escapeHtml(saved.episode_id) + ')' : '') +
+                        '. <a href="javascript:void(0)" onclick="window.location.reload()" style="color:var(--turquoise);text-decoration:underline;">Actualiser</a></div>';
+                }
+            } else if (checkData.error) {
+                if (banner) {
+                    banner.style.display = 'block';
+                    banner.style.borderColor = '#ff4444';
+                    banner.innerHTML = '<div style="padding:6px;color:#ff4444;font-weight:600;">' +
+                        '&#10060; Production échouée : ' + escapeHtml(checkData.error) + '</div>';
+                }
+            }
+            return;
+        }
+    } catch(e) {
+        /* Erreur réseau — on tente quand même le polling */
+    }
+
+    /* 4. Reprendre le polling */
+    _showRunningBanner(saved.episode_id);
+    var timeout = saved.url ? _getPollTimeout(saved.url) : 3720;
+    /* Réduire le timeout par le temps déjà écoulé */
+    var elapsedSec = Math.floor((Date.now() - (saved.started_at || Date.now())) / 1000);
+    var remainingTimeout = Math.max(timeout - elapsedSec, 300); /* minimum 5 min */
+
+    try {
+        var result = await pollJob(saved.job_id, remainingTimeout);
+        _clearActiveJob();
+        if (result.status === 'ok') {
+            var banner = document.getElementById('running-job-banner');
+            if (banner) {
+                banner.style.display = 'block';
+                banner.style.borderColor = '#4ade80';
+                banner.innerHTML = '<div style="padding:6px;color:#4ade80;font-weight:600;">' +
+                    '&#9989; Production terminée avec succès' +
+                    (saved.episode_id ? ' (' + escapeHtml(saved.episode_id) + ')' : '') +
+                    '. <a href="javascript:void(0)" onclick="window.location.reload()" style="color:var(--turquoise);text-decoration:underline;">Actualiser</a></div>';
+            }
+        } else if (result.error) {
+            var banner = document.getElementById('running-job-banner');
+            if (banner) {
+                banner.style.display = 'block';
+                banner.style.borderColor = '#ff4444';
+                banner.innerHTML = '<div style="padding:6px;color:#ff4444;font-weight:600;">' +
+                    '&#10060; Production échouée : ' + escapeHtml(result.error) + '</div>';
+            }
+        }
+    } catch(err) {
+        _clearActiveJob();
+        var banner = document.getElementById('running-job-banner');
+        if (banner) {
+            banner.style.display = 'block';
+            banner.style.borderColor = '#ff4444';
+            banner.innerHTML = '<div style="padding:6px;color:#ff4444;font-weight:600;">' +
+                '&#10060; Connexion perdue avec le job' +
+                (saved.episode_id ? ' (' + escapeHtml(saved.episode_id) + ')' : '') +
+                '. <a href="javascript:void(0)" onclick="window.location.reload()" style="color:var(--turquoise);text-decoration:underline;">Réessayer</a></div>';
+        }
+    }
+}
+
+/* ── Purge / Nettoyage ─────────────────────────────────────────────────── */
+let _purgeAction = null;  // {url, method, body, label}
+
+function purgeSaison() {
+    const num = document.getElementById('purge-saison-num').value;
+    const garder = document.getElementById('purge-garder-plan').checked;
+    _purgeAction = {
+        url: '/api/purge/saison/' + num,
+        body: {garder_plan: garder},
+        label: 'Purger la saison ' + num + (garder ? ' (en gardant le plan)' : ' (plan inclus)'),
+    };
+    const zone = document.getElementById('purge-confirm-zone');
+    document.getElementById('purge-confirm-msg').textContent =
+        'Confirmer : supprimer toutes les données de la saison ' + num + ' ?' +
+        (garder ? '' : ' Le plan de saison sera aussi supprimé.');
+    zone.style.display = 'block';
+    document.getElementById('purge-result').style.display = 'none';
+}
+
+function purgeTout() {
+    _purgeAction = {
+        url: '/api/purge/tout',
+        body: {},
+        label: 'Reset complet — tout supprimer',
+    };
+    const zone = document.getElementById('purge-confirm-zone');
+    document.getElementById('purge-confirm-msg').textContent =
+        'ATTENTION : Confirmer la suppression de TOUTES les données de production ? ' +
+        'Historique, scripts, audio, plans, DB — tout sera supprimé.';
+    zone.style.display = 'block';
+    document.getElementById('purge-result').style.display = 'none';
+}
+
+function purgeCancel() {
+    _purgeAction = null;
+    document.getElementById('purge-confirm-zone').style.display = 'none';
+}
+
+async function purgeConfirm() {
+    if (!_purgeAction) return;
+    const btn = document.getElementById('purge-confirm-btn');
+    btn.disabled = true;
+    btn.textContent = 'Suppression en cours...';
+    const result = document.getElementById('purge-result');
+
+    try {
+        const resp = await fetch(_purgeAction.url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(_purgeAction.body),
+        });
+        const data = await resp.json();
+
+        if (data.status === 'ok') {
+            result.style.background = 'rgba(46, 204, 113, 0.1)';
+            result.style.border = '1px solid var(--vert-prairie)';
+            result.style.color = 'var(--vert-prairie)';
+            let details = data.message;
+            if (data.details && data.details.details && data.details.details.length > 0) {
+                details += '<br><small style="color: var(--texte-dim);">' +
+                    data.details.details.join(' · ') + '</small>';
+            }
+            result.innerHTML = '&#10003; ' + details;
+            _dashboardDirty = true;
+        } else {
+            result.style.background = 'rgba(231, 76, 60, 0.1)';
+            result.style.border = '1px solid var(--corail)';
+            result.style.color = 'var(--corail)';
+            result.innerHTML = '&#10007; Erreur : ' + (data.message || data.error || 'Inconnue');
+        }
+    } catch (err) {
+        result.style.background = 'rgba(231, 76, 60, 0.1)';
+        result.style.border = '1px solid var(--corail)';
+        result.style.color = 'var(--corail)';
+        result.innerHTML = '&#10007; Erreur réseau : ' + err.message;
+    }
+
+    result.style.display = 'block';
+    document.getElementById('purge-confirm-zone').style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = 'Confirmer la suppression';
+    _purgeAction = null;
+}
 </script>
 
 </body>

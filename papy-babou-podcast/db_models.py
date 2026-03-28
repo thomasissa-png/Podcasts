@@ -41,8 +41,7 @@ class SaisonRepo:
         with get_cursor() as cur:
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM saisons WHERE numero = %s "
-                "FOR UPDATE",
+                "FROM saisons WHERE numero = %s",
                 (numero,),
             )
             next_version = cur.fetchone()["next_v"]
@@ -245,8 +244,7 @@ class ScriptRepo:
             # Prochaine version
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM scripts WHERE episode_id = %s "
-                "FOR UPDATE",
+                "FROM scripts WHERE episode_id = %s",
                 (episode_id,),
             )
             next_version = cur.fetchone()["next_v"]
@@ -407,7 +405,12 @@ class ProductionRepo:
         """
         with get_cursor() as cur:
             updates = ["etape_courante = %s", "status = %s"]
-            params = [etape, f"{etape}_done"]
+            # Les statuts "waiting_*" sont des statuts terminaux de workflow
+            # (attente de validation humaine) — NE PAS suffixer "_done".
+            if etape.startswith("waiting_"):
+                params = [etape, etape]
+            else:
+                params = [etape, f"{etape}_done"]
 
             if rapport:
                 updates.append("rapport_json = %s")
@@ -448,7 +451,7 @@ class ProductionRepo:
             cur.execute(
                 """UPDATE productions SET
                    status = 'failed',
-                   checkpoint_data = checkpoint_data || %s,
+                   checkpoint_data = COALESCE(checkpoint_data, '{}') || %s,
                    completed_at = NOW()
                    WHERE id = %s""",
                 (
@@ -689,21 +692,22 @@ class HistoriqueRepo:
             saison: Numéro de saison pour filtrer (None = tout).
 
         Returns:
-            Liste des entrées d'historique ordonnées chronologiquement.
+            Liste des entrées d'historique (plus récent en premier).
         """
         with get_cursor(commit=False) as cur:
             if saison:
                 prefix = f"S{saison:02d}"
                 cur.execute(
                     "SELECT * FROM historique_episodes "
-                    "WHERE episode_id LIKE %s "
-                    "ORDER BY date_production ASC",
+                    "WHERE episode_id LIKE %s AND deleted_at IS NULL "
+                    "ORDER BY date_production DESC",
                     (f"{prefix}%",),
                 )
             else:
                 cur.execute(
                     "SELECT * FROM historique_episodes "
-                    "ORDER BY date_production ASC"
+                    "WHERE deleted_at IS NULL "
+                    "ORDER BY date_production DESC"
                 )
             rows = cur.fetchall()
 
@@ -737,8 +741,7 @@ class PersonnageRepo:
         with get_cursor() as cur:
             cur.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 AS next_v "
-                "FROM personnages WHERE personnage_id = %s "
-                "FOR UPDATE",
+                "FROM personnages WHERE personnage_id = %s",
                 (personnage_id,),
             )
             next_version = cur.fetchone()["next_v"]

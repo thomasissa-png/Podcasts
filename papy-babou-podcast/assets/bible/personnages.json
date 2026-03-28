@@ -1,26 +1,31 @@
 {
+  "_meta": {
+    "annee_reference": 2024,
+    "note": "Saison 1 se déroule en 2024. Années de naissance et âges basés sur ce référent."
+  },
   "personnages": {
     "papy_babou": {
       "nom_complet": "Papy Babou",
-      "age": 72,
-      "description": "Grand-père aimant, ancien instituteur à la retraite. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants.",
+      "age": 66,
+      "age_par_saison": {"1": 66, "2": 67, "3": 67, "4": 68},
+      "description": "Grand-père bienveillant, très courageux et protecteur. Né à Dakar au Sénégal (vrai prénom : Jean-Pierre). A vécu au Liban, en Afrique du Sud, en Suisse avant de s'installer en France. Passionné par les histoires bibliques qu'il raconte avec chaleur et humour à ses petits-enfants Antoine et Noémie.",
       "apparence": {
         "cheveux": "blancs, légèrement dégarni, mèches rebelles",
         "yeux": "bleus pétillants, ridés par les sourires",
-        "corpulence": "trapu, un peu rond, rassurant",
+        "corpulence": "trapu, un peu rond, rassurant — très fort physiquement",
         "tenue_typique": "gilet en laine beige, chemise à carreaux, pantalon en velours côtelé",
         "accessoires": "lunettes rondes sur le bout du nez, montre à gousset",
         "details": "grandes mains de travailleur, sourire chaleureux, moustache grise bien taillée"
       },
       "ton": "chaleureux, grave, bienveillant",
       "tics_de_langage": [
-        "Ah mes petits loups...",
+        "Mes petits loups...",
         "Figurez-vous que...",
         "Et devinez quoi ?",
         "Comme disait ma grand-mère...",
         "C'est pas merveilleux, ça ?",
         "Attendez, attendez, j'y viens !",
-        "Eh bien, mes trésors...",
+        "Alors, mes trésors...",
         "Vous voyez, mes enfants..."
       ],
       "vocabulaire_typique": [
@@ -28,7 +33,7 @@
         "extraordinaire",
         "mes petits loups",
         "mes trésors",
-        "eh bien",
+        "alors",
         "figurez-vous"
       ],
       "interdictions": [
@@ -36,12 +41,42 @@
         "Pas de références à la technologie moderne",
         "Toujours expliquer les mots difficiles"
       ],
-      "backstory": "Ancien instituteur dans un village de Provence, veuf depuis 5 ans. A voyagé en Terre Sainte dans sa jeunesse. Vit dans une vieille maison avec un grand fauteuil près de la cheminée où il raconte ses histoires."
+      "backstory": "Né à Dakar, au Sénégal. Son vrai prénom est Jean-Pierre. Il est parti au Liban à l'âge de 10 ans. C'est là-bas qu'il a rencontré Sonia — ils habitaient dans le même immeuble et se retrouvaient dans les abris atomiques pendant les bombardements. Ils ont quitté le Liban ensemble à la fin des années 70 à cause de la guerre pour finir leurs études en France et s'y installer. Thomas est né en 1986 puis Nathalie en 1988. La famille a vécu en Afrique du Sud dans les années 90 puis en Suisse dans les années 2000. Habite désormais en France dans une jolie maison normande avec mamie Sonia. Gourmand — aime la viande et le café. Très courageux, très fort, protecteur, s'occupe bien de sa famille.",
+      "prenom_civil": "Jean-Pierre",
+      "lieu_naissance": "Dakar, Sénégal",
+      "parcours_geographique": [
+        {"lieu": "Dakar, Sénégal", "periode": "naissance — 10 ans"},
+        {"lieu": "Liban", "periode": "10 ans — fin des années 70"},
+        {"lieu": "France", "periode": "fin des années 70 — années 90 (études + installation, naissance de Thomas en 1986 et Nathalie en 1988)"},
+        {"lieu": "Afrique du Sud", "periode": "années 90"},
+        {"lieu": "Suisse", "periode": "années 2000"},
+        {"lieu": "France (Normandie)", "periode": "actuel"}
+      ],
+      "famille": {
+        "epouse": "mamie Sonia",
+        "enfants": ["Thomas (né en 1986, papa d'Antoine et Noémie)", "Nathalie (née en 1988, tata Nathalie)"],
+        "petits_enfants": ["Antoine (né en 2016)", "Noémie (née en 2019)", "Lucas (à naître saison 1)"]
+      },
+      "anecdotes_possibles": [
+        "Son enfance à Dakar au Sénégal",
+        "Son arrivée au Liban à 10 ans — découverte d'un nouveau pays",
+        "Les abris atomiques pendant la guerre du Liban — comment il a rencontré Sonia",
+        "La fuite du Liban pendant la guerre à la fin des années 70",
+        "La vie en Afrique du Sud dans les années 90",
+        "La vie en Suisse dans les années 2000",
+        "Sa gourmandise pour la viande et le café",
+        "Sa force physique et son courage"
+      ],
+      "relation_avec_antoine": "Très fier de son petit-fils. Voit en lui un futur aventurier courageux. Adore répondre à ses mille questions et l'encourage à toujours chercher à comprendre.",
+      "relation_avec_noemie": "Noémie est sa complice. Elle le fait fondre avec ses blagues et ses câlins. Il adore quand elle se blottit contre lui dans le grand fauteuil.",
+      "relation_avec_mamie_sonia": "Amoureux de Sonia depuis plus de 50 ans. Complices, partenaires de vie. Il la regarde toujours avec les mêmes yeux tendres qu'au Liban."
     },
     "antoine": {
       "nom_complet": "Antoine",
+      "annee_naissance": 2016,
       "age": 8,
-      "description": "Petit-fils curieux et aventurier. Pose beaucoup de questions, parfois impertinentes. Adore les passages avec de l'action.",
+      "age_par_saison": {"1": 8, "2": 9, "3": 10, "4": 10},
+      "description": "Petit-fils curieux et aventurier. Garçon qui aime le football et fait du judo. Adore vouloir faire comme les grands et faire le courageux. Gentil, social, travaille bien en classe. Aime jouer dehors, faire des cabanes, et aller chez Babou et mamie.",
       "apparence": {
         "cheveux": "bruns ébouriffés, mèche rebelle sur le front",
         "yeux": "marrons, vifs et expressifs",
@@ -57,127 +92,233 @@
         "Et après, qu'est-ce qui s'est passé ?",
         "Comme un super-héros ?",
         "C'est vrai, Papy ?",
-        "Wahou !",
+        "C'est incroyable !",
         "Attends, attends, je comprends pas !",
         "Et il a gagné à la fin ?"
       ],
+      "vocabulaire_typique": [
+        "pourquoi",
+        "c'est cool",
+        "super",
+        "incroyable",
+        "trop fort",
+        "genre",
+        "en vrai"
+      ],
+      "interdictions": [
+        "Pas de références technologiques modernes (jeux vidéo, apps)",
+        "Pas d'argot adolescent",
+        "Pas de mots trop complexes pour un enfant de 8-10 ans"
+      ],
+      "backstory": "Antoine est le grand frère. Passionné par le football et le judo, il aime l'action et l'aventure. Il imite souvent les héros des histoires que Papy raconte, se lève pour mimer les combats. Parfois trop impatient, il coupe la parole, mais il est toujours respectueux envers Papy. Il travaille bien en classe et adore aller chez Babou et mamie le dimanche.",
+      "famille": {
+        "pere": "Thomas (né en 1986)",
+        "petite_soeur": "Noémie (3 ans plus jeune)",
+        "petit_frere": "Lucas (à naître en S1E10)",
+        "grands_parents_paternels": "Papy Babou (Jean-Pierre) et Mamie Sonia"
+      },
       "reactions_typiques": [
         "S'enthousiasme pour les scènes d'action",
         "Compare les personnages bibliques à des héros",
         "Pose des questions sur la logique de l'histoire",
         "Coupe parfois la parole avec impatience",
         "Mime les scènes d'action avec ses mains",
-        "Fait des bruits de combat ou d'explosion"
+        "Fait des bruits de combat ou d'explosion",
+        "Veut faire comme les grands, se montre courageux"
       ],
       "relation_avec_papy": "Admire son Papy et veut devenir aventurier comme les héros des histoires. Parfois trop impatient, mais toujours respectueux.",
-      "relation_avec_noemie": "Taquine gentiment sa petite sœur mais la protège. Lève les yeux au ciel quand elle s'inquiète trop."
+      "relation_avec_noemie": "Taquine gentiment sa petite sœur mais la protège. Lève les yeux au ciel quand elle s'inquiète trop.",
+      "relation_avec_mamie_sonia": "Adore les gâteaux de mamie. La traite avec respect et affection, un peu impressionné par son calme.",
+      "anecdotes_possibles": [
+        "Ses matchs de football — marquer un but décisif",
+        "Ses cours de judo — apprendre la discipline",
+        "Ses cabanes dans le jardin — construire un fort",
+        "Ses questions incessantes sur les batailles bibliques",
+        "Le jour où il a voulu imiter David contre Goliath"
+      ]
     },
     "noemie": {
       "nom_complet": "Noémie",
-      "age": 6,
-      "description": "Petite-fille sensible et empathique. S'inquiète pour les personnages, aime les détails émotionnels.",
+      "annee_naissance": 2019,
+      "age": 5,
+      "age_par_saison": {"1": 5, "2": 6, "3": 6, "4": 7},
+      "description": "Petite fille chipie et maligne, avec un très gros caractère. Futée et observatrice pour son âge — elle pose des questions surprenantes qui montrent qu'elle comprend plus qu'on ne croit. Aime faire des blagues intelligentes et n'est pas toujours courageuse. Adore embêter tout le monde gentiment. Adore son Babou plus que tout.",
       "apparence": {
         "cheveux": "blonds bouclés, souvent attachés avec un ruban rose ou une barrette fleur",
         "yeux": "bleus comme Papy, grands et expressifs",
         "corpulence": "petite pour son âge, menue",
         "tenue_typique": "robe à fleurs ou salopette colorée, chaussettes dépareillées",
         "accessoires": "doudou lapin qu'elle serre pendant les histoires qui font peur, dessin en cours sur ses genoux",
-        "details": "joues rondes et roses, petit nez retroussé, air rêveur"
+        "details": "joues rondes et roses, petit nez retroussé, air espiègle"
       },
-      "ton": "sensible, doux, parfois inquiet",
+      "ton": "chipie, espiègle, rigolote, parfois peureuse",
       "tics_de_langage": [
-        "Oh non, le pauvre...",
+        "Le pauvre, quand même...",
         "Il avait pas peur, Papy ?",
         "Et ils étaient contents après ?",
-        "C'est triste, Papy...",
+        "C'est trop drôle !",
         "Moi je l'aurais aidé !",
         "Raconte encore, Papy !",
         "Mais ça finit bien, hein Papy ?",
-        "Il était tout seul ? Oh..."
+        "Babouuuu ! Encore une histoire !"
       ],
+      "vocabulaire_typique": [
+        "rigolo",
+        "le pauvre",
+        "trop drôle",
+        "babou",
+        "trop",
+        "c'est vrai",
+        "moi aussi"
+      ],
+      "interdictions": [
+        "Pas de concepts trop abstraits ou complexes",
+        "Pas de phrases longues (max 10-12 mots par réplique)",
+        "Pas d'émotions trop sombres ou angoissantes"
+      ],
+      "backstory": "Noémie est la petite sœur chipie ET maligne. Elle a un très gros caractère et dit toujours ce qu'elle pense sans filtre. Derrière ses airs de petite chipie, elle est plus observatrice qu'on ne le croit — elle fait parfois des remarques qui surprennent Papy par leur pertinence. Elle adore faire des blagues, embêter Antoine gentiment, et se blottir contre son Babou dans le grand fauteuil. Pas toujours courageuse, elle serre son doudou lapin quand les histoires deviennent intenses. Mais quand elle se sent en sécurité avec Papy, elle est la plus rigolote de la famille.",
+      "famille": {
+        "pere": "Thomas (né en 1986)",
+        "grand_frere": "Antoine (3 ans plus vieux)",
+        "petit_frere": "Lucas (à naître en S1E10)",
+        "grands_parents_paternels": "Papy Babou (Jean-Pierre) et Mamie Sonia"
+      },
       "reactions_typiques": [
-        "S'inquiète pour les personnages en difficulté",
+        "Fait des blagues et rigole pendant l'histoire",
+        "Embête gentiment Antoine ou Papy",
+        "N'est pas toujours courageuse — se cache derrière Papy",
         "Demande si l'histoire finit bien",
-        "Veut savoir ce que ressentent les personnages",
-        "A parfois besoin d'être rassurée par Papy Babou",
-        "Dessine les personnages pendant que Papy raconte",
-        "Serre son doudou quand l'histoire devient intense"
+        "Gros caractère — dit ce qu'elle pense sans filtre",
+        "Serre son doudou quand l'histoire devient intense",
+        "Adore son Babou — câlins et complicité"
       ],
-      "relation_avec_papy": "Sa préférée est de se blottir contre Papy dans son grand fauteuil. Très sensible aux émotions des personnages.",
-      "relation_avec_antoine": "Admire son grand frère mais trouve qu'il fait trop de bruit. Lui demande souvent de la laisser écouter tranquille."
+      "relation_avec_papy": "Adore son Babou. Sa préférée est de se blottir contre Papy dans son grand fauteuil. Complicité très forte.",
+      "relation_avec_antoine": "Aime embêter son grand frère. Lui fait des blagues. Le taquine quand il fait le courageux.",
+      "relation_avec_mamie_sonia": "Adore les câlins de mamie et ses gâteaux. Se réfugie chez mamie quand Antoine l'embête trop.",
+      "anecdotes_possibles": [
+        "Son doudou lapin qu'elle serre pendant les histoires qui font peur",
+        "Ses blagues maladroites qui font rire tout le monde",
+        "Son amour pour les gâteaux de mamie Sonia",
+        "Le jour où elle a voulu aider Moïse à traverser la mer",
+        "Ses dessins qu'elle fait pendant les histoires"
+      ]
     },
-    "narrateur": {
-      "nom_complet": "Narrateur",
-      "description": "Voix neutre qui assure les transitions entre les scènes et fournit le contexte historique.",
-      "ton": "neutre, clair, posé",
-      "usage": [
-        "Transitions entre scènes",
-        "Contexte historique ou géographique",
-        "Introduction et conclusion de l'épisode",
-        "Descriptions de lieux et d'ambiances"
+    "mamie_sonia": {
+      "nom_complet": "Mamie Sonia",
+      "role": "secondaire",
+      "premiere_apparition": "S01E02",
+      "frequence": "AU MOINS une vraie intervention par épisode — pas juste le goûter : réagir à l'histoire, ajouter un souvenir personnel, un détail culturel, ou contredire gentiment Papy",
+      "age": 65,
+      "age_par_saison": {"1": 65, "2": 66, "3": 66, "4": 67},
+      "description": "La plus gentille mamie du monde. Attentionnée, douce, adore ses petits-enfants plus que tout. Cuisine extrêmement bien. Architecte d'intérieur de métier.",
+      "ton": "doux, chaleureux, attentionné",
+      "lieu_naissance": "Le Caire, Égypte",
+      "backstory": "Née au Caire en Égypte. Elle est partie pour le Liban quand elle avait un an. C'est au Liban qu'elle a rencontré Jean-Pierre (Papy Babou) — ils habitaient dans le même immeuble et se retrouvaient dans les abris atomiques pendant les bombardements de la guerre. Ils sont tous les deux partis pendant la guerre à la fin des années 70 pour finir leurs études en France et s'installer. Thomas est né en 1986 et Nathalie en 1988. La famille a vécu en Afrique du Sud dans les années 90 puis en Suisse dans les années 2000.",
+      "parcours_geographique": [
+        {"lieu": "Le Caire, Égypte", "periode": "naissance — 1 an"},
+        {"lieu": "Liban", "periode": "1 an — fin des années 70"},
+        {"lieu": "France", "periode": "fin des années 70 — années 90 (études + installation)"},
+        {"lieu": "Afrique du Sud", "periode": "années 90"},
+        {"lieu": "Suisse", "periode": "années 2000"},
+        {"lieu": "France (Normandie)", "periode": "actuel"}
+      ],
+      "interventions_typiques": [
+        "Réagit à l'histoire en ajoutant un souvenir personnel ('Quand j'étais petite au Caire...')",
+        "Ajoute un détail culturel, culinaire ou géographique lié à l'histoire biblique",
+        "Contredit gentiment Papy sur un détail ou un souvenir ('Mon chéri, c'était pas exactement comme ça...')",
+        "Apporte le goûter ou un gâteau en lien avec l'histoire ('Tiens, j'ai fait des galettes, comme dans le récit !')",
+        "Commente avec tendresse et sagesse, souvent en écho avec sa propre enfance en Égypte/Liban",
+        "Reste écouter l'histoire un moment et pose une question qui enrichit le récit"
+      ],
+      "anecdotes_possibles": [
+        "Sa naissance au Caire en Égypte",
+        "Son arrivée au Liban bébé",
+        "Sa rencontre avec Jean-Pierre dans les abris pendant la guerre du Liban",
+        "Leur départ du Liban pour la France à la fin des années 70",
+        "La vie en Afrique du Sud dans les années 90",
+        "La vie en Suisse dans les années 2000",
+        "Ses talents de cuisinière",
+        "Son métier d'architecte d'intérieur"
+      ],
+      "relation_avec_antoine": "Fière de voir Antoine grandir et devenir courageux. L'encourage gentiment et lui prépare ses goûters préférés.",
+      "relation_avec_noemie": "Adore les blagues de Noémie et ses câlins. La réconforte quand elle a peur. Complicité très tendre."
+    },
+    "lucas": {
+      "nom_complet": "Lucas",
+      "role": "fil_rouge_saison_1",
+      "description": "Le petit dernier, encore dans le ventre de la maman pendant la saison 1. Son nom est tenu secret jusqu'à la naissance au dernier épisode. Quelques allusions occasionnelles au fait qu'Antoine et Noémie auront bientôt un petit frère.",
+      "regles": [
+        "Ne jamais révéler le prénom avant le dernier épisode de la saison 1",
+        "Allusions légères et naturelles de temps en temps — pas à chaque épisode",
+        "Utilisé comme petit fil rouge en parallèle de l'histoire principale",
+        "N'apparaît physiquement qu'au dernier épisode de la saison 1"
       ]
     }
   },
   "decor": {
-    "lieu": "Le salon de Papy Babou, dans une vieille maison provençale",
+    "lieu": "Le salon de Papy Babou, dans une jolie maison normande",
     "elements": [
       "Grand fauteuil en cuir usé près de la cheminée",
       "Étagère pleine de livres anciens et de photos de famille",
       "Tapis persan un peu élimé devant la cheminée",
       "Horloge comtoise qui sonne les heures",
       "Chat tigré qui dort sur le rebord de la fenêtre",
-      "Odeur de lavande et de gâteau qui cuit"
+      "Odeur de gâteau de mamie Sonia qui cuit dans la cuisine"
     ],
     "moment": "Le dimanche après-midi, après le goûter, quand la lumière dorée entre par la fenêtre"
   },
   "regles_interaction": {
     "frequence_interruptions": "Les enfants doivent intervenir au moins toutes les 90 secondes de narration",
-    "alternance": "Alterner entre Antoine (questions d'action/logique) et Noémie (questions émotionnelles)",
+    "alternance": "Alterner entre Antoine (questions d'action/logique, veut faire le courageux) et Noémie (blagues, chipie, parfois peureuse)",
     "reponses_papy": "Papy Babou répond toujours avec patience et pédagogie, même aux questions naïves",
-    "dynamique_fratrie": "Antoine et Noémie interagissent aussi entre eux, pas seulement avec Papy",
+    "dynamique_fratrie": "Antoine et Noémie interagissent aussi entre eux — Noémie embête Antoine, Antoine la protège",
+    "mamie_sonia": "Mamie Sonia peut intervenir brièvement à partir de l'épisode 2 — goûter, coucher, petit commentaire tendre. Ne pas forcer sa présence.",
+    "fil_rouge_lucas": "Allusions légères et naturelles au futur petit frère de temps en temps. Nom secret jusqu'au dernier épisode.",
     "progression_emotionnelle": "Chaque épisode doit avoir un arc émotionnel : curiosité → tension → résolution → morale",
-    "regles_sfx": "Les bruitages accompagnent les moments clés : arrivée d'un personnage, événement surnaturel, transition de lieu"
+    "regles_sfx": "Les bruitages accompagnent les moments clés : arrivée d'un personnage, événement surnaturel, transition de lieu",
+    "utilisation_backstory": "Les détails biographiques des personnages (voyages, goûts, métiers) servent de base d'anecdotes naturelles — à utiliser avec parcimonie, jamais de façon forcée"
   },
   "style_cover_art": {
-    "style": "Flat design chaleureux et moderne, formes géométriques douces, aplats de couleur, pas d'ombres portées, inspiré par Oliver Jeffers et Jon Klassen",
+    "style": "Cartoon aventure coloré pour enfants, style chibi/super-deformed avec grosses têtes et petits corps, traits noirs épais et dynamiques, couleurs vives et saturées, inspiré par Quelle Histoire et Les aventures de Tina (France Inter). Personnages expressifs en action, décors historiques/bibliques détaillés en arrière-plan, ambiance épique et ludique",
     "palette": {
-      "ocre_dore": "#D4A054",
-      "bleu_ciel": "#7BAFD4",
-      "rose_poudre": "#D4869A",
-      "vert_olive": "#8BAF6E",
-      "beige_chaud": "#F5E6D0",
-      "lavande": "#9B8EC4",
-      "terre_cuite": "#C47A5A",
-      "miel": "#E8B84B",
-      "ardoise": "#5A6978",
-      "ivoire": "#FDF8F0"
+      "bleu_ciel_vif": "#4A9FE5",
+      "bleu_profond": "#2D5B9E",
+      "ocre_sable": "#E8C97A",
+      "vert_nature": "#5DBD72",
+      "corail_chaud": "#F26B5E",
+      "violet_aventure": "#7B5EA7",
+      "jaune_soleil": "#FFD234",
+      "terre_antique": "#C4854A",
+      "rose_doux": "#E895A8",
+      "blanc_nuage": "#F5F0EB"
     },
     "elements_recurrents": [
-      "Livre ouvert stylisé avec reliure terre cuite (#C47A5A)",
-      "Lunettes rondes de Papy Babou en ardoise (#5A6978)",
-      "Étoiles dorées en miel (#E8B84B) autour du titre",
-      "Fond parcheminé en beige chaud (#F5E6D0)",
-      "Bordures ocre dorées (#D4A054) en haut et en bas",
-      "Coins arrondis, formes simples et lisibles"
+      "Papy Babou en style chibi avec ses lunettes rondes dorées et son gilet beige, grosses têtes expressives",
+      "Antoine et Noémie en proportions cartoon aventurier, poses dynamiques",
+      "Décor biblique stylisé en arrière-plan (temples, déserts, mers, montagnes)",
+      "Ciel bleu lumineux avec nuages stylisés blancs",
+      "Titre en lettres cartoon épaisses et colorées, légèrement inclinées",
+      "Logo discret du podcast dans un coin"
     ],
     "regles_visuelles": [
-      "Formes géométriques simples avec coins arrondis",
-      "Aplats de couleur sans dégradés ni textures lourdes",
-      "Traits nets et réguliers, épaisseur constante",
-      "Personnages stylisés avec expressions claires et lisibles",
-      "Fond toujours clair (ivoire ou beige chaud)",
-      "Palette limitée à 4-5 couleurs par illustration",
-      "Proportions enfantines : grandes têtes, yeux expressifs"
+      "Proportions chibi : têtes 40% du corps, yeux grands et ronds, expressions ultra-lisibles",
+      "Traits noirs épais et dynamiques, contours bien marqués",
+      "Couleurs vives et saturées, aplats avec légers dégradés pour le volume",
+      "Personnages toujours au premier plan, en action ou en pose héroïque",
+      "Arrière-plans détaillés mais en couleurs plus douces pour contraste avec les personnages",
+      "Palette de 5-6 couleurs vives par illustration, dominante bleue ou chaude selon le thème",
+      "Ambiance lumineuse et épique, éclairage chaud doré ou bleu ciel",
+      "Compositions dynamiques avec lignes de force diagonales"
     ],
     "interdictions_visuelles": [
       "Pas de violence graphique",
       "Pas d'images effrayantes ou sombres",
       "Pas de représentation directe de Dieu",
       "Pas de nudité",
-      "Pas d'aquarelle ni de textures peintes",
-      "Pas d'ombres portées ni d'effets 3D",
-      "Pas de dégradés complexes",
-      "Pas de couleurs néon ni saturées à l'extrême"
+      "Pas de style réaliste ou photoréaliste",
+      "Pas de style aquarelle ni textures peintes",
+      "Pas de personnages statiques ou figés — toujours du mouvement",
+      "Pas de couleurs ternes ou désaturées"
     ]
   }
 }

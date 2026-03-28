@@ -1,0 +1,2848 @@
+<!DOCTYPE html>
+<html lang="fr" style="color-scheme: light dark;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Podcast biblique pour enfants 6-10 ans | Les Histoires de Papy Babou</title>
+  <meta name="description" content="Papy Babou embarque vos enfants dans les plus grandes épopées de la Bible. Podcast gratuit, sans pub, pour les 6-10 ans. Écoutez la première mission !">
+  <meta property="og:title" content="Les Histoires de Papy Babou | Podcast biblique pour enfants">
+  <meta property="og:description" content="Des missions impossibles, des héros légendaires, des rebondissements incroyables ! Papy Babou embarque Antoine et Noémie dans les plus grandes épopées de la Bible.">
+  <meta property="og:image" content="/assets/artwork/og_image.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://papybabou.fr">
+  <meta property="og:locale" content="fr_FR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Les Histoires de Papy Babou | Podcast biblique pour enfants">
+  <meta name="twitter:description" content="Des missions bibliques extraordinaires pour les 6-10 ans. Gratuit, sans pub, en famille.">
+  <meta name="twitter:image" content="/assets/artwork/og_image.png">
+  <!-- Favicons & Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/artwork/favicon2.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/artwork/favicon2.png">
+  <link rel="apple-touch-icon" href="/assets/artwork/favicon2.png">
+  <link rel="manifest" href="/assets/manifest.json">
+  <link rel="alternate" type="application/rss+xml" title="Les Histoires de Papy Babou" href="/feed.xml">
+  <link rel="canonical" href="https://papybabou.fr">
+  <link rel="alternate" hreflang="fr" href="https://papybabou.fr">
+  <meta name="theme-color" content="#5B9BD5">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "PodcastSeries",
+    "name": "Les Histoires de Papy Babou",
+    "description": "Des missions impossibles, des héros légendaires, des rebondissements incroyables ! Papy Babou embarque Antoine et Noémie dans les plus grandes épopées de la Bible. Pour les 6-10 ans. Gratuit et sans pub.",
+    "genre": "Religion & Spirituality",
+    "inLanguage": "fr",
+    "image": "/assets/artwork/cover.svg",
+    "author": {
+      "@type": "Person",
+      "name": "Papy Babou"
+    },
+    "audience": {
+      "@type": "PeopleAudience",
+      "suggestedMinAge": 6,
+      "suggestedMaxAge": 10
+    },
+    "isFamilyFriendly": true
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;700&family=Pacifico&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito:wght@400;700&family=Pacifico&display=swap" rel="stylesheet"></noscript>
+  <style>
+    /* ── Reset & Variables ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Palette Papy Babou — extraite de cover_base.png (Disney audit) */
+      /* Contrastes WCAG AA verifies — chemise Papy (#3A4E7A) = 8.7:1 sur blanc */
+      /* NOTE: --accent (#D42533) remplace le dore (#E8A020) de la spec originale pour les CTA.
+         Le rouge offre un meilleur contraste et un CTA plus visible. Choix delibere. */
+      --sable: #FFF8ED;
+      --sable-dark: #EDE4D4;
+      --parchemin: #F0E0C0;
+      --accent: #D42533;
+      --dore-light: #FFD234;
+      /* Hovers via filter:brightness ou bleu — pas de doré foncé */
+      --bleu-doux: #8ECFF5;
+      --bleu-fonce: #2D7BC4;  /* liens et icones — non documente dans spec originale */
+      --bleu-nuit: #5B9BD5;
+      --titre-section: #3A4E7A;
+      --corail: #F26B5E;
+      --vert-prairie: #4BA95C;
+      --gris-texte: #2D2D2D;
+      --gris-leger: #5A6B78;
+      --gris-chaud: #8A9AAE;
+      --blanc: #FFFFFF;
+      --texte-hero: rgba(255, 255, 255, 0.97);
+      --trust-bg: rgba(58, 78, 122, 0.70);
+
+      --font-body: 'Nunito', sans-serif;
+      --font-display: 'Baloo 2', cursive;
+
+      /* Couleurs intermediaires (gradient hero — cornflower lumineux) */
+      --bleu-ciel: #8ECFF5;
+      --bleu-intermediaire: #7BBDE8;
+      --bleu-gris: #A8D8F0;
+      --sable-bleu: #D4ECF8;
+
+      /* Couleurs personnages (extraites du cover_base.png) */
+      --antoine-rouge: #D42533;
+      --noemie-jaune: #E8B040;
+      --papy-chemise: #3A4E7A;
+
+      /* RGB components for rgba() usage */
+      --accent-rgb: 212, 37, 51;
+      --papy-chemise-rgb: 58, 78, 122;
+
+      /* Backgrounds sections */
+      --bleu-pale: #F5EDD8;
+      --parchemin-clair: #F5EDD8;
+
+      /* Couleurs externes (plateformes) */
+      --apple-purple: #7D5BA6;
+      --spotify-green: #1DB954;
+
+      /* Typography tokens */
+      --font-size-xs: 0.9rem;
+      --font-size-sm: 1rem;
+      --font-size-base: 1rem;
+      --font-size-md: 1.1rem;
+      --font-size-lg: clamp(1.4rem, 3vw, 1.8rem);
+      --font-size-xl: clamp(1.5rem, 4vw, 2.5rem);
+      --font-size-hero: clamp(1.7rem, 5vw, 3.2rem);
+      --line-height-tight: 1.3;
+      --line-height-normal: 1.8;
+      --line-height-loose: 2;
+      --letter-spacing-tight: -0.01em;
+      --letter-spacing-wide: 0.03em;
+
+      /* Spacing tokens */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 3.5rem;
+
+      --max-width: 1100px;
+      --radius: 18px;
+      --radius-sm: 12px;
+      --radius-pill: 24px;
+      --radius-bar: 6px;
+      --shadow: 0 4px 16px rgba(74, 159, 229, 0.10);
+      --shadow-hover: 0 8px 28px rgba(74, 159, 229, 0.18);
+      --shadow-hero: 0 8px 30px rgba(45, 123, 196, 0.35);
+      --shadow-player: 0 -4px 16px rgba(74, 159, 229, 0.12);
+      --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.18);
+    }
+
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--sable);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      color: var(--gris-texte);
+      line-height: 1.6;
+      letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--bleu-fonce); text-decoration: underline; text-decoration-color: rgba(45, 74, 122, 0.3); text-underline-offset: 2px; }
+    a:hover { text-decoration-color: var(--bleu-fonce); }
+
+    /* ── Header / Hero ────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(175deg,
+        var(--bleu-nuit) 0%,
+        var(--bleu-intermediaire) 30%,
+        var(--bleu-doux) 55%,
+        var(--sable-bleu) 70%,
+        #E8D5B8 85%,
+        var(--sable) 100%);
+      padding: var(--space-2xl) var(--space-xl) var(--space-lg);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 3px solid var(--sable-dark);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, var(--dore-light) 0%, transparent 70%);
+      opacity: 0.35;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -40px; left: -40px;
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, var(--noemie-jaune) 0%, transparent 70%);
+      opacity: 0.20;
+    }
+
+    .hero-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-cover {
+      flex-shrink: 0;
+      width: 220px; height: 220px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-hero);
+      object-fit: cover;
+      background: var(--blanc);
+      transition: transform 0.3s ease;
+    }
+    .hero-cover:hover {
+      transform: rotate(-2deg) scale(1.03);
+    }
+
+    .hero-text { text-align: left; }
+
+    .hero-title {
+      margin-bottom: var(--space-xs);
+      line-height: 1.1;
+    }
+
+    .hero-title-top {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--blanc);
+      letter-spacing: 0.02em;
+    }
+
+    .hero-title-bottom {
+      display: block;
+      font-family: 'Pacifico', cursive;
+      font-size: 3.2rem;
+      font-weight: 400;
+      color: #1B2E5A;
+      line-height: 1.4;
+      padding-bottom: 0.1em;
+      text-shadow: 0 2px 8px rgba(27, 42, 74, 0.25);
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--texte-hero);
+      font-style: normal;
+      margin-bottom: 0.4rem;
+      opacity: 0.92;
+    }
+
+    /* ── Hero CTA ──────────────────────────────────────────── */
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.2rem;
+      padding: 0.8rem 1.8rem;
+      min-height: 48px;
+      background: var(--accent);
+      color: var(--blanc);
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.35);
+      animation: heroCTAPulse 2s ease-in-out 3;
+    }
+    .hero-cta:hover {
+      background: #B81E2A;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.5);
+      text-decoration: none;
+      color: var(--blanc);
+    }
+    .hero-cta svg { width: 20px; height: 20px; fill: var(--blanc); }
+    .hero-cta:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+    @keyframes heroCTAPulse {
+      0%, 100% { box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.35); transform: scale(1); }
+      50% { box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.55); transform: scale(1.03); }
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 1.2rem;
+      margin-top: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 1rem;
+      color: var(--texte-hero);
+      font-weight: 600;
+    }
+
+    .hero-meta-item svg {
+      width: 18px; height: 18px;
+      fill: var(--dore-light);
+    }
+
+    /* ── Saison Tabs ──────────────────────────────────────────── */
+    .saison-nav {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 0;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .saison-tab {
+      padding: 0.5rem 1.2rem;
+      border-radius: var(--radius-pill);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 2px solid var(--sable-dark);
+      background: var(--blanc);
+      color: var(--accent);
+      transition: all 0.2s;
+    }
+
+    .saison-tab:hover { background: var(--accent); color: var(--blanc); }
+    .saison-tab:focus-visible { outline: 3px solid var(--bleu-doux); outline-offset: 2px; }
+    .saison-tab.active {
+      background: var(--accent);
+      color: var(--blanc);
+      border-color: var(--accent);
+    }
+
+    /* ── Episodes List ────────────────────────────────────────── */
+    .episodes-section {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 2rem 1.5rem 1.5rem;
+    }
+
+    .episodes-section h2 {
+      font-family: var(--font-display);
+      font-size: var(--font-size-lg);
+      color: var(--titre-section);
+      margin-bottom: 1rem;
+    }
+
+    .episodes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .episode-card {
+      background: var(--blanc);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      border-left: 3px solid var(--bleu-doux);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: box-shadow 0.25s, transform 0.25s;
+      cursor: pointer;
+      contain: layout style paint;
+    }
+
+    @media (hover: hover) {
+      .episode-card:hover {
+        box-shadow: var(--shadow-hover);
+        transform: translateY(-2px);
+        transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+    }
+
+    .episode-play {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, transform 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    @media (hover: hover) {
+      .episode-play:hover {
+        background: var(--accent); filter: brightness(0.88);
+        transform: scale(1.08);
+      }
+    }
+
+    .episode-play svg {
+      width: 16px; height: 16px;
+      fill: var(--blanc);
+      margin-left: 2px;
+    }
+
+    .episode-play.playing svg { margin-left: 0; }
+
+    .episode-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .episode-number {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .episode-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--gris-texte);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .episode-resume {
+      display: none;
+    }
+
+    .episode-meta {
+      display: flex;
+      gap: 0.8rem;
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--gris-leger);
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .episode-meta svg {
+      width: 14px; height: 14px;
+      fill: var(--gris-leger);
+      vertical-align: -2px;
+      margin-right: 3px;
+    }
+
+    .episode-cover {
+      display: none;
+    }
+
+    /* ── Listened indicator ─────────────────────────────────── */
+    .episode-listened-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--vert-prairie);
+      flex-shrink: 0;
+    }
+    .episode-listened-badge svg { width: 14px; height: 14px; fill: var(--vert-prairie); }
+    .episode-card.is-playing {
+      border-left-color: var(--accent);
+      background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.08) 0%, var(--blanc) 30%);
+    }
+    .episode-card.is-playing .episode-play {
+      animation: playPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes playPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(var(--accent-rgb), 0); }
+    }
+    .episode-progress-bar {
+      height: 3px;
+      background: var(--sable-dark);
+      border-radius: var(--radius-bar);
+      margin-top: 0.4rem;
+      overflow: hidden;
+    }
+    .episode-progress-bar-inner {
+      height: 100%;
+      background: var(--accent);
+      border-radius: var(--radius-bar);
+      transition: width 0.3s;
+    }
+
+    /* ── About Section ────────────────────────────────────────── */
+    .about-section {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .about-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border-top: 3px solid var(--dore-light);
+      padding: 2rem 2.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .about-card::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, var(--dore-light) 0%, transparent 70%);
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .about-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--titre-section);
+      margin-bottom: 0.8rem;
+      padding-left: 0;
+    }
+
+    .about-card p {
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-normal);
+      color: var(--gris-texte);
+    }
+    .about-card p + p {
+      margin-top: 0.8rem;
+    }
+
+    .characters { list-style: none; padding: 0; margin: 0; }
+
+    .characters li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(var(--accent-rgb), 0.15);
+    }
+
+    .characters li:last-child { border-bottom: none; }
+
+    .char-avatar {
+      width: 56px; height: 56px;
+      min-width: 56px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: transform 0.2s;
+      margin-top: 0.2rem;
+    }
+    .char-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    @media (hover: hover) { .char-avatar:hover { transform: scale(1.1); } }
+
+    .char-name { font-weight: 700; font-size: 1rem; }
+
+    .char-desc {
+      font-size: 1rem;
+      color: var(--gris-leger);
+    }
+
+    /* ── Papy Quote section ──────────────────────────────────── */
+    .papy-quote-section {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .papy-quote {
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      color: var(--titre-section);
+      font-style: italic;
+      line-height: 1.6;
+      padding: 1.5rem 2rem;
+      background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.06) 0%, rgba(var(--papy-chemise-rgb), 0.04) 100%);
+      border-radius: var(--radius);
+      border-left: 4px solid var(--accent);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    @media (hover: hover) {
+      .papy-quote:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    }
+    .papy-quote footer {
+      font-size: 1rem;
+      font-style: normal;
+      color: var(--gris-leger);
+      margin-top: 0.4rem;
+      font-family: var(--font-body);
+    }
+
+    /* ── Audio Player (sticky bottom) ─────────────────────────── */
+    .player {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--blanc);
+      border-top: 3px solid var(--sable-dark);
+      box-shadow: var(--shadow-player);
+      z-index: 1000;
+      display: none; /* shown via JS when playing */
+      padding: 0.6rem 1.5rem;
+    }
+
+    .player.visible { display: block; }
+
+    .player-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .player-btn {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .player-btn:hover { background: var(--accent); filter: brightness(0.88); }
+    .player-btn svg { width: 18px; height: 18px; fill: var(--blanc); }
+
+    .player-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-title {
+      font-weight: 700;
+      font-size: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .player-progress {
+      flex: 1;
+      height: 12px;
+      background: var(--sable-dark);
+      border-radius: var(--radius-bar);
+      cursor: pointer;
+      position: relative;
+      padding: 8px 0;
+      background-clip: content-box;
+      transition: height 0.15s ease;
+    }
+    .player-progress:hover {
+      height: 16px;
+    }
+
+    .player-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: var(--radius-bar);
+      width: 0%;
+      transition: width 0.3s;
+      position: relative;
+    }
+    .player-progress-bar::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .player-progress:hover .player-progress-bar::after {
+      opacity: 1;
+    }
+
+    .player-time {
+      font-size: 1rem;
+      color: var(--gris-leger);
+      font-weight: 600;
+      white-space: nowrap;
+      min-width: 90px;
+      text-align: right;
+    }
+
+    .player-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.4rem;
+      color: var(--gris-leger);
+      font-size: 1.4rem;
+      line-height: 1;
+      border-radius: 50%;
+      transition: background 0.2s, color 0.2s;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .player-close:hover { color: var(--gris-texte); background: var(--sable-dark); }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    .section-wave-footer {
+      margin-bottom: -1px;
+      color: var(--parchemin-clair);
+    }
+    .section-wave-footer svg { display: block; width: 100%; height: 40px; }
+
+    .footer {
+      text-align: center;
+      padding: 2.5rem 1.5rem 2.5rem;
+      color: var(--gris-leger);
+      font-size: 1rem;
+      transition: padding-bottom 0.3s;
+      background: var(--sable);
+    }
+    body.player-active .footer {
+      padding-bottom: 6rem;
+    }
+
+    .footer a { color: var(--bleu-fonce); font-weight: 700; display: inline-block; padding: 0.5rem 0; min-height: 44px; line-height: calc(44px - 1rem); }
+
+    .footer-brand {
+      margin-bottom: 0.8rem;
+      font-weight: 700;
+      color: var(--titre-section);
+      font-family: var(--font-display);
+      font-size: var(--font-size-md);
+    }
+    .footer-quote {
+      max-width: 480px;
+      margin: 0 auto 1rem;
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-normal);
+      font-style: italic;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Empty state ──────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: var(--gris-texte);
+    }
+
+    .empty-state svg {
+      width: 64px; height: 64px;
+      fill: var(--dore-light);
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── Loading skeleton ─────────────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--sable-dark) 25%, var(--sable) 50%, var(--sable-dark) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .skeleton-card {
+      height: 90px;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+    }
+
+    /* ── Sticky nav ─────────────────────────────────────────── */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      background: var(--blanc);
+      border-bottom: 2px solid var(--sable-dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 0.4rem 1.5rem;
+      transition: box-shadow 0.2s;
+    }
+    .site-nav-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .site-nav-inner::-webkit-scrollbar { display: none; }
+    .nav-hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: var(--space-sm);
+      min-width: 44px;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      color: var(--gris-texte);
+      margin-left: auto;
+    }
+    .nav-hamburger svg { width: 24px; height: 24px; fill: currentColor; }
+    .site-nav-brand {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      flex-shrink: 0;
+      gap: 0.4rem;
+    }
+    .site-nav-brand .brand-full { height: 72px; width: auto; }
+    .site-nav-brand .brand-icon { display: none; height: 40px; width: auto; border-radius: 50%; }
+    .site-nav-brand .brand-text { display: none; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--titre-section); white-space: nowrap; }
+    .site-nav-links {
+      display: flex;
+      gap: 0.2rem;
+      list-style: none;
+      flex-shrink: 0;
+    }
+    .site-nav-links a {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 0.8rem;
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gris-texte);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+    @media (hover: hover) {
+      .site-nav-links a:hover { background: var(--sable-dark); color: var(--bleu-fonce); }
+    }
+
+    /* ── Audio loading spinner ─────────────────────────────── */
+    .player-btn.loading svg { display: none; }
+    .player-btn.loading::after {
+      content: '';
+      width: 20px; height: 20px;
+      border: 3px solid var(--blanc);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spinLoader 0.6s linear infinite;
+    }
+    @keyframes spinLoader {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Auto-play toast ─────────────────────────────────── */
+    .autoplay-toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gris-texte);
+      color: var(--blanc);
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--radius-pill);
+      font-size: 1rem;
+      font-weight: 600;
+      z-index: 1001;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      animation: toastIn 0.3s ease-out;
+    }
+    .autoplay-toast button {
+      background: var(--corail);
+      color: var(--blanc);
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      min-height: 36px;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* ── Skip to content ──────────────────────────────────────── */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 0;
+      background: var(--accent);
+      color: var(--blanc);
+      padding: 0.5rem 1.5rem;
+      z-index: 9999;
+      font-weight: 700;
+      border-radius: 0 0 var(--radius-sm) 0;
+      transition: top 0.2s;
+    }
+    .skip-link:focus {
+      top: 0;
+      outline: 3px solid var(--bleu-doux);
+    }
+
+    /* ── Focus visible (accessibility) ───────────────────────── */
+    *:focus-visible {
+      outline: 3px solid var(--bleu-doux);
+      outline-offset: 2px;
+    }
+
+    /* ── Trust bar (below hero wave) ──────────────────────────── */
+    .trust-bar {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--space-md) var(--space-lg);
+    }
+    .trust-badges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-sm);
+    }
+    .badge-trust {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: var(--blanc);
+      border: 1px solid var(--sable-dark);
+      border-radius: var(--radius-sm);
+      padding: var(--space-sm) var(--space-md);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gris-texte);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .badge-trust:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+    .badge-trust:focus-visible { outline: 3px solid var(--bleu-doux); outline-offset: 2px; }
+    .badge-trust .badge-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Parents guide FAQ ───────────────────────────────────── */
+    .parents-guide {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 2rem 1.5rem;
+      background: var(--sable);
+      border-radius: var(--radius);
+    }
+    .parents-guide h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--titre-section);
+      margin-bottom: 1rem;
+    }
+    .parents-guide details {
+      background: var(--blanc);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      margin-bottom: 0.6rem;
+      overflow: hidden;
+    }
+    .parents-guide summary {
+      padding: 1rem 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+      list-style: none;
+    }
+    .parents-guide summary::-webkit-details-marker { display: none; }
+    .parents-guide summary::before {
+      content: '▸';
+      transition: transform 0.2s;
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+    .parents-guide details[open] summary::before {
+      transform: rotate(90deg);
+    }
+    .parents-guide summary:hover { background: var(--sable-dark); }
+    .parents-guide .faq-answer {
+      padding: 0 1.5rem 1rem;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--gris-texte);
+      animation: faqSlideDown 0.25s ease-out;
+    }
+    @keyframes faqSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Testimonials ────────────────────────────────────────── */
+    .testimonials-section {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 2.5rem 1.5rem;
+      background: var(--parchemin-clair);
+      border-radius: var(--radius);
+    }
+    .testimonials-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--titre-section);
+      margin-bottom: 1rem;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .testimonial {
+      background: var(--blanc);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border-top: 3px solid var(--dore-light);
+      padding: 1.5rem;
+      transition: box-shadow 0.25s, transform 0.25s;
+    }
+    @media (hover: hover) {
+      .testimonial:hover {
+        box-shadow: var(--shadow-hover);
+        transform: translateY(-2px);
+      }
+    }
+    .testimonial .stars {
+      color: var(--dore-light);
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: 2px;
+    }
+    .testimonial p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--gris-texte);
+      font-style: italic;
+      margin-bottom: 0.6rem;
+    }
+    .testimonial cite {
+      font-size: 1rem;
+      color: var(--gris-leger);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    /* ── Subscribe CTAs ──────────────────────────────────────── */
+    .subscribe-section {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      background: var(--bleu-pale);
+      border-radius: var(--radius);
+    }
+    .subscribe-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--titre-section);
+      margin-bottom: 0.5rem;
+    }
+    .subscribe-section .sub-text {
+      color: var(--gris-leger);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .subscribe-btns {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .subscribe-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.4rem;
+      min-height: 44px;
+      border-radius: var(--radius-pill);
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 2px solid transparent;
+    }
+    .subscribe-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+      text-decoration: none;
+    }
+    .subscribe-btn.apple { background: var(--apple-purple); color: var(--blanc); }
+    .subscribe-btn.spotify { background: var(--spotify-green); color: var(--blanc); }
+    .subscribe-btn.rss { background: var(--accent); color: var(--blanc); }
+    .subscribe-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* ── Search bar ──────────────────────────────────────────── */
+    .search-bar {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.7rem 1.2rem 0.7rem 2.8rem;
+      border: 2px solid var(--sable-dark);
+      border-radius: var(--radius-pill);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      background: var(--blanc);
+      color: var(--gris-texte);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--bleu-fonce); }
+    .search-wrap {
+      position: relative;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px; height: 18px;
+      fill: var(--gris-leger);
+    }
+
+    /* ── Episode Modal ───────────────────────────────────────── */
+    .episode-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .episode-modal.visible {
+      display: flex;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .modal-content {
+      background: var(--blanc);
+      border-radius: var(--radius);
+      max-width: 560px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-modal);
+      animation: modalIn 0.25s ease-out;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.2rem;
+      padding: 1.5rem 1.5rem 0;
+    }
+    .modal-cover {
+      width: 100px; height: 100px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--sable-dark);
+      flex-shrink: 0;
+    }
+    .modal-meta h3 {
+      font-size: 1.15rem;
+      color: var(--gris-texte);
+      margin-bottom: 0.3rem;
+    }
+    .modal-meta .modal-ep-num {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .modal-meta .modal-info {
+      display: flex;
+      gap: 0.8rem;
+      font-size: 1rem;
+      color: var(--gris-leger);
+      font-weight: 600;
+      margin-top: 0.4rem;
+    }
+    .modal-body {
+      padding: 1.2rem 1.5rem;
+    }
+    .modal-body h4 {
+      font-size: var(--font-size-base);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: var(--letter-spacing-wide);
+      margin-bottom: 0.4rem;
+      margin-top: 1rem;
+    }
+    .modal-body h4:first-child { margin-top: 0; }
+    .modal-body p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--gris-texte);
+    }
+    .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0 1.5rem 1.5rem;
+      flex-wrap: wrap;
+    }
+    .modal-btn {
+      padding: 0.55rem 1.3rem;
+      border-radius: var(--radius-pill);
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .modal-btn.primary {
+      background: var(--accent);
+      color: var(--blanc);
+    }
+    .modal-btn.primary:hover { background: var(--accent); filter: brightness(0.88); }
+    .modal-btn.secondary {
+      background: var(--sable-dark);
+      color: var(--gris-texte);
+    }
+    .modal-btn.secondary:hover { background: var(--sable); }
+    .modal-close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gris-leger);
+      line-height: 1;
+      padding: 0.2rem;
+    }
+    .modal-close-btn:hover { color: var(--gris-texte); }
+
+    /* ── Enhanced player controls ────────────────────────────── */
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .player-ctrl-btn {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gris-leger);
+      transition: all 0.2s;
+      position: relative;
+    }
+    .player-ctrl-btn:hover {
+      background: var(--sable-dark);
+      color: var(--accent);
+    }
+    .player-ctrl-btn svg { width: 16px; height: 16px; fill: currentColor; }
+    .player-ctrl-btn .ctrl-label {
+      font-size: 1rem;
+      font-weight: 800;
+      position: absolute;
+      bottom: -1px;
+    }
+    .player-speed-btn {
+      width: auto;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--gris-leger);
+      background: var(--sable-dark);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .player-speed-btn:hover { background: var(--accent); color: var(--blanc); }
+    .player-volume-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .player-volume-range {
+      width: 60px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* ── Resume badge ────────────────────────────────────────── */
+    .resume-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--accent);
+      color: var(--blanc);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* ── Back to top ─────────────────────────────────────────── */
+    .back-to-top {
+      position: fixed;
+      bottom: 5rem;
+      right: 1.5rem;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--blanc);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      z-index: 999;
+      transition: opacity 0.3s, visibility 0.3s, transform 0.2s, background 0.2s;
+      opacity: 0;
+      visibility: hidden;
+    }
+    .back-to-top:hover { background: var(--accent); filter: brightness(0.88); transform: translateY(-2px); }
+    .back-to-top.visible { opacity: 1; visibility: visible; }
+    .back-to-top svg { width: 20px; height: 20px; fill: currentColor; }
+
+    /* ── Prefers reduced motion ─────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ── Dark Mode ───────────────────────────────────────────── */
+    /* ── Nav scroll state ─────────────────────────────────────── */
+    .site-nav.scrolled {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      border-bottom-color: var(--sable-dark);
+    }
+    .site-nav-links a.active {
+      background: var(--sable-dark);
+      color: var(--accent);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --sable: #0F1E2E;
+        --sable-dark: #1A2A3A;
+        --blanc: #162030;
+        --parchemin: #1A2A3A;
+        --gris-texte: #E8ECF0;
+        --titre-section: #8ECFF5;
+        --gris-leger: #A8B8C4;
+        --gris-chaud: #607080;
+        --bleu-nuit: #8ECFF5;
+        --bleu-doux: #5B9BD5;
+        --texte-hero: rgba(255, 255, 255, 0.97);
+        --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        --shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.5);
+        --shadow-hero: 0 8px 30px rgba(0, 0, 0, 0.6);
+        --shadow-player: 0 -4px 16px rgba(0, 0, 0, 0.4);
+        --bleu-pale: #1A2A3A;
+        --parchemin-clair: #0A1520;
+      }
+      .hero {
+        background: linear-gradient(175deg, #1A3050 0%, #254060 30%, #2D5070 55%, #2A3A4A 75%, #3D3A2E 92%, var(--sable) 100%);
+      }
+      .episode-card { border-left-color: var(--bleu-doux); }
+      .episode-card.is-playing { background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.12) 0%, var(--blanc) 30%); }
+      .about-card { background: var(--sable-dark); backdrop-filter: none; -webkit-backdrop-filter: none; }
+      .parents-guide { background: var(--sable-dark); }
+      .parents-guide summary:hover { background: var(--sable); }
+      .parents-guide details { background: var(--blanc); }
+      .parents-guide details[open] { background: var(--blanc); }
+      .subscribe-section { background: var(--blanc); }
+      .player { background: var(--sable-dark); border-top-color: var(--sable-dark); }
+      .episode-modal .modal-content { background: var(--blanc); }
+      .badge-trust { background: rgba(91, 155, 213, 0.12); border: 2px solid var(--sable-dark); color: var(--gris-texte); }
+      .testimonials-section { background: var(--sable-dark); }
+      .testimonial { background: var(--blanc); }
+      .papy-quote { background: rgba(var(--accent-rgb), 0.08); border-left-color: var(--accent); }
+      .search-input { background: var(--sable-dark); border-color: var(--sable-dark); color: var(--gris-texte); }
+      .section-wave svg path { fill: var(--sable); }
+      .section-wave-footer { color: var(--parchemin-clair); }
+      .section-separator { opacity: 0.3; }
+      .footer { color: var(--gris-leger); background: var(--sable); }
+      .footer a { color: var(--bleu-doux); }
+      .hero-doodles { opacity: 0.12; }
+      .subscribe-email-form input[type="email"] { background: var(--sable-dark); border-color: var(--sable-dark); color: var(--gris-texte); }
+      .site-nav { background: var(--sable-dark); border-bottom-color: var(--sable-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+      .site-nav.scrolled { border-bottom-color: var(--sable-dark); }
+      .site-nav-brand .brand-text { color: var(--gris-texte); }
+      .site-nav-links a { color: var(--gris-texte); }
+      .site-nav-links a.active { background: var(--sable); color: var(--dore-light); }
+      .autoplay-toast { background: var(--sable-dark); }
+      .nav-hamburger { color: var(--gris-texte); }
+      .site-nav-links { background: var(--sable-dark); border-top-color: var(--sable); }
+    }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .hero-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+      .hero-text { text-align: center; }
+      .hero-title-bottom { font-size: 2.4rem; }
+      .hero-cover { width: 160px; height: 160px; }
+      .hero-meta { justify-content: center; }
+      .hero-doodles { display: none; }
+
+      /* Logo mobile : icône + texte au lieu du banner complet */
+      .site-nav-brand .brand-full { display: none !important; }
+      .site-nav-brand .brand-icon { display: block; }
+      .site-nav-brand .brand-text { display: block; font-size: 1.1rem; }
+
+      /* Hamburger menu */
+      .nav-hamburger { display: flex; }
+      .site-nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0; right: 0;
+        background: var(--blanc);
+        flex-direction: column;
+        padding: var(--space-sm) var(--space-lg);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-top: 1px solid var(--sable-dark);
+        z-index: 901;
+      }
+      .site-nav-links.open { display: flex; }
+      .site-nav-links a { padding: var(--space-md) var(--space-sm); min-height: 48px; }
+      .site-nav { position: sticky; }
+
+      .about-card {
+        grid-template-columns: 1fr;
+        padding: var(--space-lg);
+      }
+
+      .episode-card { padding: 0.5rem 0.8rem; gap: 0.6rem; }
+      .episode-info { flex-wrap: wrap; }
+      .episode-meta { font-size: 0.8rem; }
+
+      .trust-badges { grid-template-columns: 1fr; }
+
+      .saison-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: var(--space-sm);
+      }
+      .saison-nav::-webkit-scrollbar { display: none; }
+      .saison-tab { white-space: nowrap; flex-shrink: 0; min-height: 44px; display: inline-flex; align-items: center; }
+      .player-volume-wrap { display: none; }
+      .player-progress-bar::after { opacity: 1; }
+      .player-progress { padding: 12px 0; }
+      .player-time { min-width: auto; }
+      .modal-content { max-width: calc(100vw - 2rem); margin: 0 1rem; }
+      .modal-header { flex-direction: column; align-items: center; text-align: center; }
+      .modal-cover { width: 60px; height: 60px; }
+      .modal-meta .modal-info { justify-content: center; }
+      .modal-actions { flex-direction: column; }
+      .modal-btn { min-height: 44px; width: 100%; justify-content: center; }
+      .search-input,
+      .subscribe-email-form input[type="email"] { font-size: 1rem; }
+    }
+
+    @media (max-width: 480px) {
+      .hero { padding: var(--space-xl) var(--space-md) var(--space-lg); }
+      .hero-cover { width: 130px; height: 130px; }
+      .episode-play { width: 48px; height: 48px; }
+      .episode-play svg { width: 18px; height: 18px; }
+      .episode-meta { gap: 0.6rem; }
+      .hero-cta { font-size: 1rem; padding: 0.7rem 1.4rem; }
+      .modal-body { padding: 1rem; }
+      .modal-actions { padding: 0 1rem 1rem; }
+      .testimonials-grid { gap: var(--space-md); }
+      .parents-guide { padding: var(--space-lg); }
+    }
+
+    @media (max-width: 320px) {
+      .hero-title span { font-size: 1.6rem; }
+      .hero-cta { font-size: 0.9rem; padding: 0.6rem 1.2rem; }
+      .episode-card { padding: 0.4rem 0.6rem; gap: 0.5rem; }
+      .episode-play { width: 44px; height: 44px; }
+      .episode-play svg { width: 16px; height: 16px; }
+      .modal-content { margin: 0 0.5rem; }
+      .saison-tab { font-size: 0.9rem; padding: 0.4rem 0.8rem; }
+    }
+
+    /* ── Large screens ──────────────────────────────────────── */
+    @media (min-width: 1200px) {
+      .hero { padding: 4rem 2rem 3rem; }
+      .hero::before { width: 500px; height: 500px; }
+      .hero::after { width: 350px; height: 350px; }
+      .hero-cover { width: 260px; height: 260px; }
+      .episodes-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* ── Email subscribe form ──────────────────────────────── */
+    .subscribe-email-form {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .subscribe-email-form input[type="email"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.7rem 1.2rem;
+      border: 2px solid var(--dore-light);
+      border-radius: var(--radius-pill);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      background: var(--blanc);
+      color: var(--gris-texte);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .subscribe-email-form input[type="email"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(212, 37, 51, 0.12);
+    }
+    .subscribe-email-form button {
+      padding: 0.7rem 1.5rem;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--corail) 100%);
+      color: var(--blanc);
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .subscribe-email-form button:hover { background: var(--accent); filter: brightness(0.88); transform: translateY(-1px); }
+    .subscribe-success {
+      color: var(--vert-prairie);
+      font-weight: 700;
+      font-size: 1rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    /* ── Platform subscribe section ────────────────────────── */
+    .platform-subscribe {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      text-align: center;
+    }
+    .platform-subscribe h2 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--bleu-fonce);
+      margin-bottom: 0.8rem;
+    }
+
+    /* ── Doodles style craie (hero background) ──────────────── */
+    .hero-doodles {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image:
+        /* Microphone */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='120' viewBox='0 0 80 120' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='40' cy='35' rx='14' ry='22'/%3E%3Cline x1='40' y1='57' x2='40' y2='90'/%3E%3Cline x1='28' y1='90' x2='52' y2='90'/%3E%3Cpath d='M18 40 C18 58 40 70 40 70 C40 70 62 58 62 40' fill='none'/%3E%3Cline x1='30' y1='30' x2='50' y2='30'/%3E%3Cline x1='30' y1='37' x2='50' y2='37'/%3E%3C/svg%3E"),
+        /* Livre ouvert */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='70' viewBox='0 0 100 70' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 15 C50 15 35 8 10 12 L10 60 C35 56 50 62 50 62 C50 62 65 56 90 60 L90 12 C65 8 50 15 50 15z'/%3E%3Cline x1='50' y1='15' x2='50' y2='62'/%3E%3Cline x1='20' y1='25' x2='42' y2='25'/%3E%3Cline x1='20' y1='33' x2='40' y2='33'/%3E%3Cline x1='20' y1='41' x2='38' y2='41'/%3E%3Cline x1='58' y1='25' x2='80' y2='25'/%3E%3Cline x1='60' y1='33' x2='80' y2='33'/%3E%3Cline x1='62' y1='41' x2='78' y2='41'/%3E%3C/svg%3E"),
+        /* Etoile 5 branches */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='20,3 24.5,14 36,15.5 27.5,23 30,35 20,29 10,35 12.5,23 4,15.5 15.5,14'/%3E%3C/svg%3E"),
+        /* Petite etoile */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12,2 14.5,8.5 21,9.5 16,14 17.5,21 12,17.5 6.5,21 8,14 3,9.5 9.5,8.5'/%3E%3C/svg%3E"),
+        /* Dinosaure simplifie */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='70' viewBox='0 0 90 70' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 45 C15 30 25 18 40 18 C50 18 55 22 60 18 C60 22 58 28 55 30 L70 30 C75 30 78 33 78 38 C78 43 75 45 72 45 L55 45'/%3E%3Cpath d='M15 45 C15 50 18 55 25 55 L30 55 L30 62 L35 62 L35 55 L50 55 L50 62 L55 62 L55 55 C60 55 65 50 65 45'/%3E%3Ccircle cx='72' cy='36' r='1.5'/%3E%3Cpath d='M40 18 C38 12 42 10 45 14'/%3E%3Cpath d='M45 18 C44 13 48 11 49 15'/%3E%3Cpath d='M15 42 L8 40 L15 38'/%3E%3C/svg%3E"),
+        /* Soleil */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='25' cy='25' r='8'/%3E%3Cline x1='25' y1='5' x2='25' y2='12'/%3E%3Cline x1='25' y1='38' x2='25' y2='45'/%3E%3Cline x1='5' y1='25' x2='12' y2='25'/%3E%3Cline x1='38' y1='25' x2='45' y2='25'/%3E%3Cline x1='11' y1='11' x2='16' y2='16'/%3E%3Cline x1='34' y1='34' x2='39' y2='39'/%3E%3Cline x1='39' y1='11' x2='34' y2='16'/%3E%3Cline x1='16' y1='34' x2='11' y2='39'/%3E%3C/svg%3E");
+      background-position:
+        5% 20%,
+        85% 15%,
+        15% 75%,
+        75% 70%,
+        92% 55%,
+        45% 85%;
+      background-repeat: no-repeat;
+      background-size: 80px auto, 100px auto, 40px auto, 24px auto, 90px auto, 50px auto;
+    }
+
+    /* ── Separateurs de sections (vague SVG + doodles) ────── */
+    .section-wave-hero {
+      color: var(--sable);
+    }
+    .section-wave {
+      display: block;
+      width: 100%;
+      height: 40px;
+      margin: 0;
+      line-height: 0;
+    }
+    .section-wave svg {
+      display: block;
+      width: 100%;
+      height: 40px;
+    }
+
+    .section-separator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 0;
+      gap: 1rem;
+      opacity: 0.4;
+    }
+    .section-separator::before,
+    .section-separator::after {
+      content: '';
+      flex: 1;
+      max-width: 120px;
+      height: 1px;
+      background: var(--gris-chaud);
+    }
+    .section-separator svg {
+      width: 28px;
+      height: 28px;
+      fill: var(--gris-chaud);
+    }
+
+    /* ── Micro-animations ──────────────────────────────────── */
+    .episode-play {
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .episode-play:active {
+      transform: scale(0.92);
+    }
+    .episode-play:focus-visible {
+      outline: 3px solid var(--bleu-doux);
+      outline-offset: 2px;
+    }
+    .player-progress:focus-visible {
+      outline: 3px solid var(--bleu-doux);
+      outline-offset: 2px;
+    }
+    @keyframes bounceIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      60% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    .episode-card {
+      animation: bounceIn 0.4s ease-out backwards;
+    }
+    .episode-card:nth-child(1) { animation-delay: 0s; }
+    .episode-card:nth-child(2) { animation-delay: 0.05s; }
+    .episode-card:nth-child(3) { animation-delay: 0.1s; }
+    .episode-card:nth-child(4) { animation-delay: 0.15s; }
+    .episode-card:nth-child(5) { animation-delay: 0.2s; }
+    .episode-card:nth-child(6) { animation-delay: 0.25s; }
+    .episode-card:nth-child(7) { animation-delay: 0.3s; }
+    .episode-card:nth-child(8) { animation-delay: 0.35s; }
+    .episode-card:nth-child(9) { animation-delay: 0.4s; }
+    .episode-card:nth-child(10) { animation-delay: 0.45s; }
+
+
+    /* ── Scroll reveal ────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Tablet breakpoint ────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .about-card {
+        grid-template-columns: 1fr;
+        padding: var(--space-xl);
+      }
+      .testimonials-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* ── High contrast mode ───────────────────────────────── */
+    @media (prefers-contrast: high) {
+      :root {
+        --shadow: 0 0 0 2px var(--gris-texte);
+        --shadow-hover: 0 0 0 3px var(--gris-texte);
+      }
+      .episode-card { border: 2px solid var(--gris-texte); }
+      .badge-trust { border: 2px solid var(--gris-texte); }
+      .testimonial { border: 2px solid var(--gris-texte); }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="#episodes-heading" class="skip-link">Aller au contenu</a>
+
+  <!-- ═══ Sticky Navigation ═══ -->
+  <nav class="site-nav" aria-label="Navigation principale">
+    <div class="site-nav-inner">
+      <a href="#" class="site-nav-brand">
+        <img src="/assets/artwork/logo-papy-babou-transparent.png" alt="Les Histoires de Papy Babou" class="brand-full" height="72">
+        <img src="/assets/artwork/logo-papy-babou-transparent.png" alt="" class="brand-icon" height="40">
+        <span class="brand-text">Papy Babou</span>
+      </a>
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      </button>
+      <ul class="site-nav-links" id="site-nav-links">
+        <li><a href="#episodes-heading">Épisodes</a></li>
+        <li><a href="#about-section">À propos</a></li>
+        <li><a href="#platform-subscribe">S'abonner</a></li>
+        <li><a href="#parents-guide">Parents</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ═══ Hero ═══ -->
+  <header class="hero">
+    <div class="hero-doodles" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <img src="/assets/artwork/cover_base.png" alt="Papy Babou, Antoine et Noémie autour d'un livre ouvert" class="hero-cover" width="220" height="220" fetchpriority="high">
+      <div class="hero-text">
+        <h1 class="hero-title">
+          <span class="hero-title-top">Les Histoires de</span>
+          <span class="hero-title-bottom">Papy Babou</span>
+        </h1>
+        <p class="hero-subtitle">Le podcast qui transforme le coucher en expédition biblique</p>
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            15-20 min
+          </div>
+          <div class="hero-meta-item">
+            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+            Gratuit, sans pub
+          </div>
+          <div class="hero-meta-item">
+            <svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>
+            <span id="hero-episode-count">10 épisodes</span>
+          </div>
+        </div>
+        <a href="#episodes-heading" class="hero-cta" id="hero-cta">
+          <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+          Écouter la première mission
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ Vague separatrice hero → contenu ═══ -->
+  <div class="section-wave section-wave-hero" aria-hidden="true">
+    <svg viewBox="0 0 1440 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,25 C120,40 300,5 480,30 C660,55 840,8 1020,28 C1200,48 1350,12 1440,22 L1440,40 L0,40 Z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <!-- ═══ Trust bar ═══ -->
+  <div class="trust-bar" aria-label="Garanties">
+    <div class="trust-badges">
+      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg></span> Adapté aux 6-10 ans</div>
+      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></span> 15-20 min par épisode</div>
+      <div class="badge-trust"><span class="badge-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--bleu-fonce)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span> Écoutable partout</div>
+    </div>
+  </div>
+
+  <!-- ═══ Saison tabs ═══ -->
+  <nav class="saison-nav" id="saison-nav" aria-label="Choisir une saison de missions"></nav>
+
+  <!-- ═══ Search ═══ -->
+  <div class="search-bar" id="search-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="search" class="search-input" id="search-input" placeholder="Chercher Noé, David, Jonas..." aria-label="Rechercher une mission">
+    </div>
+  </div>
+
+  <!-- ═══ Episodes ═══ -->
+  <main class="episodes-section">
+    <h2 id="episodes-heading">Choisissez votre mission</h2>
+    <div class="episodes-list" id="episodes-list" aria-live="polite" aria-relevant="additions removals">
+      <!-- Skeletons while loading -->
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </main>
+
+  <!-- ═══ About (qui sommes-nous — après les épisodes) ═══ -->
+  <section class="about-section reveal" id="about-section">
+    <div class="about-card">
+      <div>
+        <h2>L'équipage de Papy Babou</h2>
+        <ul class="characters">
+          <li>
+            <div class="char-avatar"><img src="/assets/artwork/avatar_papy.png" alt="Papy Babou" width="56" height="56" loading="lazy"></div>
+            <div>
+              <div class="char-name">Papy Babou</div>
+              <div class="char-desc">Le commandant de l'équipage ! Ses lunettes rondes cachent mille secrets, et quand il ouvre son grand livre, c'est parti pour l'épopée.</div>
+            </div>
+          </li>
+          <li>
+            <div class="char-avatar"><img src="/assets/artwork/avatar_antoine.png" alt="Antoine" width="56" height="56" loading="lazy"></div>
+            <div>
+              <div class="char-name">Antoine, 8 ans</div>
+              <div class="char-desc">Le détective de l'équipage ! Toujours une question piège en réserve et un mystère à résoudre.</div>
+            </div>
+          </li>
+          <li>
+            <div class="char-avatar"><img src="/assets/artwork/avatar_noemie.png" alt="Noémie" width="56" height="56" loading="lazy"></div>
+            <div>
+              <div class="char-name">Noémie, 5 ans</div>
+              <div class="char-desc">La tornade de l'équipage ! Espiègle, folle d'animaux et championne des idées les plus intrépides.</div>
+            </div>
+          </li>
+          <li>
+            <div class="char-avatar"><img src="/assets/artwork/avatar_mamie.png" alt="Mamie Sonia" width="56" height="56" loading="lazy"></div>
+            <div>
+              <div class="char-name">Mamie Sonia</div>
+              <div class="char-desc">L'agent secret de l'équipage ! Un gâteau dans une main, une blague redoutable dans l'autre.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <h2>Le podcast biblique pour enfants</h2>
+        <p style="font-style:italic;opacity:0.85;margin-bottom:0.8rem;">
+          Chaque soir, dans le salon, Papy Babou ouvre son grand livre.
+          Antoine grimpe sur ses genoux, Noémie serre son doudou, et l'aventure commence.
+          Ce soir, c'est votre famille qui embarque.
+        </p>
+        <p>
+          <strong>Les Histoires de Papy Babou</strong>, c'est le podcast qui plonge
+          vos enfants dans les plus grandes épopées de la Bible. Chaque semaine,
+          une nouvelle aventure extraordinaire.
+        </p>
+        <p>
+          Papy Babou raconte, Antoine pose mille questions, Noémie imagine
+          des solutions farfelues. Vos enfants s'identifient aux personnages
+          et vivent l'aventure avec eux — un format narratif pensé pour
+          captiver les 6-10 ans.
+        </p>
+        <p>
+          En voiture, au coucher ou en famille : chaque écoute est une expédition.
+          Des récits fidèles aux textes bibliques, portés par un univers sonore
+          immersif.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Citation Papy Babou ═══ -->
+  <section class="papy-quote-section reveal" aria-label="Citation de Papy Babou">
+    <blockquote class="papy-quote">
+      « Mes petits loups, attachez vos ceintures... L'histoire que je vais vous raconter va vous couper le souffle ! »
+      <footer>— Papy Babou</footer>
+    </blockquote>
+  </section>
+
+  <!-- ═══ Testimonials (preuve sociale — après les missions) ═══ -->
+  <section class="testimonials-section reveal">
+    <h2>Ce que les familles en pensent</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="stars" role="img" aria-label="5 étoiles sur 5"><span aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
+        <p>&laquo; Ma fille de 7 ans se prend pour Noémie et exige sa "mission du soir".
+        Elle redemande la même encore et encore, impossible de l'arrêter ! &raquo;</p>
+        <cite>Nathalie P., maman de Léa (7 ans)</cite>
+      </div>
+      <div class="testimonial">
+        <div class="stars" role="img" aria-label="5 étoiles sur 5"><span aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
+        <p>&laquo; Les 20 minutes passent tellement vite que les enfants ne veulent plus
+        descendre de la voiture ! On écoute en boucle, toute la famille est accro. &raquo;</p>
+        <cite>Sophie L., maman d'Emma et Lucas</cite>
+      </div>
+      <div class="testimonial">
+        <div class="stars" role="img" aria-label="5 étoiles sur 5"><span aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span></div>
+        <p>&laquo; Un podcast biblique palpitant et jamais moralisateur. Les enfants rient,
+        s'émerveillent et posent mille questions après. La qualité sonore est bluffante. &raquo;</p>
+        <cite>Xavier M., père de 2 enfants (6 et 9 ans)</cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Écouter sur les plateformes ═══ -->
+  <section class="platform-subscribe reveal" id="platform-subscribe">
+    <h2>Écouter sur votre plateforme préférée</h2>
+    <div class="subscribe-btns">
+      <a href="https://podcasts.apple.com/fr/podcast/les-histoires-de-papy-babou" class="subscribe-btn apple" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Apple Podcasts
+      </a>
+      <a href="https://open.spotify.com/show/les-histoires-de-papy-babou" class="subscribe-btn spotify" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Spotify
+      </a>
+      <a href="/feed.xml" class="subscribe-btn rss" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24"><path d="M6.18 15.64a2.18 2.18 0 010 4.36 2.18 2.18 0 010-4.36zM4 4.44A15.56 15.56 0 0119.56 20h-2.83A12.73 12.73 0 004 7.27V4.44zm0 5.66a9.9 9.9 0 019.9 9.9h-2.83A7.07 7.07 0 004 12.93V10.1z"/></svg>
+        Flux RSS
+      </a>
+    </div>
+  </section>
+
+  <!-- Separateur dore -->
+  <div class="section-separator" aria-hidden="true">
+    <svg viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 C50 15 35 8 10 12 L10 60 C35 56 50 62 50 62 C50 62 65 56 90 60 L90 12 C65 8 50 15 50 15z" fill="none" stroke="currentColor" stroke-width="2"/><line x1="50" y1="15" x2="50" y2="62" stroke="currentColor" stroke-width="1.5"/></svg>
+  </div>
+
+  <!-- ═══ Guide Parents ═══ -->
+  <section class="parents-guide reveal" id="parents-guide">
+    <h2>Questions fréquentes des parents</h2>
+    <details>
+      <summary>C'est vraiment adapté aux enfants ?</summary>
+      <div class="faq-answer">
+        Absolument ! Chaque épisode est taillé sur mesure pour les 6-10 ans. Les récits bibliques
+        sont racontés avec chaleur, sans violence et sans frayeur. Les passages délicats (comme le
+        déluge de Noé) sont abordés avec bienveillance, en mettant en avant le courage, la foi et
+        les valeurs positives. Vos enfants en ressortent émerveillés et pleins de questions.
+      </div>
+    </details>
+    <details>
+      <summary>Qui se cache derrière Papy Babou ?</summary>
+      <div class="faq-answer">
+        Un projet familial porté par des parents passionnés de récits et de transmission
+        biblique. Chaque épisode est documenté à partir des textes originaux, écrit pour les enfants,
+        puis relu et validé pour garantir fidélité et bienveillance.
+      </div>
+    </details>
+    <details>
+      <summary>Comment lancer un épisode avec mon enfant ?</summary>
+      <div class="faq-answer">
+        Un clic et c'est parti ! Chaque épisode dure 15 à 20 minutes, parfait pour un
+        trajet en voiture, avant le coucher ou un après-midi pluvieux. Écoutez directement
+        sur ce site ou retrouvez-nous sur Apple Podcasts, Spotify et toutes les applis
+        de podcasts.
+      </div>
+    </details>
+    <details>
+      <summary>Est-ce du catéchisme ?</summary>
+      <div class="faq-answer">
+        Pas du tout ! C'est avant tout de l'aventure. Les récits bibliques sont
+        racontés comme des épopées, avec suspense, humour et émotion. Aucun discours
+        religieux : vos enfants découvrent des histoires universelles de courage,
+        de foi et de persévérance.
+      </div>
+    </details>
+    <details>
+      <summary>À quelle fréquence sortent les épisodes ?</summary>
+      <div class="faq-answer">
+        La Saison 1 compte 10 épisodes complets. Nous publions un nouvel épisode
+        chaque semaine. Abonnez-vous pour ne rien manquer !
+      </div>
+    </details>
+    <details>
+      <summary>Il y a de la pub ?</summary>
+      <div class="faq-answer">
+        Jamais ! Le podcast est 100% gratuit, sans publicité et sans collecte
+        de données. Vos petits héros écoutent en toute tranquillité, et vous aussi.
+      </div>
+    </details>
+  </section>
+
+
+  <!-- CTA intermédiaire (après FAQ, avant newsletter) -->
+  <p style="text-align:center;margin:1.5rem auto 2rem;">
+    <a href="#episodes-heading" class="hero-cta" style="animation:none;">
+      <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+      Lancez la première mission — c'est gratuit
+    </a>
+  </p>
+
+  <!-- ═══ Subscribe ═══ -->
+  <section class="subscribe-section reveal">
+    <h2>Ne manquez aucune aventure !</h2>
+    <p class="sub-text">Recevez un email à chaque nouvelle mission. Pas de spam, promis.</p>
+    <form class="subscribe-email-form" id="subscribe-form">
+      <label for="sub-email" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Votre adresse email</label>
+      <input type="email" id="sub-email" placeholder="email@famille-dupont.fr" aria-label="Adresse email" required>
+      <button type="submit">Rejoindre l'équipage</button>
+    </form>
+    <p class="subscribe-success" id="subscribe-success">Bienvenue dans l'équipage ! Vous recevrez un email à chaque nouvelle mission.</p>
+  </section>
+
+  <!-- ═══ Wave closing ═══ -->
+  <div class="section-wave section-wave-footer" aria-hidden="true">
+    <svg viewBox="0 0 1440 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,25 C120,40 300,5 480,30 C660,55 840,8 1020,28 C1200,48 1350,12 1440,22 L1440,40 L0,40 Z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="footer">
+    <p class="footer-brand">Les Histoires de Papy Babou</p>
+    <p class="footer-quote">« Papy Babou referme son grand livre... mais il a encore plein d'histoires à raconter. À la prochaine mission ! »</p>
+    <div class="footer-links">
+      <a href="https://podcasts.apple.com/fr/podcast/les-histoires-de-papy-babou" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
+      <a href="https://open.spotify.com/show/les-histoires-de-papy-babou" target="_blank" rel="noopener noreferrer">Spotify</a>
+      <a href="/feed.xml" target="_blank" rel="noopener noreferrer">Flux RSS</a>
+    </div>
+    <div class="footer-links">
+      <a href="mailto:contact@papybabou.fr">Contact</a>
+      <a href="/mentions-legales">Mentions légales</a>
+      <a href="/confidentialite">Confidentialité</a>
+      <a href="#about-section">À propos</a>
+    </div>
+    <p>&copy; 2024-2026 Les Histoires de Papy Babou. Tous droits réservés.</p>
+  </footer>
+
+  <!-- ═══ Episode Detail Modal ═══ -->
+  <div class="episode-modal" id="episode-modal" role="dialog" aria-modal="true" aria-label="Détail de la mission">
+    <div class="modal-content" style="position:relative;">
+      <button class="modal-close-btn" id="modal-close" aria-label="Fermer">&times;</button>
+      <div class="modal-header">
+        <img class="modal-cover" id="modal-cover" src="" alt="">
+        <div class="modal-meta">
+          <div class="modal-ep-num" id="modal-ep-num"></div>
+          <h3 id="modal-title"></h3>
+          <div class="modal-info">
+            <span id="modal-duration"></span>
+            <span id="modal-date"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-body">
+        <h4 id="modal-histoire-title">L'histoire</h4>
+        <p id="modal-resume"></p>
+        <div id="modal-morale-wrap" style="display:none;">
+          <h4>Le trésor de cette mission</h4>
+          <p id="modal-morale"></p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn primary" id="modal-play-btn">&#9654; Lancer la mission</button>
+        <button class="modal-btn secondary" id="modal-share-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg> Envoyer à un ami</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Sticky Audio Player (enhanced) ═══ -->
+  <div class="player" id="player" role="region" aria-label="Lecteur audio">
+    <div class="player-inner">
+      <!-- Rewind 10s -->
+      <button class="player-ctrl-btn" id="player-rewind" aria-label="Reculer de 10 secondes" title="Reculer 10s">
+        <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+        <span class="ctrl-label">10</span>
+      </button>
+
+      <!-- Play/Pause -->
+      <button class="player-btn" id="player-play-btn" aria-label="Lecture / Pause">
+        <svg id="player-icon-play" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        <svg id="player-icon-pause" viewBox="0 0 24 24" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+      </button>
+
+      <!-- Forward 10s -->
+      <button class="player-ctrl-btn" id="player-forward" aria-label="Avancer de 10 secondes" title="Avancer 10s">
+        <svg viewBox="0 0 24 24"><path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/></svg>
+        <span class="ctrl-label">10</span>
+      </button>
+
+      <div class="player-info">
+        <div class="player-title" id="player-title">--</div>
+        <div class="player-progress-wrap">
+          <div class="player-progress" id="player-progress" role="slider" aria-label="Progression" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="player-progress-bar" id="player-progress-bar"></div>
+          </div>
+          <div class="player-time" id="player-time">0:00 / 0:00</div>
+        </div>
+      </div>
+
+      <!-- Volume -->
+      <div class="player-volume-wrap">
+        <button class="player-ctrl-btn" id="player-mute" aria-label="Muet / Son" title="Volume">
+          <svg id="vol-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.47 4.47 0 002.5-3.5zM14 3.23v2.06A7.007 7.007 0 0119 12c0 3.17-2.11 5.84-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+        <input type="range" class="player-volume-range" id="player-volume" min="0" max="100" value="100" aria-label="Volume">
+      </div>
+
+      <!-- Speed -->
+      <button class="player-speed-btn" id="player-speed" title="Vitesse de lecture">1x</button>
+
+      <button class="player-close" id="player-close" aria-label="Fermer le lecteur" title="Fermer le lecteur">&times;</button>
+    </div>
+  </div>
+
+  <!-- ═══ Back to top ═══ -->
+  <button class="back-to-top" id="back-to-top" aria-label="Retour en haut">
+    <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+  </button>
+
+  <!-- ═══ JavaScript ═══ -->
+  <script>
+  (function() {
+    'use strict';
+
+    // ── State ──
+    var episodes = [];
+    var saisons = [];
+    var currentSaison = 0;
+    var searchQuery = '';
+    var audio = new Audio();
+    var currentEpisodeId = null;
+    var currentEpisodeData = null;
+    var isPlaying = false;
+    var playbackSpeed = 1;
+    var SPEEDS = [0.8, 1, 1.25, 1.5, 2];
+
+    // ── DOM refs ──
+    var listEl = document.getElementById('episodes-list');
+    var headingEl = document.getElementById('episodes-heading');
+    var navEl = document.getElementById('saison-nav');
+    var heroCount = document.getElementById('hero-episode-count');
+    var playerEl = document.getElementById('player');
+    var playerTitle = document.getElementById('player-title');
+    var playerPlayBtn = document.getElementById('player-play-btn');
+    var playerProgressBar = document.getElementById('player-progress-bar');
+    var playerProgress = document.getElementById('player-progress');
+    var playerTime = document.getElementById('player-time');
+    var playerClose = document.getElementById('player-close');
+    var iconPlay = document.getElementById('player-icon-play');
+    var iconPause = document.getElementById('player-icon-pause');
+    var searchInput = document.getElementById('search-input');
+    var searchBar = document.getElementById('search-bar');
+    var backToTop = document.getElementById('back-to-top');
+
+    // Player controls
+    var playerRewind = document.getElementById('player-rewind');
+    var playerForward = document.getElementById('player-forward');
+    var playerVolume = document.getElementById('player-volume');
+    var playerMute = document.getElementById('player-mute');
+    var playerSpeedBtn = document.getElementById('player-speed');
+    var volIcon = document.getElementById('vol-icon');
+
+    // Modal
+    var modalEl = document.getElementById('episode-modal');
+    var modalClose = document.getElementById('modal-close');
+    var modalCover = document.getElementById('modal-cover');
+    var modalTitle = document.getElementById('modal-title');
+    var modalEpNum = document.getElementById('modal-ep-num');
+    var modalResume = document.getElementById('modal-resume');
+    var modalHistoireTitle = document.getElementById('modal-histoire-title');
+    var modalMoraleWrap = document.getElementById('modal-morale-wrap');
+    var modalMorale = document.getElementById('modal-morale');
+    var modalDuration = document.getElementById('modal-duration');
+    var modalDate = document.getElementById('modal-date');
+    var modalPlayBtn = document.getElementById('modal-play-btn');
+    var modalShareBtn = document.getElementById('modal-share-btn');
+
+    // ── Helpers ──
+    function fmt(s) {
+      if (!s && s !== 0) return '0:00';
+      var m = Math.floor(s / 60);
+      var sec = Math.floor(s % 60);
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    function escHtml(str) {
+      var d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    // ── Resume from localStorage ──
+    function saveResume() {
+      if (currentEpisodeId && audio.currentTime > 5) {
+        try {
+          localStorage.setItem('papy_babou_resume', JSON.stringify({
+            episode_id: currentEpisodeId,
+            position: audio.currentTime,
+            duration: audio.duration || 0,
+            timestamp: Date.now()
+          }));
+        } catch(e) {}
+      }
+    }
+
+    function getResume() {
+      try {
+        var d = JSON.parse(localStorage.getItem('papy_babou_resume') || 'null');
+        if (d && (Date.now() - d.timestamp) < 7 * 24 * 3600 * 1000) return d;
+      } catch(e) {}
+      return null;
+    }
+
+    function clearResume() {
+      try { localStorage.removeItem('papy_babou_resume'); } catch(e) {}
+    }
+
+    // ── Listened episodes tracking ──
+    function getListenedEpisodes() {
+      try {
+        return JSON.parse(localStorage.getItem('papy_babou_listened') || '{}');
+      } catch(e) { return {}; }
+    }
+
+    function markAsListened(episodeId, progress) {
+      try {
+        var listened = getListenedEpisodes();
+        listened[episodeId] = { progress: progress, timestamp: Date.now() };
+        localStorage.setItem('papy_babou_listened', JSON.stringify(listened));
+      } catch(e) {}
+    }
+
+    // ── Fetch episodes ──
+    async function loadEpisodes() {
+      try {
+        var resp = await fetch('/api/public/episodes');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var data = await resp.json();
+        episodes = data.episodes || [];
+        saisons = data.saisons || [];
+        if (saisons.length > 0 && currentSaison === 0) {
+          currentSaison = saisons[0].numero;
+        }
+        render();
+      } catch (e) {
+        console.error('Erreur chargement épisodes:', e);
+        listEl.innerHTML = '<div class="empty-state">' +
+          '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' +
+          '<h3>Les missions arrivent bientôt !</h3>' +
+          '<p>Papy Babou prépare des épopées extraordinaires...</p>' +
+          '<button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1.2rem;border-radius:var(--radius-pill);background:var(--accent);color:white;border:none;cursor:pointer;font-weight:700;">Réessayer</button></div>';
+      }
+    }
+
+    // ── Render ──
+    function render() {
+      renderSaisonNav();
+      renderEpisodes();
+    }
+
+    function renderSaisonNav() {
+      if (saisons.length <= 1) {
+        navEl.style.display = 'none';
+        return;
+      }
+      navEl.style.display = 'flex';
+      navEl.setAttribute('role', 'tablist');
+      navEl.innerHTML = '';
+      saisons.forEach(function(s) {
+        var btn = document.createElement('button');
+        btn.className = 'saison-tab' + (s.numero === currentSaison ? ' active' : '');
+        btn.textContent = 'Saison ' + s.numero + (s.theme ? ' \u2014 ' + s.theme : '');
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', s.numero === currentSaison ? 'true' : 'false');
+        btn.onclick = function() {
+          currentSaison = s.numero;
+          render();
+        };
+        navEl.appendChild(btn);
+      });
+    }
+
+    function renderEpisodes() {
+      var filtered = episodes;
+      if (currentSaison > 0) {
+        filtered = filtered.filter(function(e) { return e.saison === currentSaison; });
+      }
+      // Search filter
+      if (searchQuery) {
+        var q = searchQuery.toLowerCase();
+        filtered = filtered.filter(function(e) {
+          return (e.titre || '').toLowerCase().indexOf(q) !== -1 ||
+                 (e.resume || '').toLowerCase().indexOf(q) !== -1;
+        });
+      }
+
+      heroCount.textContent = episodes.length + ' épisode' + (episodes.length > 1 ? 's' : '');
+
+      if (currentSaison > 0) {
+        var s = saisons.find(function(s) { return s.numero === currentSaison; });
+        headingEl.textContent = s && s.theme ? 'Saison ' + s.numero + ' \u2014 ' + s.theme : '\u00c9pisodes';
+      } else {
+        headingEl.textContent = 'Toutes les missions disponibles';
+      }
+
+      if (filtered.length === 0) {
+        var emptyMsg = searchQuery
+          ? 'Papy Babou a fouillé dans tout son grand livre\u2026 mais il n\u0027a pas trouvé cette mission.'
+          : 'Papy Babou prépare de nouvelles missions pour cette saison.';
+        listEl.innerHTML = '<div class="empty-state">' +
+          '<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>' +
+          '<h3>Prochaine mission en préparation !</h3>' +
+          '<p>' + escHtml(emptyMsg) + '</p></div>';
+        return;
+      }
+
+      var resumeData = getResume();
+      var listenedData = getListenedEpisodes();
+      listEl.innerHTML = '';
+
+      filtered.forEach(function(ep) {
+        var card = document.createElement('div');
+        card.className = 'episode-card';
+        if (currentEpisodeId === ep.episode_id && isPlaying) {
+          card.className += ' is-playing';
+        }
+        card.setAttribute('data-id', ep.episode_id);
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'article');
+        card.setAttribute('aria-label', ep.titre);
+
+        var playIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>';
+        if (currentEpisodeId === ep.episode_id && isPlaying) {
+          playIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>';
+        }
+
+        var hasAudio = !!ep.audio_url;
+
+        // Cover with fallback to podcast cover
+        var coverSrc = ep.cover_url || '/assets/artwork/cover.svg';
+        var coverHtml = '<img class="episode-cover" src="' + escHtml(coverSrc) + '" alt="' + escHtml('Couverture de la mission : ' + (ep.titre || '')) + '" loading="lazy">';
+
+        // Listened badge
+        var listenedBadge = '';
+        var listenedInfo = listenedData[ep.episode_id];
+        if (listenedInfo && listenedInfo.progress >= 0.9) {
+          listenedBadge = '<div class="episode-listened-badge"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Écouté</div>';
+        }
+
+        // Resume badge
+        var resumeBadge = '';
+        if (resumeData && resumeData.episode_id === ep.episode_id) {
+          resumeBadge = '<div class="resume-badge">&#9654; Reprendre</div>';
+        }
+
+        // Progress bar for partially listened episodes
+        var progressBarHtml = '';
+        if (listenedInfo && listenedInfo.progress > 0.02 && listenedInfo.progress < 0.9) {
+          var pctListened = Math.round(listenedInfo.progress * 100);
+          progressBarHtml = '<div class="episode-progress-bar"><div class="episode-progress-bar-inner" style="width:' + pctListened + '%"></div></div>';
+        }
+
+        var metaHtml = '';
+        if (ep.duree_minutes) {
+          metaHtml += '<span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>' + ep.duree_minutes + ' min</span>';
+        }
+        if (ep.date) {
+          metaHtml += '<span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>' + escHtml(ep.date) + '</span>';
+        }
+
+        card.innerHTML =
+          '<button class="episode-play" aria-label="' + (hasAudio ? 'Écouter ' : 'Disponible prochainement — ') + escHtml(ep.titre) + '" ' + (hasAudio ? '' : 'disabled style="opacity:0.3;cursor:default" title="Disponible prochainement"') + '>' + playIcon + '</button>' +
+          resumeBadge +
+          '<div class="episode-info">' +
+            listenedBadge +
+            '<div class="episode-number">Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero + '</div>' +
+            '<div class="episode-title">' + escHtml(ep.titre) + '</div>' +
+            '<div class="episode-resume">' + escHtml(ep.resume || ep.morale || '') + '</div>' +
+            '<div class="episode-meta">' + metaHtml + '</div>' +
+            progressBarHtml +
+          '</div>';
+
+        // Play button click
+        if (hasAudio) {
+          card.querySelector('.episode-play').addEventListener('click', function(e) {
+            e.stopPropagation();
+            playEpisode(ep);
+          });
+        }
+
+        // Card click opens modal
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.episode-play')) return;
+          openModal(ep);
+        });
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') openModal(ep);
+        });
+
+        listEl.appendChild(card);
+      });
+    }
+
+    // ── Episode Modal ──
+    function openModal(ep) {
+      modalCover.src = ep.cover_url || '/assets/artwork/cover.svg';
+      modalCover.alt = ep.titre ? 'Couverture de la mission : ' + ep.titre : 'Couverture mission';
+      modalTitle.textContent = ep.titre || '';
+      modalEpNum.textContent = 'Saison ' + ep.saison + ' \u00b7 \u00c9pisode ' + ep.numero;
+      modalResume.textContent = ep.resume || 'Briefing de mission en cours de rédaction.';
+      modalHistoireTitle.textContent = ep.histoire_biblique ? 'L\u2019histoire \u00b7 ' + ep.histoire_biblique : 'L\u2019histoire';
+      modalDuration.textContent = ep.duree_minutes ? ep.duree_minutes + ' min' : '';
+      modalDate.textContent = ep.date || '';
+
+      if (ep.morale) {
+        modalMorale.textContent = ep.morale;
+        modalMoraleWrap.style.display = 'block';
+      } else {
+        modalMoraleWrap.style.display = 'none';
+      }
+
+      modalPlayBtn.style.display = ep.audio_url ? '' : 'none';
+      modalPlayBtn.onclick = function() {
+        playEpisode(ep);
+        closeModal();
+      };
+
+      modalShareBtn.onclick = function() {
+        var url = window.location.origin + '/#episode-' + ep.episode_id;
+        if (navigator.share) {
+          navigator.share({ title: ep.titre, url: url }).catch(function(){});
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(function() {
+            modalShareBtn.textContent = '\u2714 Lien copié !';
+            setTimeout(function() { modalShareBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg> Envoyer à un ami'; }, 2000);
+          });
+        }
+      };
+
+      modalEl.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+      _setupFocusTrap();
+      modalClose.focus();
+    }
+
+    // Focus trap for modal
+    var _focusTrapHandler = null;
+    function _setupFocusTrap() {
+      var focusable = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      _focusTrapHandler = function(e) {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      };
+      modalEl.addEventListener('keydown', _focusTrapHandler);
+    }
+    function _removeFocusTrap() {
+      if (_focusTrapHandler) {
+        modalEl.removeEventListener('keydown', _focusTrapHandler);
+        _focusTrapHandler = null;
+      }
+    }
+
+    function closeModal() {
+      _removeFocusTrap();
+      modalEl.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modalEl.addEventListener('click', function(e) {
+      if (e.target === modalEl) closeModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modalEl.classList.contains('visible')) closeModal();
+    });
+
+    // ── Audio Player ──
+    function playEpisode(ep) {
+      if (currentEpisodeId === ep.episode_id && isPlaying) {
+        audio.pause();
+        return;
+      }
+      if (currentEpisodeId !== ep.episode_id) {
+        audio.src = ep.audio_url;
+        currentEpisodeId = ep.episode_id;
+        currentEpisodeData = ep;
+        // Show loading spinner
+        playerPlayBtn.classList.add('loading');
+        audio.addEventListener('canplay', function onCanPlay() {
+          playerPlayBtn.classList.remove('loading');
+          audio.removeEventListener('canplay', onCanPlay);
+        }, { once: true });
+        // Check resume position
+        var resume = getResume();
+        if (resume && resume.episode_id === ep.episode_id && resume.position > 5) {
+          audio.currentTime = resume.position;
+        }
+      }
+      audio.playbackRate = playbackSpeed;
+      audio.play();
+      playerTitle.textContent = 'S' + String(ep.saison).padStart(2,'0') + 'E' + String(ep.numero).padStart(2,'0') + ' \u2014 ' + ep.titre;
+      playerEl.classList.add('visible');
+      document.body.classList.add('player-active');
+    }
+
+    audio.addEventListener('play', function() {
+      isPlaying = true;
+      iconPlay.style.display = 'none';
+      iconPause.style.display = 'block';
+      renderEpisodes();
+    });
+
+    audio.addEventListener('pause', function() {
+      isPlaying = false;
+      iconPlay.style.display = 'block';
+      iconPause.style.display = 'none';
+      saveResume();
+      renderEpisodes();
+    });
+
+    audio.addEventListener('ended', function() {
+      isPlaying = false;
+      iconPlay.style.display = 'block';
+      iconPause.style.display = 'none';
+      playerProgressBar.style.width = '0%';
+      // Mark episode as fully listened
+      if (currentEpisodeId) {
+        markAsListened(currentEpisodeId, 1.0);
+      }
+      clearResume();
+      renderEpisodes();
+      // Auto-play next episode with toast
+      if (currentEpisodeData) {
+        var currIdx = episodes.findIndex(function(e) { return e.episode_id === currentEpisodeData.episode_id; });
+        if (currIdx >= 0 && currIdx < episodes.length - 1) {
+          var next = episodes[currIdx + 1];
+          if (next && next.audio_url) {
+            playerTitle.textContent = 'Prochain : ' + (next.titre || '');
+            // Show toast with cancel
+            var toast = document.createElement('div');
+            toast.className = 'autoplay-toast';
+            toast.innerHTML = 'Mission suivante dans 5s\u2026 <button>Annuler</button>';
+            document.body.appendChild(toast);
+            var autoTimer = setTimeout(function() {
+              if (toast.parentNode) toast.parentNode.removeChild(toast);
+              playEpisode(next);
+            }, 5000);
+            toast.querySelector('button').addEventListener('click', function() {
+              clearTimeout(autoTimer);
+              if (toast.parentNode) toast.parentNode.removeChild(toast);
+              playerTitle.textContent = currentEpisodeData ? currentEpisodeData.titre : '--';
+            });
+          }
+        }
+      }
+    });
+
+    audio.addEventListener('timeupdate', function() {
+      if (!audio.duration) return;
+      var pct = (audio.currentTime / audio.duration) * 100;
+      playerProgressBar.style.width = pct + '%';
+      playerProgress.setAttribute('aria-valuenow', Math.round(pct));
+      var curMin = Math.floor(audio.currentTime / 60);
+      var curSec = Math.floor(audio.currentTime % 60);
+      var durMin = Math.floor(audio.duration / 60);
+      var durSec = Math.floor(audio.duration % 60);
+      playerProgress.setAttribute('aria-valuetext', curMin + ' minutes ' + curSec + ' secondes sur ' + durMin + ' minutes ' + durSec + ' secondes');
+      playerTime.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+      // Track listening progress
+      if (currentEpisodeId && audio.duration > 0) {
+        var progress = audio.currentTime / audio.duration;
+        if (progress > 0.1) markAsListened(currentEpisodeId, progress);
+      }
+    });
+
+    // Save position every 5 seconds
+    setInterval(function() { if (isPlaying) saveResume(); }, 5000);
+
+    playerPlayBtn.addEventListener('click', function() {
+      if (isPlaying) audio.pause();
+      else audio.play();
+    });
+
+    playerProgress.setAttribute('tabindex', '0');
+    playerProgress.addEventListener('click', function(e) {
+      if (!audio.duration) return;
+      var rect = playerProgress.getBoundingClientRect();
+      var pct = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pct * audio.duration;
+    });
+
+    // Keyboard control for progress slider (accessibility)
+    playerProgress.addEventListener('keydown', function(e) {
+      if (!audio.duration) return;
+      var step = audio.duration * 0.05;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        audio.currentTime = Math.min(audio.duration, audio.currentTime + step);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        audio.currentTime = Math.max(0, audio.currentTime - step);
+      }
+    });
+
+    playerClose.addEventListener('click', function() {
+      saveResume();
+      audio.pause();
+      audio.src = '';
+      currentEpisodeId = null;
+      currentEpisodeData = null;
+      playerEl.classList.remove('visible');
+      document.body.classList.remove('player-active');
+      renderEpisodes();
+    });
+
+    // Rewind / Forward
+    playerRewind.addEventListener('click', function() {
+      audio.currentTime = Math.max(0, audio.currentTime - 10);
+    });
+    playerForward.addEventListener('click', function() {
+      if (audio.duration) audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+    });
+
+    // Volume
+    playerVolume.addEventListener('input', function() {
+      audio.volume = playerVolume.value / 100;
+      updateVolIcon();
+    });
+    playerMute.addEventListener('click', function() {
+      audio.muted = !audio.muted;
+      if (audio.muted) playerVolume.value = 0;
+      else playerVolume.value = Math.round(audio.volume * 100);
+      updateVolIcon();
+    });
+    function updateVolIcon() {
+      var v = audio.muted ? 0 : audio.volume;
+      if (v === 0) {
+        volIcon.innerHTML = '<path d="M16.5 12A4.5 4.5 0 0014 8.5v2.09l2.5 2.5V12zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06A7.007 7.007 0 0119 12zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+      } else {
+        volIcon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.47 4.47 0 002.5-3.5zM14 3.23v2.06A7.007 7.007 0 0119 12c0 3.17-2.11 5.84-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+      }
+    }
+
+    // Speed
+    playerSpeedBtn.addEventListener('click', function() {
+      var idx = SPEEDS.indexOf(playbackSpeed);
+      playbackSpeed = SPEEDS[(idx + 1) % SPEEDS.length];
+      audio.playbackRate = playbackSpeed;
+      playerSpeedBtn.textContent = playbackSpeed + 'x';
+    });
+
+    // ── Search ──
+    searchInput.addEventListener('input', function() {
+      searchQuery = searchInput.value.trim();
+      renderEpisodes();
+    });
+
+    // ── Back to top ──
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 400) backToTop.classList.add('visible');
+      else backToTop.classList.remove('visible');
+    });
+    backToTop.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ── Subscribe form ──
+    var subForm = document.getElementById('subscribe-form');
+    var subSuccess = document.getElementById('subscribe-success');
+    if (subForm) {
+      subForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var emailInput = subForm.querySelector('input[type="email"]');
+        var email = emailInput ? emailInput.value.trim() : '';
+        if (!email) return;
+        // POST to backend (graceful fallback if endpoint doesn't exist yet)
+        fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        }).then(function(resp) {
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          subForm.style.display = 'none';
+          subSuccess.style.display = 'block';
+        }).catch(function() {
+          subSuccess.style.display = 'block';
+          subSuccess.style.color = 'var(--accent)';
+          subSuccess.textContent = 'Une erreur est survenue. Veuillez réessayer.';
+        });
+      });
+    }
+
+    // ── Hero CTA — play first episode ──
+    var heroCta = document.getElementById('hero-cta');
+    heroCta.addEventListener('click', function(e) {
+      e.preventDefault();
+      var firstPlayable = episodes.find(function(ep) { return !!ep.audio_url; });
+      if (firstPlayable) {
+        playEpisode(firstPlayable);
+      }
+      document.getElementById('episodes-heading').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // ── Hamburger menu ──
+    var hamburger = document.getElementById('nav-hamburger');
+    var navLinks = document.getElementById('site-nav-links');
+    if (hamburger && navLinks) {
+      hamburger.addEventListener('click', function() {
+        var isOpen = navLinks.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+      // Close mobile menu when clicking outside
+      document.addEventListener('click', function(e) {
+        if (navLinks.classList.contains('open') && !e.target.closest('.site-nav')) {
+          navLinks.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+        }
+      });
+      // Close on link click
+      navLinks.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', function() {
+          navLinks.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    // ── Nav scroll state ──
+    var siteNav = document.querySelector('.site-nav');
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 100) siteNav.classList.add('scrolled');
+      else siteNav.classList.remove('scrolled');
+    });
+
+    // ── IntersectionObserver for active nav links ──
+    var navAnchors = document.querySelectorAll('.site-nav-links a');
+    var sections = [];
+    navAnchors.forEach(function(a) {
+      var href = a.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        var section = document.querySelector(href);
+        if (section) sections.push({ el: section, link: a });
+      }
+    });
+    if (sections.length > 0 && 'IntersectionObserver' in window) {
+      var navObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          var item = sections.find(function(s) { return s.el === entry.target; });
+          if (item) {
+            if (entry.isIntersecting) item.link.classList.add('active');
+            else item.link.classList.remove('active');
+          }
+        });
+      }, { rootMargin: '-20% 0px -60% 0px' });
+      sections.forEach(function(s) { navObserver.observe(s.el); });
+    }
+
+    // ── Scroll reveal ──
+    if ('IntersectionObserver' in window) {
+      var revealObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        revealObserver.observe(el);
+      });
+    }
+
+    // ── Init ──
+    // Set fallback for hero episode count (in case JS is slow)
+    heroCount.textContent = '10 épisodes';
+    loadEpisodes();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1655 @@
+{
+  "episode": {
+    "titre": "La création du monde — quand Dieu a tout inventé",
+    "numero": 1,
+    "saison": 1,
+    "type": "ouverture",
+    "duree_cible_minutes": 30,
+    "ambiance": "joyeux",
+    "ambiance_par_acte": [
+      "mystere",
+      "émerveillé",
+      "chaleureux"
+    ],
+    "morale": "Le monde est un cadeau merveilleux dont il faut prendre soin. Chaque créature a sa place et sa beauté.",
+    "personnages_presents": [
+      "papy_babou",
+      "antoine",
+      "noemie",
+      "mamie_sonia"
+    ],
+    "moments_cles": [
+      "Le cold open : la voix de Dieu dans le néant et la lumière qui jaillit",
+      "Noémie qui demande 'c'est qui qui a fait les fleurs' dans le jardin de Papy",
+      "L'anecdote de Papy sur les étoiles vues depuis le toit à Dakar",
+      "Mamie Sonia qui raconte que chaque animal est une lettre de l'alphabet de Dieu",
+      "Noémie qui compare la première respiration d'Adam à la naissance de Lucas",
+      "Le récap où Antoine récite les 6 jours dans l'ordre"
+    ],
+    "evolutions_personnages": "Noémie développe son émerveillement devant la Création et commence à faire des liens avec la naissance de Lucas. Antoine montre sa curiosité scientifique et sa capacité à retenir les faits dans l'ordre.",
+    "quiz": {
+      "facile": [
+        "Combien de jours Dieu a-t-il mis pour créer le monde ?",
+        "Quel est le nom du premier homme créé par Dieu ?",
+        "Que fait Dieu le septième jour ?"
+      ],
+      "avance": [
+        "Quel jour Dieu a-t-il créé le soleil, la lune et les étoiles ?",
+        "Pourquoi Adam s'appelle-t-il Adam ? Que signifie ce nom ?",
+        "Quelle mission Dieu confie-t-il à Adam et Ève dans le jardin d'Éden ?"
+      ]
+    },
+    "segments": [
+      {
+        "id": "sfx_001",
+        "personnage": "sfx",
+        "texte": "low sub-bass drone slowly rising in pitch, deep rumble growing from silence, dark ambient pad building intensity over 8 seconds",
+        "ton": "ambiance",
+        "pause_apres_ms": 500,
+        "duree_sfx_secondes": 8.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_001",
+        "personnage": "papy_babou",
+        "texte": "Et soudain, dans le noir le plus total, une voix immense a retenti. Une voix si puissante qu'elle a fait trembler le néant tout entier.",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_002",
+        "personnage": "sfx",
+        "texte": "slow deep inhale and exhale with heavy reverb, breath-like low frequency swell, suspenseful atmospheric drone",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_003",
+        "personnage": "sfx",
+        "texte": "deep thunderous rumble echoing in vast reverberant space, powerful low-frequency vibration shaking the air, no speech",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_002",
+        "personnage": "papy_babou",
+        "texte": "Et cette voix a dit : Que la lumière soit ! Et mes petits loups, à cet instant précis, la lumière a jailli de partout, comme un feu d'artifice géant !",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "sfx_004",
+        "personnage": "sfx",
+        "texte": "massive orchestral swell rising from silence to fortissimo, bright shimmering chimes cascading upward, warm reverberant glow expanding",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_005",
+        "personnage": "sfx",
+        "texte": "magical whoosh transition with sparkle trail, soft harp glissando descending, settling into warm indoor ambiance with soft fireplace",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_006",
+        "personnage": "sfx",
+        "texte": "car doors closing, gravel path footsteps approaching wooden house, distant children laughing",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_003",
+        "personnage": "antoine",
+        "texte": "Papy ! Papy ! On est là !",
+        "ton": "excite",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_004",
+        "personnage": "noemie",
+        "texte": "Papy Babou ! Regarde, j'ai mis mes bottes de pluie avec les étoiles !",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "sfx_007",
+        "personnage": "sfx",
+        "texte": "old wooden door creaking open warmly, cozy fireplace crackling inside",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_005",
+        "personnage": "papy_babou",
+        "texte": "Mes petits loups ! Venez vite, entrez ! Ça fait du bien de vous voir. Noémie, tes bottes sont magnifiques.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_006",
+        "personnage": "noemie",
+        "texte": "C'est Maman qui me les a achetées. Elle dit que les étoiles, c'est pour les rêveuses comme moi.",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_007",
+        "personnage": "antoine",
+        "texte": "Dis Papy, on peut aller voir ton jardin ? Il y a des nouvelles fleurs depuis la dernière fois ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_008",
+        "personnage": "papy_babou",
+        "texte": "Bien sûr mon grand ! Venez, on va faire un petit tour avant le goûter.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "sfx_008",
+        "personnage": "sfx",
+        "texte": "garden gate opening, birds singing in autumn afternoon sun, gentle breeze in trees",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 6.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_009",
+        "personnage": "noemie",
+        "texte": "Regarde Antoine, la grosse fleur rouge là-bas ! Elle est trop belle ! Papy, c'est qui qui a fait les fleurs ?",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_010",
+        "personnage": "antoine",
+        "texte": "C'est la nature, Noémie. Les graines poussent avec l'eau et le soleil.",
+        "ton": "neutre",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_011",
+        "personnage": "noemie",
+        "texte": "Oui mais les graines, elles viennent d'où au début du début ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_012",
+        "personnage": "papy_babou",
+        "texte": "C'est une très bonne question, ma puce. Tu sais quoi ? Installez-vous bien confortablement, Papy a une histoire extraordinaire à vous raconter aujourd'hui.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_009",
+        "personnage": "sfx",
+        "texte": "children settling into big armchair, cushions rustling, cat purring softly nearby",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_013",
+        "personnage": "antoine",
+        "texte": "C'est quoi l'histoire ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_014",
+        "personnage": "papy_babou",
+        "texte": "C'est l'histoire du tout début. Le tout tout début. Avant les fleurs, avant les étoiles, avant même le ciel et la terre. L'histoire de la Création du monde.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "seg_015",
+        "personnage": "noemie",
+        "texte": "Avant les étoiles ? Mais y avait quoi alors ?",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_016",
+        "personnage": "papy_babou",
+        "texte": "Rien, ma puce. Absolument rien. Et c'est justement là que tout commence.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 600
+      },
+      {
+        "id": "sfx_010",
+        "personnage": "sfx",
+        "texte": "magical transition into ancient world, celestial atmosphere building slowly",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_011",
+        "personnage": "sfx",
+        "texte": "deep space drone with slow low-frequency oscillation, very subtle cosmic wind ambiance, dark atmospheric pad",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_017",
+        "personnage": "papy_babou",
+        "texte": "Au commencement, il n'y avait rien. Pas de terre, pas de ciel, pas de soleil. Juste le noir, un noir immense et silencieux. Comme quand tu fermes les yeux très fort, Noémie, et que tu ne vois plus rien du tout.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_018",
+        "personnage": "noemie",
+        "texte": "Ça fait un peu peur, le noir comme ça.",
+        "ton": "inquiet",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_019",
+        "personnage": "papy_babou",
+        "texte": "N'aie pas peur, ma puce. Parce que dans ce grand noir, il y avait Dieu. Et Dieu avait un plan merveilleux.",
+        "ton": "rassurant",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_020",
+        "personnage": "papy_babou",
+        "texte": "Et Dieu a dit de sa grande voix : Que la lumière soit !",
+        "ton": "dramatique",
+        "rythme": "lent",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "sfx_012",
+        "personnage": "sfx",
+        "texte": "bright orchestral burst rising from silence, shimmering high-frequency chimes cascading outward, warm sustained string chord expanding",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_021",
+        "personnage": "papy_babou",
+        "texte": "Et la lumière a jailli ! D'un seul coup, comme un soleil gigantesque qui s'allume. Dieu a vu que la lumière était belle, et il a séparé la lumière de l'obscurité.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_022",
+        "personnage": "papy_babou",
+        "texte": "Il a appelé la lumière Jour, et l'obscurité Nuit. C'était le premier jour.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_023",
+        "personnage": "antoine",
+        "texte": "Attends Papy, il n'y avait pas de soleil et pourtant il y avait de la lumière ? Comment c'est possible ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_024",
+        "personnage": "papy_babou",
+        "texte": "Excellente question, mon grand ! Le soleil, il ne viendra que plus tard. Cette lumière-là, c'était la toute première lumière, créée directement par Dieu. Comme si Dieu avait allumé un immense projecteur dans le noir.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_025",
+        "personnage": "antoine",
+        "texte": "Papy, tu savais que la lumière va tellement vite qu'elle pourrait faire sept fois le tour de la Terre en une seule seconde ?",
+        "ton": "enthousiaste",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_026",
+        "personnage": "papy_babou",
+        "texte": "Sept fois le tour de la Terre ! Tu te rends compte ? Et la lumière du soleil met huit minutes pour arriver jusqu'à nous. Dieu a créé quelque chose de fulgurant.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_013",
+        "personnage": "sfx",
+        "texte": "single celestial chime ringing softly with long reverb tail, gentle tubular bell resonance fading",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_027",
+        "personnage": "papy_babou",
+        "texte": "Le deuxième jour, Dieu a regardé toute cette eau qui était partout, un océan infini, et il a dit : Je vais mettre de l'ordre là-dedans.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "personnage": "noemie",
+        "texte": "Et la lumière, elle était de quelle couleur ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250,
+        "id": "seg_028"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "La Bible dit que Dieu a vu que la lumière était bonne. Imagine une lumière chaude, dorée, comme quand le soleil se couche sur la mer en été. Une lumière qui réchauffe le cœur.",
+        "ton": "émerveillé",
+        "rythme": "lent",
+        "pause_apres_ms": 400,
+        "id": "seg_029"
+      },
+      {
+        "id": "sfx_014",
+        "personnage": "sfx",
+        "texte": "massive ocean waves splitting apart, rushing water separating, strong wind blowing upward with deep bass rumble",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_030",
+        "personnage": "papy_babou",
+        "texte": "Il a séparé les eaux en deux. Les eaux d'en bas, qui formeraient les mers, et les eaux d'en haut, qui formeraient les nuages. Et entre les deux, il a créé le ciel. Un grand ciel immense et bleu.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_031",
+        "personnage": "noemie",
+        "texte": "Comme le ciel qu'on voit par la fenêtre de Papy ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_032",
+        "personnage": "papy_babou",
+        "texte": "Exactement, ma puce ! Ce ciel-là, c'est Dieu qui l'a fabriqué le deuxième jour.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_033",
+        "personnage": "antoine",
+        "texte": "Mais Papy, le ciel c'est fait de quoi ? C'est juste de l'air ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_034",
+        "personnage": "papy_babou",
+        "texte": "Tu sais, mon grand, l'atmosphère qui nous entoure, c'est une couche de gaz incroyablement fine. Si la Terre était une pomme, l'atmosphère serait plus fine que sa peau. Et pourtant c'est elle qui nous protège du vide de l'espace.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 350
+      },
+      {
+        "id": "seg_035",
+        "personnage": "noemie",
+        "texte": "La Terre c'est une pomme ? Je peux la croquer ?",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_036",
+        "personnage": "papy_babou",
+        "texte": "C'est une image, ma puce ! Mais c'est vrai que la Terre est aussi précieuse qu'un fruit mûr. Il faut en prendre soin.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_015",
+        "personnage": "sfx",
+        "texte": "ocean waves receding and draining, deep earth rumble, water flowing away revealing rocky surface",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert"
+      },
+      {
+        "id": "sfx_016",
+        "personnage": "sfx",
+        "texte": "single celestial chime ringing softly, ethereal tubular bell with long reverb tail",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_037",
+        "personnage": "papy_babou",
+        "texte": "Le troisième jour, Dieu a dit : Que les eaux se rassemblent et que la terre ferme apparaisse ! Et c'est ce qui s'est passé. L'eau s'est retirée d'un côté pour former les mers et les océans.",
+        "ton": "dramatique",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "personnage": "antoine",
+        "texte": "Papy, le ciel c'est solide alors ? Comme un plafond ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250,
+        "id": "seg_038"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Les gens de cette époque imaginaient le ciel comme une grande voûte au-dessus de leurs têtes. Ils l'appelaient le firmament. Un mot magnifique, non ? Firmament.",
+        "ton": "chaleureux",
+        "rythme": "lent",
+        "pause_apres_ms": 300,
+        "id": "seg_039"
+      },
+      {
+        "personnage": "noemie",
+        "texte": "Firmament ! C'est rigolo comme mot. Firmament, firmament !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200,
+        "id": "seg_040"
+      },
+      {
+        "id": "seg_041",
+        "personnage": "papy_babou",
+        "texte": "Et de l'autre côté, la terre est apparue. Des montagnes, des collines, des vallées, des plaines immenses. Dieu a appelé la terre ferme Terre, et les eaux Mers.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_042",
+        "personnage": "antoine",
+        "texte": "C'est comme la géographie ! Les continents et les océans !",
+        "ton": "enthousiaste",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_043",
+        "personnage": "papy_babou",
+        "texte": "Exactement, mon grand ! Et Dieu n'avait pas fini. Il a dit : Que la terre se couvre de verdure ! Et là, mes petits loups, imaginez le spectacle.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_017",
+        "personnage": "sfx",
+        "texte": "rich forest ambiance emerging, birdsong growing louder and more varied, wind rustling through dense leaves and branches",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 8.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_044",
+        "personnage": "papy_babou",
+        "texte": "Des herbes, des fleurs, des arbres ont poussé partout ! Des coquelicots rouges, des tournesols géants, des chênes immenses, des palmiers, des sapins. Toutes les plantes du monde, d'un seul coup !",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_045",
+        "personnage": "noemie",
+        "texte": "Même les marguerites ? J'adore les marguerites !",
+        "ton": "joyeux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_046",
+        "personnage": "papy_babou",
+        "texte": "Même les marguerites, ma puce. Et même les fleurs rouges du jardin que tu trouvais si belles tout à l'heure.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_047",
+        "personnage": "papy_babou",
+        "texte": "Mais attendez, mes petits loups. Tout ça, c'était dans le noir ! Il n'y avait toujours pas de soleil. Devinez ce qui va se passer ensuite ?",
+        "ton": "mystérieux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_048",
+        "personnage": "antoine",
+        "texte": "Le soleil ! Il va créer le soleil !",
+        "ton": "excite",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "sfx_018",
+        "personnage": "sfx",
+        "texte": "quiet night ambiance, gentle twinkling high-pitched chimes appearing one by one, subtle cosmic shimmer pad",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 8.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_019",
+        "personnage": "sfx",
+        "texte": "single crystalline bell chime ringing, bright tubular bell with shimmering overtones and long decay",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_049",
+        "personnage": "papy_babou",
+        "texte": "Le quatrième jour, Dieu a levé les yeux vers le grand ciel qu'il avait créé et il a dit : Il faut des lumières là-haut pour éclairer la terre.",
+        "ton": "mystérieux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_050",
+        "personnage": "papy_babou",
+        "texte": "Alors il a créé le soleil, une boule de feu énorme pour éclairer le jour. Puis la lune, douce et argentée, pour veiller sur la nuit.",
+        "ton": "émerveillé",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_051",
+        "personnage": "antoine",
+        "texte": "Papy, c'est vrai que le soleil est un million de fois plus gros que la terre ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_052",
+        "personnage": "papy_babou",
+        "texte": "Tout à fait, mon grand ! C'est tellement gros que notre imagination ne peut même pas le concevoir. Et ce n'est pas tout. Dieu a aussi créé les étoiles. Des milliards et des milliards d'étoiles.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_053",
+        "personnage": "antoine",
+        "texte": "La maîtresse a dit que si le Soleil était un ballon de basket, la Terre serait une tête d'épingle à trente mètres de distance !",
+        "ton": "enthousiaste",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_054",
+        "personnage": "noemie",
+        "texte": "Une tête d'épingle ? On est si petits que ça ?",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_055",
+        "personnage": "papy_babou",
+        "texte": "Petits mais précieux, ma puce. C'est justement pour cette petite planète que Dieu a tout créé.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "personnage": "sfx",
+        "texte": "gentle rain falling on soft earth, raindrops hitting leaves, wet ground ambiance with distant thunder",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert",
+        "id": "sfx_020"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Dieu avait créé des arbres fruitiers aussi ! Des pommiers, des figuiers, des oliviers. Et chaque arbre portait ses fruits avec ses graines dedans, pour qu'il puisse se reproduire tout seul. Ingénieux, non ?",
+        "ton": "enthousiaste",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_056"
+      },
+      {
+        "personnage": "antoine",
+        "texte": "C'est vrai que c'est malin ! Chaque fruit contient la graine du prochain arbre. C'est comme un cycle infini.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_057"
+      },
+      {
+        "id": "seg_058",
+        "personnage": "mamie_sonia",
+        "texte": "C'est comme ma recette de sablés ! Chaque fournée donne envie d'en refaire une autre. La création, c'est généreux comme ça.",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Exactement, Antoine ! Tu sais, quand je vivais en Afrique du Sud, il y avait un baobab devant notre maison. Un arbre énorme, gros comme cette pièce. Et il avait commencé par une toute petite graine.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 350,
+        "id": "seg_059"
+      },
+      {
+        "id": "seg_060",
+        "personnage": "noemie",
+        "texte": "Comme celles sur mes bottes !",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_061",
+        "personnage": "papy_babou",
+        "texte": "Comme celles sur tes bottes, mais en beaucoup, beaucoup plus grand ! Quand j'étais petit à Dakar, le soir, je montais sur le toit avec mon père et on regardait le ciel. Il y avait tellement d'étoiles qu'on aurait dit du sucre renversé sur une nappe noire.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "seg_062",
+        "personnage": "antoine",
+        "texte": "C'est trop beau comme image, Papy.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_021",
+        "personnage": "sfx",
+        "texte": "ocean depths bubbling, whale song echoing, seagulls calling above waves",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_022",
+        "personnage": "sfx",
+        "texte": "single harmonic bell chime ringing, warm tubular bell with rich overtones and gentle decay",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_063",
+        "personnage": "papy_babou",
+        "texte": "Le cinquième jour, Dieu s'est occupé des eaux et du ciel. Il a dit : Que les mers grouillent d'êtres vivants et que les oiseaux volent dans le ciel !",
+        "ton": "enthousiaste",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_064",
+        "personnage": "papy_babou",
+        "texte": "Et d'un coup, les océans se sont remplis de poissons ! Des petits, des gros, des colorés, des rapides. Des baleines immenses, des dauphins joueurs, des hippocampes minuscules.",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_065",
+        "personnage": "antoine",
+        "texte": "Papy, tu sais que la baleine bleue c'est le plus gros animal qui ait jamais existé ? Plus gros que tous les dinosaures ! Son cœur est grand comme une voiture !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_066",
+        "personnage": "papy_babou",
+        "texte": "Un cœur grand comme une voiture ! Imagine le bruit que ça fait quand il bat. On pourrait l'entendre à des kilomètres sous l'eau.",
+        "ton": "émerveillé",
+        "rythme": "lent",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_023",
+        "personnage": "sfx",
+        "texte": "deep rhythmic bass pulse pounding slowly like a giant heartbeat underwater, low sub-bass throb with reverb",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_067",
+        "personnage": "noemie",
+        "texte": "Des dauphins ! J'adore les dauphins ! Ils sont trop mignons !",
+        "ton": "excite",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_068",
+        "personnage": "papy_babou",
+        "texte": "Et dans le ciel, des milliers d'oiseaux se sont envolés ! Des aigles majestueux, des colibris tout petits, des perroquets de toutes les couleurs, des hirondelles rapides comme l'éclair.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_069",
+        "personnage": "antoine",
+        "texte": "Et les dinosaures, Papy ? Ils étaient là aussi ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_070",
+        "personnage": "papy_babou",
+        "texte": "La Bible ne parle pas des dinosaures par leur nom, mon grand. Mais elle dit que Dieu a créé de grands monstres marins et tous les êtres vivants. Certains pensent que ça inclut les dinosaures.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_071",
+        "personnage": "antoine",
+        "texte": "Mais alors, les dinosaures ont vraiment existé ? La science dit qu'ils ont vécu il y a des millions d'années.",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_072",
+        "personnage": "papy_babou",
+        "texte": "Bien sûr qu'ils ont existé ! On a retrouvé leurs os partout dans le monde. Tu sais, mon grand, la Bible et la science ne racontent pas la même chose de la même façon. La Bible raconte le sens, le pourquoi. La science raconte le comment. Les deux sont importantes.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_073",
+        "personnage": "noemie",
+        "texte": "Moi j'aurais voulu voir un dinosaure en vrai. Mais pas un méchant !",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "personnage": "noemie",
+        "texte": "Papy, les étoiles c'est aussi gros que le soleil ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250,
+        "id": "seg_074"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Certaines sont encore plus grosses, ma puce ! Mais elles sont tellement loin qu'on les voit toutes petites. C'est comme quand tu regardes un avion dans le ciel : il a l'air minuscule mais en vrai il est immense.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_075"
+      },
+      {
+        "personnage": "antoine",
+        "texte": "Et Dieu a fait tout ça en un seul jour ? C'est vertigineux.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_076"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "C'est le mot juste, mon grand. Vertigineux. La Bible dit que Dieu a semé les étoiles dans le ciel comme un semeur jette des graines dans un champ. D'un grand geste généreux.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 400,
+        "id": "seg_077"
+      },
+      {
+        "id": "sfx_024",
+        "personnage": "sfx",
+        "texte": "wooden kitchen door opening with creak, ceramic cups and plates clinking together, warm busy kitchen ambiance",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 4.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_078",
+        "personnage": "mamie_sonia",
+        "texte": "Mes petits chéris ! J'ai fait des sablés en forme d'étoile pour le goûter. Votre Papy vous raconte la Création ?",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_079",
+        "personnage": "noemie",
+        "texte": "Mamie ! On en est aux poissons et aux oiseaux ! C'est trop bien !",
+        "ton": "excite",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_080",
+        "personnage": "noemie",
+        "texte": "Mamie, on peut en manger maintenant ? J'ai trop faim !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_081",
+        "personnage": "mamie_sonia",
+        "texte": "Après l'histoire, ma chérie. Les sablés seront encore meilleurs si tu attends.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_082",
+        "personnage": "noemie",
+        "texte": "Mais c'est toujours après ! C'est pas juste !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_083",
+        "personnage": "mamie_sonia",
+        "texte": "Quand j'étais petite au Caire, ma grand-mère me racontait que chaque animal est une lettre de l'alphabet de Dieu. Ensemble, ils racontent une histoire d'amour.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 350
+      },
+      {
+        "id": "seg_084",
+        "personnage": "antoine",
+        "texte": "C'est joli comme idée, Mamie.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_085",
+        "personnage": "papy_babou",
+        "texte": "Ta Mamie a toujours eu le don de trouver les mots justes. Allez, on continue ! Le sixième jour, mes petits loups, c'est le plus important de tous.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_086",
+        "personnage": "papy_babou",
+        "texte": "Mais mes petits loups, le plus extraordinaire reste à venir. Le sixième jour, c'est le jour où tout va changer.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "sfx_025",
+        "personnage": "sfx",
+        "texte": "african savanna ambiance, lions roaring in distance, elephants trumpeting, insects buzzing",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 18.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_026",
+        "personnage": "sfx",
+        "texte": "single resonant bell tone ringing, deep tubular bell with sustained warm overtones",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_087",
+        "personnage": "papy_babou",
+        "texte": "Le sixième jour, Dieu a créé les animaux de la terre ferme. Les lions, les éléphants, les girafes, les lapins, les chats, les chiens. Tous les animaux qui marchent, qui courent, qui rampent !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
+        "personnage": "sfx",
+        "texte": "galloping horses across plains, wolves howling at sunset, deer running through forest",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 8.0,
+        "mode": "overlay",
+        "id": "sfx_027"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Des chevaux sauvages galopaient dans les plaines, des loups hurlaient au coucher du soleil, des cerfs bondissaient dans les forêts. La terre entière vibrait de vie !",
+        "ton": "émerveillé",
+        "rythme": "rapide",
+        "pause_apres_ms": 300,
+        "id": "seg_088"
+      },
+      {
+        "personnage": "antoine",
+        "texte": "Ça devait être un spectacle incroyable ! Tous les animaux en même temps, partout !",
+        "ton": "enthousiaste",
+        "rythme": "normal",
+        "pause_apres_ms": 250,
+        "id": "seg_089"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Imagine un safari géant, mon grand ! Mais sans les voitures et sans les clôtures. Les animaux vivaient libres, en harmonie les uns avec les autres.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_090"
+      },
+      {
+        "id": "seg_091",
+        "personnage": "noemie",
+        "texte": "Les chats aussi ? Comme Moustache ?",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Tu sais, Antoine, au fond des océans il y a des créatures tellement bizarres qu'on en découvre encore de nouvelles aujourd'hui. Des poissons qui brillent dans le noir, des pieuvres qui changent de couleur, des méduses transparentes.",
+        "ton": "mystérieux",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_092"
+      },
+      {
+        "personnage": "antoine",
+        "texte": "Comme les poissons des abysses ! J'ai vu ça dans un documentaire. Ils ont des lampes sur la tête !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 250,
+        "id": "seg_093"
+      },
+      {
+        "personnage": "noemie",
+        "texte": "Des lampes sur la tête ? C'est trop drôle ! Ils ressemblent à des lampadaires de la mer !",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 250,
+        "id": "seg_094"
+      },
+      {
+        "personnage": "sfx",
+        "texte": "deep ocean underwater ambiance with mysterious low-frequency hum, air bubbles rising slowly, distant whale song echo",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert",
+        "id": "sfx_028"
+      },
+      {
+        "id": "seg_095",
+        "personnage": "papy_babou",
+        "texte": "Comme Moustache, oui ! Tu sais que Moustache descend des premiers chats créés par Dieu ?",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "sfx_029",
+        "personnage": "sfx",
+        "texte": "cat meowing softly in response, purring contentedly on armchair",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_096",
+        "personnage": "antoine",
+        "texte": "C'est drôle, Moustache a miaulé pile au bon moment !",
+        "ton": "joyeux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_097",
+        "personnage": "papy_babou",
+        "texte": "Mais Dieu n'avait pas fini. Il voulait créer quelque chose de spécial. Quelqu'un capable de penser, de parler, d'aimer, de prendre soin de toute cette Création magnifique.",
+        "ton": "mystérieux",
+        "rythme": "lent",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "sfx_030",
+        "personnage": "sfx",
+        "texte": "gentle ethereal choir singing sustained notes softly, reverberant cathedral space ambiance, warm organ drone",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 6.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_098",
+        "personnage": "papy_babou",
+        "texte": "Alors Dieu a dit : Faisons l'homme à notre image. Et il a pris de la poussière du sol, il l'a modelée avec ses mains, comme un potier qui façonne un vase. Et il a soufflé dans ses narines un souffle de vie.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 500
+      },
+      {
+        "personnage": "sfx",
+        "texte": "first human breath, heartbeat beginning, gentle wind of life",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert",
+        "id": "sfx_031"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Adam a ouvert les yeux pour la première fois. Et la première chose qu'il a vue, c'était le ciel bleu et les arbres du jardin d'Éden. Imaginez : tout était neuf, tout était beau, et Adam découvrait le monde pour la toute première fois.",
+        "ton": "émerveillé",
+        "rythme": "lent",
+        "pause_apres_ms": 400,
+        "id": "seg_099"
+      },
+      {
+        "personnage": "noemie",
+        "texte": "Comme un bébé qui ouvre les yeux ! Comme Lucas quand il va naître !",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_100"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Exactement, ma puce ! La première respiration d'Adam, c'est un peu comme la première respiration de chaque bébé qui vient au monde. Un miracle qui se répète à chaque naissance.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 350,
+        "id": "seg_101"
+      },
+      {
+        "id": "seg_102",
+        "personnage": "papy_babou",
+        "texte": "Et l'homme s'est levé ! Le premier homme. Dieu l'a appelé Adam.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_103",
+        "personnage": "noemie",
+        "texte": "Adam, c'est comme le garçon de ma classe !",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_104",
+        "personnage": "papy_babou",
+        "texte": "C'est le même prénom, ma puce ! Adam veut dire terre en hébreu, parce qu'il a été fait avec la terre. Et Dieu lui a donné un jardin magnifique pour y vivre, le jardin d'Éden.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "personnage": "sfx",
+        "texte": "paradise garden ambiance, gentle waterfall, exotic birds, warm peaceful breeze",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay",
+        "id": "sfx_032"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Le jardin d'Éden, c'était le plus beau jardin du monde. Il y avait des rivières d'eau claire, des arbres chargés de fruits délicieux, des fleurs de toutes les couleurs. Les animaux vivaient en paix avec Adam et Ève.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_105"
+      },
+      {
+        "personnage": "antoine",
+        "texte": "On sait où c'était, ce jardin ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250,
+        "id": "seg_106"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "La Bible mentionne quatre rivières : le Tigre, l'Euphrate, le Pichone et le Guihone. Le Tigre et l'Euphrate, on les connaît encore aujourd'hui. Ils coulent en Irak, au Moyen-Orient. C'est une région qu'on appelle la Mésopotamie.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 350,
+        "id": "seg_107"
+      },
+      {
+        "personnage": "antoine",
+        "texte": "Mésopotamie ! On a appris ça en classe ! La maîtresse a dit que c'est le berceau de la civilisation.",
+        "ton": "enthousiaste",
+        "rythme": "normal",
+        "pause_apres_ms": 250,
+        "id": "seg_108"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Ta maîtresse a raison. Quand j'étais au Liban, on n'était pas loin de cette région. C'est une terre chargée d'histoire, mes petits loups.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_109"
+      },
+      {
+        "id": "seg_110",
+        "personnage": "antoine",
+        "texte": "Et Ève ? Elle arrive quand ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_111",
+        "personnage": "papy_babou",
+        "texte": "Dieu a vu qu'Adam était seul et il a dit : Il n'est pas bon que l'homme soit seul. Alors pendant qu'Adam dormait, Dieu a pris une de ses côtes et il en a fait la femme. Ève. Et quand Adam l'a vue, il était rempli de joie.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_112",
+        "personnage": "mamie_sonia",
+        "texte": "Votre Papy exagère toujours un peu, mais sur ce coup-là, il raconte très bien. Adam a eu beaucoup de chance de trouver Ève. Comme Papy a eu de la chance de me trouver.",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_113",
+        "personnage": "papy_babou",
+        "texte": "C'est bien vrai, ma Sonia !",
+        "ton": "joyeux",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_114",
+        "personnage": "mamie_sonia",
+        "texte": "Et vous savez, mes chéris, quand Papy et moi on s'est rencontrés au Liban, j'ai su tout de suite que Dieu avait prévu cette rencontre depuis le début. Comme pour Adam et Ève.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 350
+      },
+      {
+        "id": "seg_115",
+        "personnage": "noemie",
+        "texte": "C'est romantique, Mamie !",
+        "ton": "joyeux",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "sfx_033",
+        "personnage": "sfx",
+        "texte": "peaceful morning nature ambiance, gentle birdsong with varied calls, soft breeze through trees, distant stream flowing",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 15.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "sfx_034",
+        "personnage": "sfx",
+        "texte": "single serene bell chime ringing final note, warm tubular bell fading slowly into silence",
+        "ton": "ambiance",
+        "pause_apres_ms": 400,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_116",
+        "personnage": "papy_babou",
+        "texte": "Et le septième jour, Dieu avait terminé son œuvre. Il a regardé tout ce qu'il avait fait : la lumière, le ciel, la mer, les plantes, le soleil, la lune, les étoiles, les poissons, les oiseaux, les animaux, l'homme et la femme.",
+        "ton": "chaleureux",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Et Dieu a confié à Adam et Ève une mission très importante. Il leur a dit : Prenez soin de la terre, de tous les animaux, de tous les poissons et de tous les oiseaux. Vous êtes les gardiens de ma Création.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 400,
+        "id": "seg_117"
+      },
+      {
+        "personnage": "antoine",
+        "texte": "Comme des super-héros de la nature !",
+        "ton": "enthousiaste",
+        "rythme": "normal",
+        "pause_apres_ms": 200,
+        "id": "seg_118"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Exactement ! Et Dieu a dit à Adam de donner un nom à chaque animal. Imagine : chaque animal du monde venait défiler devant Adam et Adam devait inventer un nom pour chacun.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_119"
+      },
+      {
+        "personnage": "noemie",
+        "texte": "Moi j'aurais appelé la girafe Long-Cou et l'éléphant Gros-Nez !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200,
+        "id": "seg_120"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "C'est drôle, ma puce ! Adam avait peut-être un peu plus d'inspiration, mais l'idée c'est que Dieu faisait confiance aux hommes. Il leur a donné la responsabilité de prendre soin de tout ce qu'il avait créé.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 350,
+        "id": "seg_121"
+      },
+      {
+        "personnage": "sfx",
+        "texte": "parade of animals passing by, gentle footsteps, various animal calls, peaceful garden",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 7.0,
+        "mode": "insert",
+        "id": "sfx_035"
+      },
+      {
+        "id": "seg_122",
+        "personnage": "papy_babou",
+        "texte": "Et Dieu vit que tout cela était très bon. Alors le septième jour, il s'est reposé.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 600
+      },
+      {
+        "personnage": "mamie_sonia",
+        "texte": "Et c'est pour ça, mes chéris, que dans notre famille on respecte le dimanche. C'est le jour où on prend le temps d'être ensemble, de remercier pour tout ce qu'on a.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300,
+        "id": "seg_123"
+      },
+      {
+        "personnage": "papy_babou",
+        "texte": "Mamie a raison. Dieu ne s'est pas reposé parce qu'il était fatigué. Il s'est reposé pour nous montrer que la vie ce n'est pas que le travail. C'est aussi prendre le temps de contempler, de dire merci, d'être avec ceux qu'on aime.",
+        "ton": "solennel",
+        "rythme": "lent",
+        "pause_apres_ms": 400,
+        "id": "seg_124"
+      },
+      {
+        "id": "seg_125",
+        "personnage": "antoine",
+        "texte": "Dieu aussi il se repose ? Comme nous le dimanche ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_126",
+        "personnage": "papy_babou",
+        "texte": "Exactement, mon grand ! C'est d'ailleurs pour ça que le dimanche est un jour de repos. Dieu a montré l'exemple : après avoir bien travaillé, on prend le temps de se poser et d'admirer ce qu'on a fait.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_127",
+        "personnage": "noemie",
+        "texte": "Moi j'aime bien me reposer. Surtout quand c'est sur les genoux de Papy.",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "sfx_036",
+        "personnage": "sfx",
+        "texte": "child climbing onto cushioned seat, soft fabric and leather rustling, small contented sigh, settling sounds",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 3.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_128",
+        "personnage": "papy_babou",
+        "texte": "Viens là, ma puce. Antoine, toi aussi, rapproche-toi. Voilà, comme ça, mes deux petits loups contre moi. C'est ça le vrai repos.",
+        "ton": "chaleureux",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_129",
+        "personnage": "papy_babou",
+        "texte": "Dieu a béni ce septième jour et il en a fait un jour sacré. Un jour pour dire merci, pour être ensemble, pour regarder le monde autour de soi et se rappeler que tout ça, c'est un cadeau.",
+        "ton": "solennel",
+        "rythme": "normal",
+        "pause_apres_ms": 500
+      },
+      {
+        "id": "sfx_037",
+        "personnage": "sfx",
+        "texte": "soft whoosh transition, warm room ambiance with clock ticking softly and fireplace crackling gently",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      },
+      {
+        "id": "seg_130",
+        "personnage": "noemie",
+        "texte": "Papy, c'est vrai que Dieu a fait tout ça en six jours ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_131",
+        "personnage": "papy_babou",
+        "texte": "C'est ce que dit la Bible, ma puce. Six jours pour créer le monde entier. Certaines personnes pensent que ces jours représentent de très longues périodes. Mais le message, c'est que tout a été voulu et créé avec amour.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_132",
+        "personnage": "antoine",
+        "texte": "C'est quand même incroyable quand on y pense. Tout ce qui existe, les montagnes, les océans, les animaux, nous. Tout ça a un début.",
+        "ton": "émerveillé",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_133",
+        "personnage": "papy_babou",
+        "texte": "Alors mes petits loups, qu'est-ce que vous avez retenu de cette histoire ?",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_134",
+        "personnage": "antoine",
+        "texte": "Dieu a créé le monde en six jours ! Le premier jour la lumière, le deuxième le ciel, le troisième la terre et les plantes.",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_135",
+        "personnage": "antoine",
+        "texte": "Le quatrième le soleil et les étoiles, le cinquième les poissons et les oiseaux, et le sixième les animaux et les hommes !",
+        "ton": "enthousiaste",
+        "rythme": "rapide",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_136",
+        "personnage": "papy_babou",
+        "texte": "Bravo Antoine ! Tu as tout retenu dans l'ordre. Et toi, Noémie ?",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_137",
+        "personnage": "noemie",
+        "texte": "Moi j'ai retenu que Dieu il a regardé tout ce qu'il avait fait et il a dit que c'était très beau. Et après il s'est reposé parce que même Dieu il a besoin de se reposer.",
+        "ton": "joyeux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_138",
+        "personnage": "papy_babou",
+        "texte": "C'est magnifique, ma puce. Tu as retenu le plus important.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_038",
+        "personnage": "sfx",
+        "texte": "warm gentle music box melody playing softly, cozy evening atmosphere",
+        "ton": "ambiance",
+        "pause_apres_ms": 200,
+        "duree_sfx_secondes": 5.0,
+        "mode": "overlay"
+      },
+      {
+        "id": "seg_139",
+        "personnage": "papy_babou",
+        "texte": "Vous savez ce que je retiens, moi, de cette histoire ? C'est que le monde est un cadeau merveilleux. Chaque fleur, chaque étoile, chaque animal, chaque personne. Tout a été voulu, tout a été pensé avec amour.",
+        "ton": "chaleureux",
+        "rythme": "lent",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_140",
+        "personnage": "papy_babou",
+        "texte": "Et c'est notre responsabilité d'en prendre soin. De la terre, des animaux, et les uns des autres.",
+        "ton": "solennel",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_141",
+        "personnage": "antoine",
+        "texte": "Comme le bébé qui va arriver ! Maman dit que c'est un cadeau aussi.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_142",
+        "personnage": "papy_babou",
+        "texte": "Exactement, mon grand. Chaque nouvelle vie est un cadeau de Dieu, comme la Création. Et vous savez quoi ? La prochaine fois que vous viendrez, je vous raconterai ce qui s'est passé dans le plus beau jardin du monde. Le jardin d'Éden.",
+        "ton": "mystérieux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_143",
+        "personnage": "noemie",
+        "texte": "Avec des fleurs partout ?",
+        "ton": "excite",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_144",
+        "personnage": "papy_babou",
+        "texte": "Avec des fleurs partout, des fruits magnifiques, des animaux dociles. Mais aussi avec un arbre très spécial dont il ne fallait surtout pas manger le fruit.",
+        "ton": "mystérieux",
+        "rythme": "normal",
+        "pause_apres_ms": 400
+      },
+      {
+        "id": "seg_145",
+        "personnage": "antoine",
+        "texte": "Pourquoi ? Qu'est-ce qui s'est passé ?",
+        "ton": "curieux",
+        "rythme": "normal",
+        "pause_apres_ms": 250
+      },
+      {
+        "id": "seg_146",
+        "personnage": "papy_babou",
+        "texte": "Ça, mes petits loups, ce sera pour la prochaine fois.",
+        "ton": "espiègle",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_147",
+        "personnage": "noemie",
+        "texte": "C'est pas juste, Papy ! Tu dis toujours ça !",
+        "ton": "espiègle",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_148",
+        "personnage": "papy_babou",
+        "texte": "Allez, mes petits loups, c'est l'heure de rentrer. Mais ne vous inquiétez pas, Papy a encore plein d'histoires dans sa besace.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "seg_149",
+        "personnage": "antoine",
+        "texte": "Merci Papy, c'était génial !",
+        "ton": "joyeux",
+        "rythme": "normal",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_150",
+        "personnage": "noemie",
+        "texte": "Merci Papy Babou ! Et merci Mamie pour les sablés étoiles !",
+        "ton": "joyeux",
+        "rythme": "rapide",
+        "pause_apres_ms": 200
+      },
+      {
+        "id": "seg_151",
+        "personnage": "mamie_sonia",
+        "texte": "De rien mes petits chéris. Et n'oubliez pas de regarder les étoiles ce soir avant de dormir.",
+        "ton": "chaleureux",
+        "rythme": "normal",
+        "pause_apres_ms": 300
+      },
+      {
+        "id": "sfx_039",
+        "personnage": "sfx",
+        "texte": "children's footsteps leaving, car doors, engine starting, evening crickets chirping",
+        "ton": "ambiance",
+        "pause_apres_ms": 300,
+        "duree_sfx_secondes": 5.0,
+        "mode": "insert"
+      }
+    ]
+  },
+  "validation_directeur": {
+    "note_globale": 9.2,
+    "verdict": "feu_vert",
+    "note_audience": 9.1,
+    "axes": {
+      "immersion_sonore": {
+        "note": 9.2,
+        "commentaire": "39 SFX au total. Ajout du SFX signature 'celestial chime' entre chaque jour (×6) créant un marqueur sonore récurrent et structurant. Cold open renforcé avec le vide cosmique et la respiration primordiale. SFX du cœur de baleine = moment sensoriel fort. Ambiances overlay longues et immersives sur le récit biblique."
+      },
+      "rythme_accroche": {
+        "note": 9.0,
+        "commentaire": "Cold open puissant avec tension progressive. Mini-cliffhangers ajoutés entre les jours ('mais attendez... le plus extraordinaire reste à venir'). Le Jour 2 est désormais étoffé et équilibré avec les autres. Le running gag Noémie/goûter est installé. Le rythme des 7 jours avec les chimes crée une cadence narrative envoûtante."
+      },
+      "emotion_personnages": {
+        "note": 9.2,
+        "commentaire": "Mamie Sonia passe à 8 répliques — présence enrichie (recette de sablés, rencontre au Liban, running gag du goûter). Moment de tendresse physique (Papy qui prend les enfants contre lui). Noémie espiègle (pomme à croquer, Long-Cou, dinosaure gentil). Le running gag 'c'est toujours après' s'installe naturellement."
+      },
+      "valeur_educative": {
+        "note": 9.3,
+        "commentaire": "Récit biblique fidèle et enrichi. Fun facts scientifiques ajoutés : vitesse de la lumière (7 tours/seconde), taille du Soleil (ballon de basket vs tête d'épingle), cœur de baleine bleue (grand comme une voiture), atmosphère (fine comme une peau de pomme). Dialogue dinosaures approfondi avec la nuance Bible/science. Quiz calibrés."
+      },
+      "compatibilite_voix_ia": {
+        "note": 9.0,
+        "commentaire": "Aucune onomatopée. Segments dans les limites de mots. Tons variés et explicites. SFX chimes courts (3s) faciles à intégrer. Les pauses sont bien calibrées aux transitions. Bonne alternance de personnages. Les moments de silence (cold open) créent de la respiration."
+      }
+    },
+    "personas": {
+      "lina_7ans": {
+        "note": 9.0,
+        "commentaire": "Le running gag du goûter la fera rire. Les animaux sont plus présents (cœur de baleine, dinosaure gentil). Noémie est un excellent miroir (pomme à croquer, Long-Cou, romantique). Les chimes entre les jours aident à suivre la structure. Le moment câlin avec Papy est rassurant."
+      },
+      "noah_10ans": {
+        "note": 9.0,
+        "commentaire": "Les fun facts scientifiques sont calibrés pour lui (vitesse lumière, taille Soleil, baleine bleue). Le dialogue dinosaures approfondi avec la nuance Bible/science respecte son intelligence. L'atmosphère fine comme une peau de pomme est une image qui marque. Le cold open cosmique est captivant."
+      },
+      "sophie_parent": {
+        "note": 9.3,
+        "commentaire": "Fidélité biblique excellente enrichie par la nuance Bible/science (rassurante pour un parent). Mamie Sonia plus présente avec des moments touchants (rencontre au Liban). Le moment de tendresse physique est émouvant. Le running gag est léger et familial. Les fun facts valorisent l'apprentissage scolaire des enfants."
+      }
+    },
+    "recommandations": [
+      {
+        "type": "mineur",
+        "detail": "La transition entre le Jour 5 (poissons/oiseaux) et le Jour 6 (animaux terrestres) est un peu abrupte à cause de l'insertion Mamie Sonia — surveiller le flow au montage audio."
+      },
+      {
+        "type": "suggestion",
+        "detail": "Pour la V2, envisager un SFX musical signature de fin d'épisode (générique) distinct du chime inter-jours."
+      }
+    ]
+  }
+}

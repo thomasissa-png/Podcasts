@@ -46,6 +46,13 @@ class Publisher:
         """
         logger.info("Publication de l'épisode : %s", meta["titre"])
 
+        # 0. Vérifier que le fichier audio existe avant de tenter l'upload
+        if not chemin_audio.exists():
+            raise FileNotFoundError(
+                f"Fichier audio introuvable : {chemin_audio}. "
+                f"Vérifiez que le montage a bien été effectué."
+            )
+
         # 1. Upload vers Buzzsprout
         url_audio = self._upload_buzzsprout(meta, chemin_audio, taille_bytes)
 

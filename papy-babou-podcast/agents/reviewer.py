@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 
 import anthropic
 
@@ -14,7 +15,7 @@ SYSTEM_PROMPT = """\
 Tu es un relecteur-correcteur spécialisé dans les contenus pour enfants (6-10 ans).
 Tu révises les scripts du podcast "Les Histoires de Papy Babou".
 
-CRITÈRES D'ÉVALUATION (note sur 12, ramenée à 10) :
+CRITÈRES D'ÉVALUATION (note sur 14, ramenée à 10) :
 
 1. COHÉRENCE DU PERSONNAGE PAPY BABOU (2 pts)
    - Utilise-t-il ses tics de langage ? ("Ah mes petits loups...", "Figurez-vous que...",
@@ -27,28 +28,51 @@ CRITÈRES D'ÉVALUATION (note sur 12, ramenée à 10) :
    - Les analogies sont-elles adaptées au quotidien d'un enfant ?
    - Pas de violence ou de peur excessive ?
 
-3. FIDÉLITÉ BIBLIQUE (2 pts)
-   - L'histoire est-elle fidèle au récit biblique original ?
-   - Pas de contresens théologiques majeurs ?
-   - Les adaptations pour enfants restent-elles cohérentes ?
+3. FIDÉLITÉ BIBLIQUE ET VÉRACITÉ (2 pts) — CRITÈRE CRITIQUE
+   Ce critère est ESSENTIEL. Vérifie CHAQUE fait biblique mentionné dans le script :
+   - Les NOMS des personnages bibliques sont-ils corrects ? (ex: Abraham, pas "Abram" après le changement de nom)
+   - Les LIEUX sont-ils exacts ? (ex: Ur des Chaldéens, Harân, Canaan, Égypte — pas d'invention)
+   - La CHRONOLOGIE des événements est-elle respectée ? (ordre des péripéties)
+   - Les DIALOGUES attribués à Dieu ou aux personnages bibliques sont-ils fidèles au texte ?
+   - Les NOMBRES sont-ils corrects ? (âges, durées, quantités mentionnées dans la Bible)
+   - Les RELATIONS entre personnages sont-elles justes ? (parenté, alliances, conflits)
+   - Aucune INVENTION de faits non bibliques présentée comme vérité biblique ?
+   - Les ADAPTATIONS pour enfants ne déforment-elles pas le sens original du récit ?
+   Si une erreur factuelle est détectée, c'est une correction de priorité "critique".
+   En cas de doute sur un fait, ajouter une ALERTE plutôt que de laisser passer.
 
-4. RYTHME ET STRUCTURE (2 pts)
+4. RICHESSE ÉDUCATIVE ET COUVERTURE DU RÉCIT (2 pts) — CRITÈRE CRITIQUE
+   Le podcast est AVANT TOUT éducatif. L'auditeur doit APPRENDRE l'histoire biblique :
+   - Au moins 60% des segments de dialogue (hors SFX) doivent être consacrés au récit biblique
+     (narration de l'histoire, dialogues reconstitués, descriptions, contexte historique).
+   - L'histoire annoncée dans le titre est-elle couverte INTÉGRALEMENT, pas juste survolée ?
+   - Y a-t-il des DÉTAILS CONCRETS qui enrichissent (noms de lieux, coutumes, contexte géographique) ?
+   - Les ANECDOTES bibliques sont-elles présentes (détails marquants du texte original) ?
+   - Les interventions des enfants font-elles AVANCER la compréhension de l'histoire ?
+   - À la fin de l'épisode, un enfant pourrait-il résumer les événements clés de l'histoire ?
+   - Le ratio bavardage/récit n'est-il PAS déséquilibré en faveur du bavardage ?
+   Si le récit biblique est trop superficiel ou que l'épisode est surtout du bavardage,
+   c'est une correction de priorité "critique".
+
+5. RYTHME ET STRUCTURE (2 pts)
    - Les enfants interviennent-ils régulièrement (toutes les 90 sec max) ?
    - Alternance correcte narration / dialogue / question ?
    - Les pauses sont-elles bien placées ?
 
-5. DURÉE ET FORMAT (2 pts)
+6. DURÉE ET FORMAT (2 pts)
    - Durée et mots cibles : vérifie selon le type d'épisode indiqué dans le script.
      Référence des formats : {formats_episodes}
    - Comptage : {mots_min_enfant} mots/min pour enfants, {mots_min_adulte} mots/min pour adultes.
    - Format JSON correct et complet ?
    - Les segments SFX (personnage "sfx") sont-ils bien placés et pertinents ?
-   - Les bruitages enrichissent-ils l'histoire sans surcharger ? (3-8 SFX max)
+   - Les bruitages enrichissent-ils l'histoire sans surcharger ? (8-12 SFX pour un épisode de 25 min)
    - Chaque segment SFX doit avoir un champ "mode" : "overlay" (superposé aux voix)
      ou "insert" (inséré séquentiellement entre les segments voix).
    - Chaque segment SFX doit avoir un champ "duree_sfx_secondes" (durée en secondes).
+   - Les SFX "overlay" d'ambiance doivent durer au moins 15 secondes pour couvrir la narration.
+   - Un SFX de transition doit marquer le passage scène de vie → récit biblique et vice versa.
 
-6. CRÉATIVITÉ NARRATIVE (2 pts)
+7. CRÉATIVITÉ NARRATIVE (2 pts)
    - L'épisode suit-il un arc émotionnel clair (curiosité → tension → climax → résolution) ?
    - Y a-t-il au moins un moment de SURPRISE ou RÉVÉLATION inattendue ?
    - Les questions des enfants font-elles avancer l'histoire (pas juste décoratives) ?
@@ -56,7 +80,7 @@ CRITÈRES D'ÉVALUATION (note sur 12, ramenée à 10) :
    - Si un fil rouge de saison est indiqué, progresse-t-il visiblement ?
    - Le SFX enrichit-il l'émotion (pas juste l'ambiance) ?
 
-Le score final = somme des 6 critères, ramenée sur 10 (diviser par 1.2).
+Le score final = somme des 7 critères, ramenée sur 10 (diviser par 1.4).
 
 FORMAT DE RÉPONSE — JSON STRICT :
 {{
@@ -75,6 +99,7 @@ FORMAT DE RÉPONSE — JSON STRICT :
       "coherence_personnage": 2,
       "adequation_age": 1.5,
       "fidelite_biblique": 2,
+      "richesse_educative": 1.5,
       "rythme_structure": 1.5,
       "duree_format": 1,
       "creativite_narrative": 1.5
@@ -111,13 +136,14 @@ class Reviewer:
                 "Cle API Anthropic (ANTHROPIC_API_KEY) non configuree. "
                 "Ajoutez-la dans votre fichier .env ou dans les Secrets Replit."
             )
-        self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, timeout=300.0)
 
-    def evaluer(self, script: dict) -> dict:
+    def evaluer(self, script: dict, *, max_retry: int = 3) -> dict:
         """Évalue et corrige un script.
 
         Args:
             script: Script JSON structuré (sortie du Scripteur).
+            max_retry: Nombre maximum de tentatives en cas de JSON malformé.
 
         Returns:
             Dictionnaire contenant la review et le script corrigé.
@@ -138,57 +164,87 @@ class Reviewer:
 
         system_prompt = _construire_system_prompt_reviewer()
 
-        # max_tokens adaptatif selon le type d'épisode du script
+        # max_tokens adaptatif selon le type d'épisode du script (doublé pour scripts longs)
         type_episode = script.get("episode", {}).get("type", "standard")
         max_tokens_map = {
-            "ouverture": 12288,
-            "standard": 10240,
-            "mi-saison": 12288,
+            "ouverture": 16384,
+            "standard": 16384,
+            "mi-saison": 16384,
             "final": 16384,
-            "bonus": 8192,
+            "bonus": 12288,
         }
-        max_tokens = max_tokens_map.get(type_episode, 6144)
+        max_tokens = max_tokens_map.get(type_episode, 16384)
 
-        response = config.appel_claude_avec_retry(
-            self.client,
-            model=config.CLAUDE_MODEL,
-            max_tokens=max_tokens,
-            system=system_prompt,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        # Boucle de validation avec retry automatique :
+        # Si la review ne passe pas la validation (JSON malformé, structure
+        # invalide...), on re-génère en injectant l'erreur dans le prompt.
+        derniere_erreur = ""
+        for validation_attempt in range(1, max_retry + 1):
+            prompt_effectif = prompt
+            if derniere_erreur:
+                prompt_effectif = (
+                    f"{prompt}\n\n"
+                    f"⚠️ ERREUR DE VALIDATION (tentative {validation_attempt}/{max_retry}) :\n"
+                    f"Ta review précédente a été REJETÉE pour la raison suivante :\n"
+                    f"  {derniere_erreur}\n\n"
+                    f"Corrige ce problème et renvoie une review valide."
+                )
+                logger.warning(
+                    "Retry validation review %d/%d — erreur précédente : %s",
+                    validation_attempt, max_retry, derniere_erreur,
+                )
 
-        if response.stop_reason == "max_tokens":
-            raise ValueError(
-                f"La review a été tronquée (max_tokens={max_tokens} atteint). "
-                f"Le JSON est incomplet."
-            )
-
-        texte_brut = response.content[0].text.strip()
-        try:
-            resultat = parser_json_llm(texte_brut)
-        except json.JSONDecodeError as e:
-            logger.warning(
-                "JSON malformé dans la review LLM (%s). "
-                "Retry avec une nouvelle génération...", e,
-            )
             response = config.appel_claude_avec_retry(
                 self.client,
                 model=config.CLAUDE_MODEL,
                 max_tokens=max_tokens,
                 system=system_prompt,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": prompt_effectif}],
             )
-            if response.stop_reason == "max_tokens":
-                raise ValueError(
-                    f"La review a été tronquée (max_tokens={max_tokens} atteint). "
-                    f"Le JSON est incomplet."
-                )
-            texte_brut = response.content[0].text.strip()
-            resultat = parser_json_llm(texte_brut)
-        self._valider_review(resultat)
 
-        # Vérifier la cohérence structurelle du script corrigé vs original (BUG 6)
-        self._verifier_coherence(script, resultat)
+            if response.stop_reason == "max_tokens":
+                derniere_erreur = f"Review tronquée (max_tokens={max_tokens} atteint). Le JSON est incomplet."
+                if validation_attempt < max_retry:
+                    max_tokens = min(int(max_tokens * 1.5), 32768)
+                    continue
+                raise ValueError(derniere_erreur)
+
+            texte_brut = response.content[0].text.strip()
+            try:
+                resultat = parser_json_llm(texte_brut)
+            except json.JSONDecodeError as e:
+                derniere_erreur = f"JSON malformé : {e}"
+                if validation_attempt < max_retry:
+                    continue
+                raise ValueError(
+                    f"La review n'est pas du JSON valide "
+                    f"après {max_retry} tentatives : {e}"
+                )
+
+            try:
+                self._valider_review(resultat)
+            except ValueError as e:
+                derniere_erreur = str(e)
+                if validation_attempt < max_retry:
+                    continue
+                raise
+
+            # Vérifier la cohérence structurelle du script corrigé vs original (BUG 6)
+            try:
+                self._verifier_coherence(script, resultat)
+            except ValueError as e:
+                derniere_erreur = str(e)
+                if validation_attempt < max_retry:
+                    continue
+                raise
+
+            # Review valide
+            if derniere_erreur:
+                logger.info(
+                    "Review corrigée après %d tentative(s) de validation.",
+                    validation_attempt,
+                )
+            break
 
         score = resultat["review"]["score"]
         nb_corrections = len(resultat["review"]["corrections"])
@@ -271,7 +327,6 @@ class Reviewer:
             texte_lower = seg["texte"].lower()
             for mot in config.MOTS_INTERDITS:
                 # Chercher le mot comme mot complet (pas en sous-chaîne)
-                import re
                 if re.search(r"\b" + re.escape(mot) + r"\b", texte_lower):
                     violations.append(
                         f"Mot interdit '{mot}' dans segment {seg['id']} "
@@ -321,6 +376,172 @@ class Reviewer:
                 f"La question ouverte de l'épisode précédent n'est pas reprise : "
                 f"'{q_str[:80]}...'"
             )
+        return alertes
+
+    @staticmethod
+    def verifier_teasing(script: dict) -> list[str]:
+        """Vérifie que le teasing de fin d'épisode est naturel (pas de langage méta).
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Liste d'alertes (vide si OK).
+        """
+        alertes = []
+        segments = script["episode"]["segments"]
+        if not segments:
+            return alertes
+
+        # Chercher dans les 5 derniers segments non-SFX
+        derniers = [s for s in segments if s["personnage"] != "sfx"][-5:]
+        texte_fin = " ".join(s["texte"].lower() for s in derniers)
+
+        mots_meta = [
+            "prochain épisode", "prochaine saison", "la semaine prochaine",
+            "dans le prochain", "au prochain épisode", "restez à l'écoute",
+            "abonnez-vous", "n'oubliez pas de",
+        ]
+        for mot in mots_meta:
+            if mot in texte_fin:
+                alertes.append(
+                    f"Teasing non naturel : '{mot}' détecté dans la fin de l'épisode. "
+                    f"Utiliser un langage naturel de Papy Babou (ex: 'La prochaine fois "
+                    f"que vous viendrez...')."
+                )
+        return alertes
+
+    @staticmethod
+    def verifier_ratio_biblique(script: dict) -> tuple[float, list[str]]:
+        """Vérifie que le ratio de contenu biblique est suffisant (≥ 60%).
+
+        Compte les segments de dialogue de papy_babou comme contenu biblique
+        (il est le narrateur de l'histoire) et les segments des enfants comme
+        interactions. Le ratio est segments_papy / segments_non_sfx.
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Tuple (ratio, alertes). ratio est entre 0.0 et 1.0.
+        """
+        alertes = []
+        segments = script["episode"]["segments"]
+        non_sfx = [s for s in segments if s["personnage"] != "sfx"]
+        if not non_sfx:
+            return 0.0, ["Aucun segment de dialogue trouvé."]
+
+        # Compter les mots par personnage
+        mots_papy = sum(
+            len(s["texte"].split()) for s in non_sfx
+            if s["personnage"] == "papy_babou"
+        )
+        mots_total = sum(len(s["texte"].split()) for s in non_sfx)
+
+        if mots_total == 0:
+            return 0.0, ["Aucun mot dans les segments."]
+
+        ratio = mots_papy / mots_total
+        if ratio < 0.60:
+            alertes.append(
+                f"Ratio contenu biblique insuffisant : {ratio:.0%} "
+                f"(minimum 60%). Papy Babou ({mots_papy} mots) devrait "
+                f"raconter davantage l'histoire biblique par rapport au "
+                f"bavardage ({mots_total - mots_papy} mots enfants/autres)."
+            )
+        return ratio, alertes
+
+    @staticmethod
+    def verifier_ratio_papy_enfants(script: dict) -> tuple[float, list[str]]:
+        """Vérifie l'équilibre Papy/enfants dans les segments.
+
+        Les enfants doivent avoir au moins 25% des segments pour maintenir
+        l'interactivité, mais pas plus de 45% pour laisser place au récit.
+
+        Returns:
+            Tuple (ratio_enfants, alertes).
+        """
+        alertes = []
+        segments = script["episode"]["segments"]
+        non_sfx = [s for s in segments if s["personnage"] != "sfx"]
+        if not non_sfx:
+            return 0.0, []
+
+        nb_enfants = sum(
+            1 for s in non_sfx
+            if s["personnage"] in ("antoine", "noemie")
+        )
+        ratio = nb_enfants / len(non_sfx)
+
+        if ratio < 0.25:
+            alertes.append(
+                f"Les enfants n'interviennent que dans {ratio:.0%} des segments "
+                f"({nb_enfants}/{len(non_sfx)}). Minimum recommandé : 25%."
+            )
+        elif ratio > 0.45:
+            alertes.append(
+                f"Les enfants occupent {ratio:.0%} des segments "
+                f"({nb_enfants}/{len(non_sfx)}). Maximum recommandé : 45%. "
+                f"Le récit biblique risque d'être insuffisant."
+            )
+        return ratio, alertes
+
+    @staticmethod
+    def verifier_pauses(script: dict) -> list[str]:
+        """Vérifie que les pauses sont dans des plages raisonnables.
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Liste d'alertes.
+        """
+        alertes = []
+        segments = script["episode"]["segments"]
+        pauses_excessives = 0
+        pauses_nulles = 0
+
+        for seg in segments:
+            pause = seg.get("pause_apres_ms", 0)
+            if pause > 3000:
+                pauses_excessives += 1
+            elif pause == 0 and seg["personnage"] != "sfx":
+                pauses_nulles += 1
+
+        if pauses_excessives > 3:
+            alertes.append(
+                f"{pauses_excessives} segments ont des pauses > 3 secondes. "
+                f"Maximum recommandé : 3 par épisode."
+            )
+        if pauses_nulles > len(segments) * 0.5:
+            alertes.append(
+                f"{pauses_nulles} segments n'ont aucune pause (0ms). "
+                f"Le rythme risque d'être trop rapide."
+            )
+        return alertes
+
+    @staticmethod
+    def verifier_sfx_overlay_duree(script: dict) -> list[str]:
+        """Vérifie que les SFX overlay d'ambiance durent au moins 15 secondes.
+
+        Args:
+            script: Script JSON structuré.
+
+        Returns:
+            Liste d'alertes pour les overlay trop courts.
+        """
+        alertes = []
+        for seg in script["episode"]["segments"]:
+            if seg["personnage"] != "sfx":
+                continue
+            mode = seg.get("mode", "insert")
+            duree = seg.get("duree_sfx_secondes", 5.0)
+            if mode == "overlay" and duree < 15.0:
+                alertes.append(
+                    f"SFX overlay '{seg.get('texte', '')[:50]}' ({seg['id']}) "
+                    f"ne dure que {duree}s — minimum recommandé : 15s pour "
+                    f"couvrir la narration."
+                )
         return alertes
 
     @staticmethod

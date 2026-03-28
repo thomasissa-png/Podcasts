@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import threading
+import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
@@ -37,17 +38,48 @@ def get_pool() -> psycopg2.pool.ThreadedConnectionPool:
                         "Ajoutez-la dans .env ou dans les secrets Replit."
                     )
                 _pool = psycopg2.pool.ThreadedConnectionPool(
-                    minconn=2,
+                    minconn=1,   # Réduit de 2 à 1 — moins de connexions idle
                     maxconn=10,
                     dsn=DATABASE_URL,
+                    connect_timeout=10,  # Timeout de connexion (Neon cold start ~3s)
+                    # TCP keepalives pour détecter les connexions mortes
+                    keepalives=1,
+                    keepalives_idle=30,
+                    keepalives_interval=10,
+                    keepalives_count=5,
                 )
                 logger.info("Pool PostgreSQL initialisé (2-10 connexions)")
     return _pool
 
 
+def _ping_connection(conn) -> bool:
+    """Vérifie qu'une connexion est encore vivante (pre-ping).
+
+    Retourne True si la connexion est utilisable, False sinon.
+    psycopg2 utilise conn.closed == 0 pour une connexion ouverte.
+    """
+    try:
+        # psycopg2: closed est un int (0=ouvert, >0=fermé)
+        closed_attr = getattr(conn, "closed", 0)
+        if isinstance(closed_attr, int) and closed_attr != 0:
+            return False
+        # Exécuter un SELECT 1 léger pour détecter les connexions périmées
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+        # Annuler toute transaction ouverte par le ping
+        conn.rollback()
+        return True
+    except Exception:
+        return False
+
+
 @contextmanager
 def get_conn():
     """Context manager pour obtenir une connexion du pool.
+
+    Vérifie que la connexion est vivante (pre-ping). Si elle est périmée,
+    la ferme, en obtient une nouvelle du pool, et réessaie une fois.
 
     Usage:
         with get_conn() as conn:
@@ -57,13 +89,42 @@ def get_conn():
     """
     pool = get_pool()
     conn = pool.getconn()
+
+    # Pre-ping : vérifier que la connexion n'est pas périmée
+    if not _ping_connection(conn):
+        logger.warning("Connexion PostgreSQL périmée détectée, renouvellement...")
+        try:
+            pool.putconn(conn, close=True)
+        except Exception:
+            # Si putconn échoue aussi, on ignore — on va en chercher une neuve
+            pass
+        conn = pool.getconn()
+        if not _ping_connection(conn):
+            # Deuxième échec : recréer tout le pool
+            logger.error("Pool PostgreSQL corrompu, recréation...")
+            try:
+                pool.putconn(conn, close=True)
+            except Exception:
+                pass
+            _reset_pool()
+            pool = get_pool()
+            conn = pool.getconn()
+
     try:
         yield conn
     except Exception:
         conn.rollback()
         raise
     finally:
-        pool.putconn(conn)
+        try:
+            pool.putconn(conn)
+        except Exception:
+            # Connexion irrécupérable — la fermer silencieusement
+            logger.warning("Impossible de remettre la connexion dans le pool")
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 @contextmanager
@@ -89,6 +150,61 @@ def close_pool() -> None:
         _pool.closeall()
         _pool = None
         logger.info("Pool PostgreSQL fermé")
+
+
+def _reset_pool() -> None:
+    """Ferme le pool existant et force sa recréation au prochain appel.
+
+    Utilisé quand le pool est corrompu (toutes les connexions périmées).
+    """
+    global _pool
+    with _pool_lock:
+        if _pool is not None:
+            try:
+                _pool.closeall()
+            except Exception:
+                pass
+            _pool = None
+            logger.info("Pool PostgreSQL réinitialisé (sera recréé au prochain appel)")
+
+
+# ── Keepalive du pool (Neon scale-to-zero) ───────────────────────────────────
+
+def _pool_keepalive_loop():
+    """Ping périodique pour empêcher Neon de fermer les connexions idle.
+
+    Neon (PostgreSQL managé de Replit) ferme les connexions après ~5 min
+    d'inactivité. Les TCP keepalives ne traversent pas toujours le proxy.
+    Ce thread envoie un SELECT 1 toutes les 2 minutes pour maintenir le pool.
+    """
+    while True:
+        time.sleep(120)  # 2 minutes
+        try:
+            pool = _pool  # Lecture sans lock (atomique pour les refs Python)
+            if pool is None:
+                continue
+            # Obtenir une connexion, la pinguer, la remettre
+            conn = pool.getconn()
+            try:
+                if _ping_connection(conn):
+                    pool.putconn(conn)
+                else:
+                    pool.putconn(conn, close=True)
+                    logger.debug("Keepalive : connexion périmée remplacée")
+            except Exception:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+        except Exception:
+            pass  # Pool fermé ou indisponible — on réessaie au prochain cycle
+
+
+if DATABASE_URL:
+    _keepalive_thread = threading.Thread(
+        target=_pool_keepalive_loop, daemon=True, name="pg-keepalive"
+    )
+    _keepalive_thread.start()
 
 
 # ── Schéma de la base de données ────────────────────────────────────────────────
@@ -265,6 +381,16 @@ BEGIN
     END IF;
 END $$;
 
+-- Migration : ajouter deleted_at pour soft-delete (remplace le hard DELETE)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'historique_episodes'
+                   AND column_name = 'deleted_at') THEN
+        ALTER TABLE historique_episodes ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
+    END IF;
+END $$;
+
 -- ══════════════════════════════════════════════════════════════════════════════
 -- Table: preferences_producteur — Mémoire persistante des préférences
 -- ══════════════════════════════════════════════════════════════════════════════
@@ -364,6 +490,16 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Migration : ajouter web_job_id pour reconnecter le polling après perte réseau
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'productions'
+                   AND column_name = 'web_job_id') THEN
+        ALTER TABLE productions ADD COLUMN web_job_id VARCHAR(12) DEFAULT NULL;
+    END IF;
+END $$;
 
 -- Appliquer le trigger d'audit sur toutes les tables principales
 DO $$

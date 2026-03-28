@@ -15,7 +15,12 @@ Usage:
 
 import json
 import logging
+import os
+import signal
 import sys
+import tempfile
+import threading
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -25,13 +30,14 @@ from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+from rich.prompt import Prompt
 from rich.style import Style
 
 import config
-from utils import fichier_lock, ouvrir_fichier
+from utils import fichier_lock, ouvrir_fichier, slug as _slug
 from agents import (
     Scripteur, Reviewer, ProducteurAudio, SfxProvider, Monteur,
-    Metadonnees, Publisher, CoverArt, Planificateur,
+    Metadonnees, Publisher, CoverArt, Planificateur, DirecteurPodcast,
 )
 from theme import (
     Palette, Icons, Typo, NOMS_PERSONNAGES_STYLED,
@@ -66,7 +72,11 @@ LOG_FILE = config.LOGS_DIR / "production.log"
 
 
 def configurer_logging() -> None:
-    """Configure le logging avec sortie console (Rich) et fichier."""
+    """Configure le logging avec sortie console (Rich) et fichier.
+
+    Utilise force=True pour écraser toute configuration antérieure
+    (imports de bibliothèques qui appellent logging avant nous).
+    """
     logging.basicConfig(
         level=logging.INFO,
         format="%(message)s",
@@ -75,7 +85,25 @@ def configurer_logging() -> None:
             RichHandler(console=console, rich_tracebacks=True),
             logging.FileHandler(str(LOG_FILE), encoding="utf-8"),
         ],
+        force=True,
     )
+    # Ajouter un handler stderr explicite pour les subprocesses
+    # Rich Console peut ne pas flusher correctement quand stdout est un PIPE.
+    # Ce handler garantit que les messages INFO+ arrivent dans stderr,
+    # capturé par _stream_reader dans web.py.
+    # Vérifier qu'on n'ajoute pas un doublon (appels multiples de configurer_logging).
+    _root = logging.getLogger()
+    _has_stderr = any(
+        isinstance(h, logging.StreamHandler)
+        and getattr(h, "_is_papy_stderr", False)
+        for h in _root.handlers
+    )
+    if not _has_stderr:
+        _stderr_handler = logging.StreamHandler(sys.stderr)
+        _stderr_handler.setLevel(logging.INFO)
+        _stderr_handler.setFormatter(logging.Formatter("[%(levelname)s] %(name)s: %(message)s"))
+        _stderr_handler._is_papy_stderr = True  # tag pour détection doublon
+        _root.addHandler(_stderr_handler)
 
 
 def initialiser_db() -> bool:
@@ -131,10 +159,56 @@ def charger_historique() -> list[dict]:
     return []
 
 
+def _episodes_deja_produits(
+    saison_num: int,
+    episodes_plan: list[dict],
+) -> set[str]:
+    """Retourne les episode_id déjà produits ET dont l'histoire n'a pas changé.
+
+    Compare l'histoire_biblique du plan actuel avec celle de l'historique.
+    Si le plan a changé (nouvelle histoire pour le même numéro), l'épisode
+    est considéré comme NON produit — il faut le re-produire.
+    """
+    historique = charger_historique()
+
+    # Index historique : episode_id → titre de l'historique
+    hist_par_id: dict[str, str] = {}
+    for h in historique:
+        eid = h.get("episode_id", "")
+        if eid.startswith(f"S{saison_num:02d}"):
+            hist_par_id[eid] = h.get("titre", "")
+
+    deja: set[str] = set()
+    for ep in episodes_plan:
+        ep_id = f"S{saison_num:02d}E{ep['numero']:02d}"
+        if ep_id not in hist_par_id:
+            continue
+        # Comparer le titre du plan avec celui de l'historique
+        titre_plan = ep.get("titre", "")
+        titre_hist = hist_par_id[ep_id]
+        # Si le titre a changé, l'épisode a changé → pas "déjà produit"
+        if titre_plan and titre_hist and titre_plan != titre_hist:
+            logger.info(
+                "Épisode %s : plan changé ('%s' → '%s') — sera re-produit",
+                ep_id, titre_hist, titre_plan,
+            )
+            continue
+        deja.add(ep_id)
+
+    return deja
+
+
 def sauvegarder_historique(historique: list[dict]) -> None:
-    """Sauvegarde l'historique des épisodes (JSON — rétrocompatibilité)."""
-    with open(HISTORIQUE_PATH, "w", encoding="utf-8") as f:
-        json.dump(historique, f, ensure_ascii=False, indent=2)
+    """Sauvegarde l'historique des épisodes (JSON — rétrocompatibilité).
+
+    Utilise une écriture atomique pour éviter la corruption si crash mid-write.
+    """
+    with tempfile.NamedTemporaryFile(
+        mode="w", dir=HISTORIQUE_PATH.parent, delete=False, suffix=".tmp", encoding="utf-8"
+    ) as tmp:
+        json.dump(historique, tmp, ensure_ascii=False, indent=2)
+        tmp_path = tmp.name
+    os.replace(tmp_path, HISTORIQUE_PATH)
 
 
 # ── Préférences producteur (mémoire persistante) ────────────────────────────
@@ -147,8 +221,12 @@ def charger_preferences() -> list[dict]:
         Liste de regles/preferences persistantes.
     """
     if config.PREFERENCES_PATH.exists():
-        with open(config.PREFERENCES_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(config.PREFERENCES_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("Fichier préférences corrompu (%s) : %s — ignoré",
+                           config.PREFERENCES_PATH, e)
     return []
 
 
@@ -207,6 +285,214 @@ def _construire_bloc_preferences() -> str:
     return "\n".join(lignes)
 
 
+def _appliquer_instructions_montage(
+    script: dict, instructions: str, episode_id: str
+) -> dict:
+    """Modifie le script selon les instructions du producteur pour le montage.
+
+    Utilise Claude pour interpréter les instructions en langage naturel et
+    adapter les paramètres du script qui affectent le montage : pause_apres_ms,
+    ton, rythme, mode SFX, ambiance_par_acte.
+
+    Le script modifié est sauvegardé comme nouvelle version validée.
+
+    Args:
+        script: Script JSON validé actuel.
+        instructions: Instructions en texte libre du producteur.
+        episode_id: Identifiant de l'épisode (pour la sauvegarde).
+
+    Returns:
+        Script modifié avec les ajustements demandés.
+    """
+    import anthropic
+    from utils import parser_json_llm
+
+    client = anthropic.Anthropic()
+
+    # Extraire les segments actuels pour contexte
+    segments = script.get("episode", {}).get("segments", [])
+    segments_resume = []
+    for i, seg in enumerate(segments):
+        segments_resume.append(
+            f"  [{i}] id={seg['id']} personnage={seg['personnage']} "
+            f"ton={seg.get('ton', 'normal')} rythme={seg.get('rythme', 'normal')} "
+            f"pause_apres_ms={seg.get('pause_apres_ms', 0)} "
+            f"texte=\"{seg.get('texte', '')[:60]}...\""
+        )
+
+    system_prompt = (
+        "Tu es un ingénieur son spécialisé dans le montage de podcasts pour enfants. "
+        "On te donne un script JSON d'épisode et des instructions du producteur. "
+        "Tu dois modifier UNIQUEMENT les paramètres de montage du script, sans changer "
+        "le texte des dialogues ni ajouter/supprimer de segments.\n\n"
+        "Paramètres modifiables par segment :\n"
+        "- pause_apres_ms (0-2500) : durée de la pause après le segment en ms\n"
+        "- ton : émotion du segment (joyeux, triste, dramatique, solennel, tendre, "
+        "epique, malicieux, mystérieux, calme, surpris, effrayé, enthousiaste, "
+        "nostalgique, complice, rieur)\n"
+        "- rythme : cadence (rapide, normal, lent)\n"
+        "- mode (SFX uniquement) : overlay (superposé à la voix) ou insert (séquentiel)\n\n"
+        "Paramètres modifiables au niveau épisode :\n"
+        "- ambiance : thème musical de fond\n"
+        "- ambiance_par_acte : liste de 3 ambiances pour varier par acte\n\n"
+        "Réponds UNIQUEMENT avec un JSON contenant les modifications :\n"
+        "{\n"
+        '  "modifications_segments": {\n'
+        '    "<index_segment>": {"pause_apres_ms": 1500, "ton": "dramatique", ...},\n'
+        "    ...\n"
+        "  },\n"
+        '  "modifications_episode": {"ambiance": "...", "ambiance_par_acte": [...]},\n'
+        '  "resume_modifications": "Description courte des changements appliqués"\n'
+        "}\n\n"
+        "Ne modifie QUE ce qui est demandé par le producteur. "
+        "Laisse les autres paramètres inchangés."
+    )
+
+    user_prompt = (
+        f"INSTRUCTIONS DU PRODUCTEUR :\n{instructions}\n\n"
+        f"SEGMENTS ACTUELS ({len(segments)} segments) :\n"
+        + "\n".join(segments_resume)
+        + f"\n\nAmbiance actuelle : {script.get('episode', {}).get('ambiance', 'non définie')}"
+        + f"\nAmbiance par acte : {script.get('episode', {}).get('ambiance_par_acte', 'non défini')}"
+    )
+
+    logger.info("Appel Claude pour instructions montage %s", episode_id)
+    response = config.appel_claude_avec_retry(
+        client,
+        model=config.CLAUDE_MODEL,
+        max_tokens=4096,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_prompt}],
+    )
+
+    response_text = response.content[0].text
+    try:
+        modifications = parser_json_llm(response_text)
+    except (json.JSONDecodeError, ValueError):
+        logger.warning(
+            "Réponse Claude non parsable pour instructions montage %s", episode_id
+        )
+        return script
+
+    if not modifications:
+        logger.warning("Aucune modification retournée par Claude pour %s", episode_id)
+        return script
+
+    # Appliquer les modifications aux segments
+    mods_segments = modifications.get("modifications_segments", {})
+    for idx_str, changements in mods_segments.items():
+        try:
+            idx = int(idx_str)
+            if 0 <= idx < len(segments):
+                _RYTHMES_VALIDES = {"rapide", "normal", "lent"}
+                _MODES_VALIDES = {"insert", "overlay"}
+                _TONS_VALIDES = {
+                    "joyeux", "triste", "dramatique", "solennel", "tendre",
+                    "epique", "malicieux", "mystérieux", "calme", "surpris",
+                    "effrayé", "enthousiaste", "nostalgique", "complice",
+                    "rieur", "normal",
+                }
+                for cle, valeur in changements.items():
+                    if cle == "pause_apres_ms":
+                        if isinstance(valeur, (int, float)):
+                            valeur = max(0, min(int(valeur), config.PRODUCTION.get("max_pause_ms", 2500)))
+                            segments[idx][cle] = valeur
+                    elif cle == "rythme":
+                        if isinstance(valeur, str) and valeur in _RYTHMES_VALIDES:
+                            segments[idx][cle] = valeur
+                    elif cle == "mode":
+                        if isinstance(valeur, str) and valeur in _MODES_VALIDES:
+                            segments[idx][cle] = valeur
+                    elif cle == "ton":
+                        if isinstance(valeur, str) and valeur in _TONS_VALIDES:
+                            segments[idx][cle] = valeur
+        except (ValueError, IndexError):
+            logger.warning("Index segment invalide : %s", idx_str)
+
+    # Appliquer les modifications au niveau épisode
+    mods_episode = modifications.get("modifications_episode", {})
+    if "ambiance" in mods_episode:
+        script["episode"]["ambiance"] = mods_episode["ambiance"]
+    if "ambiance_par_acte" in mods_episode:
+        script["episode"]["ambiance_par_acte"] = mods_episode["ambiance_par_acte"]
+
+    resume = modifications.get("resume_modifications", "Modifications appliquées")
+    logger.info("Instructions montage appliquées pour %s : %s", episode_id, resume)
+
+    # Sauvegarder le script modifié comme version validée
+    chemin_valide = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
+    try:
+        with fichier_lock(chemin_valide):
+            with open(chemin_valide, "w", encoding="utf-8") as f:
+                json.dump(script, f, ensure_ascii=False, indent=2)
+        logger.info("Script modifié sauvegardé : %s", chemin_valide)
+    except Exception as e:
+        logger.warning("Erreur sauvegarde script modifié : %s", e)
+
+    return script
+
+
+def _charger_scripts_precedents_saison(saison: int, numero: int) -> list[dict]:
+    """Charge les scripts validés des épisodes précédents de la même saison.
+
+    Pour l'épisode S01E03, charge les scripts de S01E01 et S01E02.
+    Cela permet au scripteur de lire les vrais dialogues et événements,
+    pas seulement les résumés courts de l'historique.
+
+    Returns:
+        Liste de dicts {episode_id, titre, segments_resume} triés par numéro.
+    """
+    scripts_precedents = []
+    for n in range(1, numero):
+        ep_id = f"S{saison:02d}E{n:02d}"
+        chemin = config.SCRIPTS_DIR / f"{ep_id}_valide.json"
+        if not chemin.exists():
+            # Tenter la restauration depuis Object Storage
+            try:
+                import persistent_storage
+                persistent_storage.restore_script(ep_id, config.SCRIPTS_DIR)
+            except Exception:
+                pass
+        if not chemin.exists():
+            # B8: Signaler le script manquant (trou dans la continuité narrative)
+            logger.warning(
+                "Script précédent %s introuvable — trou dans la continuité "
+                "narrative pour S%02dE%02d", ep_id, saison, numero,
+            )
+            continue
+        try:
+            with open(chemin, "r", encoding="utf-8") as f:
+                script_data = json.load(f)
+            episode = script_data.get("episode", {})
+            segments = episode.get("segments", [])
+
+            # Extraire les dialogues clés (pas les SFX) — résumé condensé
+            dialogues = []
+            for seg in segments:
+                if seg.get("personnage", "") == "sfx":
+                    continue
+                texte = seg.get("texte", "").strip()
+                perso = seg.get("personnage", "inconnu")
+                if texte:
+                    # Tronquer les longs textes pour ne pas exploser le contexte
+                    if len(texte) > 300:
+                        texte = texte[:300] + "..."
+                    dialogues.append(f"[{perso}] {texte}")
+
+            scripts_precedents.append({
+                "episode_id": ep_id,
+                "titre": episode.get("titre", ep_id),
+                "ambiance": episode.get("ambiance", ""),
+                "nb_segments": len(segments),
+                "dialogues": dialogues,
+            })
+        except (json.JSONDecodeError, KeyError, OSError) as e:
+            logger.debug("Script précédent %s illisible : %s", ep_id, e)
+            continue
+
+    return scripts_precedents
+
+
 def ajouter_historique(rapport: dict, script: dict) -> None:
     """Ajoute un épisode à l'historique (DB + JSON pour rétrocompatibilité)."""
     episode = script.get("episode", {})
@@ -217,12 +503,15 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         if seg["personnage"] != "sfx"
     })
 
-    # Construire un résumé court à partir des premiers segments (pas juste le titre)
-    premiers_textes = [
-        seg["texte"] for seg in episode.get("segments", [])[:3]
-        if seg.get("personnage") != "sfx"
-    ]
-    resume_court = " ".join(premiers_textes)[:200] if premiers_textes else episode.get("titre", "")
+    # Construire un résumé court : priorité au résumé narratif, puis morale, puis titre
+    resume_court = (
+        episode.get("resume")
+        or rapport.get("resume")
+        or episode.get("morale")
+        or rapport.get("titre", "")
+    )
+    if resume_court:
+        resume_court = resume_court[:200]
 
     # Construire un resume des retours humains pour la memoire (A2)
     retours_humains = ""
@@ -236,6 +525,8 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
 
     entree = {
         "episode_id": rapport.get("episode_id", ""),
+        "saison": episode.get("saison", rapport.get("saison", 1)),
+        "numero": episode.get("numero", rapport.get("numero", 1)),
         "titre": rapport.get("titre", ""),
         "morale": episode.get("morale", ""),
         "resume_court": resume_court,
@@ -250,6 +541,11 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         "type_episode": episode.get("type", "standard"),
         # Retours humains pour la memoire inter-episodes (A2)
         "retours_humains": retours_humains,
+        # Métriques de validation post-génération
+        "ratio_biblique": rapport.get("metriques", {}).get("ratio_biblique", 0),
+        "ratio_enfants": rapport.get("metriques", {}).get("ratio_enfants", 0),
+        # Fil rouge
+        "elements_fil_rouge": episode.get("elements_fil_rouge", ""),
     }
 
     # Sauvegarder en DB si disponible
@@ -279,14 +575,78 @@ def ajouter_historique(rapport: dict, script: dict) -> None:
         if HISTORIQUE_PATH.exists():
             with open(HISTORIQUE_PATH, "r", encoding="utf-8") as f:
                 historique = json.load(f)
+        # UPSERT : remplace l'entrée si episode_id existe déjà
+        historique = [h for h in historique if h.get("episode_id") != entree["episode_id"]]
         historique.append(entree)
         sauvegarder_historique(historique)
 
 
 # ── Système de checkpoints ───────────────────────────────────────────────────
 
-# Variable globale pour l'ID de production courante (DB)
-_production_id_courante: int | None = None
+# Thread-local pour l'ID de production courante (DB)
+_production_local = threading.local()
+
+
+# ── Gestionnaire SIGTERM (redéploiement Replit) ────────────────────────────────
+
+def _sigterm_handler(signum, frame):
+    """Sauvegarde l'état du pipeline avant arrêt forcé (SIGTERM de Replit autoscale).
+
+    Quand Replit redéploie, il envoie SIGTERM au process gunicorn, qui le propage
+    aux subprocesses (main.py). Ce handler :
+    1. Sauvegarde le checkpoint avec l'état courant
+    2. Marque la production comme 'interrupted' en DB (distinct de 'failed')
+    3. Sort proprement pour que le serveur puisse reprendre au redémarrage
+    """
+    pipeline_ctx = getattr(_production_local, 'pipeline_context', None)
+    pid = getattr(_production_local, 'production_id', None)
+
+    if pipeline_ctx:
+        episode_id = pipeline_ctx.get('episode_id', 'unknown')
+        rapport = pipeline_ctx.get('rapport', {})
+        logger.warning(
+            "SIGTERM reçu — sauvegarde checkpoint d'interruption pour %s (étape: %s)",
+            episode_id, pipeline_ctx.get('etape_courante', '?'),
+        )
+        try:
+            sauvegarder_checkpoint(episode_id, pipeline_ctx.get('etape_courante', 'interrupted'), {
+                "episode_id": episode_id,
+                "titre": pipeline_ctx.get("titre", ""),
+                "resume": pipeline_ctx.get("resume", ""),
+                "saison": pipeline_ctx.get("saison", 1),
+                "numero": pipeline_ctx.get("numero", 1),
+                "morale": pipeline_ctx.get("morale", ""),
+                "type_episode": pipeline_ctx.get("type_episode", "standard"),
+                "dry_run": pipeline_ctx.get("dry_run", False),
+                "rapport": rapport,
+                "pubdate_offset_seconds": pipeline_ctx.get("pubdate_offset_seconds", 0),
+                "stop_after": pipeline_ctx.get("stop_after", ""),
+            })
+        except Exception as e:
+            logger.error("Impossible de sauvegarder le checkpoint SIGTERM : %s", e)
+
+    # Marquer la production comme 'interrupted' en DB — retry car DB peut être lente
+    if _use_db() and pid:
+        for _attempt in range(3):
+            try:
+                from db_models import get_cursor
+                with get_cursor() as cur:
+                    cur.execute(
+                        """UPDATE productions SET status = 'interrupted', updated_at = NOW()
+                           WHERE id = %s AND status NOT IN ('completed', 'failed')""",
+                        (pid,),
+                    )
+                logger.info("Production #%d marquée 'interrupted' en DB", pid)
+                break  # Succès
+            except Exception as e:
+                logger.error(
+                    "Marquage interrupted tentative %d/3 échouée : %s", _attempt + 1, e,
+                )
+                if _attempt < 2:
+                    time.sleep(0.5)
+
+    # Sortie propre — SystemExit n'est pas capturé par except Exception
+    sys.exit(0)
 
 
 def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
@@ -303,13 +663,20 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
     Returns:
         Chemin du fichier checkpoint.
     """
-    global _production_id_courante
+    _pid = getattr(_production_local, 'production_id', None)
+
+    # Mettre à jour le contexte SIGTERM avec l'étape courante et le rapport
+    ctx = getattr(_production_local, 'pipeline_context', None)
+    if ctx:
+        ctx['etape_courante'] = etape
+        if 'rapport' in data:
+            ctx['rapport'] = data['rapport']
 
     # Sauvegarder en DB si disponible
-    if _use_db() and _production_id_courante:
+    if _use_db() and _pid:
         try:
             ProductionRepo.maj_etape(
-                _production_id_courante,
+                _pid,
                 etape=etape,
                 rapport=data.get("rapport"),
                 checkpoint_data=data,
@@ -325,9 +692,22 @@ def sauvegarder_checkpoint(episode_id: str, etape: str, data: dict) -> Path:
         "timestamp": datetime.now().isoformat(),
         "data": data,
     }
-    with open(chemin, "w", encoding="utf-8") as f:
-        json.dump(checkpoint, f, ensure_ascii=False, indent=2)
+    # Écriture atomique pour éviter la corruption si crash mid-write
+    with tempfile.NamedTemporaryFile(
+        mode="w", dir=chemin.parent, delete=False, suffix=".tmp", encoding="utf-8"
+    ) as tmp:
+        json.dump(checkpoint, tmp, ensure_ascii=False, indent=2)
+        tmp_path = tmp.name
+    os.replace(tmp_path, chemin)
     logger.info("Checkpoint sauvegardé : %s (étape: %s)", chemin, etape)
+
+    # Persister en Object Storage (survit aux redéploiements Replit)
+    try:
+        import persistent_storage
+        persistent_storage.upload_checkpoint(episode_id, chemin)
+    except Exception as e:
+        logger.debug("Object Storage indisponible pour checkpoint : %s", e)
+
     return chemin
 
 
@@ -360,10 +740,10 @@ def archiver_checkpoint(episode_id: str) -> None:
     En DB, il est marqué 'completed'. Le fichier JSON est renommé avec un
     suffixe _done pour conservation.
     """
-    global _production_id_courante
+    _pid = getattr(_production_local, 'production_id', None)
 
     # En DB : marquer terminé (jamais supprimé)
-    if _use_db() and _production_id_courante:
+    if _use_db() and _pid:
         try:
             # Le statut sera mis à jour par ProductionRepo.terminer()
             pass
@@ -372,10 +752,14 @@ def archiver_checkpoint(episode_id: str) -> None:
 
     # Fichier JSON : renommer au lieu de supprimer
     chemin = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint.json"
-    if chemin.exists():
-        archive = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint_done_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        chemin.rename(archive)
-        logger.info("Checkpoint archivé (non supprimé) : %s → %s", chemin, archive)
+    try:
+        if chemin.exists():
+            archive = config.CHECKPOINTS_DIR / f"{episode_id}_checkpoint_done_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            chemin.rename(archive)
+            logger.info("Checkpoint archivé (non supprimé) : %s → %s", chemin, archive)
+    except FileNotFoundError:
+        # Déjà archivé par un autre processus concurrent
+        logger.debug("Checkpoint déjà archivé par un autre processus : %s", chemin)
 
 
 # ── Métriques de coût ────────────────────────────────────────────────────────
@@ -743,6 +1127,265 @@ def _validation_script(
             console.print("[red]  Choix non reconnu. Tapez v, m, c ou a.[/red]")
 
 
+def _sauvegarder_plan_complet(
+    plan: dict,
+    chemin_json: Path,
+    saison: int,
+    planificateur_instance=None,
+) -> None:
+    """Sauvegarde un plan de saison sur les 3 backends : JSON + DB + Object Storage.
+
+    Doit être appelé après chaque modification du plan pour éviter la perte
+    de données en cas de redéploiement Replit (le filesystem est éphémère).
+    """
+    # 1. JSON (filesystem local)
+    if planificateur_instance:
+        planificateur_instance.sauvegarder(plan, chemin_json)
+    else:
+        from agents import Planificateur
+        Planificateur().sauvegarder(plan, chemin_json)
+
+    # 2. PostgreSQL (versionnée)
+    if _use_db():
+        try:
+            db_id = SaisonRepo.sauvegarder(plan)
+            logger.info("Plan saison %d sauvegardé en DB (id=%d)", saison, db_id)
+        except Exception as e:
+            logger.warning("DB indisponible pour plan saison %d : %s", saison, e)
+
+    # 3. Object Storage (survit aux redéploiements)
+    try:
+        import persistent_storage
+        key = persistent_storage.upload_saison(saison, chemin_json)
+        if not key:
+            logger.warning(
+                "Object Storage : échec upload plan saison %d "
+                "(bucket non configuré ? Allez dans Tools > Object Storage sur Replit)",
+                saison,
+            )
+    except Exception as e:
+        logger.warning("Object Storage indisponible pour plan saison %d : %s", saison, e)
+
+
+def _previsualiser_ambiances_saison(
+    plan: dict,
+    chemin_json: Path,
+    saison: int,
+) -> dict:
+    """Prévisualisation et remplacement des jingles intro/outro de la saison.
+
+    Permet au producteur d'écouter les jingles de saison (intro_saison,
+    outro_saison), et de les remplacer soit par auto-génération ElevenLabs,
+    soit par un fichier audio custom.
+
+    Les chemins custom sont sauvegardés dans ``plan["saison"]["jingles_custom"]``
+    pour que le monteur les utilise durant toute la production de la saison.
+
+    Args:
+        plan: Plan de saison (sera muté avec les chemins jingles_custom).
+        chemin_json: Chemin du fichier JSON du plan (pour sauvegarde).
+        saison: Numéro de saison.
+
+    Returns:
+        Le plan mis à jour.
+    """
+    from agents.monteur import (
+        Monteur, JINGLE_PROMPTS,
+    )
+
+    console.print(Panel(
+        f"[bold]Prévisualisation des ambiances sonores — Saison {saison}[/bold]\n"
+        "Écoutez les jingles d'intro et d'outro de la saison.\n"
+        "Vous pouvez les remplacer si vous n'êtes pas satisfait.",
+        title=f"{Icons.SAISON} Ambiances sonores de saison",
+        border_style="blue",
+    ))
+
+    monteur = Monteur()
+    jingles_custom = plan.get("saison", {}).get("jingles_custom", {})
+
+    for position, label in [("intro", "Intro de saison"), ("outro", "Outro de saison")]:
+        jingle_key = f"{position}_saison"
+        chemin_defaut = config.JINGLES_PAR_TYPE.get(
+            "ouverture" if position == "intro" else "final", {},
+        ).get(position, config.ASSETS_DIR / "music" / f"{jingle_key}.mp3")
+
+        # Chercher le jingle actuel (custom ou par défaut)
+        chemin_custom = jingles_custom.get(jingle_key)
+        chemin_actuel = Path(chemin_custom) if chemin_custom and Path(chemin_custom).exists() else None
+        if not chemin_actuel and chemin_defaut.exists():
+            chemin_actuel = chemin_defaut
+        source = "custom" if chemin_custom else "par défaut"
+
+        # Générer si aucun fichier n'existe encore
+        if not chemin_actuel:
+            console.print(f"\n  [yellow]{label} : aucun fichier trouvé — génération automatique...[/yellow]")
+            prompt = JINGLE_PROMPTS.get(jingle_key, "")
+            if prompt and monteur._generer_asset_elevenlabs(prompt, 10.0, chemin_defaut):
+                chemin_actuel = chemin_defaut
+                source = "auto-généré"
+                console.print(f"  [{Palette.SUCCES}]Jingle généré : {chemin_defaut}[/]")
+            else:
+                console.print(f"  [red]Impossible de générer le jingle {position}.[/red]")
+                continue
+
+        console.print(f"\n  [bold]{label}[/bold] ({source}) : {chemin_actuel}")
+
+        # Boucle d'écoute / remplacement pour ce jingle
+        while True:
+            console.print(panel_validation([
+                ("e", f"Écouter le jingle {position}"),
+                ("v", "Valider — garder ce jingle"),
+                ("g", "Régénérer automatiquement (ElevenLabs)"),
+                ("f", "Remplacer par un fichier audio custom"),
+            ], titre=f"Jingle {label}"))
+
+            choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+
+            if choix in ("e", "ecouter"):
+                if chemin_actuel and chemin_actuel.exists():
+                    if ouvrir_fichier(chemin_actuel):
+                        console.print(f"  [{Palette.SUCCES}]Lecture lancée.[/]")
+                    else:
+                        console.print(f"  [yellow]Ouvrez manuellement : {chemin_actuel}[/yellow]")
+                else:
+                    console.print("  [red]Fichier introuvable.[/red]")
+
+            elif choix in ("v", "valider"):
+                console.print(f"  [{Palette.SUCCES}]Jingle {position} validé.[/]")
+                break
+
+            elif choix in ("g", "generer"):
+                console.print(f"  [cyan]Régénération du jingle {position}...[/cyan]")
+                prompt = JINGLE_PROMPTS.get(jingle_key, "")
+                if not prompt:
+                    console.print("  [red]Aucun prompt configuré pour ce jingle.[/red]")
+                    continue
+
+                # Supprimer l'ancien fichier pour forcer la régénération
+                chemin_gen = chemin_defaut
+                if chemin_gen.exists():
+                    chemin_gen.unlink()
+
+                if monteur._generer_asset_elevenlabs(prompt, 10.0, chemin_gen):
+                    chemin_actuel = chemin_gen
+                    source = "auto-généré"
+                    # Supprimer l'éventuel custom puisqu'on revient au généré
+                    jingles_custom.pop(jingle_key, None)
+                    console.print(f"  [{Palette.SUCCES}]Nouveau jingle généré : {chemin_gen}[/]")
+                else:
+                    console.print("  [red]Échec de la génération ElevenLabs.[/red]")
+
+            elif choix in ("f", "fichier"):
+                console.print(
+                    "\n  [yellow]Entrez le chemin absolu du fichier audio de remplacement "
+                    "(MP3) :[/yellow]"
+                )
+                chemin_input = console.input("  > ").strip()
+                if not chemin_input:
+                    console.print("  [yellow]Annulé.[/yellow]")
+                    continue
+
+                chemin_remplacement = Path(chemin_input)
+                if not chemin_remplacement.exists():
+                    console.print(f"  [red]Fichier introuvable : {chemin_remplacement}[/red]")
+                    continue
+                if not chemin_remplacement.suffix.lower() in (".mp3", ".wav", ".ogg", ".m4a"):
+                    console.print("  [red]Format non supporté. Utilisez MP3, WAV, OGG ou M4A.[/red]")
+                    continue
+
+                # Copier dans le dossier assets de la saison
+                import shutil
+                dest = config.ASSETS_DIR / "music" / f"saison_{saison:02d}_{jingle_key}{chemin_remplacement.suffix}"
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(chemin_remplacement), str(dest))
+                chemin_actuel = dest
+                jingles_custom[jingle_key] = str(dest)
+                console.print(f"  [{Palette.SUCCES}]Fichier copié : {dest}[/]")
+
+            else:
+                console.print("  [red]Choix non reconnu. Tapez e, v, g ou f.[/red]")
+
+    # Sauvegarder les jingles custom dans le plan
+    plan.setdefault("saison", {})["jingles_custom"] = jingles_custom
+    plan["saison"].setdefault("decisions_humaines", []).append({
+        "action": "ambiances_saison_validees",
+        "jingles_custom": jingles_custom,
+        "timestamp": datetime.now().isoformat(),
+    })
+
+    # Sauvegarder le plan mis à jour (JSON + DB + Object Storage)
+    _sauvegarder_plan_complet(plan, chemin_json, saison)
+    console.print(f"\n[{Palette.SUCCES}]Ambiances sonores de saison validées et sauvegardées.[/]")
+
+    return plan
+
+
+def _afficher_retour_directeur_saison(resultat: dict) -> None:
+    """Affiche le retour du directeur podcast sur un plan de saison."""
+    dir_data = resultat.get("directeur_saison", {})
+    note_dir = dir_data.get("note_globale", 0)
+    verdict = dir_data.get("verdict", "?")
+    note_aud = DirecteurPodcast.note_audience_plan(resultat)
+
+    # Verdict avec couleur
+    couleur_verdict = {
+        "feu_vert": Palette.SUCCES,
+        "ajustements_mineurs": "yellow",
+        "retravailler": "red",
+    }.get(verdict, "white")
+
+    # Construire le contenu du panel (M4: cohérence thème)
+    lignes = []
+    lignes.append(
+        f"[{couleur_verdict}]{verdict.replace('_', ' ').upper()}[/] "
+        f"— note {note_dir}/10, audience {note_aud}/10"
+    )
+
+    # Synthèse
+    synthese = dir_data.get("synthese", "")
+    if synthese:
+        lignes.append(f"\n{Typo.dim(synthese)}")
+
+    # Axes détaillés
+    for axe_nom, axe_data in dir_data.get("axes", {}).items():
+        axe_label = axe_nom.replace("_", " ").title()
+        axe_note = axe_data.get("note", 0)
+        lignes.append(f"  {axe_label} : {axe_note}/10")
+
+    console.print(panel_info("\n".join(lignes), titre=f"{Icons.REVIEW} Avis du Directeur Podcast"))
+
+    # Recommandations
+    recommandations = dir_data.get("recommandations", [])
+    if recommandations:
+        console.print("[yellow]  Recommandations :[/yellow]")
+        priorite_ordre = {"critique": 0, "important": 1, "suggestion": 2}
+        triees = sorted(
+            recommandations,
+            key=lambda r: priorite_ordre.get(r.get("priorite", "suggestion"), 3),
+        )
+        for r in triees:
+            ep = r.get("episode")
+            # M1: guard against non-int episode values from LLM
+            ep_str = f" (E{int(ep):02d})" if isinstance(ep, (int, float)) and ep else ""
+            console.print(f"    - [{r.get('priorite', '?')}]{ep_str} {r.get('texte', '')}")
+
+    # Points forts
+    points_forts = dir_data.get("points_forts", [])
+    if points_forts:
+        console.print(f"[{Palette.SUCCES}]  Points forts :[/]")
+        for p in points_forts:
+            console.print(f"    + {p}")
+
+    # Réactions des personas
+    personas = resultat.get("personas", {})
+    for persona_key, persona_data in personas.items():
+        nom = persona_key.replace("_", " ").title()
+        reaction = persona_data.get("reaction", "")
+        p_note = persona_data.get("note", 0)
+        console.print(f"  {Typo.dim(f'{nom} ({p_note}/10) : {reaction}')}")
+
+
 def _validation_plan_saison(
     plan: dict,
     chemin_json: Path,
@@ -753,8 +1396,12 @@ def _validation_plan_saison(
     personnages_list: list[str] | None = None,
     saisons_prec: list[dict] | None = None,
     nb_episodes: int = 10,
+    archives_saisons: list[dict] | None = None,
 ) -> dict:
     """Point de validation humaine du plan de saison (go/no-go).
+
+    Le directeur podcast évalue le plan à chaque tour (max 3 retours).
+    Au 4e tour, le directeur modifie le plan directement.
 
     Affiche le plan complet et permet au producteur de valider, modifier,
     regenerer ou abandonner avant de lancer la production des episodes.
@@ -768,6 +1415,8 @@ def _validation_plan_saison(
         description: Description du producteur.
         personnages_list: Personnages secondaires.
         saisons_prec: Saisons precedentes pour contexte.
+        nb_episodes: Nombre d'episodes.
+        archives_saisons: Archives des saisons precedentes pour continuite.
 
     Returns:
         Le plan (potentiellement modifie ou regenere).
@@ -775,6 +1424,18 @@ def _validation_plan_saison(
     Raises:
         ProductionAbandonnee: Si l'utilisateur choisit d'abandonner.
     """
+    retours_directeur: list[dict] = []
+    MAX_RETOURS_DIRECTEUR = 3
+    MAX_ECHECS_DIRECTEUR = 3
+    echecs_directeur = 0
+
+    # Instancier le directeur une seule fois (H2)
+    try:
+        directeur = DirecteurPodcast()
+    except Exception as e:
+        logger.warning("Directeur Podcast non disponible : %s", e)
+        directeur = None
+
     while True:
         # Afficher un resume compact du plan avant les choix
         saison_data = plan.get("saison", {})
@@ -787,6 +1448,78 @@ def _validation_plan_saison(
             titre=f"{Icons.SAISON} Résumé du plan de saison",
         ))
 
+        # ── Évaluation du Directeur Podcast ─────────────────────────────
+        nb_retours = len(retours_directeur)
+
+        if directeur is None or echecs_directeur >= MAX_ECHECS_DIRECTEUR:
+            # Directeur indisponible ou trop d'échecs consécutifs — on skip
+            if echecs_directeur >= MAX_ECHECS_DIRECTEUR:
+                console.print(
+                    f"[yellow]  Directeur indisponible après {echecs_directeur} échecs "
+                    f"consécutifs — évaluation désactivée.[/yellow]"
+                )
+        elif nb_retours >= MAX_RETOURS_DIRECTEUR:
+            # 4e tour : le directeur prend la main et corrige directement
+            console.print(
+                f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur podcast a donné "
+                f"{MAX_RETOURS_DIRECTEUR} retours. Il prend la main et corrige "
+                f"le plan directement.[/bold red]"
+            )
+            try:
+                plan_corrige = directeur.corriger_plan_saison(
+                    plan, retours_directeur,
+                )
+                plan = plan_corrige
+                _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+                console.print(
+                    f"[{Palette.SUCCES}]  Plan corrigé par le directeur podcast "
+                    f"et sauvegardé (DB + Object Storage).[/]"
+                )
+                _afficher_plan_saison(plan)
+                plan["saison"].setdefault("decisions_humaines", []).append({
+                    "action": "correction_directeur_podcast",
+                    "timestamp": datetime.now().isoformat(),
+                    "nb_retours_avant_correction": MAX_RETOURS_DIRECTEUR,
+                })
+                # Réinitialiser les retours — le directeur a corrigé
+                retours_directeur = []
+                echecs_directeur = 0
+            except Exception as e:
+                echecs_directeur += 1
+                logger.warning("Directeur Podcast (correction plan) indisponible : %s", e)
+                console.print(
+                    f"[yellow]  Correction directeur non disponible : {e}[/yellow]"
+                )
+        else:
+            # Tours 1-3 : le directeur évalue et donne ses retours
+            tour_label = f"Tour {nb_retours + 1}/{MAX_RETOURS_DIRECTEUR}"
+            console.print(
+                f"\n  {Icons.REVIEW} Évaluation Directeur Podcast ({tour_label})..."
+            )
+            try:
+                resultat_directeur = directeur.evaluer_plan_saison(
+                    plan, retours_precedents=retours_directeur or None,
+                )
+                retours_directeur.append(resultat_directeur)
+                _afficher_retour_directeur_saison(resultat_directeur)
+                echecs_directeur = 0
+
+                # Stocker dans le plan
+                plan["saison"].setdefault("retours_directeur", []).append({
+                    "tour": nb_retours + 1,
+                    "note_globale": resultat_directeur.get("directeur_saison", {}).get("note_globale"),
+                    "verdict": resultat_directeur.get("directeur_saison", {}).get("verdict"),
+                    "note_audience": directeur.note_audience_plan(resultat_directeur),
+                    "timestamp": datetime.now().isoformat(),
+                })
+            except Exception as e:
+                echecs_directeur += 1
+                logger.warning("Directeur Podcast (évaluation plan) indisponible : %s", e)
+                console.print(
+                    f"[yellow]  Évaluation directeur non disponible ({echecs_directeur}/{MAX_ECHECS_DIRECTEUR}) : {e}[/yellow]"
+                )
+
+        # ── Menu de validation humaine ──────────────────────────────────
         console.print(panel_validation([
             ("v", "Valider le plan — lancer la production"),
             ("m", "Modifier le fichier JSON manuellement"),
@@ -803,6 +1536,7 @@ def _validation_plan_saison(
                 "action": "valide",
                 "timestamp": datetime.now().isoformat(),
             })
+            _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
             return plan
 
         elif choix in ("m", "modifier"):
@@ -820,7 +1554,8 @@ def _validation_plan_saison(
                     "action": "modification_json",
                     "timestamp": datetime.now().isoformat(),
                 })
-                console.print(f"[{Palette.SUCCES}]  Plan rechargé et validé depuis le fichier.[/]")
+                _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+                console.print(f"[{Palette.SUCCES}]  Plan rechargé, validé et sauvegardé (DB + Object Storage).[/]")
                 _afficher_plan_saison(plan)
             except (json.JSONDecodeError, FileNotFoundError) as e:
                 console.print(f"[red]  Erreur au rechargement : {e}[/red]")
@@ -841,10 +1576,14 @@ def _validation_plan_saison(
                 saisons_precedentes=saisons_prec or None,
                 nb_episodes=nb_episodes,
                 preferences_producteur=_construire_bloc_preferences(),
+                archives_saisons=archives_saisons or None,
             )
-            planificateur.sauvegarder(plan, chemin_json)
-            console.print(f"[{Palette.SUCCES}]  Nouveau plan généré et sauvegardé.[/]")
+            _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+            console.print(f"[{Palette.SUCCES}]  Nouveau plan généré et sauvegardé (DB + Object Storage).[/]")
             _afficher_plan_saison(plan)
+            # H1: réinitialiser les retours directeur — le plan est entièrement nouveau
+            retours_directeur = []
+            echecs_directeur = 0
 
         elif choix in ("i", "instructions"):
             console.print(
@@ -878,15 +1617,19 @@ def _validation_plan_saison(
                     saisons_precedentes=saisons_prec or None,
                     nb_episodes=nb_episodes,
                     preferences_producteur=_construire_bloc_preferences(),
+                    archives_saisons=archives_saisons or None,
                 )
                 # Stocker les instructions dans le plan pour reference future (A5)
                 plan["saison"].setdefault("instructions_producteur", []).append({
                     "instructions": instructions_texte,
                     "date": datetime.now().isoformat(),
                 })
-                planificateur.sauvegarder(plan, chemin_json)
-                console.print(f"[{Palette.SUCCES}]  Nouveau plan généré avec vos instructions.[/]")
+                _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+                console.print(f"[{Palette.SUCCES}]  Nouveau plan généré avec vos instructions (DB + Object Storage).[/]")
                 _afficher_plan_saison(plan)
+                # H1: réinitialiser les retours directeur — le plan est entièrement nouveau
+                retours_directeur = []
+                echecs_directeur = 0
 
         elif choix in ("a", "abandonner"):
             plan["saison"].setdefault("decisions_humaines", []).append({
@@ -1149,8 +1892,9 @@ def _validation_montage(
                     console.print(f"[red]  Structure invalide : {e}[/red]")
                     console.print("[yellow]  Les données précédentes sont conservées. Retour au menu.[/yellow]")
             else:
-                console.print("[yellow]  Fichier script introuvable — relance sans modification.[/yellow]")
-                reload_ok = True
+                console.print("[red]  Fichier script introuvable — édition impossible.[/red]")
+                console.print("[yellow]  Retour au menu de validation.[/yellow]")
+                reload_ok = False
 
             if reload_ok:
                 if rapport is not None:
@@ -1288,6 +2032,9 @@ def _validation_metadonnees(
             return meta
 
         elif choix in ("c", "corrections"):
+            if not script:
+                console.print("[yellow]  Script non disponible — régénération impossible.[/yellow]")
+                continue
             console.print(
                 "\n[yellow]  Décrivez ce que vous souhaitez changer dans les métadonnées "
                 "(terminez par une ligne vide) :[/yellow]"
@@ -1298,7 +2045,7 @@ def _validation_metadonnees(
                 if not ligne.strip():
                     break
                 lignes.append(ligne)
-            if lignes and script:
+            if lignes:
                 console.print("[cyan]  Régénération des métadonnées...[/cyan]")
                 metadonnees_agent = Metadonnees()
                 instructions = "\n".join(lignes)
@@ -1319,8 +2066,6 @@ def _validation_metadonnees(
                         "instructions": lignes,
                         "timestamp": datetime.now().isoformat(),
                     })
-            elif not script:
-                console.print("[yellow]  Script non disponible — régénération impossible.[/yellow]")
 
         elif choix in ("m", "modifier"):
             console.print(
@@ -1457,16 +2202,18 @@ def _validation_publication(
             return False
 
         elif choix in ("a", "abandonner"):
+            console.print(
+                f"[{Palette.ATTENTION}]  Publication annulée. "
+                f"L'audio et les métadonnées sont conservés. "
+                f"Le rapport final sera tout de même généré.[/]"
+            )
             if rapport is not None:
                 rapport.setdefault("decisions_humaines", []).append({
                     "etape": "publication",
                     "action": "abandonne",
                     "timestamp": datetime.now().isoformat(),
                 })
-            raise ProductionAbandonnee(
-                "Production arrêtée avant publication. "
-                "L'audio et les métadonnées sont conservés."
-            )
+            return False  # Ne pas publier mais continuer vers le rapport final
 
         else:
             console.print("[red]  Choix non reconnu. Tapez p, s ou a.[/red]")
@@ -1490,6 +2237,7 @@ def pipeline(
     type_episode: str = "standard",
     pubdate_offset_seconds: int = 0,
     no_publish: bool = False,
+    stop_after: str = "",
     # Contexte d'affichage pour production sérielle
     episode_courant: int = 0,
     total_episodes: int = 0,
@@ -1515,11 +2263,10 @@ def pipeline(
     Returns:
         Rapport de production complet.
     """
-    global _production_id_courante
-    _production_id_courante = None  # Reset au début de chaque pipeline
+    _production_local.production_id = None  # Reset au début de chaque pipeline
 
     episode_id = f"S{saison:02d}E{numero:02d}"
-    rapport = checkpoint_data or {
+    rapport = checkpoint_data if checkpoint_data is not None else {
         "episode_id": episode_id,
         "titre": titre,
         "dry_run": dry_run,
@@ -1527,14 +2274,45 @@ def pipeline(
         "etapes": {},
     }
 
-    # Créer une production en DB si disponible
+    # Enregistrer le contexte du pipeline pour le handler SIGTERM
+    _production_local.pipeline_context = {
+        "episode_id": episode_id, "titre": titre, "resume": resume,
+        "saison": saison, "numero": numero, "morale": morale,
+        "type_episode": type_episode, "dry_run": dry_run,
+        "rapport": rapport, "etape_courante": etape_depart,
+        "pubdate_offset_seconds": pubdate_offset_seconds,
+        "stop_after": stop_after,
+    }
+    # Installer le handler SIGTERM (uniquement depuis le thread principal)
+    try:
+        signal.signal(signal.SIGTERM, _sigterm_handler)
+    except ValueError:
+        pass  # Pas le thread principal — handler déjà installé ou non supporté
+
+    # Créer ou réutiliser une production en DB
     if _use_db():
         try:
-            _production_id_courante = ProductionRepo.creer(
-                episode_id=episode_id,
-                dry_run=dry_run,
-                auto_mode=auto,
-            )
+            # Si on reprend un checkpoint, réutiliser la production existante
+            # au lieu d'en créer une nouvelle (évite les lignes orphelines en DB)
+            if etape_depart != "script":
+                existing = ProductionRepo.charger_dernier_checkpoint(episode_id)
+                if existing:
+                    _production_local.production_id = existing["id"]
+                    logger.info("Reprise de la production DB #%d pour %s", existing["id"], episode_id)
+                else:
+                    _production_local.production_id = ProductionRepo.creer(
+                        episode_id=episode_id,
+                        dry_run=dry_run,
+                        auto_mode=auto,
+                    )
+                    logger.info("Production DB #%d créée pour %s (reprise sans production existante)", _production_local.production_id, episode_id)
+            else:
+                _production_local.production_id = ProductionRepo.creer(
+                    episode_id=episode_id,
+                    dry_run=dry_run,
+                    auto_mode=auto,
+                )
+                logger.info("Production DB #%d créée pour %s", _production_local.production_id, episode_id)
             EpisodeRepo.creer_ou_maj(
                 episode_id=episode_id,
                 saison=saison,
@@ -1545,10 +2323,9 @@ def pipeline(
                 morale=morale,
                 status="in_progress",
             )
-            logger.info("Production DB #%d créée pour %s", _production_id_courante, episode_id)
         except Exception as e:
             logger.warning("DB indisponible pour création production : %s", e)
-            _production_id_courante = None
+            _production_local.production_id = None
 
     try:
         return _pipeline_inner(
@@ -1559,7 +2336,7 @@ def pipeline(
             contexte_saison=contexte_saison, type_episode=type_episode,
             episode_id=episode_id, rapport=rapport,
             pubdate_offset_seconds=pubdate_offset_seconds,
-            no_publish=no_publish,
+            no_publish=no_publish, stop_after=stop_after,
             episode_courant=episode_courant,
             total_episodes=total_episodes,
             saison_theme=saison_theme,
@@ -1568,19 +2345,76 @@ def pipeline(
         raise
     except Exception as e:
         # Marquer la production comme échouée en DB (BUG 29)
+        import traceback as _tb_pipeline
+        sys.stderr.write(
+            f"[pipeline {episode_id}] ERREUR FATALE dans pipeline(): "
+            f"{type(e).__name__}: {e}\n"
+            f"{_tb_pipeline.format_exc()}\n"
+        )
+        sys.stderr.flush()
         logger.error("Pipeline échoué pour %s : %s", episode_id, e)
-        if _use_db() and _production_id_courante:
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
             try:
-                ProductionRepo.echouer(_production_id_courante, str(e))
+                ProductionRepo.echouer(_pid, str(e))
                 EpisodeRepo.maj_status(episode_id, "failed")
             except Exception as db_err:
                 logger.warning("DB indisponible pour marquage échec : %s", db_err)
-        # Sauvegarder le rapport partiel
+        # W13: Nettoyer le fichier de corrections web en cas de crash
+        # pour éviter qu'il ne soit réutilisé lors d'une prochaine production
+        try:
+            corrections_stale = config.SCRIPTS_DIR / f"{episode_id}_web_corrections.txt"
+            if corrections_stale.exists():
+                corrections_stale.unlink()
+        except OSError:
+            pass
+        # Sauvegarder le rapport partiel dans le fichier NORMAL (pas _echec)
+        # pour que charger_rapport() le trouve et que le web dashboard affiche
+        # les résultats partiels (ex: script OK, audio OK, montage échoué).
         rapport["erreur"] = str(e)
+        rapport["status"] = "failed"
         rapport["fin"] = datetime.now().isoformat()
-        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport_echec.json"
-        with open(chemin_rapport, "w", encoding="utf-8") as f:
-            json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        # MERGE avec le rapport existant pour préserver decisions_humaines,
+        # etapes déjà complétées, etc. (ne pas écraser un rapport riche
+        # par un rapport d'erreur squelettique)
+        with fichier_lock(chemin_rapport):
+            if chemin_rapport.exists():
+                try:
+                    with open(chemin_rapport, "r", encoding="utf-8") as f:
+                        rapport_existant = json.load(f)
+                    # Préserver les clés du rapport existant absentes du nouveau
+                    for cle in ("decisions_humaines", "metriques", "alertes_post_generation"):
+                        if cle in rapport_existant and cle not in rapport:
+                            rapport[cle] = rapport_existant[cle]
+                    # Merger les étapes : garder les étapes existantes, écraser
+                    # uniquement celles que le nouveau rapport a aussi
+                    if "etapes" in rapport_existant:
+                        etapes_merged = rapport_existant["etapes"].copy()
+                        etapes_merged.update(rapport.get("etapes", {}))
+                        rapport["etapes"] = etapes_merged
+                except (json.JSONDecodeError, OSError) as merge_err:
+                    logger.debug("Impossible de merger avec rapport existant : %s", merge_err)
+            with open(chemin_rapport, "w", encoding="utf-8") as f:
+                json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+        # Upload rapport vers Object Storage (survit aux redéploiements)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e_os:
+            logger.warning("Object Storage indisponible pour rapport échec : %s", e_os)
+        # Sauvegarder un checkpoint d'erreur pour permettre la reprise
+        try:
+            sauvegarder_checkpoint(episode_id, "erreur", {
+                "episode_id": episode_id, "titre": titre, "resume": resume,
+                "saison": saison, "numero": numero, "morale": morale,
+                "type_episode": type_episode,
+                "dry_run": dry_run, "rapport": rapport,
+                "pubdate_offset_seconds": pubdate_offset_seconds,
+                "stop_after": stop_after,
+            })
+        except Exception:
+            logger.debug("Impossible de sauvegarder le checkpoint d'erreur")
         console.print(panel_erreur(
             f"Pipeline échoué pour {episode_id} : {e}\n"
             f"Rapport partiel sauvé : {chemin_rapport}"
@@ -1592,11 +2426,30 @@ def _pipeline_inner(
     titre, resume, saison, numero, morale, dry_run, auto,
     max_iterations_review, etape_depart, checkpoint_data,
     contexte_saison, type_episode, episode_id, rapport,
-    pubdate_offset_seconds=0, no_publish=False,
+    pubdate_offset_seconds=0, no_publish=False, stop_after="",
     episode_courant=0, total_episodes=0, saison_theme="",
 ):
     """Corps interne du pipeline, encapsulé pour la gestion d'erreurs."""
-    global _production_id_courante
+    # Log direct stderr pour visibilité subprocess (ne dépend pas de Rich Console)
+    def _log_direct(msg: str) -> None:
+        sys.stderr.write(f"[pipeline {episode_id}] {msg}\n")
+        sys.stderr.flush()
+
+    _log_direct(f"Démarrage pipeline — etape_depart={etape_depart}, stop_after={stop_after}")
+
+    # Timer pour mesurer la durée de chaque étape
+    _t_pipeline_start = time.perf_counter()
+    _t_last_step = _t_pipeline_start
+
+    def _log_step_duration(step_name: str) -> None:
+        nonlocal _t_last_step
+        now = time.perf_counter()
+        step_s = now - _t_last_step
+        total_s = now - _t_pipeline_start
+        logger.info(
+            "⏱ %s : %.1fs (total %.1fs)", step_name, step_s, total_s
+        )
+        _t_last_step = now
 
     # Charger le contexte de saison automatiquement si pas fourni
     if not contexte_saison:
@@ -1661,7 +2514,57 @@ def _pipeline_inner(
         ))
 
     etapes = ["script", "review", "audio", "sfx", "montage", "metadonnees", "publication", "rapport"]
-    etape_idx = etapes.index(etape_depart) if etape_depart in etapes else 0
+    # Mapper les statuts DB vers l'étape pipeline correspondante.
+    # Chaque statut non-standard DOIT être ici, sinon etape_idx = 0 → restart total.
+    _etape_mapping = {
+        "waiting_script": "audio",        # script validé → reprendre à l'audio
+        "waiting_montage": "metadonnees",  # montage validé → reprendre aux métadonnées
+        "script_done": "audio",
+        "review_done": "audio",
+        "audio_done": "sfx",
+        "sfx_done": "montage",
+        "montage_done": "metadonnees",
+        "metadonnees_done": "publication",
+        "publication_done": "rapport",
+        "interrupted": "script",           # fallback sûr — le checkpoint data a la bonne étape
+        "erreur": "script",                # erreur handler checkpoint — restart propre
+        "started": "script",               # production créée mais jamais avancée
+    }
+    etape_effective = _etape_mapping.get(etape_depart, etape_depart)
+    if etape_effective != etape_depart:
+        logger.info("Étape de reprise mappée : %s → %s", etape_depart, etape_effective)
+    if etape_effective not in etapes:
+        logger.error(
+            "Étape de reprise inconnue : %r (ni dans etapes ni dans _etape_mapping) — "
+            "redémarrage depuis le script par sécurité", etape_depart,
+        )
+        etape_effective = "script"
+    etape_idx = etapes.index(etape_effective)
+    _log_direct(f"etape_idx={etape_idx} ({etape_effective}), etapes à jouer: {etapes[etape_idx:]}")
+
+    # ── Nettoyer les anciennes erreurs du rapport pour les étapes qui seront rejouées ──
+    # Quand on reprend un checkpoint "empoisonné" (ex: montage échoué), le rapport
+    # contient status="error" pour l'étape. Si le pipeline crashe AVANT d'atteindre
+    # cette étape (ex: erreur de chargement script), l'error handler re-sauvegarde
+    # le rapport tel quel — perpétuant la vieille erreur indéfiniment.
+    # On nettoie ici les statuts error/failed des étapes qui vont être rejouées.
+    if rapport.get("etapes"):
+        for i in range(etape_idx, len(etapes)):
+            step_name = etapes[i]
+            step_data = rapport["etapes"].get(step_name, {})
+            if step_data.get("status") in ("error", "failed"):
+                logger.info(
+                    "Nettoyage erreur précédente pour l'étape '%s' avant retry "
+                    "(ancien status=%s, erreur=%s)",
+                    step_name, step_data.get("status"), step_data.get("erreur", "?"),
+                )
+                # Supprimer l'étape erronée — elle sera recréée proprement
+                del rapport["etapes"][step_name]
+        # Nettoyer les flags d'erreur globaux du rapport
+        rapport.pop("erreur", None)
+        rapport.pop("erreur_montage", None)
+        if rapport.get("status") == "failed":
+            del rapport["status"]
 
     # Roadmap visuel des étapes
     console.print(panel_roadmap(etape_idx, dry_run=dry_run))
@@ -1694,15 +2597,25 @@ def _pipeline_inner(
             rapport["etapes"].setdefault("montage", {})["validation_humaine"] = True
 
     # Restaurer les métadonnées depuis le fichier si on reprend après l'étape metadonnees
-    if etape_idx > 5 and chemin_meta.exists():
-        with open(chemin_meta, "r", encoding="utf-8") as f:
-            meta = json.load(f)
-        logger.info("Métadonnées chargées depuis : %s", chemin_meta)
-    elif etape_idx > 5:
-        raise FileNotFoundError(
-            f"Reprise à l'étape {etape_depart} impossible : "
-            f"le fichier de métadonnées {chemin_meta} est introuvable."
-        )
+    if etape_idx > 5:
+        if not chemin_meta.exists():
+            # Restaurer depuis Object Storage
+            try:
+                import persistent_storage
+                persistent_storage.restore_metadonnees(episode_id, config.SCRIPTS_DIR)
+                logger.info("Métadonnées restaurées depuis Object Storage : %s", chemin_meta)
+            except Exception as e:
+                logger.warning("Restauration métadonnées Object Storage échouée : %s", e)
+        if chemin_meta.exists():
+            with open(chemin_meta, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            logger.info("Métadonnées chargées depuis : %s", chemin_meta)
+        else:
+            raise FileNotFoundError(
+                f"Reprise à l'étape {etape_depart} impossible : "
+                f"le fichier de métadonnées {chemin_meta} est introuvable "
+                f"(ni local, ni Object Storage)."
+            )
 
     # Charger l'historique pour la continuité
     historique = charger_historique()
@@ -1712,17 +2625,52 @@ def _pipeline_inner(
     chemin_valide = config.SCRIPTS_DIR / f"{episode_id}_valide.json"
 
     # Si on reprend, charger le script existant et restaurer le score
-    if etape_idx > 0 and chemin_valide.exists():
-        with open(chemin_valide, "r", encoding="utf-8") as f:
-            script = json.load(f)
+    if etape_idx > 0:
+        # Restaurer depuis Object Storage / DB si le fichier local est absent
+        # (cas fréquent après un redéploiement Replit qui remet le FS à zéro)
+        if not chemin_valide.exists():
+            _restored = False
+            # Tentative 1 : Object Storage
+            try:
+                import persistent_storage
+                if persistent_storage.restore_script(episode_id, config.SCRIPTS_DIR):
+                    logger.info("Script validé restauré depuis Object Storage : %s", chemin_valide)
+                    _restored = True
+            except Exception as e:
+                logger.warning("Restauration Object Storage échouée : %s", e)
+            # Tentative 2 : DB (ScriptRepo)
+            if not _restored:
+                try:
+                    from db_models import ScriptRepo
+                    db_script = ScriptRepo.charger_valide(episode_id)
+                    if not db_script or not db_script.get("episode"):
+                        db_script = ScriptRepo.charger_derniere_version(episode_id)
+                    if db_script and db_script.get("episode"):
+                        chemin_valide.parent.mkdir(parents=True, exist_ok=True)
+                        with open(chemin_valide, "w", encoding="utf-8") as f:
+                            json.dump(db_script, f, ensure_ascii=False, indent=2)
+                        logger.info("Script validé restauré depuis la DB : %s", chemin_valide)
+                        _restored = True
+                except Exception as e:
+                    logger.warning("Restauration DB échouée : %s", e)
+            if not _restored:
+                raise FileNotFoundError(
+                    f"Reprise à l'étape {etape_depart} impossible : "
+                    f"le script validé {chemin_valide} est introuvable "
+                    f"(ni local, ni Object Storage, ni DB)."
+                )
+        # Charger le script
+        try:
+            with open(chemin_valide, "r", encoding="utf-8") as f:
+                script = json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            raise ValueError(
+                f"Script validé corrompu ({chemin_valide}) : {e}. "
+                f"Supprimez-le et relancez la production."
+            ) from e
         if checkpoint_data:
             score = checkpoint_data.get("etapes", {}).get("script", {}).get("score_review", 0)
-        logger.info("Script chargé depuis le checkpoint : %s", chemin_valide)
-    elif etape_idx > 0:
-        raise FileNotFoundError(
-            f"Reprise à l'étape {etape_depart} impossible : "
-            f"le script validé {chemin_valide} est introuvable."
-        )
+        logger.info("Script chargé pour reprise : %s", chemin_valide)
 
     # ── Étape 1-2 : Scripteur + Reviewer ─────────────────────────────────────
 
@@ -1731,8 +2679,136 @@ def _pipeline_inner(
         scripteur = Scripteur()
         corrections = None
 
+        # Charger les corrections soumises depuis le web (modification demandée)
+        web_corrections_path = config.SCRIPTS_DIR / f"{episode_id}_web_corrections.txt"
+        if web_corrections_path.exists():
+            try:
+                web_text = web_corrections_path.read_text(encoding="utf-8").strip()
+                if web_text:
+                    corrections = web_text
+                    console.print(
+                        f"  [bold cyan]Corrections du producteur :[/bold cyan] {web_text[:200]}"
+                    )
+                web_corrections_path.unlink()  # Usage unique
+            except Exception as e:
+                logger.warning("Erreur lecture corrections web : %s", e)
+
         if max_iterations_review < 1:
             raise ValueError(f"max_iterations_review doit être >= 1, reçu {max_iterations_review}")
+
+        # Charger les scripts validés des épisodes précédents de la saison
+        # pour que le scripteur puisse lire les vrais dialogues
+        scripts_precedents = _charger_scripts_precedents_saison(saison, numero)
+        if scripts_precedents:
+            console.print(
+                f"  [bold cyan]Contexte sériel :[/bold cyan] "
+                f"{len(scripts_precedents)} script(s) précédent(s) chargé(s) "
+                f"({', '.join(s['episode_id'] for s in scripts_precedents)})"
+            )
+
+        # Charger l'arc state de l'épisode précédent pour injection N→N+1
+        arc_state_precedent = None
+        if numero == 1 and saison > 1:
+            # Continuité inter-saisons : charger l'arc state du dernier épisode de la saison précédente
+            plan_prec = config.charger_saison(saison - 1)
+            if plan_prec:
+                nb_eps_prec = len(plan_prec.get("saison", {}).get("episodes", []))
+                if nb_eps_prec > 0:
+                    ep_prec_id = f"S{saison - 1:02d}E{nb_eps_prec:02d}"
+                    chemin_arc_prec = config.SCRIPTS_DIR / f"{ep_prec_id}_arc_state.json"
+                    if chemin_arc_prec.exists():
+                        try:
+                            with open(chemin_arc_prec, "r", encoding="utf-8") as f:
+                                arc_state_precedent = json.load(f)
+                            console.print(
+                                f"  [bold cyan]Arc state inter-saison :[/bold cyan] "
+                                f"{ep_prec_id} (fin S{saison - 1:02d})"
+                            )
+                        except (json.JSONDecodeError, OSError) as e:
+                            logger.warning("Arc state inter-saison %s illisible : %s", ep_prec_id, e)
+        if numero > 1:
+            ep_prec_id = f"S{saison:02d}E{numero - 1:02d}"
+            chemin_arc_prec = config.SCRIPTS_DIR / f"{ep_prec_id}_arc_state.json"
+            if chemin_arc_prec.exists():
+                try:
+                    with open(chemin_arc_prec, "r", encoding="utf-8") as f:
+                        arc_state_precedent = json.load(f)
+                    console.print(
+                        f"  [bold cyan]Arc state précédent :[/bold cyan] "
+                        f"{ep_prec_id} — {len(arc_state_precedent.get('moments_cles', []))} "
+                        f"moments clés, {len(arc_state_precedent.get('questions_ouvertes', []))} "
+                        f"questions ouvertes"
+                    )
+                except (json.JSONDecodeError, OSError) as e:
+                    logger.warning("Arc state %s illisible : %s", ep_prec_id, e)
+
+        # ── Directeur Podcast — brief créatif pré-génération ──────────────
+        brief_directeur = ""
+        if not dry_run:
+            try:
+                directeur_brief = DirecteurPodcast()
+                resultat_brief = directeur_brief.brief_creatif(
+                    titre=titre, resume=resume, morale=morale,
+                    type_episode=type_episode,
+                    episode_plan=episode_plan,
+                    contexte_saison=contexte_saison,
+                )
+                # Afficher le brief
+                console.print(f"\n  {Icons.REVIEW} Brief créatif du directeur :")
+                if resultat_brief.get("directives_ton"):
+                    console.print(f"  Ton : {Typo.dim(resultat_brief['directives_ton'])}")
+                if resultat_brief.get("accroche_suggestion"):
+                    console.print(f"  Accroche : {Typo.dim(resultat_brief['accroche_suggestion'])}")
+                moments = resultat_brief.get("moments_cles", [])
+                if moments:
+                    console.print("  Moments clés :")
+                    for m in moments[:5]:
+                        console.print(f"    - {m}")
+                pieges = resultat_brief.get("pieges_a_eviter", [])
+                if pieges:
+                    console.print("[yellow]  Pièges à éviter :[/yellow]")
+                    for p in pieges[:3]:
+                        console.print(f"    ! {p}")
+
+                # Construire le bloc texte à injecter dans le prompt du scripteur
+                brief_lines = ["\n\nBRIEF CRÉATIF DU DIRECTEUR PODCAST :"]
+                brief_lines.append(f"Ton : {resultat_brief.get('directives_ton', '')}")
+                brief_lines.append(f"Accroche : {resultat_brief.get('accroche_suggestion', '')}")
+                if moments:
+                    brief_lines.append("Moments clés à ne pas manquer :")
+                    for m in moments:
+                        brief_lines.append(f"  - {m}")
+                sfx_attendus = resultat_brief.get("sfx_attendus", [])
+                if sfx_attendus:
+                    brief_lines.append("SFX attendus :")
+                    for s in sfx_attendus:
+                        brief_lines.append(f"  - {s}")
+                ambiances = resultat_brief.get("ambiances_suggerees", {})
+                if ambiances:
+                    brief_lines.append("Ambiances suggérées :")
+                    for acte, amb in ambiances.items():
+                        brief_lines.append(f"  - {acte} : {amb}")
+                if pieges:
+                    brief_lines.append("Pièges à éviter :")
+                    for p in pieges:
+                        brief_lines.append(f"  - {p}")
+                perso_focus = resultat_brief.get("personnages_focus", "")
+                if perso_focus:
+                    brief_lines.append(f"Focus personnages : {perso_focus}")
+                brief_directeur = "\n".join(brief_lines)
+
+                rapport["etapes"]["brief_directeur"] = {
+                    "directives_ton": resultat_brief.get("directives_ton", ""),
+                    "nb_moments_cles": len(moments),
+                    "nb_sfx_attendus": len(sfx_attendus),
+                    "nb_pieges": len(pieges),
+                }
+            except Exception as e:
+                logger.warning("Directeur Podcast (brief créatif) indisponible : %s", e)
+                console.print(f"[yellow]  Brief créatif non disponible : {e}[/yellow]")
+
+        # Combiner préférences producteur + brief directeur
+        preferences_completes = _construire_bloc_preferences() + brief_directeur
 
         for iteration in range(1, max_iterations_review + 1):
             console.print(f"  Iteration {iteration}/{max_iterations_review}...")
@@ -1742,7 +2818,9 @@ def _pipeline_inner(
                 morale=morale, corrections=corrections, historique=historique,
                 contexte_saison=contexte_saison, episode_plan=episode_plan,
                 type_episode=type_episode,
-                preferences_producteur=_construire_bloc_preferences(),
+                preferences_producteur=preferences_completes,
+                scripts_precedents=scripts_precedents,
+                arc_state_precedent=arc_state_precedent,
             )
 
             chemin_script = config.SCRIPTS_DIR / f"{episode_id}_v{iteration}.json"
@@ -1795,12 +2873,13 @@ def _pipeline_inner(
                 except Exception as e:
                     logger.warning("DB indisponible pour sauvegarde review : %s", e)
 
-            if reviewer.est_valide(resultat_review):
+            seuil_effectif = Reviewer.SEUILS_PAR_TYPE.get(type_episode, 7)
+            if reviewer.est_valide(resultat_review, seuil=seuil_effectif):
                 script = {"episode": resultat_review["episode"]}
-                console.print(f"[{Palette.SUCCES}]  Script validé (score {score}/10).[/]")
+                console.print(f"[{Palette.SUCCES}]  Script validé (score {score}/10, seuil {seuil_effectif}).[/]")
                 break
 
-            console.print(f"[yellow]  Score insuffisant ({score}/10 < 7) — relance du scripteur[/yellow]")
+            console.print(f"[yellow]  Score insuffisant ({score}/10 < {seuil_effectif}) — relance du scripteur[/yellow]")
             corrections = reviewer.extraire_corrections(resultat_review)
 
         else:
@@ -1827,6 +2906,49 @@ def _pipeline_inner(
                 console.print(f"    ! {a}")
             rapport.setdefault("alertes_post_generation", []).extend(alertes_questions)
 
+        # Validation ratio biblique (≥60%) — CRITIQUE
+        ratio_bib, alertes_bib = Reviewer.verifier_ratio_biblique(script)
+        if alertes_bib:
+            console.print(f"[red]  Ratio biblique : {ratio_bib:.0%} (minimum 60%) :[/red]")
+            for a in alertes_bib:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_bib)
+        else:
+            console.print(f"  Ratio biblique : {ratio_bib:.0%} {Icons.OK}")
+        rapport.setdefault("metriques", {})["ratio_biblique"] = round(ratio_bib, 2)
+
+        # Validation ratio Papy/enfants
+        ratio_enf, alertes_enf = Reviewer.verifier_ratio_papy_enfants(script)
+        if alertes_enf:
+            console.print("[yellow]  Ratio Papy/enfants :[/yellow]")
+            for a in alertes_enf:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_enf)
+        rapport.setdefault("metriques", {})["ratio_enfants"] = round(ratio_enf, 2)
+
+        # Validation teasing naturel
+        alertes_teasing = Reviewer.verifier_teasing(script)
+        if alertes_teasing:
+            console.print("[yellow]  Alertes teasing :[/yellow]")
+            for a in alertes_teasing:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_teasing)
+
+        # Validation pauses
+        alertes_pauses = Reviewer.verifier_pauses(script)
+        if alertes_pauses:
+            console.print("[yellow]  Alertes pauses :[/yellow]")
+            for a in alertes_pauses:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_pauses)
+
+        alertes_sfx_overlay = Reviewer.verifier_sfx_overlay_duree(script)
+        if alertes_sfx_overlay:
+            console.print("[yellow]  Alertes SFX overlay trop courts :[/yellow]")
+            for a in alertes_sfx_overlay:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(alertes_sfx_overlay)
+
         # Marquer comme validé en DB
         if _use_db():
             try:
@@ -1851,6 +2973,200 @@ def _pipeline_inner(
             "chemin": str(chemin_valide),
         }
 
+        # Upload script vers Object Storage (persistance inter-deploy)
+        try:
+            import persistent_storage
+            script_key = persistent_storage.upload_script(episode_id, chemin_valide)
+            if script_key:
+                rapport["etapes"]["script"]["object_storage"] = script_key
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour script : %s", e)
+
+        # ── Validation ambiances musicales ──────────────────────────────
+        ambiance_validation = DirecteurPodcast.valider_ambiances(script)
+        if ambiance_validation["alertes"]:
+            console.print(f"[yellow]  Ambiances musicales — {len(ambiance_validation['alertes'])} alerte(s) :[/yellow]")
+            for a in ambiance_validation["alertes"]:
+                console.print(f"    ! {a}")
+            rapport.setdefault("alertes_post_generation", []).extend(ambiance_validation["alertes"])
+        else:
+            stats_amb = ambiance_validation["stats"]
+            dyn = "dynamique" if stats_amb["dynamique"] else "uniforme"
+            console.print(
+                f"  Ambiances : {stats_amb['ambiance_principale']} ({dyn}, "
+                f"{stats_amb['nb_ambiances_distinctes']} variantes)"
+            )
+
+        # ── Directeur Podcast — validation créative + audience (BLOQUANT) ──
+        # Le directeur peut demander jusqu'à MAX_RETOURS_DIRECTEUR_SCRIPT corrections.
+        # Si "retravailler" ou "ajustements_mineurs" avec critiques, le script est
+        # renvoyé au scripteur avec les recommandations du directeur comme corrections.
+        MAX_RETOURS_DIRECTEUR_SCRIPT = 2
+        directeur_ok = False
+
+        if not dry_run:
+            for tour_dir in range(1, MAX_RETOURS_DIRECTEUR_SCRIPT + 2):  # +1 pour la dernière éval
+                console.print(f"\n{Typo.etape(2, 8, f'Validation Directeur Podcast (tour {tour_dir})')}")
+                try:
+                    directeur = DirecteurPodcast()
+                    contexte_directeur = {
+                        "type_episode": type_episode,
+                        "score_reviewer": score,
+                        "alertes": rapport.get("alertes_post_generation", []),
+                        "metriques": rapport.get("metriques", {}),
+                    }
+                    resultat_directeur = directeur.evaluer(script, contexte=contexte_directeur)
+                    dir_data = resultat_directeur.get("directeur", {})
+                    note_dir = dir_data.get("note_globale", 0)
+                    verdict = dir_data.get("verdict", "?")
+                    note_aud = directeur.note_audience(resultat_directeur)
+
+                    # Affichage verdict
+                    couleur_verdict = {
+                        "feu_vert": Palette.SUCCES,
+                        "ajustements_mineurs": "yellow",
+                        "retravailler": "red",
+                    }.get(verdict, "white")
+                    console.print(
+                        f"  Directeur : [{couleur_verdict}]{verdict.replace('_', ' ').upper()}[/] "
+                        f"(note {note_dir}/10, audience {note_aud}/10)"
+                    )
+
+                    # Synthèse
+                    if dir_data.get("synthese"):
+                        console.print(f"  {Typo.dim(dir_data['synthese'])}")
+
+                    # Axes détaillés
+                    for axe_nom, axe_data in dir_data.get("axes", {}).items():
+                        axe_label = axe_nom.replace("_", " ").title()
+                        axe_note = axe_data.get("note", 0)
+                        console.print(f"    {axe_label} : {axe_note}/10")
+
+                    # Recommandations
+                    recommandations = directeur.extraire_recommandations(resultat_directeur)
+                    if recommandations:
+                        console.print("[yellow]  Recommandations :[/yellow]")
+                        for r in recommandations:
+                            console.print(f"    - {r}")
+
+                    # Points forts
+                    points_forts = dir_data.get("points_forts", [])
+                    if points_forts:
+                        console.print(f"[{Palette.SUCCES}]  Points forts :[/]")
+                        for p in points_forts:
+                            console.print(f"    + {p}")
+
+                    # Réactions des personas
+                    personas = resultat_directeur.get("personas", {})
+                    for persona_key, persona_data in personas.items():
+                        nom = persona_key.replace("_", " ").title()
+                        reaction = persona_data.get("reaction", "")
+                        p_note = persona_data.get("note", 0)
+                        console.print(f"  {Typo.dim(f'{nom} ({p_note}/10) : {reaction}')}")
+
+                    # Sauvegarder dans le rapport
+                    rapport["etapes"]["directeur_podcast"] = {
+                        "note_globale": note_dir,
+                        "verdict": verdict,
+                        "note_audience": note_aud,
+                        "tour": tour_dir,
+                        "axes": {
+                            k: v.get("note", 0) for k, v in dir_data.get("axes", {}).items()
+                        },
+                        "nb_recommandations_critiques": sum(
+                            1 for r in dir_data.get("recommandations", [])
+                            if r.get("priorite") == "critique"
+                        ),
+                        "personas": {
+                            k: {"note": v.get("note", 0)}
+                            for k, v in personas.items()
+                        },
+                    }
+
+                    # ── Verdict : feu vert → on continue ────────────────────
+                    if verdict == "feu_vert":
+                        console.print(f"[{Palette.SUCCES}]  {Icons.OK} Feu vert du directeur — script approuvé.[/]")
+                        directeur_ok = True
+                        break
+
+                    # ── Verdict : retravailler ou ajustements avec critiques ──
+                    has_critiques = directeur.a_critiques(resultat_directeur)
+
+                    if verdict == "ajustements_mineurs" and not has_critiques:
+                        # Ajustements mineurs sans critiques → on accepte
+                        console.print(
+                            f"[yellow]  {Icons.ATTENTION_IC} Ajustements mineurs suggérés "
+                            f"(pas de critique bloquante) — script accepté.[/yellow]"
+                        )
+                        directeur_ok = True
+                        break
+
+                    # ── Verdict bloquant : renvoi au scripteur ──────────────
+                    if tour_dir > MAX_RETOURS_DIRECTEUR_SCRIPT:
+                        # On a atteint le max de tours → on accepte tel quel
+                        console.print(
+                            f"[yellow]  {Icons.ATTENTION_IC} Max retours directeur atteint "
+                            f"({MAX_RETOURS_DIRECTEUR_SCRIPT}) — script accepté avec réserves.[/yellow]"
+                        )
+                        directeur_ok = True
+                        break
+
+                    # Extraire les corrections du directeur pour le scripteur
+                    corrections_directeur = recommandations
+                    nb_critiques = sum(
+                        1 for r in dir_data.get("recommandations", [])
+                        if r.get("priorite") == "critique"
+                    )
+                    console.print(
+                        f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur demande une réécriture "
+                        f"({nb_critiques} critique(s)). Relance du scripteur...[/bold red]"
+                    )
+
+                    # Relancer le scripteur avec les corrections du directeur
+                    corrections = corrections_directeur
+                    script = scripteur.generer(
+                        titre=titre, resume=resume, saison=saison, numero=numero,
+                        morale=morale, corrections=corrections, historique=historique,
+                        contexte_saison=contexte_saison, episode_plan=episode_plan,
+                        type_episode=type_episode,
+                        preferences_producteur=preferences_completes,
+                        scripts_precedents=scripts_precedents,
+                        arc_state_precedent=arc_state_precedent,
+                    )
+
+                    # Re-review le script corrigé
+                    resultat_review = reviewer.evaluer(script, type_episode=type_episode)
+                    score = resultat_review["review"]["note"]
+                    seuil_effectif = Reviewer.SEUILS_PAR_TYPE.get(type_episode, 7)
+                    console.print(
+                        f"  Re-review après corrections directeur : {score}/10 "
+                        f"(seuil {seuil_effectif})"
+                    )
+                    if resultat_review.get("episode"):
+                        script = {"episode": resultat_review["episode"]}
+
+                    # Sauvegarder la version corrigée
+                    chemin_corrige = config.SCRIPTS_DIR / f"{episode_id}_dir_v{tour_dir}.json"
+                    scripteur.sauvegarder(script, chemin_corrige)
+                    chemin_valide = chemin_corrige
+                    console.print(
+                        f"  Script corrigé v{tour_dir} : {scripteur.compter_mots(script)} mots"
+                    )
+
+                except Exception as e:
+                    logger.warning("Directeur Podcast indisponible : %s", e)
+                    console.print(f"[yellow]  Directeur Podcast non disponible : {e}[/yellow]")
+                    directeur_ok = True  # En cas d'erreur, on ne bloque pas
+                    break
+        else:
+            directeur_ok = True  # dry-run → pas de validation directeur
+
+        # Enregistrer le statut directeur dans le rapport
+        if "directeur_podcast" in rapport.get("etapes", {}):
+            rapport["etapes"]["directeur_podcast"]["approuve"] = directeur_ok
+
+        _log_step_duration("Script + Review")
+
         # Checkpoint après script (inclut le chemin du script validé)
         sauvegarder_checkpoint(episode_id, "audio", {
             "episode_id": episode_id, "titre": titre, "resume": resume,
@@ -1859,6 +3175,7 @@ def _pipeline_inner(
             "dry_run": dry_run, "rapport": rapport,
             "chemin_script_valide": str(chemin_valide),
             "pubdate_offset_seconds": pubdate_offset_seconds,
+            "stop_after": stop_after,
         })
 
         # ── Validation humaine : script ──────────────────────────────────────
@@ -1880,6 +3197,151 @@ def _pipeline_inner(
             scripteur.sauvegarder(script, chemin_valide)
             duree_estimee = reviewer.estimer_duree(script)
             rapport["etapes"]["script"]["validation_humaine"] = True
+
+    # ── Stop après script (mode web : attendre validation avant audio) ────────
+    if stop_after == "script":
+        rapport["stop_after"] = "script"
+        rapport["status"] = "waiting_validation"
+        console.print(
+            f"\n[bold cyan]  Pipeline arrêté après le script — "
+            f"en attente de validation.[/bold cyan]"
+        )
+        # Sauvegarder le rapport partiel
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        # Upload rapport vers Object Storage (survit aux redéploiements)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour rapport (stop_after=script) : %s", e)
+        # Ajouter à l'historique dès maintenant pour que la page de validation
+        # web affiche l'épisode avec les données à jour (titre, résumé, score, etc.)
+        ajouter_historique(rapport, script)
+        # Marquer la production DB comme en attente (pas "in_progress" indéfiniment)
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
+            try:
+                ProductionRepo.maj_etape(
+                    _pid, etape="waiting_script",
+                    rapport=rapport,
+                )
+            except Exception as e:
+                logger.warning("DB indisponible pour maj_etape waiting_script : %s", e)
+        return rapport
+
+    # ── Garde : si le checkpoint demande montage mais que les segments audio
+    #    sont introuvables (ni local, ni Object Storage), reculer à l'étape audio
+    #    pour régénérer. Cela arrive quand les segments ont été générés avant
+    #    l'introduction de l'upload Object Storage, puis perdus au redéploiement.
+    if not dry_run and etape_idx > 2:
+        segments_episode_dir = config.SEGMENTS_DIR / episode_id
+        _segments_present = (
+            segments_episode_dir.exists()
+            and any(segments_episode_dir.glob("*.mp3"))
+        )
+        if not _segments_present:
+            # Tenter la restauration depuis Object Storage
+            try:
+                import persistent_storage
+                nb_restored = persistent_storage.restore_segments(episode_id, config.SEGMENTS_DIR)
+                if nb_restored > 0:
+                    logger.info(
+                        "Segments restaurés depuis Object Storage : %d fichiers", nb_restored
+                    )
+                    console.print(
+                        f"  [cyan]Segments restaurés depuis Object Storage : "
+                        f"{nb_restored} fichiers[/cyan]"
+                    )
+                    _segments_present = True
+            except Exception as e:
+                logger.warning("Restauration segments Object Storage échouée : %s", e)
+
+        if not _segments_present:
+            logger.warning(
+                "Segments introuvables pour %s (ni local, ni Object Storage). "
+                "Fallback : régénération audio depuis le script validé.",
+                episode_id,
+            )
+            console.print(
+                f"\n  [bold yellow]Segments audio introuvables — "
+                f"régénération automatique depuis le script validé[/bold yellow]"
+            )
+            etape_idx = 2  # Reculer à l'étape audio
+
+        # ── Nettoyage des segments périmés ──
+        # Après restauration depuis Object Storage, il peut y avoir des segments
+        # d'anciennes productions (IDs différents du script actuel).
+        # Les supprimer pour éviter toute confusion lors du montage.
+        if _segments_present and script:
+            _ids_attendus = {s["id"] for s in script["episode"]["segments"]}
+            _voix_ids = {
+                s["id"] for s in script["episode"]["segments"]
+                if s["personnage"] != "sfx"
+            }
+            _nb_nettoyes = 0
+            for _old_mp3 in segments_episode_dir.glob("*.mp3"):
+                _seg_id = _old_mp3.stem  # ex: "seg_001" from "seg_001.mp3"
+                if _seg_id not in _ids_attendus:
+                    try:
+                        _old_mp3.unlink()
+                        _nb_nettoyes += 1
+                    except OSError:
+                        pass
+            if _nb_nettoyes > 0:
+                _log_direct(
+                    f"Nettoyage : {_nb_nettoyes} segments périmés supprimés "
+                    f"(ne correspondent pas au script actuel avec {len(_ids_attendus)} segments)"
+                )
+                logger.info(
+                    "Segments périmés nettoyés : %d fichiers supprimés "
+                    "(script actuel : %d segments)",
+                    _nb_nettoyes, len(_ids_attendus),
+                )
+
+            # Vérifier que les segments voix du script actuel sont présents
+            _fichiers_restants = {f.stem for f in segments_episode_dir.glob("*.mp3")}
+            _voix_manquants = _voix_ids - _fichiers_restants
+            _sfx_ids = {
+                s["id"] for s in script["episode"]["segments"]
+                if s["personnage"] == "sfx"
+            }
+            _sfx_manquants = _sfx_ids - _fichiers_restants
+
+            _total_attendus = len(_ids_attendus)
+            _total_presents = len(_fichiers_restants)
+            _total_manquants = len(_voix_manquants) + len(_sfx_manquants)
+
+            if _total_manquants > 0:
+                _log_direct(
+                    f"Segments : {_total_presents}/{_total_attendus} présents, "
+                    f"{len(_voix_manquants)} voix manquants, "
+                    f"{len(_sfx_manquants)} SFX manquants"
+                )
+
+            if len(_voix_manquants) > len(_voix_ids) * 0.5:
+                # >50% voix manquants → régénérer tout l'audio
+                _log_direct(
+                    f"Après nettoyage : {len(_voix_manquants)}/{len(_voix_ids)} "
+                    f"segments voix manquants — régénération audio nécessaire"
+                )
+                etape_idx = 2  # Reculer à audio
+            elif _voix_manquants or _sfx_manquants:
+                # Quelques segments manquants (voix ≤50% + SFX) → régénérer audio+SFX
+                if _voix_manquants:
+                    _log_direct(
+                        f"{len(_voix_manquants)}/{len(_voix_ids)} segments voix manquants "
+                        f"+ {len(_sfx_manquants)} SFX — régénération audio nécessaire"
+                    )
+                    etape_idx = 2  # Régénérer voix (l'étape audio ne regénère que les manquants)
+                elif _sfx_manquants:
+                    _log_direct(
+                        f"Voix OK, {len(_sfx_manquants)}/{len(_sfx_ids)} SFX manquants "
+                        f"— régénération SFX nécessaire"
+                    )
+                    etape_idx = min(etape_idx, 3)  # SFX seulement
 
     # ── Étape 3 : Production audio (voix) ─────────────────────────────────────
 
@@ -1906,9 +3368,17 @@ def _pipeline_inner(
                 fichiers_audio = producteur.produire_episode(script)
                 progress.update(task, completed=len(segments_voix))
 
-            console.print(f"  {len(fichiers_audio)} segments voix générés")
+            nb_attendus = len(segments_voix)
+            nb_recus = len(fichiers_audio)
+            console.print(f"  {nb_recus} segments voix générés")
+            if nb_recus < nb_attendus:
+                console.print(
+                    f"  [{Palette.ATTENTION}]{Icons.ATTENTION_IC} {nb_attendus - nb_recus} "
+                    f"segment(s) manquant(s) — sera(ont) remplacé(s) par du silence au montage.[/]"
+                )
             rapport["etapes"]["audio"] = {
-                "nb_segments": len(fichiers_audio),
+                "nb_segments": nb_recus,
+                "nb_segments_attendus": nb_attendus,
                 "caracteres": dict(producteur.caracteres_utilises),
             }
 
@@ -1924,7 +3394,7 @@ def _pipeline_inner(
                             episode_id=episode_id,
                             type_fichier="segment_voix",
                             chemin=str(chemin_seg),
-                            production_id=_production_id_courante,
+                            production_id=getattr(_production_local, 'production_id', None),
                             segment_id=seg_audio["id"],
                             personnage=seg_audio["personnage"],
                             source="elevenlabs",
@@ -1938,10 +3408,21 @@ def _pipeline_inner(
                         service="elevenlabs_tts",
                         cout_estime=cout_tts,
                         detail={"caracteres": dict(producteur.caracteres_utilises)},
-                        production_id=_production_id_courante,
+                        production_id=getattr(_production_local, 'production_id', None),
                     )
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement audio : %s", e)
+
+            # Upload segments voix vers Object Storage (survie au redéploiement)
+            try:
+                import persistent_storage
+                nb_uploaded = persistent_storage.upload_segments(episode_id, config.SEGMENTS_DIR)
+                if nb_uploaded > 0:
+                    logger.info("Segments voix uploadés : %d fichiers", nb_uploaded)
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour segments voix : %s", e)
+
+            _log_step_duration("Audio TTS")
 
             sauvegarder_checkpoint(episode_id, "sfx", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
@@ -1949,7 +3430,48 @@ def _pipeline_inner(
                 "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
+                "stop_after": stop_after,
             })
+
+    # ── Stop après audio (survie au recyclage container) ──────────────────────
+    if stop_after == "audio":
+        # Le checkpoint sauvé ci-dessus (etape="sfx") garde stop_after="audio".
+        # On le met à jour vers "montage" pour que l'auto-resume ne boucle pas
+        # sur le stop_after="audio" si le chaînage web échoue.
+        sauvegarder_checkpoint(episode_id, "sfx", {
+            "episode_id": episode_id, "titre": titre, "resume": resume,
+            "saison": saison, "numero": numero, "morale": morale,
+            "type_episode": type_episode,
+            "dry_run": dry_run, "rapport": rapport,
+            "pubdate_offset_seconds": pubdate_offset_seconds,
+            "stop_after": "montage",  # Destination finale, pas l'étape intermédiaire
+        })
+        rapport["stop_after"] = "audio"
+        rapport["status"] = "audio_done"
+        console.print(
+            f"\n[bold cyan]  Pipeline arrêté après l'audio — "
+            f"SFX et montage dans le prochain job.[/bold cyan]"
+        )
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour rapport (stop_after=audio) : %s", e)
+        ajouter_historique(rapport, script)
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
+            try:
+                ProductionRepo.maj_etape(
+                    _pid, etape="audio_done",
+                    rapport=rapport,
+                )
+            except Exception as e:
+                logger.warning("DB indisponible pour maj_etape audio_done : %s", e)
+        return rapport
 
     # ── Étape 4 : Bruitages (SFX) ─────────────────────────────────────────────
 
@@ -1964,6 +3486,22 @@ def _pipeline_inner(
             rapport["etapes"]["sfx"] = {"status": "no sfx segments", "nb_sfx": 0}
         else:
             console.print(f"\n{Typo.etape(4, 8, f'SFX Bruitages ({nb_sfx})')}")
+
+            # Pré-validation SFX par le directeur podcast
+            sfx_validation = DirecteurPodcast.valider_sfx_pour_generation(script)
+            stats_sfx_pre = sfx_validation["stats"]
+            console.print(
+                f"  Pré-validation SFX : {stats_sfx_pre['nb_sfx']} SFX "
+                f"({stats_sfx_pre['nb_overlay']} overlay, {stats_sfx_pre['nb_insert']} insert)"
+            )
+            if sfx_validation["alertes"]:
+                console.print(f"[yellow]  {len(sfx_validation['alertes'])} alerte(s) SFX :[/yellow]")
+                for a in sfx_validation["alertes"][:10]:
+                    console.print(f"    ! {a}")
+                if len(sfx_validation["alertes"]) > 10:
+                    console.print(f"    ... et {len(sfx_validation['alertes']) - 10} autres")
+            rapport.setdefault("alertes_post_generation", []).extend(sfx_validation["alertes"])
+
             sfx_provider = SfxProvider()
             fichiers_sfx = sfx_provider.produire_sfx(script)
 
@@ -1974,7 +3512,31 @@ def _pipeline_inner(
             rapport["etapes"]["sfx"] = {
                 "nb_sfx": len(fichiers_sfx),
                 "sources": dict(sfx_provider.stats),
+                "pre_validation": sfx_validation["stats"],
             }
+
+            # Audit niveaux audio des SFX générés
+            if fichiers_sfx:
+                try:
+                    audit_sfx = sfx_provider.auditer_niveaux_audio(script, fichiers_sfx)
+                    stats_audit = audit_sfx["stats"]
+                    console.print(
+                        f"  Audit audio : {stats_audit['nb_ok']}/{stats_audit['nb_sfx_audites']} "
+                        f"SFX OK (niveau moyen {stats_audit.get('dbfs_moyen', '?')} dBFS)"
+                    )
+                    if audit_sfx["alertes"]:
+                        console.print(f"[yellow]  {len(audit_sfx['alertes'])} alerte(s) audio :[/yellow]")
+                        for a in audit_sfx["alertes"][:5]:
+                            console.print(f"    ! {a}")
+                    rapport["etapes"]["sfx"]["audit_audio"] = {
+                        "ok": audit_sfx["ok"],
+                        "nb_ok": stats_audit["nb_ok"],
+                        "nb_problemes": stats_audit["nb_problemes"],
+                        "dbfs_moyen": stats_audit.get("dbfs_moyen"),
+                    }
+                    rapport.setdefault("alertes_post_generation", []).extend(audit_sfx["alertes"])
+                except Exception as e:
+                    logger.warning("Audit audio SFX échoué : %s", e)
 
             # Enregistrer les SFX en DB
             if _use_db():
@@ -1985,7 +3547,7 @@ def _pipeline_inner(
                             episode_id=episode_id,
                             type_fichier="segment_sfx",
                             chemin=str(chemin_sfx),
-                            production_id=_production_id_courante,
+                            production_id=getattr(_production_local, 'production_id', None),
                             segment_id=seg_id,
                             personnage="sfx",
                             source=source,
@@ -1998,14 +3560,75 @@ def _pipeline_inner(
                             service="elevenlabs_sfx",
                             cout_estime=nb_sfx_el * config.COUTS["elevenlabs_sfx_par_generation"],
                             detail={"nb_sfx_elevenlabs": nb_sfx_el},
-                            production_id=_production_id_courante,
+                            production_id=getattr(_production_local, 'production_id', None),
                         )
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement SFX : %s", e)
 
+        # Upload segments SFX vers Object Storage (les SFX sont dans le même dossier)
+        if not dry_run and nb_sfx > 0:
+            try:
+                import persistent_storage
+                nb_uploaded = persistent_storage.upload_segments(episode_id, config.SEGMENTS_DIR)
+                if nb_uploaded > 0:
+                    logger.info("Segments (voix+SFX) uploadés : %d fichiers", nb_uploaded)
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour segments SFX : %s", e)
+
+        _log_step_duration("SFX Bruitages")
+
+        # Checkpoint après SFX (manquant auparavant — perte de données SFX sur crash)
+        sauvegarder_checkpoint(episode_id, "montage", {
+            "episode_id": episode_id, "titre": titre, "resume": resume,
+            "saison": saison, "numero": numero, "morale": morale,
+            "type_episode": type_episode,
+            "dry_run": dry_run, "rapport": rapport,
+            "pubdate_offset_seconds": pubdate_offset_seconds,
+            "stop_after": stop_after,
+        })
+
+    # ── Stop après SFX (survie au recyclage container) ────────────────────────
+    if stop_after == "sfx":
+        # Mettre à jour le checkpoint avec stop_after="montage" pour l'auto-resume
+        sauvegarder_checkpoint(episode_id, "montage", {
+            "episode_id": episode_id, "titre": titre, "resume": resume,
+            "saison": saison, "numero": numero, "morale": morale,
+            "type_episode": type_episode,
+            "dry_run": dry_run, "rapport": rapport,
+            "pubdate_offset_seconds": pubdate_offset_seconds,
+            "stop_after": "montage",  # Destination finale, pas l'étape intermédiaire
+        })
+        rapport["stop_after"] = "sfx"
+        rapport["status"] = "sfx_done"
+        console.print(
+            f"\n[bold cyan]  Pipeline arrêté après les SFX — "
+            f"montage dans le prochain job.[/bold cyan]"
+        )
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour rapport (stop_after=sfx) : %s", e)
+        ajouter_historique(rapport, script)
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
+            try:
+                ProductionRepo.maj_etape(
+                    _pid, etape="sfx_done",
+                    rapport=rapport,
+                )
+            except Exception as e:
+                logger.warning("DB indisponible pour maj_etape sfx_done : %s", e)
+        return rapport
+
     # ── Étape 5 : Montage ─────────────────────────────────────────────────────
 
     if etape_idx <= 4:
+        _log_direct("Entrée étape 5 — Montage")
         if dry_run:
             console.print(f"\n{Typo.etape(5, 8, 'Montage')}  {Typo.attention('SAUTÉ — dry-run')}")
             rapport["etapes"]["montage"] = {"status": "skipped (dry-run)"}
@@ -2015,9 +3638,158 @@ def _pipeline_inner(
             taille_bytes = 0
             chemin_hq = None
         else:
+            _log_direct(f"Montage — {len(script['episode']['segments'])} segments dans le script")
             console.print(f"\n{Typo.etape(5, 8, 'Montage')}")
+
+            # ── Restaurer le WAV intermédiaire depuis Object Storage si nécessaire ──
+            # Si le container a été recyclé pendant l'export MP3, le WAV intermédiaire
+            # (étapes 1-8 déjà complétées) peut être en Object Storage.
+            _wav_checkpoint_name = f"{episode_id}_{_slug(titre)}_pre_export.wav"
+            _wav_checkpoint_path = config.OUTPUT_DIR / _wav_checkpoint_name
+            if not _wav_checkpoint_path.exists():
+                try:
+                    import persistent_storage
+                    _wav_key = persistent_storage.PREFIX_MONTAGE_WAV + f"{episode_id}_pre_export.wav"
+                    if persistent_storage.download_file(_wav_key, _wav_checkpoint_path):
+                        logger.info(
+                            "WAV intermédiaire restauré depuis Object Storage — "
+                            "montage reprendra à l'export MP3"
+                        )
+                        console.print(
+                            "  [cyan]WAV intermédiaire restauré — "
+                            "reprise à l'export MP3 (skip étapes 1-8)[/cyan]"
+                        )
+                except Exception as e_wav_restore:
+                    logger.debug("Pas de WAV intermédiaire en Object Storage : %s", e_wav_restore)
+
+            # ── Vérification de cohérence segments vs script ──
+            # CRITIQUE : si les segments locaux ne correspondent pas au script actuel
+            # (ex: anciennes productions restaurées depuis Object Storage), le montage
+            # produira un épisode incohérent ou échouera silencieusement.
+            _seg_dir_check = config.SEGMENTS_DIR / episode_id
+            if _seg_dir_check.exists() and script:
+                _voix_ids_script = {
+                    s["id"] for s in script["episode"]["segments"]
+                    if s["personnage"] != "sfx"
+                }
+                _fichiers_locaux = {f.stem for f in _seg_dir_check.glob("*.mp3")}
+                _voix_manquants = _voix_ids_script - _fichiers_locaux
+                if _voix_manquants:
+                    _log_direct(
+                        f"ALERTE : {len(_voix_manquants)} segments voix manquants "
+                        f"sur {len(_voix_ids_script)} attendus. "
+                        f"Manquants: {sorted(_voix_manquants)[:10]}"
+                    )
+                    logger.warning(
+                        "Segments voix manquants avant montage : %d/%d — %s",
+                        len(_voix_manquants), len(_voix_ids_script),
+                        sorted(_voix_manquants)[:10],
+                    )
+                    # Si plus de 50% des segments voix manquent, le montage est impossible
+                    if len(_voix_manquants) > len(_voix_ids_script) * 0.5:
+                        raise RuntimeError(
+                            f"Montage impossible : {len(_voix_manquants)}/{len(_voix_ids_script)} "
+                            f"segments voix manquants. Relancez la production audio."
+                        )
+
+            # ── Appliquer les instructions de montage (modification depuis le web) ──
+            # Si le producteur a soumis des instructions via "Modifier le montage",
+            # on utilise Claude pour adapter le script (pauses, tons, rythmes, SFX)
+            # avant de relancer le montage avec les segments audio existants.
+            _montage_instructions_path = config.SCRIPTS_DIR / f"{episode_id}_montage_instructions.txt"
+            if _montage_instructions_path.exists():
+                try:
+                    _montage_instructions = _montage_instructions_path.read_text(
+                        encoding="utf-8"
+                    ).strip()
+                    if _montage_instructions:
+                        _log_direct(
+                            f"Instructions de montage détectées : "
+                            f"{_montage_instructions[:200]}"
+                        )
+                        console.print(
+                            f"  [bold cyan]Instructions du producteur :[/bold cyan] "
+                            f"{_montage_instructions[:200]}"
+                        )
+                        script = _appliquer_instructions_montage(
+                            script, _montage_instructions, episode_id
+                        )
+                    _montage_instructions_path.unlink()  # Usage unique
+                except Exception as e:
+                    logger.warning(
+                        "Erreur application instructions montage : %s", e
+                    )
+
             monteur = Monteur()
-            resultat_montage = monteur.assembler(script)
+
+            # Audit des musiques de fond avant montage
+            try:
+                audit_musique = Monteur.auditer_musiques_fond(script)
+                stats_mus = audit_musique["stats"]
+                console.print(
+                    f"  Musiques de fond : {stats_mus['nb_ok']} prêtes, "
+                    f"{stats_mus['nb_a_generer']} à générer "
+                    f"({'dynamique' if stats_mus['dynamique'] else 'uniforme'})"
+                )
+                if audit_musique["alertes"]:
+                    console.print(f"[yellow]  {len(audit_musique['alertes'])} alerte(s) musique :[/yellow]")
+                    for a in audit_musique["alertes"][:5]:
+                        console.print(f"    ! {a}")
+                rapport.setdefault("etapes", {}).setdefault("montage", {})["audit_musique"] = {
+                    "ok": audit_musique["ok"],
+                    "nb_ambiances": stats_mus["nb_ambiances"],
+                    "dynamique": stats_mus["dynamique"],
+                }
+                rapport.setdefault("alertes_post_generation", []).extend(audit_musique["alertes"])
+            except Exception as e:
+                logger.warning("Audit musiques de fond échoué : %s", e)
+
+            # Vérifier que les segments audio existent avant de lancer le montage
+            _seg_dir = config.SEGMENTS_DIR / episode_id
+            _seg_count = len(list(_seg_dir.glob("*.mp3"))) if _seg_dir.exists() else 0
+            _script_seg_count = len(script["episode"]["segments"])
+            _log_direct(
+                f"Lancement monteur.assembler() — "
+                f"{_seg_count} fichiers MP3 en local, "
+                f"{_script_seg_count} segments dans le script"
+            )
+            try:
+                resultat_montage = monteur.assembler(script)
+                _log_direct(
+                    f"Montage terminé — "
+                    f"durée={resultat_montage.get('duree_secondes', '?')}s, "
+                    f"fichier={resultat_montage.get('chemin_hq', '?')}"
+                )
+            except Exception as e:
+                # ── Montage échoué : sauvegarder l'erreur dans le rapport ──
+                _log_direct(f"ERREUR MONTAGE : {type(e).__name__}: {e}")
+                logger.error("Montage échoué pour %s : %s", episode_id, e, exc_info=True)
+                rapport["etapes"]["montage"] = {
+                    "status": "error",
+                    "erreur": str(e),
+                    "erreur_type": type(e).__name__,
+                }
+                # Sauvegarder le rapport partiel (même en cas d'erreur)
+                chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+                rapport["erreur_montage"] = str(e)
+                with fichier_lock(chemin_rapport):
+                    with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                        json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+                try:
+                    import persistent_storage
+                    persistent_storage.upload_rapport(episode_id, chemin_rapport)
+                except Exception as e_os:
+                    logger.warning("Object Storage indisponible pour rapport montage échec : %s", e_os)
+                # Sauvegarder checkpoint pour reprise
+                sauvegarder_checkpoint(episode_id, "montage", {
+                    "episode_id": episode_id, "titre": titre, "resume": resume,
+                    "saison": saison, "numero": numero, "morale": morale,
+                    "type_episode": type_episode,
+                    "dry_run": dry_run, "rapport": rapport,
+                    "pubdate_offset_seconds": pubdate_offset_seconds,
+                    "stop_after": stop_after,
+                })
+                raise  # Re-raise pour que le outer handler marque failed en DB
 
             duree_secondes = resultat_montage["duree_secondes"]
             taille_bytes = resultat_montage["taille_bytes"]
@@ -2039,7 +3811,7 @@ def _pipeline_inner(
                         episode_id=episode_id,
                         type_fichier="episode_hq",
                         chemin=str(chemin_hq),
-                        production_id=_production_id_courante,
+                        production_id=getattr(_production_local, 'production_id', None),
                         taille_bytes=taille_bytes,
                         duree_secondes=duree_secondes,
                     )
@@ -2047,11 +3819,30 @@ def _pipeline_inner(
                         episode_id=episode_id,
                         type_fichier="episode_preview",
                         chemin=str(resultat_montage["chemin_preview"]),
-                        production_id=_production_id_courante,
+                        production_id=getattr(_production_local, 'production_id', None),
                         duree_secondes=duree_secondes,
                     )
                 except Exception as e:
                     logger.warning("DB indisponible pour enregistrement montage : %s", e)
+
+            # Upload audio + chapitres vers Object Storage (persistance inter-deploy)
+            try:
+                import persistent_storage
+                _preview_raw = resultat_montage.get("chemin_preview")
+                preview_path = Path(_preview_raw) if _preview_raw else None
+                storage_keys = persistent_storage.upload_episode_audio(
+                    episode_id, Path(chemin_hq), preview_path,
+                )
+                if storage_keys:
+                    rapport["etapes"]["montage"]["object_storage"] = storage_keys
+                # Upload chapitres
+                chemin_chapitres = resultat_montage.get("chemin_chapitres")
+                if chemin_chapitres:
+                    chap_key = persistent_storage.upload_chapters(episode_id, Path(chemin_chapitres))
+                    if chap_key:
+                        rapport["etapes"]["montage"]["object_storage_chapters"] = chap_key
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour audio/chapitres : %s", e)
 
             sauvegarder_checkpoint(episode_id, "metadonnees", {
                 "episode_id": episode_id, "titre": titre, "resume": resume,
@@ -2059,11 +3850,13 @@ def _pipeline_inner(
                 "type_episode": type_episode,
                 "dry_run": dry_run, "rapport": rapport,
                 "pubdate_offset_seconds": pubdate_offset_seconds,
+                "stop_after": stop_after,
             })
 
     # ── Validation humaine : montage ─────────────────────────────────────────
 
-    if not auto and not dry_run and chemin_hq and resultat_montage:
+    montage_deja_valide = rapport.get("etapes", {}).get("montage", {}).get("validation_humaine", False)
+    if not auto and not dry_run and chemin_hq and resultat_montage and not montage_deja_valide:
         preview_chemin = (
             resultat_montage.get("chemin_preview")
             if isinstance(resultat_montage, dict)
@@ -2113,6 +3906,29 @@ def _pipeline_inner(
                     resultat_montage=resultat_montage,
                     rapport=rapport,
                 )
+
+            # Upload audio remontée vers Object Storage
+            try:
+                import persistent_storage
+                preview_remonté = resultat_montage.get("chemin_preview")
+                preview_path_r = Path(preview_remonté) if preview_remonté else None
+                storage_keys = persistent_storage.upload_episode_audio(
+                    episode_id, Path(chemin_hq), preview_path_r,
+                )
+                if storage_keys:
+                    rapport["etapes"]["montage"]["object_storage"] = storage_keys
+            except Exception as e:
+                logger.warning("Object Storage indisponible pour audio remontée : %s", e)
+
+            # M9: Save checkpoint after remontage loop to preserve remontage work
+            sauvegarder_checkpoint(episode_id, "metadonnees", {
+                "episode_id": episode_id, "titre": titre, "resume": resume,
+                "saison": saison, "numero": numero, "morale": morale,
+                "type_episode": type_episode,
+                "dry_run": dry_run, "rapport": rapport,
+                "pubdate_offset_seconds": pubdate_offset_seconds,
+                "stop_after": stop_after,
+            })
         else:
             logger.warning(
                 "Pas de fichier preview disponible — validation du montage impossible."
@@ -2123,6 +3939,63 @@ def _pipeline_inner(
                 "[yellow]  La publication sera bloquée tant que le montage "
                 "n'aura pas été écouté et validé.[/yellow]"
             )
+            # M5: Allow forced validation when no preview exists
+            console.print(
+                "\n[bold yellow]  Vous pouvez forcer la validation du montage "
+                "sans écoute (non recommandé).[/bold yellow]\n"
+                "[dim]  Le fichier HQ existe mais aucun preview n'a été généré.[/dim]"
+            )
+            choix_force = Prompt.ask(
+                "  Forcer la validation sans écoute ?",
+                choices=["o", "n"],
+                default="n",
+            )
+            if choix_force == "o":
+                console.print(
+                    f"  [{Palette.ATTENTION}]{Icons.ATTENTION_IC} Montage validé SANS écoute "
+                    f"— vérifiez le fichier HQ manuellement : {chemin_hq}[/]"
+                )
+                rapport["etapes"]["montage"]["validation_humaine"] = True
+                rapport.setdefault("decisions_humaines", []).append({
+                    "etape": "montage",
+                    "action": "validation_forcee_sans_preview",
+                    "raison": "Aucun fichier preview disponible",
+                })
+                logger.info("Montage validé sans écoute (forcé par le producteur).")
+
+    # ── Stop après montage (mode web : attendre validation avant publication) ─
+    if stop_after == "montage":
+        _log_direct(f"Stop après montage — chemin_hq={chemin_hq}")
+        rapport["stop_after"] = "montage"
+        rapport["status"] = "waiting_validation"
+        console.print(
+            f"\n[bold cyan]  Pipeline arrêté après le montage — "
+            f"en attente de validation.[/bold cyan]"
+        )
+        chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
+        with fichier_lock(chemin_rapport):
+            with open(chemin_rapport, "w", encoding="utf-8") as f_out:
+                json.dump(rapport, f_out, ensure_ascii=False, indent=2, default=str)
+        # Upload rapport vers Object Storage (survit aux redéploiements)
+        try:
+            import persistent_storage
+            persistent_storage.upload_rapport(episode_id, chemin_rapport)
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour rapport (stop_after=montage) : %s", e)
+        # Mettre à jour l'historique pour que la page de validation web soit à jour
+        ajouter_historique(rapport, script)
+        _pid = getattr(_production_local, 'production_id', None)
+        if _use_db() and _pid:
+            try:
+                ProductionRepo.maj_etape(
+                    _pid, etape="waiting_montage",
+                    rapport=rapport,
+                )
+            except Exception as e:
+                logger.warning("DB indisponible pour maj_etape waiting_montage : %s", e)
+        return rapport
+
+    _log_step_duration("Montage")
 
     # ── Étape 6 : Métadonnées ─────────────────────────────────────────────────
 
@@ -2154,7 +4027,7 @@ def _pipeline_inner(
                 MetadonneesRepo.sauvegarder(
                     episode_id=episode_id,
                     meta=meta,
-                    production_id=_production_id_courante,
+                    production_id=getattr(_production_local, 'production_id', None),
                 )
                 # Coût Claude pour métadonnées
                 if not dry_run:
@@ -2167,7 +4040,7 @@ def _pipeline_inner(
                         service="anthropic_claude",
                         cout_estime=cout_claude_meta,
                         detail={"operation": "metadonnees"},
-                        production_id=_production_id_courante,
+                        production_id=getattr(_production_local, 'production_id', None),
                     )
             except Exception as e:
                 logger.warning("DB indisponible pour métadonnées : %s", e)
@@ -2184,6 +4057,112 @@ def _pipeline_inner(
                 console.print(f"  Cover art : {cover_path}")
                 rapport["etapes"]["metadonnees"]["cover_art_cout"] = config.COUTS["openai_dalle3_par_image"]
 
+                # Upload cover art vers Object Storage
+                try:
+                    import persistent_storage
+                    cover_key = persistent_storage.upload_cover(episode_id, cover_path)
+                    if cover_key:
+                        rapport["etapes"]["metadonnees"]["object_storage_cover"] = cover_key
+                except Exception as e:
+                    logger.warning("Object Storage indisponible pour cover art : %s", e)
+
+    # ── Directeur Podcast — validation métadonnées ────────────────────────────
+
+    if not dry_run and etape_idx <= 5:
+        try:
+            directeur_meta = DirecteurPodcast()
+            resultat_meta_dir = directeur_meta.valider_metadonnees(meta, script)
+            note_meta = resultat_meta_dir.get("note", 0)
+            verdict_meta = resultat_meta_dir.get("verdict", "?")
+
+            couleur = {
+                "feu_vert": Palette.SUCCES,
+                "ajustements_mineurs": "yellow",
+                "retravailler": "red",
+            }.get(verdict_meta, "white")
+            console.print(
+                f"  Directeur (métadonnées) : [{couleur}]{verdict_meta.replace('_', ' ').upper()}[/] "
+                f"(note {note_meta}/10)"
+            )
+
+            # Titre
+            titre_avis = resultat_meta_dir.get("titre_avis", "")
+            if titre_avis:
+                console.print(f"  Titre : {Typo.dim(titre_avis)}")
+
+            # Suggestions de titres alternatifs
+            suggestions = resultat_meta_dir.get("suggestions", {})
+            titres_alt = suggestions.get("titres_alternatifs", [])
+            if titres_alt:
+                console.print("[yellow]  Titres alternatifs proposés :[/yellow]")
+                for t in titres_alt[:3]:
+                    console.print(f"    - {t}")
+
+            # Description
+            desc_avis = resultat_meta_dir.get("description_avis", "")
+            if desc_avis:
+                console.print(f"  Description : {Typo.dim(desc_avis)}")
+
+            # Personas
+            personas_meta = resultat_meta_dir.get("personas", {})
+            for pk, pv in personas_meta.items():
+                nom = pk.replace("_", " ").title()
+                clic = "cliquerait" if pv.get("cliquerait", True) else "NE cliquerait PAS"
+                comm = pv.get("commentaire", "")
+                console.print(f"  {Typo.dim(f'{nom} : {clic} — {comm}')}")
+
+            rapport["etapes"]["directeur_metadonnees"] = {
+                "note": note_meta,
+                "verdict": verdict_meta,
+                "titres_alternatifs": titres_alt,
+            }
+
+            # Si "retravailler" → régénérer les métadonnées avec les suggestions du directeur
+            if verdict_meta == "retravailler":
+                console.print(
+                    f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur demande de retravailler "
+                    f"les métadonnées. Régénération avec ses suggestions...[/bold red]"
+                )
+                desc_amelioree = suggestions.get("description_amelioree", "")
+                instructions_dir = []
+                if titres_alt:
+                    instructions_dir.append(f"Utiliser un titre parmi : {', '.join(titres_alt[:3])}")
+                if desc_amelioree:
+                    instructions_dir.append(f"Description améliorée : {desc_amelioree}")
+                mots_manquants = suggestions.get("mots_cles_manquants", [])
+                if mots_manquants:
+                    instructions_dir.append(f"Ajouter les mots-clés : {', '.join(mots_manquants)}")
+                if titre_avis:
+                    instructions_dir.append(f"Avis titre : {titre_avis}")
+                if desc_avis:
+                    instructions_dir.append(f"Avis description : {desc_avis}")
+
+                try:
+                    # Injecter les instructions du directeur dans le script pour le LLM
+                    script_enrichi = dict(script)
+                    if instructions_dir:
+                        script_enrichi["_instructions_metadonnees"] = "\n".join(instructions_dir)
+                    meta = metadonnees.generer(script_enrichi, duree_secondes)
+                    # Appliquer le titre alternatif suggéré par le directeur si disponible
+                    if titres_alt:
+                        meta["titre"] = titres_alt[0]
+                        console.print(f"  Titre remplacé par suggestion directeur : {titres_alt[0]}")
+                    if desc_amelioree:
+                        meta["description_courte"] = desc_amelioree
+                        console.print(f"  Description remplacée par suggestion directeur")
+                    metadonnees.sauvegarder(meta, chemin_meta)
+                    console.print(f"  Nouveau titre : {meta['titre']}")
+                    console.print(f"  Nouvelle description : {meta['description_courte']}")
+                    rapport["etapes"]["metadonnees"]["titre"] = meta["titre"]
+                    rapport["etapes"]["metadonnees"]["regenere_par_directeur"] = True
+                except Exception as regen_e:
+                    logger.warning("Régénération métadonnées échouée : %s", regen_e)
+                    console.print(f"[yellow]  Régénération échouée : {regen_e}[/yellow]")
+
+        except Exception as e:
+            logger.warning("Directeur Podcast (métadonnées) indisponible : %s", e)
+            console.print(f"[yellow]  Validation directeur métadonnées non disponible : {e}[/yellow]")
+
     # ── Validation humaine : metadonnees ──────────────────────────────────────
 
     if not auto and not dry_run and etape_idx <= 5:
@@ -2197,6 +4176,18 @@ def _pipeline_inner(
         metadonnees_agent.sauvegarder(meta, chemin_meta)
         rapport["etapes"]["metadonnees"]["validation_humaine"] = True
 
+    # Upload métadonnées vers Object Storage (après validation éventuelle)
+    if not dry_run and etape_idx <= 5:
+        try:
+            import persistent_storage
+            meta_key = persistent_storage.upload_metadonnees(episode_id, chemin_meta)
+            if meta_key:
+                rapport["etapes"]["metadonnees"]["object_storage_meta"] = meta_key
+        except Exception as e:
+            logger.warning("Object Storage indisponible pour métadonnées : %s", e)
+
+    _log_step_duration("Métadonnées")
+
     # ── Étape 7 : Publication ─────────────────────────────────────────────────
 
     if etape_idx <= 6:
@@ -2205,12 +4196,87 @@ def _pipeline_inner(
             console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention(f'SAUTÉ — {raison}')}")
             rapport["etapes"]["publication"] = {"status": f"skipped ({raison})"}
         else:
+            # ── Directeur Podcast — Go/No-Go final ────────────────────────
+            publication_bloquee_directeur = False
+            try:
+                directeur_pub = DirecteurPodcast()
+                resultat_go = directeur_pub.go_no_go_publication(rapport, meta)
+                verdict_go = resultat_go.get("verdict", "?")
+                note_go = resultat_go.get("note_globale", 0)
+
+                couleur_go = {
+                    "go": Palette.SUCCES,
+                    "conditionnel": "yellow",
+                    "no_go": "red",
+                }.get(verdict_go, "white")
+                console.print(
+                    f"  Directeur — verdict final : [{couleur_go}]{verdict_go.upper()}[/] "
+                    f"(note {note_go}/10)"
+                )
+
+                synthese_go = resultat_go.get("synthese", "")
+                if synthese_go:
+                    console.print(f"  {Typo.dim(synthese_go)}")
+
+                # Points forts
+                for pf in resultat_go.get("points_forts", []):
+                    console.print(f"  [{Palette.SUCCES}]+ {pf}[/]")
+
+                # Risques
+                for r in resultat_go.get("risques", []):
+                    console.print(f"  [yellow]! {r}[/yellow]")
+
+                # Conditions (si conditionnel)
+                for c in resultat_go.get("conditions", []):
+                    console.print(f"  [bold yellow]? {c}[/bold yellow]")
+
+                # Personas
+                personas_go = resultat_go.get("personas", {})
+                for pk, pv in personas_go.items():
+                    nom = pk.replace("_", " ").title()
+                    pret = "OK" if pv.get("pret_a_publier", True) else "NON"
+                    comm_go = pv.get("commentaire", "")
+                    console.print(f"  {Typo.dim(f'{nom} ({pret}) : {comm_go}')}")
+
+                rapport["etapes"]["directeur_go_no_go"] = {
+                    "verdict": verdict_go,
+                    "note_globale": note_go,
+                    "risques": resultat_go.get("risques", []),
+                }
+
+                # Bloquer si no_go — la publication est interdite
+                if verdict_go == "no_go":
+                    console.print(
+                        f"\n[bold red]  {Icons.ATTENTION_IC} Le directeur podcast BLOQUE "
+                        f"la publication. Raisons :[/bold red]"
+                    )
+                    for r in resultat_go.get("risques", []):
+                        console.print(f"  [red]  • {r}[/red]")
+                    console.print(
+                        "[yellow]  L'audio et les métadonnées sont conservés. "
+                        "Corrigez les problèmes et relancez.[/yellow]"
+                    )
+                    rapport["etapes"]["publication"] = {
+                        "status": "blocked (directeur no_go)",
+                        "risques": resultat_go.get("risques", []),
+                    }
+                    publication_bloquee_directeur = True
+
+            except Exception as e:
+                logger.warning("Directeur Podcast (go/no-go) indisponible : %s", e)
+                console.print(f"[yellow]  Go/No-Go directeur non disponible : {e}[/yellow]")
+
             # Confirmation avant publication (T4)
-            # En mode auto, la publication est sautée par défaut
-            # (action irréversible qui nécessite une demande explicite via --publish)
+            # Si le directeur a bloqué, pas de publication possible
             publier = False
-            if not auto:
+            if publication_bloquee_directeur:
+                console.print(f"\n{Typo.etape(7, 8, 'Publication')}  [bold red]BLOQUÉ — directeur no_go[/bold red]")
+            elif not auto:
                 publier = _validation_publication(meta, episode_id, rapport=rapport)
+            elif rapport.get("etapes", {}).get("publication", {}).get("validation_humaine"):
+                # Web validation already confirmed — proceed with publication
+                publier = True
+                logger.info("Publication auto-validée (validation_humaine=True dans rapport)")
 
             if publier:
                 # Garde-fou ultime : jamais de publication sans relecture ET écoute
@@ -2230,6 +4296,14 @@ def _pipeline_inner(
                         "status": "blocked (prerequis manquants)",
                         "prerequis_manquants": manquants,
                     }
+                elif not chemin_hq or not Path(str(chemin_hq)).exists():
+                    console.print(
+                        "[bold red]  BLOQUÉ — fichier audio HQ introuvable. "
+                        "Relancez le montage ou reprenez depuis un checkpoint.[/bold red]"
+                    )
+                    rapport["etapes"]["publication"] = {
+                        "status": "blocked (audio HQ manquant)",
+                    }
                 else:
                     console.print(f"\n{Typo.etape(7, 8, 'Publication')}")
                     publisher = Publisher()
@@ -2240,6 +4314,7 @@ def _pipeline_inner(
                     console.print(f"  URL audio : {rapport_pub['url_audio']}")
                     if rapport_pub.get("transcript_url"):
                         console.print(f"  Transcript : {rapport_pub['transcript_url']}")
+                    rapport_pub["validation_humaine"] = True
                     rapport["etapes"]["publication"] = rapport_pub
 
                     # Enregistrer publication en DB
@@ -2248,7 +4323,7 @@ def _pipeline_inner(
                             PublicationRepo.enregistrer(
                                 episode_id=episode_id,
                                 rapport_pub=rapport_pub,
-                                production_id=_production_id_courante,
+                                production_id=getattr(_production_local, 'production_id', None),
                             )
                             EpisodeRepo.maj_status(episode_id, "published")
                         except Exception as e:
@@ -2258,30 +4333,80 @@ def _pipeline_inner(
                 console.print(f"\n{Typo.etape(7, 8, 'Publication')}  {Typo.attention(f'SAUTÉ — {raison_skip}')}")
                 rapport["etapes"]["publication"] = {"status": f"skipped ({raison_skip})"}
 
+    _log_step_duration("Publication")
+
     # ── Étape 8 : Rapport final ───────────────────────────────────────────────
 
     console.print(f"\n{Typo.etape(8, 8, 'Rapport final')}")
     rapport["fin"] = datetime.now().isoformat()
+    rapport["status"] = "completed"
 
     # Calculer les métriques de coût
     rapport["couts"] = _calculer_couts(rapport)
 
     # Sauvegarder le rapport
     chemin_rapport = config.LOGS_DIR / f"{episode_id}_rapport.json"
-    with open(chemin_rapport, "w", encoding="utf-8") as f:
-        json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+    with fichier_lock(chemin_rapport):
+        with open(chemin_rapport, "w", encoding="utf-8") as f:
+            json.dump(rapport, f, ensure_ascii=False, indent=2, default=str)
+
+    # Upload rapport vers Object Storage (persistance inter-deploy)
+    try:
+        import persistent_storage
+        persistent_storage.upload_rapport(episode_id, chemin_rapport)
+    except Exception as e:
+        logger.warning("Object Storage indisponible pour rapport : %s", e)
 
     # Ajouter à l'historique
     ajouter_historique(rapport, script)
+
+    # ── Arc state final : sauvegarder l'état narratif pour l'épisode suivant ──
+    # Extraire arc_state_final du script et le sauvegarder pour injection N→N+1
+    arc_state = {
+        "episode_id": episode_id,
+        "moments_cles": script["episode"].get("moments_cles", []),
+        "questions_ouvertes": script["episode"].get("questions_ouvertes", []),
+        "evolutions_personnages": script["episode"].get("evolutions_personnages", ""),
+        "ambiance": script["episode"].get("ambiance", ""),
+        "fil_rouge": script["episode"].get("elements_fil_rouge", ""),
+    }
+    chemin_arc = config.SCRIPTS_DIR / f"{episode_id}_arc_state.json"
+    with open(chemin_arc, "w", encoding="utf-8") as f:
+        json.dump(arc_state, f, ensure_ascii=False, indent=2)
+    logger.info("Arc state sauvegardé : %s", chemin_arc)
+
+    # ── Season Archive : générer après le dernier épisode de la saison ──
+    if contexte_saison and episode_plan:
+        episodes_saison = contexte_saison.get("saison", {}).get("episodes", [])
+        dernier_ep = max((ep.get("numero", 0) for ep in episodes_saison), default=0)
+        if numero == dernier_ep:
+            try:
+                historique_saison = [
+                    h for h in charger_historique()
+                    if h.get("episode_id", "").startswith(f"S{saison:02d}")
+                ]
+                archive = Planificateur.generer_archive_saison(
+                    contexte_saison, historique_saison
+                )
+                chemin_archive = config.ARCHIVES_DIR / f"archive_saison_{saison:02d}.json"
+                with open(chemin_archive, "w", encoding="utf-8") as f:
+                    json.dump(archive, f, ensure_ascii=False, indent=2)
+                console.print(
+                    f"  [{Palette.SUCCES}]Archive de saison {saison} générée : {chemin_archive}[/]"
+                )
+                logger.info("Archive de saison %d sauvegardée : %s", saison, chemin_archive)
+            except Exception as e:
+                logger.warning("Erreur lors de la génération de l'archive de saison : %s", e)
 
     # Archiver le checkpoint (JAMAIS supprimer — conservation des données)
     archiver_checkpoint(episode_id)
 
     # Finaliser la production en DB
-    if _use_db() and _production_id_courante:
+    _pid = getattr(_production_local, 'production_id', None)
+    if _use_db() and _pid:
         try:
             ProductionRepo.terminer(
-                _production_id_courante,
+                _pid,
                 rapport=rapport,
                 couts=rapport.get("couts", {}),
             )
@@ -2304,6 +4429,10 @@ def _pipeline_inner(
         chemin_rapport=str(chemin_rapport),
         dry_run=dry_run,
     ))
+
+    total_s = time.perf_counter() - _t_pipeline_start
+    logger.info("⏱ Pipeline complet : %.1fs (%.1f min)", total_s, total_s / 60)
+    console.print(f"  Durée totale : {total_s:.0f}s ({total_s/60:.1f} min)")
 
     return rapport
 
@@ -2356,7 +4485,8 @@ def cli(ctx):
 @click.option("--dry-run", is_flag=True, help="Tester sans audio ni publication")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 @click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
-def produire(episode: str, saison: int, numero: int, resume: str, morale: str, type_episode: str, dry_run: bool, auto: bool, no_publish: bool):
+@click.option("--stop-after", type=click.Choice(["script", "audio", "sfx", "montage", ""]), default="", help="Arreter le pipeline apres l'etape donnee (pour validation web)")
+def produire(episode: str, saison: int, numero: int, resume: str, morale: str, type_episode: str, dry_run: bool, auto: bool, no_publish: bool, stop_after: str):
     """Produit un episode complet du podcast."""
     try:
         pipeline(
@@ -2369,6 +4499,7 @@ def produire(episode: str, saison: int, numero: int, resume: str, morale: str, t
             auto=auto,
             type_episode=type_episode,
             no_publish=no_publish,
+            stop_after=stop_after,
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
@@ -2415,18 +4546,21 @@ def _interactif_saison(saisons_existantes: list[int]):
         saison_num = saisons_existantes[0]
         console.print(f"  [{Palette.SUCCES}]Saison {saison_num} sélectionnée automatiquement.[/]")
     else:
-        try:
-            saison_num = int(console.input(
-                f"  [{Palette.MIEL}]Numéro de saison ({', '.join(str(s) for s in saisons_existantes)}) :[/] "
-            ).strip())
-        except ValueError:
-            console.print("[red]Numéro de saison invalide.[/red]")
-            sys.exit(1)
+        while True:
+            try:
+                saison_num = int(console.input(
+                    f"  [{Palette.MIEL}]Numéro de saison ({', '.join(str(s) for s in saisons_existantes)}) :[/] "
+                ).strip())
+                if saison_num in saisons_existantes:
+                    break
+                console.print(f"[red]  Saison {saison_num} non trouvée. Réessayez.[/red]")
+            except ValueError:
+                console.print("[red]  Numéro invalide. Réessayez.[/red]")
 
     plan = config.charger_saison(saison_num)
     if not plan:
         console.print(f"[red]Plan de saison {saison_num} introuvable.[/red]")
-        sys.exit(1)
+        return
 
     if "saison" not in plan or "episodes" not in plan.get("saison", {}):
         console.print("[red]Plan de saison invalide : clés 'saison' ou 'episodes' manquantes.[/red]")
@@ -2435,12 +4569,8 @@ def _interactif_saison(saisons_existantes: list[int]):
     saison_data = plan["saison"]
     episodes_plan = saison_data["episodes"]
 
-    # Détecter les épisodes déjà produits
-    historique = charger_historique()
-    deja_produits = {
-        h["episode_id"] for h in historique
-        if h.get("episode_id", "").startswith(f"S{saison_num:02d}")
-    }
+    # Détecter les épisodes déjà produits (en vérifiant que le plan n'a pas changé)
+    deja_produits = _episodes_deja_produits(saison_num, episodes_plan)
 
     # Afficher les épisodes disponibles
     console.print(f"\n  [{Palette.BLEU_CIEL}]Saison {saison_num} — {saison_data.get('theme', '')}[/]")
@@ -2502,8 +4632,8 @@ def _interactif_saison(saisons_existantes: list[int]):
                 contexte_saison=plan,
                 type_episode=ep.get("type", "standard"),
                 pubdate_offset_seconds=ep["numero"] * 3600,
-                episode_courant=1,
-                total_episodes=1,
+                episode_courant=ep["numero"],
+                total_episodes=len(episodes_plan),
                 saison_theme=saison_data.get("theme", ""),
             )
         except ProductionAbandonnee as e:
@@ -2515,6 +4645,26 @@ def _interactif_saison(saisons_existantes: list[int]):
     else:
         # Produire tous les épisodes restants
         nb_restants = len(episodes_restants)
+
+        # Confirmation avant de lancer la production en série
+        console.print(
+            f"\n  [{Palette.BLEU_CIEL}]Vous allez produire {nb_restants} épisode(s) "
+            f"en mode {'DRY RUN' if dry_run else 'PRODUCTION'}.[/]"
+        )
+        console.print(panel_validation([
+            ("v", "Valider — lancer la production"),
+            ("a", "Abandonner"),
+        ], titre="Confirmation — Production en série"))
+        while True:
+            choix_conf = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+            if choix_conf in ("v", "valider"):
+                break
+            elif choix_conf in ("a", "abandonner"):
+                console.print(f"[{Palette.ATTENTION}]Production annulée.[/]")
+                return
+            else:
+                console.print("[red]  Choix non reconnu. Tapez v ou a.[/red]")
+
         console.print(
             f"\n  [{Palette.BLEU_CIEL}]Lancement de la production de "
             f"{nb_restants} épisode(s)...[/]"
@@ -2544,8 +4694,8 @@ def _interactif_saison(saisons_existantes: list[int]):
                     contexte_saison=plan,
                     type_episode=ep.get("type", "standard"),
                     pubdate_offset_seconds=ep["numero"] * 3600,
-                    episode_courant=i,
-                    total_episodes=nb_restants,
+                    episode_courant=ep["numero"],
+                    total_episodes=len(episodes_plan),
                     saison_theme=saison_data.get("theme", ""),
                 )
                 resultats.append({"status": "ok", "episode": ep["titre"]})
@@ -2586,6 +4736,14 @@ def _interactif_episode_unique():
     resume = console.input(f"  [{Palette.MIEL}]Résumé de l'histoire biblique :[/] ")
     morale = console.input(f"  [{Palette.MIEL}]Leçon de vie / morale (optionnel) :[/] ")
 
+    type_episode_str = console.input(
+        f"  [{Palette.MIEL}]Type d'épisode (standard/ouverture/mi-saison/final/bonus) :[/] "
+    ).strip().lower() or "standard"
+    types_valides = {"ouverture", "standard", "mi-saison", "final", "bonus"}
+    if type_episode_str not in types_valides:
+        console.print(f"[yellow]  Type '{type_episode_str}' non reconnu — 'standard' utilisé.[/yellow]")
+        type_episode_str = "standard"
+
     dry_run_str = console.input(f"  [{Palette.MIEL}]Mode dry-run ? (o/n) :[/] ").strip().lower()
     dry_run = dry_run_str in ("o", "oui", "y", "yes")
 
@@ -2599,6 +4757,7 @@ def _interactif_episode_unique():
             morale=morale,
             dry_run=dry_run,
             auto=False,
+            type_episode=type_episode_str,
         )
     except ProductionAbandonnee as e:
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
@@ -2678,6 +4837,14 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
         except Exception as e:
             logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
             resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+            if not auto:
+                choix_cont = console.input(
+                    f"  [{Palette.ATTENTION}]Épisode en erreur. "
+                    f"(c)ontinuer / (a)rrêter ? [/] "
+                ).strip().lower()
+                if choix_cont == "a":
+                    console.print(f"  [{Palette.ATTENTION}]Production batch arrêtée par le producteur.[/]")
+                    break
 
     # Rapport batch
     console.print(f"\n[bold]{'='*60}[/bold]")
@@ -2711,26 +4878,77 @@ def batch(fichier: str, dry_run: bool, auto: bool, no_publish: bool):
         sys.exit(1)
 
 
+def _mark_failed_in_db(episode_id: str | None) -> None:
+    """Marque la production la plus récente comme 'failed' en DB.
+
+    Utilisé par reprendre() pour empêcher _auto_resume_interrupted de relancer
+    en boucle une production qui crash systématiquement.
+    """
+    if not episode_id or not _use_db():
+        return
+    try:
+        from db_models import get_cursor
+        with get_cursor() as cur:
+            cur.execute(
+                """UPDATE productions SET status = 'failed', updated_at = NOW()
+                   WHERE id = (
+                       SELECT id FROM productions
+                       WHERE episode_id = %s
+                         AND status NOT IN ('completed', 'failed')
+                       ORDER BY started_at DESC LIMIT 1
+                   )""",
+                (episode_id,),
+            )
+        logger.info("Production %s marquée 'failed' après crash dans reprendre()", episode_id)
+    except Exception as db_err:
+        logger.warning("Impossible de marquer la production failed : %s", db_err)
+
+
 @cli.command()
 @click.option("--checkpoint", "-c", required=True, type=click.Path(exists=True),
               help="Chemin du fichier checkpoint")
 @click.option("--auto", is_flag=True, help="Mode automatique sans validation humaine")
 @click.option("--no-publish", is_flag=True, help="Sauter l'etape de publication (upload + RSS)")
-def reprendre(checkpoint: str, auto: bool, no_publish: bool):
+@click.option("--stop-after", type=click.Choice(["script", "audio", "sfx", "montage", ""]), default="", help="Arreter apres l'etape donnee")
+def reprendre(checkpoint: str, auto: bool, no_publish: bool, stop_after: str):
     """Reprend une production depuis un checkpoint."""
-    cp = charger_checkpoint(Path(checkpoint))
-    data = cp["data"]
-    etape = cp["etape"]
+    # Log explicite sur stderr pour garantir la visibilité dans les deployment logs
+    # (Rich Console peut ne pas flusher quand stdout est un PIPE subprocess)
+    def _log_direct(msg: str) -> None:
+        sys.stderr.write(f"[reprendre] {msg}\n")
+        sys.stderr.flush()
 
-    console.print(Panel(
-        f"[bold]Reprise depuis le checkpoint[/bold]\n"
-        f"Episode : {data['episode_id']} — {data['titre']}\n"
-        f"Etape de reprise : {etape}",
-        title="Reprise de production",
-        border_style="yellow",
-    ))
-
+    _log_direct(f"Démarrage reprendre — checkpoint={checkpoint}, stop_after={stop_after}")
+    episode_id = None  # Initialisé tôt pour le marquage failed dans le except
     try:
+        cp = charger_checkpoint(Path(checkpoint))
+        data = cp["data"]
+        etape = cp["etape"]
+        episode_id = data.get("episode_id")
+        _log_direct(f"Checkpoint chargé — episode={episode_id}, etape={etape}")
+
+        # Utiliser le stop_after du checkpoint si pas spécifié en CLI
+        # (reprise automatique après interruption SIGTERM)
+        effective_stop_after = stop_after or data.get("stop_after", "")
+
+        console.print(Panel(
+            f"[bold]Reprise depuis le checkpoint[/bold]\n"
+            f"Episode : {data.get('episode_id', '?')} — {data.get('titre', '?')}\n"
+            f"Etape de reprise : {etape}"
+            + (f"\nArrêt après : {effective_stop_after}" if effective_stop_after else ""),
+            title="Reprise de production",
+            border_style="yellow",
+        ))
+
+        # Valider les champs obligatoires du checkpoint
+        for _required in ("titre", "saison", "numero"):
+            if _required not in data:
+                raise ValueError(
+                    f"Checkpoint corrompu : champ '{_required}' manquant dans data. "
+                    f"Clés présentes : {list(data.keys())}"
+                )
+
+        _log_direct(f"Lancement pipeline — etape_depart={etape}, stop_after={effective_stop_after}")
         pipeline(
             titre=data["titre"],
             resume=data.get("resume", ""),
@@ -2743,13 +4961,27 @@ def reprendre(checkpoint: str, auto: bool, no_publish: bool):
             checkpoint_data=data.get("rapport"),
             type_episode=data.get("type_episode", "standard"),
             no_publish=no_publish,
+            stop_after=effective_stop_after,
             pubdate_offset_seconds=data.get("pubdate_offset_seconds", 0),
         )
+        _log_direct(f"Pipeline terminé avec succès pour {episode_id}")
     except ProductionAbandonnee as e:
+        _log_direct(f"Production abandonnée : {e}")
         console.print(f"\n[bold yellow]Production arrêtée : {e}[/bold yellow]")
+    except SystemExit:
+        raise  # Ne pas intercepter sys.exit() du SIGTERM handler
     except Exception as e:
+        import traceback as _tb
+        _full_tb = _tb.format_exc()
+        _log_direct(f"ERREUR FATALE : {type(e).__name__}: {e}")
+        _log_direct(f"TRACEBACK COMPLET:\n{_full_tb}")
         console.print(f"[bold red]Erreur fatale : {e}[/bold red]")
         logger.exception("Erreur lors de la reprise")
+        # CRITICAL: Marquer la production 'failed' en DB pour éviter que
+        # _auto_resume_interrupted ne la relance en boucle à chaque redéploiement.
+        # Sans ce marquage, le status reste 'interrupted'/'started'/etc. →
+        # chaque redeploy re-auto-resume → même crash → boucle infinie.
+        _mark_failed_in_db(episode_id)
         sys.exit(1)
 
 
@@ -2778,16 +5010,44 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
     ))
 
     # Charger les saisons précédentes pour continuité
+    # IMPORTANT : exclure la saison courante pour éviter que le LLM
+    # ne l'interprète comme "déjà existante" et incrémente le numéro
     saisons_prec = []
     for num in config.liste_saisons():
-        plan = config.charger_saison(num)
-        if plan:
-            saison_data = plan.get("saison", {})
+        if num >= saison:
+            continue
+        plan_prec = config.charger_saison(num)
+        if plan_prec:
+            saison_data_prec = plan_prec.get("saison", {})
             saisons_prec.append({
-                "numero": saison_data.get("numero", num),
-                "theme": saison_data.get("theme", "?"),
-                "description": saison_data.get("description", ""),
+                "numero": saison_data_prec.get("numero", num),
+                "theme": saison_data_prec.get("theme", "?"),
+                "description": saison_data_prec.get("description", ""),
+                "saison": saison_data_prec,
             })
+
+    # Charger les archives de saisons précédentes pour continuité renforcée
+    archives_saisons = []
+    for num in config.liste_saisons():
+        if num >= saison:
+            continue
+        chemin_archive = config.ARCHIVES_DIR / f"archive_saison_{num:02d}.json"
+        if chemin_archive.exists():
+            try:
+                with open(chemin_archive, "r", encoding="utf-8") as f:
+                    archives_saisons.append(json.load(f))
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning("Archive saison %d illisible : %s", num, e)
+
+    # Avertir si l'archive de la saison précédente est absente
+    if saison > 1:
+        archive_prec = config.ARCHIVES_DIR / f"archive_saison_{saison - 1:02d}.json"
+        if not archive_prec.exists():
+            console.print(
+                f"[bold yellow]{Icons.ATTENTION_IC} Archive de la saison {saison - 1} "
+                f"non trouvée. La continuité inter-saisons sera limitée.\n"
+                f"  Terminez la saison {saison - 1} pour générer l'archive automatiquement.[/bold yellow]"
+            )
 
     personnages_list = [p.strip() for p in personnages.split(",") if p.strip()] if personnages else None
 
@@ -2801,11 +5061,19 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
             saisons_precedentes=saisons_prec or None,
             preferences_producteur=_construire_bloc_preferences(),
             nb_episodes=nb_episodes,
+            archives_saisons=archives_saisons or None,
         )
+
+        # Forcer le numéro de saison dans le plan (le LLM peut l'avoir changé)
+        plan.setdefault("saison", {})["numero"] = saison
+
+        # Intégrer les événements spéciaux dans le plan
+        plan = Planificateur.integrer_evenements_speciaux(plan)
 
         # Valider les types d'épisodes retournés par le LLM
         types_valides = {"ouverture", "standard", "mi-saison", "final", "bonus"}
-        for ep in plan.get("episodes", []):
+        plan_episodes = plan.get("saison", {}).get("episodes", [])
+        for ep in plan_episodes:
             t = ep.get("type", "standard")
             if t not in types_valides:
                 logger.warning(
@@ -2815,20 +5083,44 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 ep["type"] = "standard"
 
         # Valider la séquence des numéros d'épisodes
-        numeros = [ep.get("numero") for ep in plan.get("episodes", [])]
+        numeros = [ep.get("numero") for ep in plan_episodes]
         attendus = list(range(1, len(numeros) + 1))
         if numeros != attendus:
             logger.warning(
                 "Numéros d'épisodes non séquentiels (%s) — renumérotation automatique",
                 numeros,
             )
-            for idx, ep in enumerate(plan.get("episodes", []), 1):
+            for idx, ep in enumerate(plan_episodes, 1):
                 ep["numero"] = idx
 
         # Sauvegarder le plan (brouillon)
         chemin_json = config.SAISONS_DIR / f"saison_{saison:02d}.json"
         planificateur.sauvegarder(plan, chemin_json)
         console.print(f"  Plan sauvegarde : {chemin_json}")
+
+        # Purger l'historique des épisodes de cette saison dont le titre a changé
+        # (sinon, produire-saison les skip comme "déjà produits")
+        try:
+            historique = charger_historique()
+            prefix = f"S{saison:02d}"
+            titres_plan = {}
+            for ep in plan.get("saison", {}).get("episodes", []):
+                ep_id = f"S{saison:02d}E{ep['numero']:02d}"
+                titres_plan[ep_id] = ep.get("titre", "")
+            historique_filtre = [
+                h for h in historique
+                if not h.get("episode_id", "").startswith(prefix)
+                or h.get("titre", "") == titres_plan.get(h.get("episode_id", ""), "")
+            ]
+            if len(historique_filtre) < len(historique):
+                nb_purge = len(historique) - len(historique_filtre)
+                sauvegarder_historique(historique_filtre)
+                console.print(
+                    f"  [yellow]{nb_purge} épisode(s) obsolète(s) supprimé(s) de l'historique "
+                    f"(plan changé)[/yellow]"
+                )
+        except Exception as e:
+            logger.warning("Purge historique échouée : %s", e)
 
         # Afficher le plan complet
         _afficher_plan_saison(plan)
@@ -2845,6 +5137,7 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 personnages_list=personnages_list,
                 saisons_prec=saisons_prec,
                 nb_episodes=nb_episodes,
+                archives_saisons=archives_saisons,
             )
         else:
             plan["saison"].setdefault("decisions_humaines", []).append({
@@ -2852,16 +5145,17 @@ def planifier_saison(saison: int, theme: str, description: str, personnages: str
                 "timestamp": datetime.now().isoformat(),
             })
 
-        # Re-sauvegarder le plan valide (peut avoir ete modifie ou regenere)
-        planificateur.sauvegarder(plan, chemin_json)
+        # ── Prévisualisation des ambiances sonores de saison ──────────
+        if not auto:
+            plan = _previsualiser_ambiances_saison(
+                plan=plan,
+                chemin_json=chemin_json,
+                saison=saison,
+            )
 
-        # Sauvegarder en DB (versionnée — anciennes versions conservées)
-        if _use_db():
-            try:
-                db_id = SaisonRepo.sauvegarder(plan)
-                console.print(f"  Plan sauvegardé en PostgreSQL (id={db_id})")
-            except Exception as e:
-                console.print(f"  [yellow]DB indisponible pour plan : {e}[/yellow]")
+        # Re-sauvegarder le plan valide (JSON + DB + Object Storage)
+        _sauvegarder_plan_complet(plan, chemin_json, saison, planificateur)
+        console.print(f"  Plan sauvegardé (JSON + DB + Object Storage).")
 
         # Exporter en CSV et Markdown
         chemin_csv = config.SAISONS_DIR / f"saison_{saison:02d}.csv"
@@ -2923,11 +5217,9 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
             sys.exit(1)
 
     # Detecter les episodes deja produits pour les skipper
-    historique = charger_historique()
-    deja_produits = {
-        h["episode_id"] for h in historique
-        if h.get("episode_id", "").startswith(f"S{saison:02d}")
-    }
+    # (en vérifiant que le plan n'a pas changé — si l'histoire a changé,
+    #  l'épisode est considéré comme non produit et sera re-produit)
+    deja_produits = _episodes_deja_produits(saison, episodes_plan)
     episodes_a_produire = []
     episodes_skipped = []
     for ep in episodes_plan:
@@ -2962,19 +5254,22 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
     if not auto:
         _afficher_plan_saison(plan)
         console.print(panel_validation([
-            ("g", "Go — lancer la production"),
+            ("v", "Valider — lancer la production"),
             ("a", "Abandonner"),
         ], titre="Go / No-Go — Plan de saison"))
 
-        choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
-        if choix in ("a", "abandonner"):
-            console.print(
-                "[bold yellow]Production annulee. "
-                "Modifiez le plan avec planifier-saison si nécessaire.[/bold yellow]"
-            )
-            return
-        elif choix not in ("g", "go"):
-            console.print("[yellow]  Choix non reconnu — lancement par défaut.[/yellow]")
+        while True:
+            choix = console.input(f"  [{Palette.MIEL}]Votre choix :[/] ").strip().lower()
+            if choix in ("v", "g", "go", "valider"):
+                break
+            elif choix in ("a", "abandonner"):
+                console.print(
+                    "[bold yellow]Production annulée. "
+                    "Modifiez le plan avec planifier-saison si nécessaire.[/bold yellow]"
+                )
+                return
+            else:
+                console.print("[red]  Choix non reconnu. Tapez v pour valider ou a pour abandonner.[/red]")
 
     resultats = []
     # Ajouter les episodes skippés au rapport
@@ -3021,6 +5316,9 @@ def produire_saison(saison: int, episodes: str, dry_run: bool, auto: bool, no_pu
         except Exception as e:
             logger.exception("Erreur sur l'episode %s", ep.get("titre", "?"))
             resultats.append({"status": "error", "episode": ep["titre"], "erreur": str(e)})
+            console.print(
+                f"  [bold red]{Icons.ERREUR} Épisode '{ep['titre']}' échoué : {e}[/bold red]"
+            )
             # Proposer de continuer ou d'arrêter la production
             if not auto and nb_a_produire - i > 0:
                 choix = console.input(

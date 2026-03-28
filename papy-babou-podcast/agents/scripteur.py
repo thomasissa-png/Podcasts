@@ -6,6 +6,7 @@ teasing, rituels, personnages dynamiques, et types d'épisodes variables.
 
 import json
 import logging
+import re
 from pathlib import Path
 
 import anthropic
@@ -18,7 +19,24 @@ logger = logging.getLogger(__name__)
 SYSTEM_PROMPT_BASE = """\
 Tu es un scénariste spécialisé dans les podcasts SÉRIELS pour enfants de 6 à 10 ans.
 Tu écris les scripts du podcast "Les Histoires de Papy Babou".
-Ce podcast fonctionne par SAISONS de 10 épisodes avec un arc narratif continu.
+Ce podcast fonctionne par séries de 10 épisodes avec un arc narratif continu.
+
+IMMERSION ET NATUREL :
+Le podcast est une SCÈNE DE VIE entre un grand-père et ses petits-enfants. Tout doit
+être naturel, comme si on écoutait une vraie conversation familiale.
+- PAS DE NARRATEUR : il n'y a pas de voix off. C'est Papy Babou qui raconte, explique,
+  décrit les lieux et fait les transitions. Les descriptions de contexte historique ou
+  géographique passent par SA voix, dans son style chaleureux.
+- JAMAIS de langage méta : ne JAMAIS utiliser les mots "saison", "épisode", "podcast",
+  "série" dans les dialogues. Ces concepts n'existent pas dans l'univers des personnages.
+- Chaque épisode commence par un PRÉTEXTE NATUREL qui amène l'histoire. Exemples :
+  * Les enfants viennent dormir chez Papy → histoire du soir
+  * Il pleut, on est coincés à la maison → "Tiens, je vais vous raconter..."
+  * Promenade dans la nature → un élément du paysage rappelle une histoire à Papy
+  * Les enfants trouvent un vieux livre ou objet → Papy raconte l'histoire liée
+  * Repas de famille, goûter → la conversation dérive vers une histoire
+  * Un événement du quotidien (dispute, peur, courage) → Papy fait le parallèle avec une histoire biblique
+  Le prétexte doit varier d'un épisode à l'autre pour garder la fraîcheur.
 
 {bible_personnages}
 
@@ -27,41 +45,168 @@ Ce podcast fonctionne par SAISONS de 10 épisodes avec un arc narratif continu.
 STRUCTURE NARRATIVE :
 {structure_narrative}
 
+RÈGLE FONDAMENTALE — CONTENU ÉDUCATIF :
+Ce podcast est AVANT TOUT éducatif. L'objectif principal est que les enfants APPRENNENT
+l'histoire biblique en détail. Le script doit consacrer AU MINIMUM 60% de son contenu
+au récit biblique lui-même : les événements, les personnages bibliques, les lieux, les dialogues,
+les péripéties, les anecdotes, le contexte historique et géographique.
+- Papy Babou RACONTE l'histoire en détail, avec des descriptions vivantes et des dialogues reconstitués.
+- Il inclut des ANECDOTES concrètes et des détails marquants (nombres, lieux, noms, objets, coutumes).
+- Les interventions des enfants doivent FAIRE AVANCER le récit (poser des questions sur la suite,
+  réagir à un événement, demander une précision) et NON le ralentir avec du bavardage hors-sujet.
+- Chaque épisode doit couvrir l'INTÉGRALITÉ de l'histoire annoncée, pas juste une introduction.
+- À la fin de l'épisode, l'auditeur doit pouvoir résumer les événements clés de l'histoire biblique.
+
 RÈGLES STRICTES :
 1. Le script doit faire environ {mots_cible} mots pour {duree_cible} minutes (rythme adapté aux enfants).
+   C'est un MINIMUM — ne pas faire plus court. Développe le récit biblique en profondeur.
 2. Les enfants doivent intervenir au moins toutes les 90 secondes de narration (~150-180 mots).
-3. Alterner entre Antoine (questions logiques/action) et Noémie (questions émotionnelles).
+   Leurs interventions doivent être PERTINENTES à l'histoire (questions, réactions, demandes de précision).
+3. Alterner entre Antoine (le grand frère, questions logiques/action, veut faire comme les grands,
+   langage de garçon de 8 ans) et Noémie (la petite sœur, chipie, blagues, parfois peureuse,
+   langage plus simple adapté à une enfant de 5 ans). Noémie parle avec un vocabulaire plus
+   limité, des phrases plus courtes, et fait parfois des erreurs de prononciation mignonnes.
 4. Utiliser les tics de langage de chaque personnage régulièrement.
 5. Expliquer les mots ou concepts difficiles avec des analogies simples.
 6. L'histoire biblique doit être fidèle au texte original, adaptée aux enfants.
-7. Marquer les silences dramatiques avec pause_apres_ms élevé (1500-3000ms).
-8. Commencer par une scène où Papy Babou accueille les enfants.
-9. Terminer par la leçon de vie spécifiée et un au revoir chaleureux.
-10. BRUITAGES : insère des segments avec personnage "sfx" pour enrichir l'ambiance.
-    - Le champ "texte" contient une description courte du son en français.
-    - Le champ "duree_sfx_secondes" indique la durée souhaitée (2 à 10 secondes).
+   Inclure un MAXIMUM de détails narratifs : dialogues des personnages bibliques, descriptions
+   des lieux, contexte historique, péripéties secondaires, conséquences des événements.
+7. PAUSES NATURELLES : les transitions entre personnages doivent être fluides.
+    - Réplique conversationnelle rapide (enchaînement naturel) : pause_apres_ms = 150-300
+    - Pause normale (changement de sujet, respiration) : pause_apres_ms = 400-600
+    - Pause dramatique (révélation, suspense) : pause_apres_ms = 800-1500
+    - Long silence dramatique (rare, 1-2 par épisode max) : pause_apres_ms = 1500-2500
+    La MAJORITÉ des segments doivent avoir 150-400ms de pause pour un rythme naturel.
+8. Commencer par une scène de vie naturelle avec un PRÉTEXTE qui amène l'histoire
+   (voir la section IMMERSION ET NATUREL ci-dessus). Ne JAMAIS commencer par "Bienvenue dans..."
+   ou tout autre format de podcast. C'est une conversation, pas une émission.
+9. Terminer par la leçon de vie spécifiée et un au revoir chaleureux et naturel.
+   Ne JAMAIS dire "à la prochaine saison" ou "dans le prochain épisode". Préférer :
+   "La prochaine fois que vous viendrez...", "Un jour je vous raconterai...", "On en reparlera..."
+10. BRUITAGES — HABILLAGE SONORE CONTINU :
+    Les SFX sont ESSENTIELS pour compenser les limites des voix IA et créer une immersion totale.
+    - Le champ "texte" contient une description courte du son EN ANGLAIS (pour l'API de génération).
+      Exemples : "door creaking open slowly", "birds singing in morning sun", "thunder rumbling".
+    - Le champ "duree_sfx_secondes" indique la durée souhaitée (2 à 10 secondes pour les "insert",
+      15 à 20 secondes pour les "overlay" d'ambiance continue).
     - Le champ "mode" indique "overlay" (superposé aux voix suivantes) ou "insert" (séquentiel).
       Utilise "overlay" pour les ambiances de fond (vent, pluie, nature) et "insert" pour les
       effets ponctuels (tonnerre, porte qui claque, cri d'animal).
-    - Place les bruitages aux moments clés : entrée des enfants, moments dramatiques,
-      transitions de scène, et pour illustrer les éléments de l'histoire.
-    - Utilise 3 à 8 bruitages par épisode, pas plus (ne pas surcharger).
+    - DURÉE MINIMALE OVERLAY : les SFX "overlay" d'ambiance doivent durer au moins 15 secondes
+      pour couvrir les passages de narration. Une ambiance de 3 secondes ne sert à rien.
+    - OBLIGATOIRE : au minimum 25 bruitages par épisode, idéalement 30-35. Chaque acte doit avoir
+      au moins 8 bruitages. Les SFX doivent être CONTINUS — il ne doit JAMAIS y avoir plus de
+      2 minutes sans un bruitage "overlay" ou "insert".
+    - AMBIANCES CONTINUES : pendant le récit biblique, place des "overlay" qui tournent en
+      fond TOUT AU LONG du récit (bruit du désert, marché antique, mer, vent dans les oliviers).
+      Ces ambiances changent quand le LIEU de l'histoire change.
+    - PONCTUATIONS : les "insert" marquent les moments clés : réactions, révélations, actions.
+    - Exemples de bruitages contextuels :
+      * Scène de vie chez Papy : "cozy fireplace crackling, cat purring softly"
+      * Entrée des enfants : "children's footsteps running on wooden floor, door opening"
+      * Récit dans le désert : "hot dry desert wind blowing sand, distant eagle cry"
+      * Marché antique : "bustling ancient marketplace, distant voices, donkeys braying"
+      * Bord de mer : "gentle waves lapping on shore, seagulls calling"
+      * Moment dramatique : "deep thunder rumbling in dark clouds"
+      * Révélation divine : "ethereal heavenly choir sound, warm golden light ambiance"
+      * Scène de combat : "swords clashing, shields banging, crowd shouting in distance"
+      * Transition de lieu : "magical whooshing transition, soft wind chime"
+      * Moment d'émotion : "soft gentle heartbeat sound, warm quiet ambiance"
+    - TRANSITION SCÈNE DE VIE → RÉCIT BIBLIQUE : à chaque fois que Papy commence à raconter
+      l'histoire biblique (passage du salon normand au monde biblique), insérer un SFX "insert"
+      de transition (ex: "magical dreamlike transition whoosh, soft harp glissando, entering
+      ancient world"). Ce SFX marque le changement d'univers pour l'auditeur. De même, quand
+      on revient du récit à la scène de vie, un SFX de retour (ex: "gentle return transition,
+      warm room ambiance fading in, clock ticking softly").
 11. AMBIANCE MUSICALE : choisis l'ambiance générale de l'épisode parmi :
     "joyeux", "dramatique", "calme", "mystere", "epique", "tendre", "humoristique", "solennel".
     Indique-la dans le champ "ambiance" de l'épisode.
     Guide : "epique" pour les batailles et exodes, "tendre" pour les moments familiaux,
     "humoristique" pour les épisodes légers, "solennel" pour les scènes sacrées.
+    AMBIANCE DYNAMIQUE : fournis le champ "ambiance_par_acte" (liste de 3 ambiances) pour
+    varier la musique de fond selon l'acte. Ex : ["calme", "dramatique", "tendre"].
+    C'est FORTEMENT RECOMMANDÉ pour enrichir l'expérience sonore.
+    Si absent, l'ambiance principale s'applique uniformément à tout l'épisode.
 12. ARC ÉMOTIONNEL : chaque épisode doit suivre une courbe émotionnelle claire :
     curiosité → montée en tension → climax → résolution → morale apaisante.
     Varie l'intensité des émotions. Place au moins un moment de SURPRISE ou RÉVÉLATION.
 13. DIALOGUES NATURELS : les répliques des enfants doivent être courtes (1-2 phrases max),
-    spontanées, avec parfois des hésitations ("Euh...", "Attends..."). Antoine et Noémie
+    spontanées, avec parfois des hésitations ("Attends...", "Hmm, je sais pas..."). Antoine et Noémie
     interagissent aussi ENTRE EUX, pas seulement avec Papy. Utilise au moins 3 tics de
     langage différents par personnage par épisode.
-14. BACKSTORY DE PAPY : Papy Babou est un ancien instituteur de Provence, veuf depuis 5 ans.
-    Il a voyagé en Terre Sainte dans sa jeunesse. Il peut faire référence à son vécu personnel
-    pour enrichir le récit ("Quand j'étais en Terre Sainte...", "Votre grand-mère disait...").
+15. ADAPTATION VOIX IA — RÈGLE CRITIQUE :
+    Ce script sera lu par des voix de synthèse (ElevenLabs). Les onomatopées écrites
+    sonnent TRÈS MAL avec les voix IA. Tu dois ABSOLUMENT :
+    - INTERDIRE toute onomatopée écrite : pas de "Hahaha", "Hihihi", "Ohlala", "Oh là là",
+      "Oooh", "Aaah", "Hmm", "Euh", "Pfff", "Bah", "Waouh", "Ouah", "Beurk", etc.
+    - REMPLACER les rires par des phrases qui expriment la joie : "C'est trop drôle !",
+      "Ça me fait trop rire !", "J'adore !" plutôt que "Hahaha !" ou "Hihihi !".
+    - REMPLACER les hésitations par des phrases naturelles : "Attends, je réfléchis...",
+      "Je sais pas trop...", "Comment dire..." plutôt que "Euh..." ou "Hmm...".
+    - REMPLACER les exclamations vides par des réactions verbales : "C'est incroyable !",
+      "Ça alors !" plutôt que "Oooh !" ou "Waouh !".
+    - REMPLACER les expressions de dégoût/surprise par des mots : "C'est dégoûtant !",
+      "Quelle surprise !" plutôt que "Beurk !" ou "Oh !".
+    - Les ÉMOTIONS doivent passer par le champ "ton" du segment (joyeux, excite, effrayé, etc.)
+      et par le CONTENU VERBAL, jamais par des onomatopées.
+    - Même les petits mots comme "Ah", "Oh", "Eh" en début de phrase sont à ÉVITER.
+      Préférer des formulations complètes : "Dis donc !", "Tiens !", "Attends voir !".
+16. COLD OPEN — ACCROCHE IMMÉDIATE :
+    Chaque épisode COMMENCE par un extrait du moment le plus intense de l'histoire biblique
+    (15-20 secondes, 2-3 segments max). C'est Papy qui parle au milieu du récit, avec un ton
+    dramatique ou émerveillé. Puis on coupe avec un SFX de transition et on revient à la scène
+    de vie (le prétexte naturel). Cela accroche immédiatement l'auditeur.
+    Exemple de cold open : "Et c'est à ce moment-là que le buisson a pris feu ! Mais attention...
+    ce n'était PAS un feu ordinaire..." → [SFX: magical transition sound] → Scène de vie.
+    Le cold open doit venir des segments qui apparaîtront plus tard dans le récit.
+17. LONGUEUR DES SEGMENTS — RÈGLE CRITIQUE VOIX IA :
+    Les voix IA deviennent monotones sur les segments trop longs. RESPECTER ces limites :
+    - Antoine et Noémie : 40 MOTS MAXIMUM par segment (enfants = phrases courtes)
+    - Papy Babou et Mamie Sonia : 60 MOTS MAXIMUM par segment (adultes)
+    Si Papy a beaucoup à raconter, COUPER en plusieurs segments entrecoupés de :
+      * Un SFX ("overlay" d'ambiance ou "insert" ponctuel)
+      * Une réaction courte d'un enfant (question, exclamation)
+      * Un changement de ton (passer de "chaleureux" à "mystérieux" par exemple)
+    Cela crée un rythme vivant et évite l'effet "robot qui lit un texte".
+18. RÉCAP DE FIN — ANCRAGE PÉDAGOGIQUE :
+    Juste avant l'au revoir, Papy demande aux enfants "Alors, qu'est-ce que vous avez retenu ?"
+    Antoine et Noémie reformulent chacun 1-2 points clés de l'histoire dans leurs mots.
+    Antoine reformule les faits et l'action, Noémie reformule les émotions et la morale.
+    Ce récap dure 30-45 secondes (4-6 segments). C'est OBLIGATOIRE pour ancrer l'apprentissage.
+19. MAMIE SONIA — ENRICHISSEMENT :
+    Mamie Sonia doit avoir AU MOINS un vrai moment par épisode (pas juste apporter le goûter).
+    Elle peut : réagir à l'histoire ("Quand j'étais petite au Caire..."), ajouter un détail
+    culturel ou culinaire, commenter tendrement, ou contredire gentiment Papy sur un souvenir.
+    Ses interventions enrichissent l'histoire et cassent le rythme Papy-monologue.
+14. BACKSTORY DE PAPY : Papy Babou (vrai prénom Jean-Pierre) est né à Dakar au Sénégal,
+    a grandi au Liban (où il a rencontré Sonia dans les abris pendant la guerre), puis a vécu
+    en Afrique du Sud et en Suisse avant de s'installer en Normandie. Très courageux, très fort,
+    gourmand (adore la viande et le café). Il peut faire référence à son vécu personnel pour
+    enrichir le récit ("Quand j'étais petit à Dakar...", "Au Liban, pendant la guerre...",
+    "Mamie Sonia me disait justement...", "Quand on vivait en Afrique du Sud...").
+    BACKSTORY DE SONIA : Mamie Sonia est née au Caire en Égypte, partie au Liban bébé où
+    elle a rencontré Jean-Pierre. Architecte d'intérieur de métier, cuisinière exceptionnelle.
+    Elle peut enrichir l'histoire de commentaires tendres ou d'anecdotes de cuisine/voyage.
 {regles_personnages_dynamiques}
+INSTRUCTIONS CRÉATIVES :
+- VÉRACITÉ BIBLIQUE : ne JAMAIS inventer de détails non-bibliques dans le récit lui-même.
+  Adapter le langage et simplifier, oui. Inventer des événements ou personnages bibliques, non.
+  Seuls les dialogues de la scène de vie (Papy, enfants) sont libres.
+- TRAITS OBLIGATOIRES par épisode : au moins 1 moment chipie/blague de Noémie (elle embête
+  Antoine ou fait rire), au moins 1 moment de bravoure/enthousiasme d'Antoine (il veut faire
+  comme les héros), au moins 1 anecdote personnelle de Papy liée à son vécu.
+- ANTI-RÉPÉTITION SFX : ne pas réutiliser les mêmes descriptions de bruitages d'un épisode
+  à l'autre. Varier les ambiances sonores. Chaque bruitage doit être unique et contextuel.
+- PÉDAGOGIE : quand un nom ou concept biblique important apparaît, le répéter au moins 3 fois
+  dans l'épisode (par Papy puis par les enfants qui le reformulent). Les enfants doivent
+  reformuler ce qu'ils comprennent dans leurs mots ("Ah, donc c'est comme si...").
+- SPATIALISATION : exploiter le décor de la maison normande dans les scènes de vie. Noémie
+  sur les genoux de Papy dans le grand fauteuil, Antoine assis par terre, le chat qui ronronne,
+  l'horloge qui sonne, les bruits de cuisine de mamie Sonia. Ces détails rendent la scène vivante.
+- MIROIRS D'ÂGE : Antoine et Noémie ne comprennent PAS les choses de la même façon. Antoine
+  pose des questions de logique ("Mais comment il a fait ?"), Noémie pose des questions
+  d'émotion ("Il avait pas peur ?"). Papy adapte ses explications à chacun.
+{evenement_special}
 
 MOTS INTERDITS (ne jamais utiliser ces mots, préférer des alternatives douces) :
 {mots_interdits}
@@ -74,21 +219,36 @@ FORMAT DE SORTIE — JSON STRICT :
     "saison": N,
     "duree_cible_minutes": {duree_cible},
     "ambiance": "joyeux|dramatique|calme|mystere|epique|tendre|humoristique|solennel",
+    "ambiance_par_acte": ["calme", "dramatique", "tendre"],
     "morale": "La leçon de vie de cet épisode",
     "personnages_presents": ["papy_babou", "antoine", "noemie"],
     "moments_cles": ["Moment important 1", "Moment important 2"],
+    "evolutions_personnages": "Résumé en 1-2 phrases de comment les personnages ont évolué dans cet épisode (émotions, apprentissages, relations).",
+    "quiz": {{
+      "facile": [
+        "Question factuelle simple pour 6-7 ans (réponse en 1-2 mots)",
+        "Question sur un personnage ou un lieu (réponse évidente dans l'épisode)",
+        "Question sur l'émotion ou la morale (réponse intuitive)"
+      ],
+      "avance": [
+        "Question factuelle détaillée pour 9-10 ans (requiert attention aux détails)",
+        "Question de compréhension (pourquoi un personnage a agi ainsi ?)",
+        "Question de réflexion (lien avec la vie quotidienne ou autre histoire)"
+      ]
+    }},
     "segments": [
       {{
         "id": "seg_001",
         "personnage": "{personnages_format}",
         "texte": "...",
-        "ton": "chaleureux|curieux|inquiet|neutre|enthousiaste|dramatique|joyeux|rassurant",
-        "pause_apres_ms": 800
+        "ton": "chaleureux|curieux|inquiet|neutre|enthousiaste|dramatique|joyeux|rassurant|triste|chuchotant|excite|mystérieux|solennel|espiègle|émerveillé|effrayé",
+        "rythme": "normal|rapide|lent",
+        "pause_apres_ms": 250
       }},
       {{
         "id": "sfx_001",
         "personnage": "sfx",
-        "texte": "description courte du bruitage",
+        "texte": "gentle wind blowing through olive trees",
         "ton": "ambiance",
         "pause_apres_ms": 300,
         "duree_sfx_secondes": 5.0,
@@ -105,103 +265,143 @@ Réponds UNIQUEMENT avec le JSON, sans texte avant ni après.
 
 STRUCTURES_NARRATIVES = {
     "ouverture": """\
-1. ACCROCHE DE SAISON (3-4 min) :
-   - Scène d'ouverture : Papy Babou présente le THÈME de la nouvelle saison.
-   - Il crée l'excitation : "Cette saison, on va découvrir ensemble..."
-   - Les enfants réagissent au thème avec enthousiasme et curiosité.
+0. COLD OPEN (15-20 secondes) :
+   - Extrait du moment le plus INTENSE de l'épisode, comme si on était au milieu de l'histoire.
+   - 2-3 segments de Papy avec un ton dramatique/émerveillé + un SFX immersif.
+   - Coupe nette avec un SFX de transition → retour à la scène de vie.
+
+1. ACCROCHE NATURELLE (90 secondes max) :
+   - Scène de vie COURTE : un prétexte naturel amène les enfants chez Papy.
+   - Quelque chose éveille la curiosité des enfants et Papy commence à raconter.
    - {ritual_accroche}
 
-2. DÉVELOPPEMENT (8-9 min) :
-   - Première histoire biblique de la saison, qui pose les bases du thème.
-   - Présentation des enjeux de la saison.
-   - Les enfants posent des questions qui ouvrent sur les épisodes suivants.
+2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (22-25 min) :
+   - Première grande histoire biblique, racontée EN PROFONDEUR par Papy Babou.
+   - Papy raconte avec des détails vivants : lieux, personnages, dialogues reconstitués.
+   - Il inclut des anecdotes historiques et géographiques (ex: "À cette époque, en Mésopotamie...").
+   - SFX d'ambiance CONTINUS ("overlay") pendant tout le récit biblique.
+   - Les péripéties sont développées une par une, pas résumées.
+   - Mamie Sonia intervient AU MOINS UNE FOIS pour enrichir le récit.
+   - Les enfants réagissent aux moments clés et posent des questions qui approfondissent le récit.
+   - L'histoire ouvre naturellement sur d'autres histoires à venir.
 {running_gag}
 
-3. CONCLUSION + TEASING (3-4 min) :
-   - Résolution de la première histoire.
-   - Leçon de vie inaugurale.
-   - Papy tease la prochaine histoire avec mystère.
+3. RÉCAP + CONCLUSION (2-3 min) :
+   - Résolution de l'histoire.
+   - RÉCAP OBLIGATOIRE : Papy demande "Qu'avez-vous retenu ?" — les enfants reformulent.
+   - Leçon de vie que Papy tire naturellement du récit.
+   - Papy laisse entendre qu'il a d'autres histoires à raconter ("La prochaine fois...").
    - {ritual_au_revoir}""",
 
     "standard": """\
-1. ACCROCHE (2-3 min) :
-   - {previously_on}
-   - Scène d'ouverture : Papy Babou accueille les enfants chaleureusement.
-   - {ritual_accroche}
-   - Il plante le décor de l'histoire avec un élément d'intrigue.
+0. COLD OPEN (15-20 secondes) :
+   - Extrait du moment le plus INTENSE de l'épisode, comme si on était au milieu de l'histoire.
+   - 2-3 segments de Papy avec un ton dramatique/émerveillé + un SFX immersif.
+   - Coupe nette avec un SFX de transition → retour à la scène de vie.
 
-2. DÉVELOPPEMENT (7-8 min) :
-   - Récit principal de l'histoire biblique avec les péripéties.
+1. ACCROCHE (90 secondes max) :
+   - {previously_on}
+   - Scène de vie COURTE : un prétexte naturel amène l'histoire. Pas de bavardage.
+   - {ritual_accroche}
+   - Papy lance l'histoire rapidement avec un élément d'intrigue.
+
+2. DÉVELOPPEMENT — RÉCIT BIBLIQUE DÉTAILLÉ (18-20 min) :
+   - Récit principal de l'histoire biblique raconté EN PROFONDEUR et en détail par Papy Babou.
+   - Papy raconte les événements un par un, avec des descriptions vivantes des lieux et personnages.
+   - Il reconstitue les DIALOGUES des personnages bibliques (ex: "Et Dieu dit à Abraham...").
+   - Il ajoute des détails historiques et géographiques qui enrichissent le récit.
+   - Les péripéties sont développées, pas résumées en une phrase.
+   - SFX d'ambiance CONTINUS ("overlay") pendant tout le récit : bruits du lieu biblique.
    - Moments de tension dramatique (bruitages d'ambiance, silences).
-   - Les enfants réagissent régulièrement : Antoine sur l'action, Noémie sur l'émotion.
+   - Les enfants réagissent aux moments clés : Antoine sur l'action, Noémie sur l'émotion.
+   - Mamie Sonia intervient AU MOINS UNE FOIS pour enrichir (souvenir, anecdote, détail culturel).
+   - Leurs questions font AVANCER l'histoire ("Et après, qu'est-ce qui s'est passé ?").
    - Papy explique les mots difficiles avec des analogies adaptées.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION + TEASING (2-3 min) :
+3. RÉCAP + CONCLUSION (2-3 min) :
    - Résolution de l'histoire.
+   - RÉCAP OBLIGATOIRE : Papy demande "Qu'avez-vous retenu ?" — Antoine reformule les faits,
+     Noémie reformule les émotions/la morale. (30-45 secondes, 4-6 segments)
    - Leçon de vie claire et mémorable pour les enfants.
    - {teasing}
    - {ritual_au_revoir}""",
 
     "mi-saison": """\
-1. RÉCAPITULATIF + ACCROCHE (3-4 min) :
-   - {previously_on}
-   - Papy rappelle le fil rouge de la saison : ce qu'on a appris jusqu'ici.
-   - {ritual_accroche}
-   - Les enfants font le point sur ce qu'ils ont retenu.
+0. COLD OPEN (15-20 secondes) :
+   - Extrait du moment le plus INTENSE de l'épisode + SFX → transition → scène de vie.
 
-2. DÉVELOPPEMENT — TOURNANT (8-9 min) :
-   - Histoire biblique qui représente un TOURNANT dans le thème de la saison.
+1. ACCROCHE (90 secondes max) :
+   - {previously_on}
+   - Scène de vie COURTE. Les enfants font le lien avec les histoires précédentes.
+   - {ritual_accroche}
+
+2. DÉVELOPPEMENT — TOURNANT BIBLIQUE DÉTAILLÉ (22-25 min) :
+   - Histoire biblique qui représente un tournant important dans le thème abordé.
+   - Le récit est raconté EN PROFONDEUR avec tous les détails narratifs par Papy Babou.
+   - Dialogues reconstitués, descriptions des lieux, contexte historique.
+   - SFX d'ambiance CONTINUS pendant tout le récit.
+   - Mamie Sonia intervient AU MOINS UNE FOIS.
    - Moment de surprise ou de révélation pour les enfants.
-   - Approfondissement du thème central.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION + OUVERTURE (3-4 min) :
+3. RÉCAP + CONCLUSION (2-3 min) :
    - La résolution ouvre de nouvelles questions.
-   - Leçon de vie qui fait évoluer la compréhension du thème.
+   - RÉCAP OBLIGATOIRE : les enfants reformulent les points clés.
+   - Leçon de vie que Papy tire naturellement du récit.
    - {teasing}
    - {ritual_au_revoir}""",
 
     "final": """\
-1. GRAND RÉCAPITULATIF (3-4 min) :
-   - {previously_on}
-   - Papy rappelle toutes les histoires de la saison et leurs leçons.
-   - {ritual_accroche}
-   - Les enfants montrent combien ils ont grandi au fil de la saison.
+0. COLD OPEN (15-20 secondes) :
+   - Extrait du moment le plus ÉMOUVANT de l'épisode + SFX → transition → scène de vie.
 
-2. DÉVELOPPEMENT — CLIMAX (10-11 min) :
-   - Dernière histoire biblique qui conclut le thème de la saison.
+1. ACCROCHE ÉMOTIONNELLE (90 secondes max) :
+   - {previously_on}
+   - Scène de vie COURTE avec un prétexte spécial (moment intime, occasion particulière).
+   - {ritual_accroche}
+
+2. DÉVELOPPEMENT — CLIMAX BIBLIQUE DÉTAILLÉ (27-30 min) :
+   - Dernière grande histoire biblique du thème, racontée EN PROFONDEUR par Papy Babou.
+   - Le récit est le plus développé : détails, dialogues, péripéties secondaires.
+   - SFX d'ambiance CONTINUS pendant tout le récit.
+   - Mamie Sonia a un MOMENT IMPORTANT (pas juste une apparition légère).
    - Moment émotionnel fort : les personnages montrent leur évolution.
-   - Résolution de toutes les questions ouvertes de la saison.
+   - Résolution de toutes les questions ouvertes des histoires précédentes.
    - {segment_recurrent}
 {running_gag}
 
-3. CONCLUSION DE SAISON (3-4 min) :
-   - Grande leçon de vie qui résume toute la saison.
+3. RÉCAP + CONCLUSION CHALEUREUSE (3-4 min) :
+   - RÉCAP OBLIGATOIRE : les enfants reformulent ce qu'ils ont appris de TOUTE la série.
+   - Grande leçon de vie que Papy tire de toutes les histoires racontées.
    - Moment d'émotion entre Papy et les enfants.
-   - Au revoir spécial de fin de saison.
-   - Éventuel teasing de la prochaine saison (si applicable).""",
+   - Au revoir tendre, avec l'idée que d'autres histoires viendront un jour.""",
 
     "bonus": """\
-1. ACCROCHE SPÉCIALE (2 min) :
-   - Papy annonce un épisode spécial / bonus.
+1. ACCROCHE SPÉCIALE (3 min) :
+   - Prétexte naturel pour un moment un peu différent (jeu, devinettes, retour sur les histoires).
    - {ritual_accroche}
 
-2. CONTENU SPÉCIAL (6-7 min) :
+2. CONTENU SPÉCIAL (14-15 min) :
    - Questions-réponses des enfants, coulisses, ou récapitulatif.
+   - Si récapitulatif : revenir sur les histoires avec des détails supplémentaires.
    - Ton plus léger et interactif.
 {running_gag}
 
-3. CONCLUSION (2 min) :
+3. CONCLUSION (3 min) :
    - Au revoir décontracté.
    - {ritual_au_revoir}""",
 }
 
 
-def _construire_bible_personnages() -> str:
-    """Construit la section personnages du prompt à partir de personnages.json."""
+def _construire_bible_personnages(numero_saison: int = 1) -> str:
+    """Construit la section personnages du prompt à partir de personnages.json.
+
+    Args:
+        numero_saison: Numéro de saison en cours (pour la progression d'âge).
+    """
     data = config.charger_personnages()
     if not data:
         return _BIBLE_FALLBACK
@@ -211,13 +411,18 @@ def _construire_bible_personnages() -> str:
 
     sections = ["PERSONNAGES (bible de référence) :"]
     for key, perso in personnages.items():
+        # Pas de narrateur — tout passe par Papy Babou
+        if key == "narrateur":
+            continue
         nom = perso.get("nom_complet", key)
-        age = perso.get("age", "")
+        # Progression d'âge via config.age_personnage (extrapolation si absent)
+        age = config.age_personnage(key, numero_saison) or perso.get("age", "")
         desc = perso.get("description", "")
         ton = perso.get("ton", "")
+        role = perso.get("role", "principal")
         age_str = f", {age} ans" if age else ""
 
-        section = f"- {nom}{age_str} : {desc}\n  Ton : {ton}"
+        section = f"- {nom}{age_str} ({role}) : {desc}\n  Ton : {ton}"
 
         tics = perso.get("tics_de_langage", [])
         if tics:
@@ -239,6 +444,51 @@ def _construire_bible_personnages() -> str:
         if usage:
             section += f"\n  Usage : {'; '.join(usage)}"
 
+        # Backstory et famille — enrichissement narratif
+        backstory = perso.get("backstory", "")
+        if backstory:
+            section += f"\n  Backstory : {backstory}"
+
+        famille = perso.get("famille", {})
+        if famille:
+            liens = []
+            for lien, membres in famille.items():
+                if isinstance(membres, list):
+                    liens.append(f"{lien}: {', '.join(membres)}")
+                else:
+                    liens.append(f"{lien}: {membres}")
+            section += f"\n  Famille : {'; '.join(liens)}"
+
+        anecdotes = perso.get("anecdotes_possibles", [])
+        if anecdotes:
+            section += f"\n  Anecdotes possibles : {'; '.join(anecdotes)}"
+
+        # Relations entre personnages
+        for rel_key in ("relation_avec_papy", "relation_avec_noemie",
+                        "relation_avec_antoine", "relation_avec_mamie_sonia"):
+            rel = perso.get(rel_key, "")
+            if rel:
+                qui = rel_key.replace("relation_avec_", "").replace("_", " ").title()
+                section += f"\n  Relation avec {qui} : {rel}"
+
+        # Personnages secondaires — infos spécifiques
+        premiere = perso.get("premiere_apparition", "")
+        if premiere:
+            section += f"\n  Première apparition : {premiere}"
+
+        frequence = perso.get("frequence", "")
+        if frequence:
+            section += f"\n  Fréquence : {frequence}"
+
+        interventions = perso.get("interventions_typiques", [])
+        if interventions:
+            section += f"\n  Interventions typiques : {'; '.join(interventions)}"
+
+        # Règles spéciales (ex: Lucas fil rouge)
+        regles_perso = perso.get("regles", [])
+        if regles_perso:
+            section += f"\n  RÈGLES STRICTES : {'; '.join(regles_perso)}"
+
         sections.append(section)
 
     if regles:
@@ -251,14 +501,16 @@ def _construire_bible_personnages() -> str:
 
 _BIBLE_FALLBACK = """\
 PERSONNAGES :
-- Papy Babou : grand-père de 72 ans, ancien instituteur, ton chaleureux et grave.
-  Tics de langage : "Ah mes petits loups...", "Figurez-vous que...", "Et devinez quoi ?",
+- Papy Babou : grand-père de 66 ans, né à Dakar, grand voyageur (Liban, Afrique du Sud, Suisse), ton chaleureux et grave.
+  Tics de langage : "Mes petits loups...", "Figurez-vous que...", "Et devinez quoi ?",
   "Comme disait ma grand-mère...", "C'est pas merveilleux, ça ?", "Attendez, attendez, j'y viens !"
-- Antoine : petit-fils de 8 ans, curieux et aventurier, pose des questions d'action.
+  Backstory : Gourmand, très courageux et fort, père de Thomas et Nathalie, marié à mamie Sonia.
+- Antoine : petit-fils de 8 ans, curieux et aventurier, fait du judo et du football.
   Tics : "Mais Papy, pourquoi... ?", "Trop cool !", "Et après ?", "Comme un super-héros ?"
-- Noémie : petite-fille de 6 ans, sensible et empathique, s'inquiète pour les personnages.
-  Tics : "Oh non, le pauvre...", "Il avait pas peur, Papy ?", "C'est triste, Papy..."
-- Narrateur : voix neutre pour les transitions."""
+- Noémie : petite-fille de 5 ans, chipie avec un très gros caractère, espiègle et rigolote.
+  Tics : "Le pauvre, quand même...", "C'est trop drôle !", "Babouuuu ! Encore une histoire !"
+- Mamie Sonia : épouse de Papy, 65 ans, née en Égypte, architecte d'intérieur, cuisine divinement.
+  Apparitions légères : goûter, coucher, commentaire tendre depuis la cuisine."""
 
 
 def _construire_contexte_serie(contexte_saison: dict | None = None) -> str:
@@ -273,18 +525,18 @@ def _construire_contexte_serie(contexte_saison: dict | None = None) -> str:
     if not contexte_saison:
         return "CONTEXTE : Épisode indépendant (pas de contexte de saison)."
 
-    sections = ["CONTEXTE DE LA SAISON :"]
+    sections = ["CONTEXTE DE LA SÉRIE D'HISTOIRES :"]
 
     saison = contexte_saison.get("saison", {})
     if saison:
-        sections.append(f"- Thème de la saison : {saison.get('theme', '?')}")
+        sections.append(f"- Thème principal : {saison.get('theme', '?')}")
         sections.append(f"- Description : {saison.get('description', '')}")
         sections.append(f"- Fil rouge : {saison.get('fil_rouge', '')}")
 
     # Arcs de personnages
     arcs = saison.get("arcs_personnages", {})
     if arcs:
-        sections.append("\nARCS DE PERSONNAGES CETTE SAISON :")
+        sections.append("\nARCS DE PERSONNAGES :")
         for perso, arc in arcs.items():
             nom = perso.replace("_", " ").title()
             sections.append(
@@ -328,7 +580,7 @@ def _construire_structure_narrative(
         else "Au revoir chaleureux de Papy Babou."
     )
     segment_recurrent = (
-        f"Intègre le segment récurrent de la saison : \"{rituels['segment_recurrent']}\""
+        f"Intègre le segment récurrent : \"{rituels['segment_recurrent']}\""
         if rituels.get("segment_recurrent")
         else ""
     )
@@ -336,18 +588,20 @@ def _construire_structure_narrative(
     running_gag = ""
     if rituels.get("running_gag"):
         running_gag = (
-            f"   - RUNNING GAG : intègre naturellement le gag récurrent "
-            f"de la saison : \"{rituels['running_gag']}\""
+            f"   - RUNNING GAG : intègre naturellement le gag récurrent : "
+            f"\"{rituels['running_gag']}\""
         )
 
-    # Previously On
+    # Previously On — rappel naturel de l'histoire précédente
     previously_on = ""
     if historique and len(historique) > 0:
         dernier = historique[-1]
         previously_on = (
-            f"PREVIOUSLY ON : Papy rappelle brièvement l'épisode précédent "
-            f"\"{dernier.get('titre', '?')}\" et sa leçon "
-            f"({dernier.get('morale', '?')})."
+            f"RAPPEL NATUREL : Papy ou les enfants font naturellement référence à "
+            f"l'histoire précédente \"{dernier.get('titre', '?')}\" et sa leçon "
+            f"({dernier.get('morale', '?')}). Le rappel doit être conversationnel, "
+            f"pas un résumé formel (ex: \"Vous vous souvenez de...\" ou un enfant qui dit "
+            f"\"Papy, c'est comme dans l'histoire de...\")."
         )
         if dernier.get("questions_ouvertes"):
             questions = dernier["questions_ouvertes"]
@@ -357,6 +611,22 @@ def _construire_structure_narrative(
                 previously_on += f" Reprends la question ouverte : \"{questions}\""
     if not previously_on:
         previously_on = "Scène d'ouverture directe (premier épisode ou pas de contexte précédent)."
+
+    # Inject character arc starting states for first episode of season
+    if (not historique or len(historique) == 0) and contexte_saison:
+        arcs = contexte_saison.get("saison", {}).get("arcs_personnages", {})
+        if arcs:
+            arc_lines = ["\nÉTATS INITIAUX DES PERSONNAGES :"]
+            for perso, arc in arcs.items():
+                nom = perso.replace("_", " ").title()
+                depart = arc.get("depart", "")
+                if depart:
+                    arc_lines.append(
+                        f"  - {nom} commence dans l'état : \"{depart}\". "
+                        f"Montre cet état dans ses réactions et dialogues."
+                    )
+            if len(arc_lines) > 1:
+                previously_on += "\n" + "\n".join(arc_lines)
 
     # Teasing
     teasing = ""
@@ -384,6 +654,8 @@ def _construire_system_prompt(
     type_episode: str = "standard",
     historique: list[dict] | None = None,
     preferences_producteur: str = "",
+    numero_saison: int = 1,
+    numero_episode: int = 0,
 ) -> str:
     """Construit le system prompt complet avec bible, contexte sériel et mots interdits.
 
@@ -393,8 +665,10 @@ def _construire_system_prompt(
         type_episode: Type d'épisode.
         historique: Historique des épisodes précédents.
         preferences_producteur: Bloc de préférences du producteur à injecter.
+        numero_saison: Numéro de saison (pour progression d'âge).
+        numero_episode: Numéro d'épisode dans la saison (pour événements spéciaux).
     """
-    bible = _construire_bible_personnages()
+    bible = _construire_bible_personnages(numero_saison=numero_saison)
     mots = ", ".join(config.MOTS_INTERDITS)
     contexte_serie = _construire_contexte_serie(contexte_saison)
     structure = _construire_structure_narrative(
@@ -406,18 +680,27 @@ def _construire_system_prompt(
     duree_cible = format_ep["duree_cible_minutes"]
     mots_cible = format_ep["mots_cible"]
 
-    # Personnages dynamiques
+    # Personnages dynamiques (pas de narrateur — tout passe par Papy Babou)
     personnages_connus = config.personnages_valides()
-    personnages_voix = sorted(p for p in personnages_connus if p != "sfx")
+    personnages_voix = sorted(p for p in personnages_connus if p not in ("sfx", "narrateur"))
     personnages_format = "|".join(personnages_voix)
     regles_dyn = ""
     extra_persos = personnages_connus - {"papy_babou", "antoine", "noemie", "narrateur", "sfx"}
     if extra_persos:
         regles_dyn = (
-            "\n12. PERSONNAGES SECONDAIRES disponibles cette saison : "
+            "\nPERSONNAGES SECONDAIRES disponibles : "
             + ", ".join(sorted(extra_persos))
             + ".\n    N'utilise un personnage secondaire QUE s'il est mentionné dans les "
             "personnages présents de cet épisode."
+        )
+
+    # Événement spécial (anniversaire, etc.)
+    evenement = config.EVENEMENTS_SPECIAUX.get((numero_saison, numero_episode), {})
+    evenement_special = ""
+    if evenement:
+        evenement_special = (
+            f"\nÉVÉNEMENT SPÉCIAL — {evenement['type'].upper()} :\n"
+            f"{evenement['details']}"
         )
 
     # Échapper les accolades dans les valeurs textuelles libres
@@ -436,6 +719,7 @@ def _construire_system_prompt(
         personnages_format=personnages_format,
         regles_personnages_dynamiques=regles_dyn,
         preferences_producteur=safe_preferences,
+        evenement_special=evenement_special,
     )
 
 
@@ -452,10 +736,10 @@ class Scripteur:
                 "Cle API Anthropic (ANTHROPIC_API_KEY) non configuree. "
                 "Ajoutez-la dans votre fichier .env ou dans les Secrets Replit."
             )
-        self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, timeout=300.0)
 
-    def generer(
-        self,
+    @staticmethod
+    def _construire_user_prompt(
         titre: str,
         resume: str,
         saison: int,
@@ -466,31 +750,33 @@ class Scripteur:
         contexte_saison: dict | None = None,
         episode_plan: dict | None = None,
         type_episode: str = "standard",
-        preferences_producteur: str = "",
-    ) -> dict:
-        """Génère un script JSON structuré pour un épisode.
+        format_ep: dict | None = None,
+        scripts_precedents: list[dict] | None = None,
+        arc_state_precedent: dict | None = None,
+    ) -> str:
+        """Construit le user prompt pour la génération de script.
 
         Args:
-            titre: Titre de l'épisode (ex: "Le buisson ardent").
-            resume: Résumé de l'histoire biblique à raconter.
+            titre: Titre de l'épisode.
+            resume: Résumé de l'histoire biblique.
             saison: Numéro de saison.
-            numero: Numéro d'épisode dans la saison.
-            morale: Leçon de vie à transmettre (optionnel).
-            corrections: Liste de corrections du reviewer à intégrer (optionnel).
-            historique: Résumés des épisodes précédents pour la continuité (optionnel).
-            contexte_saison: Plan de saison complet pour le contexte sériel (optionnel).
-            episode_plan: Données de l'épisode depuis le plan de saison (optionnel).
-            type_episode: Type d'épisode (ouverture, standard, mi-saison, final, bonus).
-            preferences_producteur: Bloc de preferences du producteur a injecter.
+            numero: Numéro d'épisode.
+            morale: Leçon de vie (optionnel).
+            corrections: Corrections du reviewer (optionnel).
+            historique: Épisodes précédents (optionnel).
+            contexte_saison: Plan de saison (optionnel).
+            episode_plan: Données de l'épisode (optionnel).
+            type_episode: Type d'épisode.
+            format_ep: Format de l'épisode (durée, mots cible).
+            scripts_precedents: Dialogues des scripts précédents (optionnel).
+            arc_state_precedent: État narratif de l'épisode N-1 (optionnel).
 
         Returns:
-            Dictionnaire JSON du script structuré.
+            Texte du user prompt.
         """
-        # Déterminer le type d'épisode depuis le plan si disponible
-        if episode_plan and type_episode == "standard":
-            type_episode = episode_plan.get("type", "standard")
+        if format_ep is None:
+            format_ep = config.FORMATS_EPISODES.get(type_episode, config.FORMATS_EPISODES["standard"])
 
-        format_ep = config.FORMATS_EPISODES.get(type_episode, config.FORMATS_EPISODES["standard"])
         nb_episodes_saison = 10
         if contexte_saison:
             nb_episodes_saison = len(
@@ -509,6 +795,22 @@ class Scripteur:
         if morale:
             prompt += f"- Leçon de vie / morale à transmettre : {morale}\n"
 
+        # Périmètre biblique de la saison
+        perimetre = config.PERIMETRES_SAISONS.get(saison)
+        if perimetre:
+            prompt += (
+                f"\n⚠️ PÉRIMÈTRE BIBLIQUE (saison {saison}) : {perimetre['perimetre']}\n"
+                f"  {perimetre['description']}\n"
+            )
+
+        # Événement spécial (anniversaire, etc.)
+        evenement = config.EVENEMENTS_SPECIAUX.get((saison, numero), {})
+        if evenement:
+            prompt += (
+                f"\n🎉 ÉVÉNEMENT SPÉCIAL — {evenement['type'].upper()} :\n"
+                f"{evenement['details']}\n"
+            )
+
         # Contexte sériel depuis le plan d'épisode
         if episode_plan:
             if episode_plan.get("arc_personnage_focus"):
@@ -523,12 +825,39 @@ class Scripteur:
                     f"- Personnages secondaires présents : "
                     f"{', '.join(episode_plan['personnages_secondaires_presents'])}\n"
                 )
+            if episode_plan.get("pretexte"):
+                prompt += (
+                    f"- Prétexte de l'épisode (contexte de départ planifié) : "
+                    f"{episode_plan['pretexte']}\n"
+                )
             if episode_plan.get("lien_episode_precedent"):
                 prompt += f"- Lien avec l'épisode précédent : {episode_plan['lien_episode_precedent']}\n"
             if episode_plan.get("questions_ouvertes"):
                 questions = episode_plan["questions_ouvertes"]
                 if isinstance(questions, list):
                     prompt += f"- Questions ouvertes à laisser en suspens : {'; '.join(questions)}\n"
+
+        # Arc state de l'épisode précédent (continuité N→N+1) — CRITIQUE
+        if arc_state_precedent:
+            prompt += "\n🔗 ÉTAT NARRATIF DE L'ÉPISODE PRÉCÉDENT (continuité obligatoire) :\n"
+            moments = arc_state_precedent.get("moments_cles", [])
+            if moments:
+                prompt += f"  Moments clés : {', '.join(moments[:5])}\n"
+            questions = arc_state_precedent.get("questions_ouvertes", [])
+            if questions:
+                prompt += "  Questions ouvertes à reprendre naturellement :\n"
+                for q in questions[:3]:
+                    prompt += f"    - {q}\n"
+            evolution = arc_state_precedent.get("evolutions_personnages", "")
+            if evolution:
+                prompt += f"  Évolutions des personnages : {evolution}\n"
+            fil_rouge = arc_state_precedent.get("fil_rouge", "")
+            if fil_rouge:
+                prompt += f"  Fil rouge : {fil_rouge}\n"
+            prompt += (
+                "  → Tu DOIS faire référence à au moins un de ces éléments dans les "
+                "premières minutes de l'épisode pour assurer la continuité narrative.\n"
+            )
 
         if historique:
             # Pour les épisodes finaux/mi-saison, inclure tout l'historique de la saison
@@ -557,6 +886,27 @@ class Scripteur:
                     ep_info += f" | Retours producteur : {ep['retours_humains']}"
                 prompt += ep_info + "\n"
 
+        # Injecter les dialogues réels des épisodes précédents de la saison
+        if scripts_precedents:
+            prompt += (
+                "\n📖 SCRIPTS DES ÉPISODES PRÉCÉDENTS DE CETTE SAISON "
+                "(lis attentivement pour assurer la continuité des dialogues, "
+                "du ton, des personnages et des arcs narratifs) :\n"
+            )
+            for sp in scripts_precedents:
+                prompt += f"\n--- {sp['episode_id']} \"{sp['titre']}\" "
+                if sp.get("ambiance"):
+                    prompt += f"(ambiance: {sp['ambiance']}) "
+                prompt += f"({sp['nb_segments']} segments) ---\n"
+                dialogues = sp.get("dialogues", [])
+                is_dernier = (sp == scripts_precedents[-1])
+                max_lignes = 20 if is_dernier else 10
+                for ligne in dialogues[:max_lignes]:
+                    prompt += f"  {ligne}\n"
+                if len(dialogues) > max_lignes:
+                    prompt += f"  [...{len(dialogues) - max_lignes} lignes supplémentaires...]\n"
+            prompt += "\n"
+
         if corrections:
             prompt += (
                 "\n⚠️ CORRECTIONS À INTÉGRER (le script précédent avait ces problèmes) :\n"
@@ -564,6 +914,69 @@ class Scripteur:
             for i, c in enumerate(corrections, 1):
                 prompt += f"  {i}. {c}\n"
             prompt += "\nCorrige tous ces points dans cette nouvelle version.\n"
+
+        return prompt
+
+    def generer(
+        self,
+        titre: str,
+        resume: str,
+        saison: int,
+        numero: int,
+        morale: str = "",
+        corrections: list[str] | None = None,
+        historique: list[dict] | None = None,
+        contexte_saison: dict | None = None,
+        episode_plan: dict | None = None,
+        type_episode: str = "standard",
+        preferences_producteur: str = "",
+        scripts_precedents: list[dict] | None = None,
+        arc_state_precedent: dict | None = None,
+    ) -> dict:
+        """Génère un script JSON structuré pour un épisode.
+
+        Args:
+            titre: Titre de l'épisode (ex: "Le buisson ardent").
+            resume: Résumé de l'histoire biblique à raconter.
+            saison: Numéro de saison.
+            numero: Numéro d'épisode dans la saison.
+            morale: Leçon de vie à transmettre (optionnel).
+            corrections: Liste de corrections du reviewer à intégrer (optionnel).
+            historique: Résumés des épisodes précédents pour la continuité (optionnel).
+            contexte_saison: Plan de saison complet pour le contexte sériel (optionnel).
+            episode_plan: Données de l'épisode depuis le plan de saison (optionnel).
+            type_episode: Type d'épisode (ouverture, standard, mi-saison, final, bonus).
+            preferences_producteur: Bloc de preferences du producteur a injecter.
+            scripts_precedents: Dialogues des scripts précédents de la saison pour
+                assurer la continuité (optionnel). Chaque élément contient episode_id,
+                titre, ambiance, nb_segments et dialogues (liste de lignes).
+            arc_state_precedent: État narratif de l'épisode précédent (moments clés,
+                questions ouvertes, évolutions) pour assurer la continuité N→N+1.
+
+        Returns:
+            Dictionnaire JSON du script structuré.
+        """
+        # Déterminer le type d'épisode depuis le plan si disponible
+        if episode_plan and type_episode == "standard":
+            type_episode = episode_plan.get("type", "standard")
+
+        format_ep = config.FORMATS_EPISODES.get(type_episode, config.FORMATS_EPISODES["standard"])
+
+        prompt = self._construire_user_prompt(
+            titre=titre,
+            resume=resume,
+            saison=saison,
+            numero=numero,
+            morale=morale,
+            corrections=corrections,
+            historique=historique,
+            contexte_saison=contexte_saison,
+            episode_plan=episode_plan,
+            type_episode=type_episode,
+            format_ep=format_ep,
+            scripts_precedents=scripts_precedents,
+            arc_state_precedent=arc_state_precedent,
+        )
 
         logger.info(
             "Génération du script : %s (S%02dE%02d, type=%s)",
@@ -576,69 +989,134 @@ class Scripteur:
             type_episode=type_episode,
             historique=historique,
             preferences_producteur=preferences_producteur,
+            numero_saison=saison,
+            numero_episode=numero,
         )
 
         # max_tokens adaptatif selon le type d'épisode
         max_tokens_map = {
-            "ouverture": 10000,
-            "standard": 8192,
-            "mi-saison": 10000,
-            "final": 12000,
-            "bonus": 6144,
+            "final": 16384,
+            "ouverture": 12288,
+            "mi-saison": 12288,
+            "standard": 10240,
+            "bonus": 8192,
         }
-        max_tokens = max_tokens_map.get(type_episode, 8192)
-
-        # Tentative avec retry automatique si la réponse est tronquée
+        max_tokens = max_tokens_map.get(type_episode, 10240)
         max_retry_truncated = 2
-        for attempt in range(1, max_retry_truncated + 1):
-            response = config.appel_claude_avec_retry(
-                self.client,
-                model=config.CLAUDE_MODEL,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                messages=[{"role": "user", "content": prompt}],
-            )
 
-            if response.stop_reason == "max_tokens":
-                if attempt < max_retry_truncated:
-                    max_tokens = min(int(max_tokens * 1.5), 16384)
-                    logger.warning(
-                        "Réponse tronquée (max_tokens atteint). "
-                        "Retry %d/%d avec max_tokens=%d",
-                        attempt, max_retry_truncated, max_tokens,
-                    )
+        # Boucle de validation avec retry automatique :
+        # Si le script généré ne passe pas la validation (structure, personnage
+        # inconnu...), on re-génère en injectant l'erreur dans le prompt.
+        max_validation_retries = 3
+        derniere_erreur = ""
+        for validation_attempt in range(1, max_validation_retries + 1):
+            prompt_effectif = prompt
+            if derniere_erreur:
+                prompt_effectif = (
+                    f"{prompt}\n\n"
+                    f"⚠️ ERREUR DE VALIDATION (tentative {validation_attempt}/{max_validation_retries}) :\n"
+                    f"Le script précédent a été REJETÉ pour la raison suivante :\n"
+                    f"  {derniere_erreur}\n\n"
+                    f"Corrige ce problème et génère un nouveau script valide."
+                )
+                logger.warning(
+                    "Retry validation script %d/%d — erreur précédente : %s",
+                    validation_attempt, max_validation_retries, derniere_erreur,
+                )
+
+            # Génération avec retry sur max_tokens
+            for attempt in range(1, max_retry_truncated + 1):
+                response = config.appel_claude_avec_retry(
+                    self.client,
+                    model=config.CLAUDE_MODEL,
+                    max_tokens=max_tokens,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": prompt_effectif}],
+                )
+                if response.stop_reason == "max_tokens":
+                    if attempt < max_retry_truncated:
+                        max_tokens = min(int(max_tokens * 1.5), 32768)
+                        logger.warning(
+                            "Réponse tronquée (max_tokens atteint). "
+                            "Retry %d/%d avec max_tokens=%d",
+                            attempt, max_retry_truncated, max_tokens,
+                        )
+                        continue
+                    else:
+                        raise ValueError(
+                            f"Le script généré dépasse la limite de tokens "
+                            f"({max_tokens} tokens) même après {max_retry_truncated} "
+                            f"tentatives. Le JSON est tronqué et inutilisable."
+                        )
+                break
+
+            # Protection contre une réponse vide
+            if not response.content:
+                raise ValueError(
+                    "La réponse de l'API Claude est vide (aucun bloc de contenu). "
+                    "Vérifiez la configuration de l'appel API."
+                )
+
+            texte_brut = response.content[0].text.strip()
+            try:
+                script = parser_json_llm(texte_brut)
+            except json.JSONDecodeError as e:
+                derniere_erreur = f"JSON malformé : {e}"
+                if validation_attempt < max_validation_retries:
                     continue
-                else:
-                    raise ValueError(
-                        f"Le script généré dépasse la limite de tokens "
-                        f"({max_tokens} tokens) même après {max_retry_truncated} "
-                        f"tentatives. Le JSON est tronqué et inutilisable."
-                    )
+                raise ValueError(
+                    f"Le script n'est pas du JSON valide "
+                    f"après {max_validation_retries} tentatives : {e}"
+                )
+
+            # Type-check : le LLM doit retourner un dict, pas une liste ou un scalaire
+            if not isinstance(script, dict):
+                derniere_erreur = (
+                    f"Le JSON retourné n'est pas un objet (type: {type(script).__name__}). "
+                    f"Attendu : un dictionnaire avec une clé 'episode'."
+                )
+                if validation_attempt < max_validation_retries:
+                    continue
+                raise ValueError(derniere_erreur)
+
+            # Validation structurelle
+            try:
+                self._valider_structure(script)
+            except ValueError as e:
+                derniere_erreur = str(e)
+                if validation_attempt < max_validation_retries:
+                    continue
+                raise
+
+            # Script valide — sortir de la boucle
+            if derniere_erreur:
+                logger.info(
+                    "Script corrigé après %d tentative(s) de validation.",
+                    validation_attempt,
+                )
             break
 
-        texte_brut = response.content[0].text.strip()
-        try:
-            script = parser_json_llm(texte_brut)
-        except json.JSONDecodeError as e:
-            logger.warning(
-                "JSON malformé dans la réponse LLM (%s). "
-                "Retry avec une nouvelle génération...", e,
-            )
-            response = config.appel_claude_avec_retry(
-                self.client,
-                model=config.CLAUDE_MODEL,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            if response.stop_reason == "max_tokens":
-                raise ValueError(
-                    f"Le script généré dépasse la limite de tokens "
-                    f"({max_tokens} tokens). Le JSON est tronqué et inutilisable."
-                )
-            texte_brut = response.content[0].text.strip()
-            script = parser_json_llm(texte_brut)
-        self._valider_structure(script)
+        # Inject type_episode into script so reviewer can read it
+        # Valider et auto-corriger le type si le LLM a généré un type invalide
+        valid_types = {"ouverture", "standard", "mi-saison", "final", "bonus"}
+        ep_type = script.get("episode", {}).get("type", "")
+        if ep_type not in valid_types:
+            if ep_type:
+                logger.warning("Type épisode invalide '%s' généré par le LLM — corrigé à '%s'",
+                               ep_type, type_episode)
+            script.setdefault("episode", {})["type"] = type_episode
+
+        # Vérifier l'utilisation des tics de langage par personnage
+        self._verifier_tics_de_langage(script)
+
+        # Vérifier les mots interdits dans le texte généré
+        self._verifier_mots_interdits(script)
+
+        # Nettoyer les onomatopées résiduelles (le LLM n'est pas infaillible)
+        self._nettoyer_onomatopees(script)
+
+        # Valider la longueur des segments (voix IA = segments courts)
+        self._valider_longueur_segments(script)
 
         nb_mots = self.compter_mots(script)
         mots_cible = format_ep["mots_cible"]
@@ -680,6 +1158,210 @@ class Scripteur:
             json.dump(script, f, ensure_ascii=False, indent=2)
         logger.info("Script sauvegardé dans %s", chemin)
         return chemin
+
+    @staticmethod
+    def _verifier_tics_de_langage(script: dict) -> None:
+        """Vérifie que chaque personnage principal utilise ses tics de langage.
+
+        Émet un warning si un personnage a moins de 2 tics utilisés dans l'épisode.
+        Cela aide le reviewer à demander une réécriture si le script manque
+        de caractérisation.
+        """
+        data = config.charger_personnages()
+        if not data:
+            return
+
+        personnages = data.get("personnages", {})
+        textes_par_perso: dict[str, str] = {}
+
+        for seg in script.get("episode", {}).get("segments", []):
+            perso = seg.get("personnage", "")
+            if perso in personnages:
+                textes_par_perso.setdefault(perso, "")
+                textes_par_perso[perso] += " " + seg.get("texte", "")
+
+        for perso_id, texte_complet in textes_par_perso.items():
+            tics = personnages.get(perso_id, {}).get("tics_de_langage", [])
+            if not tics:
+                continue
+            texte_lower = texte_complet.lower()
+            tics_trouves = sum(
+                1 for tic in tics if tic.lower().rstrip("...!?. ") in texte_lower
+            )
+            nom = personnages[perso_id].get("nom_complet", perso_id)
+            if tics_trouves < 2:
+                logger.warning(
+                    "Tics de langage : %s n'utilise que %d/%d tics dans cet épisode "
+                    "(minimum recommandé : 2-3).",
+                    nom, tics_trouves, len(tics),
+                )
+            else:
+                logger.info(
+                    "Tics de langage : %s utilise %d/%d tics.",
+                    nom, tics_trouves, len(tics),
+                )
+
+    @staticmethod
+    def _verifier_mots_interdits(script: dict) -> None:
+        """Vérifie qu'aucun mot interdit n'apparaît dans le texte généré.
+
+        Le LLM reçoit l'instruction de ne pas utiliser ces mots, mais il n'est
+        pas infaillible. Ce filtre post-génération émet un warning pour chaque
+        mot interdit trouvé.
+        """
+        mots_interdits = config.MOTS_INTERDITS
+        if not mots_interdits:
+            return
+
+        texte_complet = ""
+        for seg in script.get("episode", {}).get("segments", []):
+            if seg.get("personnage") != "sfx":
+                texte_complet += " " + seg.get("texte", "")
+
+        texte_lower = texte_complet.lower()
+        trouves = []
+        for mot in mots_interdits:
+            # Utiliser word boundary regex pour éviter faux positifs
+            # (ex: "mort" ne doit pas matcher "immortel")
+            pattern = r"\b" + re.escape(mot.lower()) + r"\b"
+            if re.search(pattern, texte_lower):
+                trouves.append(mot)
+
+        if trouves:
+            logger.warning(
+                "Mots interdits détectés dans le script généré : %s. "
+                "Le LLM n'a pas respecté l'instruction. "
+                "Le reviewer devrait signaler ces occurrences.",
+                ", ".join(trouves),
+            )
+
+    # ── Onomatopées : patterns à nettoyer dans les scripts générés ──────────
+
+    # Onomatopées pures (segment entier = onomatopée) → supprimer le segment
+    _ONOMATOPEES_PURES = re.compile(
+        r"^(?:ha\s*)+!*$|^(?:hi\s*)+!*$|^(?:ho\s*)+!*$|"
+        r"^(?:oh\s*)+(?:la\s*)*!*$|^(?:ah\s*)+!*$|^(?:eh\s*)+!*$|"
+        r"^(?:euh\s*)+\.{0,3}$|^(?:hmm\s*)+\.{0,3}$|^(?:pfff?\s*)+!*$|"
+        r"^(?:bah\s*)+!*$|^(?:waouh?\s*)+!*$|^(?:ouah?\s*)+!*$|"
+        r"^(?:beurk\s*)+!*$|^(?:oooh?\s*)+!*$|^(?:aaah?\s*)+!*$",
+        re.IGNORECASE,
+    )
+
+    # Onomatopées en début de réplique → retirer le préfixe
+    _ONOMATOPEE_PREFIX = re.compile(
+        r"^(?:(?:Ha){2,}|(?:Hi){2,}|(?:Ho){2,}|"
+        r"Oh\s*(?:là\s*là)?|Ah|Eh|Euh|Hmm+|Pfff?|Bah|Waouh?|Ouah?|Oooh?|Aaah?)"
+        r"[\s!.,…]*\s*",
+        re.IGNORECASE,
+    )
+
+    # Onomatopées en milieu de texte (rires, hésitations)
+    _ONOMATOPEE_INLINE = re.compile(
+        r"\s*(?:(?:Ha){2,}|(?:Hi){2,}|(?:Ho){2,})[\s!]*",
+        re.IGNORECASE,
+    )
+
+    @staticmethod
+    def _nettoyer_onomatopees(script: dict) -> None:
+        """Nettoie les onomatopées résiduelles des segments de dialogue.
+
+        Les voix ElevenLabs prononcent littéralement les onomatopées écrites
+        (ex: "hache-i-hache-i"), ce qui sonne très artificiel.
+        Ce filtre post-génération :
+        1. Supprime les segments qui ne contiennent QUE des onomatopées.
+        2. Retire les onomatopées en début ou milieu de réplique.
+        """
+        segments = script.get("episode", {}).get("segments", [])
+        segments_a_supprimer = []
+        nb_nettoyages = 0
+
+        for i, seg in enumerate(segments):
+            if seg.get("personnage") == "sfx":
+                continue
+
+            texte = seg.get("texte", "").strip()
+            if not texte:
+                continue
+
+            # Cas 1 : segment entièrement onomatopée
+            texte_sans_ponct = re.sub(r"[!.,…\s]+", " ", texte).strip()
+            if Scripteur._ONOMATOPEES_PURES.match(texte_sans_ponct):
+                segments_a_supprimer.append(i)
+                nb_nettoyages += 1
+                continue
+
+            # Cas 2 : onomatopée en début de réplique
+            texte_nettoye = Scripteur._ONOMATOPEE_PREFIX.sub("", texte, count=1)
+
+            # Cas 3 : rires/onomatopées inline
+            texte_nettoye = Scripteur._ONOMATOPEE_INLINE.sub(" ", texte_nettoye)
+
+            # Nettoyer espaces multiples et vérifier qu'il reste du contenu
+            texte_nettoye = re.sub(r"\s{2,}", " ", texte_nettoye).strip()
+
+            # Recapitaliser si le début a été retiré
+            if texte_nettoye and texte_nettoye[0].islower():
+                texte_nettoye = texte_nettoye[0].upper() + texte_nettoye[1:]
+
+            if texte_nettoye and texte_nettoye != texte:
+                seg["texte"] = texte_nettoye
+                nb_nettoyages += 1
+            elif not texte_nettoye:
+                # Texte devenu vide après nettoyage
+                segments_a_supprimer.append(i)
+                nb_nettoyages += 1
+
+        # Supprimer les segments vides (en ordre inverse pour ne pas décaler les index)
+        for i in reversed(segments_a_supprimer):
+            removed = segments.pop(i)
+            logger.debug(
+                "Segment %s supprimé (onomatopée pure) : '%s'",
+                removed.get("id", "?"), removed.get("texte", "")[:50],
+            )
+
+        if nb_nettoyages:
+            logger.info(
+                "Onomatopées nettoyées : %d segment(s) corrigé(s) ou supprimé(s) "
+                "pour compatibilité voix IA.",
+                nb_nettoyages,
+            )
+
+    @staticmethod
+    def _valider_longueur_segments(script: dict) -> None:
+        """Vérifie et signale les segments trop longs pour les voix IA.
+
+        Les voix ElevenLabs deviennent monotones au-delà de 40-60 mots.
+        Émet un warning pour chaque segment dépassant la limite.
+        """
+        segments = script.get("episode", {}).get("segments", [])
+        segments_trop_longs = 0
+
+        for seg in segments:
+            if seg.get("personnage") == "sfx":
+                continue
+            texte = seg.get("texte", "")
+            nb_mots = len(texte.split())
+            personnage = seg.get("personnage", "")
+
+            if personnage in config.PERSONNAGES_ENFANTS:
+                limite = config.SEGMENT_MAX_MOTS_ENFANT
+            else:
+                limite = config.SEGMENT_MAX_MOTS_ADULTE
+
+            if nb_mots > limite:
+                segments_trop_longs += 1
+                logger.warning(
+                    "Segment %s trop long pour voix IA : %d mots (limite %d pour %s). "
+                    "Risque de monotonie en synthèse vocale.",
+                    seg.get("id", "?"), nb_mots, limite, personnage,
+                )
+
+        if segments_trop_longs:
+            logger.warning(
+                "Longueur segments : %d segment(s) dépassent la limite voix IA. "
+                "Le directeur podcast recommande de découper en segments plus courts.",
+                segments_trop_longs,
+            )
 
     @staticmethod
     def compter_mots(script: dict) -> int:
@@ -738,6 +1420,24 @@ class Scripteur:
                     f"Personnage inconnu '{seg['personnage']}' dans segment {seg['id']}. "
                     f"Valides : {personnages_ok}"
                 )
+            # Valider pause_apres_ms est un nombre >= 0
+            pause = seg.get("pause_apres_ms", 0)
+            if not isinstance(pause, (int, float)) or pause < 0:
+                logger.warning(
+                    "pause_apres_ms invalide (%s) dans segment %s — corrigé à 0.",
+                    pause, seg["id"],
+                )
+                seg["pause_apres_ms"] = 0
+
+            # Valider que le texte est non-vide (sauf SFX qui ont des descriptions)
+            texte = seg.get("texte", "")
+            if seg["personnage"] != "sfx" and not texte.strip():
+                logger.warning(
+                    "Texte vide dans segment %s (personnage: %s) — "
+                    "causera une génération TTS inutile.",
+                    seg["id"], seg["personnage"],
+                )
+
             # Avertir si le personnage n'a pas de voice_id configuré
             if seg["personnage"] != "sfx":
                 vid = config.VOICE_IDS.get(seg["personnage"])
@@ -766,7 +1466,38 @@ class Scripteur:
                         seg["mode"], seg["id"],
                     )
 
-        if sfx_count > 8:
-            logger.warning("Trop de bruitages : %d (recommandé 3-8).", sfx_count)
-        elif sfx_count < 1:
-            logger.warning("Aucun bruitage dans le script (recommandé 3-8).")
+        if sfx_count > 15:
+            logger.warning("Trop de bruitages : %d (recommandé 8-12).", sfx_count)
+        elif sfx_count < 8:
+            logger.warning("Pas assez de bruitages : %d (minimum 8, recommandé 8-12).", sfx_count)
+
+        # Vérifier que evolutions_personnages est présent et non vide
+        evolutions = ep.get("evolutions_personnages", "")
+        if not evolutions or (isinstance(evolutions, str) and not evolutions.strip()):
+            logger.warning(
+                "Champ 'evolutions_personnages' manquant ou vide — "
+                "l'historique inter-épisodes perdra la trace de l'évolution "
+                "des personnages pour cet épisode."
+            )
+
+        # Vérifier le quiz à deux niveaux (facile/avancé)
+        quiz = ep.get("quiz")
+        if quiz is None:
+            logger.warning("Champ 'quiz' manquant dans le script.")
+        elif isinstance(quiz, list):
+            # Ancien format (liste simple) — migrer vers le nouveau format
+            logger.warning(
+                "Quiz au format liste simple — migration vers format facile/avancé."
+            )
+            ep["quiz"] = {
+                "facile": quiz[:3] if len(quiz) >= 3 else quiz,
+                "avance": quiz[:3] if len(quiz) >= 3 else quiz,
+            }
+        elif isinstance(quiz, dict):
+            for niveau in ("facile", "avance"):
+                questions = quiz.get(niveau, [])
+                if not questions or len(questions) < 3:
+                    logger.warning(
+                        "Quiz niveau '%s' : %d questions (minimum 3).",
+                        niveau, len(questions) if questions else 0,
+                    )

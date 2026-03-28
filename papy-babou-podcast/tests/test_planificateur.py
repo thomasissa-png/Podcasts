@@ -64,7 +64,7 @@ def plan_saison_exemple():
                     "resume": "Abraham quitte Ur pour la Terre Promise",
                     "morale": "Le courage de partir vers l'inconnu",
                     "ambiance": "mystere",
-                    "duree_cible_minutes": 15,
+                    "duree_cible_minutes": 30,
                     "personnages_presents": ["papy_babou", "antoine", "noemie"],
                     "personnages_secondaires_presents": [],
                     "arc_personnage_focus": "antoine",
@@ -83,7 +83,7 @@ def plan_saison_exemple():
                     "resume": "Moïse guide le peuple",
                     "morale": "La persévérance face aux obstacles",
                     "ambiance": "dramatique",
-                    "duree_cible_minutes": 13,
+                    "duree_cible_minutes": 25,
                     "personnages_presents": ["papy_babou", "antoine", "noemie"],
                     "personnages_secondaires_presents": [],
                     "arc_personnage_focus": "noemie",
@@ -200,6 +200,7 @@ class TestPlanificateurGeneration:
         plan = planificateur.planifier_saison(
             numero_saison=1,
             theme="Les grands voyages de la Bible",
+            nb_episodes=2,
         )
 
         assert plan["saison"]["theme"] == "Les grands voyages de la Bible"
